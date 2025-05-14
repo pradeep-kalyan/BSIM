@@ -3,7 +3,8 @@ import { comparePassword, hashPassword } from "../functions/Hash.js";
 import crypto from "crypto";
 import axios from "axios";
 import prisma from "../functions/prisma";
-import { redirect } from "next/dist/server/api-utils/index.js";
+import { redirect } from "next/navigation";
+import { generateToken, setCookie } from "../functions/jwt";
 
 // Type for incoming form data
 interface RegisterFormData {
@@ -74,9 +75,10 @@ export const registerUser = async (
   // Save the user to the database
   try {
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { mail: email },
-    });
+    const existingUser =
+      (await prisma.user.findUnique({
+        where: { mail: email },
+      })) || null;
 
     if (existingUser) {
       return {
@@ -108,7 +110,7 @@ export const registerUser = async (
   };
 };
 
-const loginUser = async (formData: FormData) => {
+export const loginUser = async (formData: FormData) => {
   const mail = formData.get("mail") as string;
   const password = formData.get("password") as string;
 
@@ -116,16 +118,38 @@ const loginUser = async (formData: FormData) => {
     return { status: 400, message: "Please provide both email and password." };
   }
 
-  await prisma.user.findFirst({ where: { mail } }).then((user) => {
+  try {
+    const user = await prisma.user.findFirst({ where: { mail } });
+
     if (!user) {
-      return { status: 400, message: "Invalid credentials" };
-    } else {
-      comparePassword(password, user.password).then((match) => {
-        if (!match) {
-          return { status: 400, message: "Invalid credentials" };
-        }
-      });
-      redirect("/dashboard")
+      return { status: 400, message: "kindly register before signing in" };
     }
-  });
+
+    const isPasswordValid = await comparePassword(password, user.password);
+
+    if (!isPasswordValid) {
+      return { status: 400, message: "Invalid credentials" };
+    }
+
+    // Generate JWT token
+    const token = await generateToken({
+      id: user.id,
+      name: user.name,
+      role: user.role,
+    });
+
+    // Set the token in a cookie
+    await setCookie(token);
+
+    console.log(token);
+
+    // Redirect to the dashboard
+    redirect("/dashboard");
+  } catch (error) {
+    console.error("Login error:", error);
+    return {
+      status: 500,
+      message: "An error occurred during login. Please try again.",
+    };
+  }
 };

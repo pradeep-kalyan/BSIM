@@ -127,7 +127,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\pradeepkalyan\\business-sim\\app\\generated\\prisma",
+      "value": "/Users/pradeepkalyan/businessSimulation/app/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -136,12 +136,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\pradeepkalyan\\business-sim\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/pradeepkalyan/businessSimulation/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -159,7 +159,7 @@ const config = {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://postgres:admin@localhost:5432/BusinessSim?schema=public"
+        "value": "postgresql://pradeepkalyan:pradeepkalyan@localhost:5432/BSA"
       }
     }
   },

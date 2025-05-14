@@ -10,30 +10,32 @@ const PasswordInput = ({
   name,
 }) => {
   return (
-    <div className="flex flex-col w-full max-w-md  bg-white rounded-md">
-      <label htmlFor={id} className="text-gray-700 font-semibold text-md m-2">
+    <div className="flex flex-col w-full bg-transparent rounded-md">
+      <label
+        htmlFor={id}
+        className="text-white font-semibold text-sm mb-1.5 ml-1"
+      >
         {label}
       </label>
-      <div className="flex items-center border rounded-lg px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500">
+      <div className="flex items-center border border-slate-600 bg-slate-800/50 rounded-lg px-4 py-2.5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-400 transition-all duration-200">
         <input
           id={id}
           type={showPassword ? "text" : "password"}
-          className="w-full text-black placeholder-gray-400 outline-none bg-transparent"
+          className="w-full text-white/80 text-sm placeholder-gray-400 outline-none bg-transparent"
           placeholder={placeholder}
           name={name}
           required
-          autoFocus
         />
         <button
           type="button"
           onClick={() => setShowPassword((prev) => !prev)}
-          className="ml-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+          className="ml-2 text-gray-400 hover:text-blue-400 focus:outline-none transition-colors"
           aria-label={showPassword ? "Hide password" : "Show password"}
         >
           {showPassword ? (
-            <Eye className="w-5 h-5" />
+            <EyeOff className="w-4 h-4" />
           ) : (
-            <EyeOff className="w-5 h-5" />
+            <Eye className="w-4 h-4" />
           )}
         </button>
       </div>
