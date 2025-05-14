@@ -144,7 +144,7 @@ export const loginUser = async (formData: FormData) => {
     console.log(token);
 
     // Redirect to the dashboard
-    redirect("/dashboard");
+    // redirect("/dashboard");
   } catch (error) {
     console.error("Login error:", error);
     return {

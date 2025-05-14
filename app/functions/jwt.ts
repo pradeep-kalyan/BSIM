@@ -94,3 +94,4 @@ export const deleteCookie = async (): Promise<void> => {
     throw new Error("Error deleting cookie");
   }
 };
+    

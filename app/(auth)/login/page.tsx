@@ -15,6 +15,8 @@ const Page = () => {
     setDisabled(true);
     try {
       await loginUser(formData);
+      toast.success("Login successful");
+      window.location.href = "/dashboard";
     } catch (error) {
       toast.error("Login failed. Please check your credentials.");
     } finally {
