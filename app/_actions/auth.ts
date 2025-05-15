@@ -1,13 +1,14 @@
+// app/_actions/auth.ts
 "use server";
-import { comparePassword, hashPassword } from "../functions/Hash.js";
+
+import { comparePassword, hashPassword } from "../functions/Hash";
 import crypto from "crypto";
 import axios from "axios";
 import prisma from "../functions/prisma";
-import { redirect } from "next/navigation";
 import { generateToken, setCookie } from "../functions/jwt";
 
 // Type for incoming form data
-interface RegisterFormData {
+export interface RegisterFormData {
   name: string;
   email: string;
   password: string;
@@ -15,14 +16,20 @@ interface RegisterFormData {
 }
 
 // Type for response format
-interface RegisterResponse {
+export interface AuthResponse {
   status: number;
   message: string;
+  success?: boolean;
 }
 
+/**
+ * Registers a new user with password security validation
+ * @param formData - User registration data
+ * @returns Promise resolving to a response object with status and message
+ */
 export const registerUser = async (
   formData: RegisterFormData
-): Promise<RegisterResponse> => {
+): Promise<AuthResponse> => {
   const { name, email, password } = formData;
 
   // Basic field validation
@@ -30,60 +37,58 @@ export const registerUser = async (
     return {
       status: 400,
       message: "Name, email, and password are required.",
+      success: false
     };
   }
 
-  // Step 1: Generate SHA-1 hash of the password (for Have I Been Pwned API)
-  const sha1HashedPassword = crypto
-    .createHash("sha1")
-    .update(password)
-    .digest("hex")
-    .toUpperCase();
-
-  const hashPrefix = sha1HashedPassword.slice(0, 5);
-  const hashSuffix = sha1HashedPassword.slice(5);
-
   try {
-    // Step 2: Query Have I Been Pwned API using k-Anonymity model
-    const hibpResponse = await axios.get<string>(
-      `https://api.pwnedpasswords.com/range/${hashPrefix}`
-    );
+    // Step 1: Generate SHA-1 hash of the password (for Have I Been Pwned API)
+    const sha1HashedPassword = crypto
+      .createHash("sha1")
+      .update(password)
+      .digest("hex")
+      .toUpperCase();
 
-    const passwordBreached = hibpResponse.data.split("\n").some((line) => {
-      const [suffix] = line.split(":");
-      return suffix === hashSuffix;
-    });
+    const hashPrefix = sha1HashedPassword.slice(0, 5);
+    const hashSuffix = sha1HashedPassword.slice(5);
 
-    if (passwordBreached) {
-      return {
-        status: 400,
-        message:
-          "This password has been found in a data breach. Please choose a more secure password.",
-      };
+    try {
+      // Step 2: Query Have I Been Pwned API using k-Anonymity model
+      const hibpResponse = await axios.get<string>(
+        `https://api.pwnedpasswords.com/range/${hashPrefix}`
+      );
+
+      const passwordBreached = hibpResponse.data.split("\n").some((line) => {
+        const [suffix] = line.split(":");
+        return suffix === hashSuffix;
+      });
+
+      if (passwordBreached) {
+        return {
+          status: 400,
+          message:
+            "This password has been found in a data breach. Please choose a more secure password.",
+          success: false
+        };
+      }
+    } catch (error) {
+      console.error("Error checking password security:", error);
+      // Continue with registration even if password check fails
     }
-  } catch (error) {
-    return {
-      status: 500,
-      message:
-        "Error while checking password security. Please try again later.",
-    };
-  }
 
-  // Step 3: Securely hash the password before saving
-  const securelyHashedPassword = await hashPassword(password);
+    // Step 3: Securely hash the password before saving
+    const securelyHashedPassword = await hashPassword(password);
 
-  // Save the user to the database
-  try {
     // Check if user already exists
-    const existingUser =
-      (await prisma.user.findUnique({
-        where: { mail: email },
-      })) || null;
+    const existingUser = await prisma.user.findUnique({
+      where: { mail: email },
+    });
 
     if (existingUser) {
       return {
         status: 409,
         message: "Email already exists. Please log in or use another email.",
+        success: false
       };
     }
 
@@ -96,39 +101,60 @@ export const registerUser = async (
         role: "user",
       },
     });
+
+    return {
+      status: 200,
+      message: "User registered successfully.",
+      success: true
+    };
   } catch (error) {
     console.error("Error creating user:", error);
     return {
       status: 500,
-      message: "Failed to create user . Please try again.",
+      message: "Failed to create user. Please try again.",
+      success: false
+    };
+  }
+};
+
+/**
+ * Authenticates a user and creates a session
+ * @param formData - Form data containing email and password
+ * @returns Promise resolving to an auth response
+ */
+export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
+  const email = formData.get("mail") as string;
+  const password = formData.get("password") as string;
+
+  if (!email || !password) {
+    return { 
+      status: 400, 
+      message: "Please provide both email and password.",
+      success: false
     };
   }
 
-  return {
-    status: 200,
-    message: "User registered successfully.",
-  };
-};
-
-export const loginUser = async (formData: FormData) => {
-  const mail = formData.get("mail") as string;
-  const password = formData.get("password") as string;
-
-  if (!mail || !password) {
-    return { status: 400, message: "Please provide both email and password." };
-  }
-
   try {
-    const user = await prisma.user.findFirst({ where: { mail } });
+    const user = await prisma.user.findUnique({ 
+      where: { mail: email } 
+    });
 
     if (!user) {
-      return { status: 400, message: "kindly register before signing in" };
+      return { 
+        status: 404, 
+        message: "Account not found. Please register first.",
+        success: false
+      };
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      return { status: 400, message: "Invalid credentials" };
+      return { 
+        status: 401, 
+        message: "Invalid credentials. Please check your email and password.",
+        success: false
+      };
     }
 
     // Generate JWT token
@@ -141,15 +167,17 @@ export const loginUser = async (formData: FormData) => {
     // Set the token in a cookie
     await setCookie(token);
 
-    console.log(token);
-
-    // Redirect to the dashboard
-    // redirect("/dashboard");
+    return {
+      status: 200,
+      message: "Login successful",
+      success: true
+    };
   } catch (error) {
     console.error("Login error:", error);
     return {
       status: 500,
       message: "An error occurred during login. Please try again.",
+      success: false
     };
   }
 };

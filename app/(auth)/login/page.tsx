@@ -17,7 +17,7 @@ const Page = () => {
     try {
       await loginUser(formData);
       toast.success("Login successful");
-      window.location.href = "/dashboard";
+      window.location.href = "/homepage";
     } catch (error) {
       toast.error("Login failed. Please check your credentials.");
     } finally {
