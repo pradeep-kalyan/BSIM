@@ -39,12 +39,18 @@ export const generateToken = async (
 };
 
 // Verify token
-export const verifyToken = async (token: string): Promise<JWTPayload> => {
+export const verifyToken = async (
+  token: string
+): Promise<JWTPayload | null> => {
   try {
+    if (!token) {
+      return null;
+    }
     const decoded = jwt.verify(token, getJwtSecret()) as JWTPayload;
     return decoded;
   } catch (error) {
-    throw new Error("Invalid Token");
+    const status = "Invalid Token";
+    return null;
   }
 };
 
@@ -75,13 +81,16 @@ export const getCookie = async (): Promise<string | null> => {
 };
 
 // Logout handler
-export const logoutHandler = async (): Promise<void> => {
+export const logoutHandler = async (): Promise<string> => {
   try {
     await deleteCookie();
     console.log("User logged out and token cookie deleted.");
+    const status = "logout successful";
+    return status;
   } catch (error) {
     console.error("Logout failed:", error);
-    throw new Error("Error during logout");
+    const status = `logout failed ${error}`;
+    return status;
   }
 };
 
@@ -94,4 +103,3 @@ export const deleteCookie = async (): Promise<void> => {
     throw new Error("Error deleting cookie");
   }
 };
-    

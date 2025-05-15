@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Inputbox from "../../../ui/Input-Box";
 import PasswordInput from "../../../ui/PasswordInput";
 import { toast, ToastContainer } from "react-toastify";
@@ -14,6 +14,7 @@ const Page = () => {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [disabled, setDisabled] = React.useState(false);
   const [isExiting, setIsExiting] = React.useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (formData: FormData) => {
@@ -25,13 +26,15 @@ const Page = () => {
     const confirmPassword = formData.get("confirmPassword")?.toString() || "";
 
     if (!userName || !mail || !password || !confirmPassword) {
-      toast.error("Please fill all the fields");
+      // toast.error("Please fill all the fields");
+      setError("please fill all the fields");
       setDisabled(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      // toast.error("Passwords do not match");
+      setError("password does not match");
       setDisabled(false);
       return;
     }
@@ -52,9 +55,11 @@ const Page = () => {
       }, 600); // Matches the animation duration
       return;
     } else if (response.status === 409) {
-      toast.error("Email already exists. Please log in or use another email.");
+      // toast.error("Email already exists. Please log in or use another email.");
+      setError("Email already exists. Please log in or use another email.");
     } else {
-      toast.error(response.message);
+      // toast.error(response.message);
+      setError("response.message");
     }
 
     setDisabled(false);
@@ -115,6 +120,9 @@ const Page = () => {
               setShowPassword={setShowConfirmPassword}
               name={"confirmPassword"}
             />
+            {error && (
+              <h2 className="text-md text-red-500 font-mono">{error}</h2>
+            )}
             <div className="w-full mt-1 flex justify-center items-center">
               <button
                 className={`bg-blue-600 cursor-pointer text-white w-[50%] px-4 py-3 rounded-lg text-base font-semibold cupo transition-all transform hover:scale-[1.02] ${
