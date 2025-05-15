@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import Inputbox from "../../../ui/Input-Box";
 import PasswordInput from "../../../ui/PasswordInput";
 import { loginUser } from "@/app/_actions/auth";
@@ -24,24 +25,25 @@ const Page = () => {
     }
   };
 
-  const handleLogin = async (formData: FormData) => {
-    const response = await loginUser(formData);
-
-    if (response.status === 200 && response.redirectUrl) {
-      window.location.href = response.redirectUrl; // Perform the redirection
-    } else {
-      console.error(response.message);
-    }
-  };
-
   return (
-    <div className="flex group justify-center items-center w-full h-screen flex-col gap-5 overflow-auto bg-slate-900">
-      <div className="z-10 flex flex-col justify-center items-center gap-5 bg-slate-800/90 border border-slate-700 transition-all ease-in-out duration-300 rounded-xl shadow-2xl max-w-[90%] sm:w-[500px]">
-        <ToastContainer position="top-right" />
-        <div className="flex items-center gap-2 mt-8 bg-slate-700/50 px-5 py-2 rounded-full -translate-y-6 shadow-md">
+    <div className="flex justify-center items-center w-full h-screen bg-slate-900 overflow-auto px-4">
+      <ToastContainer position="top-right" />
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="z-10 flex flex-col justify-center items-center gap-5 bg-slate-800/90 border border-slate-700 transition-all ease-in-out duration-300 rounded-xl shadow-2xl w-full sm:w-[500px]"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="flex items-center gap-2 mt-8 bg-slate-700/50 px-5 py-2 rounded-full shadow-md"
+        >
           <LogIn className="w-6 h-6 text-blue-400" />
-          <h2 className="text-xl font-bold text-center text-white">Sign In</h2>
-        </div>
+          <h2 className="text-xl font-bold text-white">Sign In</h2>
+        </motion.div>
+
         <div className="w-full flex flex-col justify-start items-center rounded-xl px-4 py-3 -mt-4">
           <form
             className="flex flex-col justify-start items-center w-full h-full gap-5"
@@ -59,6 +61,7 @@ const Page = () => {
               showPassword={showPassword}
               setShowPassword={setShowPassword}
             />
+
             <div className="w-full mt-1 flex justify-center items-center">
               <button
                 className={`bg-blue-600 text-white text-center px-4 py-3 rounded-lg text-base font-semibold transition-all transform hover:scale-[1.02] w-[50%] cursor-pointer ${
@@ -102,6 +105,7 @@ const Page = () => {
               </button>
             </div>
           </form>
+
           <div className="w-full border-t border-slate-700 mt-5 pt-4">
             <div className="flex flex-col sm:flex-row justify-center items-center gap-2 text-sm">
               <h2 className="text-white/80">Don't have an account?</h2>
@@ -114,7 +118,7 @@ const Page = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

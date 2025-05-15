@@ -5,13 +5,16 @@ import PasswordInput from "../../../ui/PasswordInput";
 import { toast, ToastContainer } from "react-toastify";
 import { registerUser } from "../../_actions/auth";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { UserPlus } from "lucide-react"; // Import UserPlus icon
+import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
+import { UserPlus } from "lucide-react";
 
 const Page = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [disabled, setDisabled] = React.useState(false);
+  const [isExiting, setIsExiting] = React.useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (formData: FormData) => {
     setDisabled(true);
@@ -21,7 +24,6 @@ const Page = () => {
     const password = formData.get("password")?.toString() || "";
     const confirmPassword = formData.get("confirmPassword")?.toString() || "";
 
-    // Basic Validation
     if (!userName || !mail || !password || !confirmPassword) {
       toast.error("Please fill all the fields");
       setDisabled(false);
@@ -43,7 +45,12 @@ const Page = () => {
 
     if (response.status === 200) {
       toast.success("User Created Successfully");
-      redirect("/login");
+      setTimeout(() => {}, 200);
+      setIsExiting(true);
+      setTimeout(() => {
+        router.push("/login");
+      }, 600); // Matches the animation duration
+      return;
     } else if (response.status === 409) {
       toast.error("Email already exists. Please log in or use another email.");
     } else {
@@ -55,7 +62,23 @@ const Page = () => {
 
   return (
     <div className="flex group justify-center items-center w-full h-screen flex-col gap-5 overflow-auto bg-slate-900">
-      <div className="z-10 flex flex-col justify-center items-center gap-5 bg-slate-800/90 border border-slate-700 transition-all ease-in-out duration-300 rounded-xl shadow-2xl max-w-[90%] sm:w-[500px]">
+      <motion.div
+        initial={{ x: -1000, rotate: -180, opacity: 0.3 }}
+        animate={
+          isExiting
+            ? { x: 1000, rotate: -180, opacity: 0 }
+            : { x: 0, rotate: 0, opacity: 1 }
+        }
+        transition={{
+          type: "spring",
+          stiffness: 40,
+          damping: 20,
+          mass: 0.3,
+          duration: 0.6,
+        }}
+        whileFocus={{ scale: 1.4 }}
+        className="z-10 flex flex-col justify-center items-center gap-5 bg-slate-800/90 border border-slate-700 transition-all ease-in-out duration-300 rounded-xl shadow-2xl max-w-[90%] sm:w-[500px]"
+      >
         <ToastContainer position="top-right" />
         <div className="flex items-center gap-2 mt-8 bg-slate-700/50 px-5 py-2 rounded-full -translate-y-6 shadow-md">
           <UserPlus className="w-6 h-6 text-blue-400" />
@@ -94,7 +117,7 @@ const Page = () => {
             />
             <div className="w-full mt-1 flex justify-center items-center">
               <button
-                className={`bg-blue-600 text-white w-[50%] px-4 py-3 rounded-lg text-base font-semibold cupo transition-all transform hover:scale-[1.02] ${
+                className={`bg-blue-600 cursor-pointer text-white w-[50%] px-4 py-3 rounded-lg text-base font-semibold cupo transition-all transform hover:scale-[1.02] ${
                   disabled
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-blue-500 hover:shadow-lg"
@@ -147,7 +170,7 @@ const Page = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
