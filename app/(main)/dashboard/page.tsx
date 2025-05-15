@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 const Page = async () => {
   const token = (await getCookie()) as string;
   const user = await verifyToken(token);
-  if (!user){
-    redirect('/login')
+  if (!user) {
+    redirect("/login");
   }
 
   return (

@@ -59,7 +59,7 @@ const Page = () => {
       setError("Email already exists. Please log in or use another email.");
     } else {
       // toast.error(response.message);
-      setError("response.message");
+      setError(response.message);
     }
 
     setDisabled(false);
@@ -68,29 +68,23 @@ const Page = () => {
   return (
     <div className="flex group justify-center items-center w-full h-screen flex-col gap-5 overflow-auto bg-slate-900">
       <motion.div
-        initial={{ x: -1000, rotate: -180, opacity: 0.3 }}
-        animate={
-          isExiting
-            ? { x: 1000, rotate: -180, opacity: 0 }
-            : { x: 0, rotate: 0, opacity: 1 }
-        }
-        transition={{
-          type: "spring",
-          stiffness: 40,
-          damping: 20,
-          mass: 0.3,
-          duration: 0.6,
-        }}
-        whileFocus={{ scale: 1.4 }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
         className="z-10 flex flex-col justify-center items-center gap-5 bg-slate-800/90 border border-slate-700 transition-all ease-in-out duration-300 rounded-xl shadow-2xl max-w-[90%] sm:w-[500px]"
       >
         <ToastContainer position="top-right" />
-        <div className="flex items-center gap-2 mt-8 bg-slate-700/50 px-5 py-2 rounded-full -translate-y-6 shadow-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="flex items-center gap-2 mt-8 bg-slate-700/50 px-5 py-2 rounded-full -translate-y-6 shadow-md"
+        >
           <UserPlus className="w-6 h-6 text-blue-400" />
           <h2 className="text-xl font-bold text-center text-white">
             Create an Account
           </h2>
-        </div>
+        </motion.div>
         <div className="w-full flex flex-col justify-start items-center rounded-xl px-4 py-3 -mt-4">
           <form
             className="flex flex-col justify-start items-center w-full h-full gap-5"
@@ -121,7 +115,7 @@ const Page = () => {
               name={"confirmPassword"}
             />
             {error && (
-              <h2 className="text-md text-red-500 font-mono">{error}</h2>
+              <h2 className="text-md text-red-500 font-mono text-center p-3">{error}</h2>
             )}
             <div className="w-full mt-1 flex justify-center items-center">
               <button
