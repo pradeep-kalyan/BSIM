@@ -5,7 +5,7 @@ import Link from "next/link";
 import { checkAuthStatus } from "@/app/_actions/auth_actions";
 import { JWTPayload } from "@/app/functions/jwt";
 import LogoutBtn from "../(auth)/_components/Logout";
-import { motion, AnimatePresence,LayoutGroup } from "motion/react";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import {
   HomeIcon,
   ChartBarIcon,
@@ -236,14 +236,20 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main Content */}
 
-      <div className="md:w-4/5 h-full overflow-auto">
+      <div className="md:w-4/5 h-full flex">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
             initial={{ opacity: 0, x: 500, y: 0 }}
             animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, y: 0, x: -500 }}
-            transition={{ duration: 0.5, type: "spring" , stiffness:50 , damping:20, mass:2 }}
+            // exit={{ opacity: 0, y: 0, x: 0 }}
+            transition={{
+              duration: 0.5,
+              type: "spring",
+              stiffness: 50,
+              damping: 20,
+              mass: 2,
+            }}
             className="w-full h-full bg-red-900"
           >
             {children}
