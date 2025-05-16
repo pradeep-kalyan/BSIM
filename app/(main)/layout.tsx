@@ -5,6 +5,7 @@ import Link from "next/link";
 import { checkAuthStatus } from "@/app/_actions/auth_actions";
 import { JWTPayload } from "@/app/functions/jwt";
 import LogoutBtn from "../(auth)/_components/Logout";
+import { motion, AnimatePresence,LayoutGroup } from "motion/react";
 import {
   HomeIcon,
   ChartBarIcon,
@@ -121,27 +122,27 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const managementLinks: NavLink[] = [
     {
       name: "Human Resource",
-      link: "management/hr",
+      link: "/management/hr",
       icon: <UsersIcon />,
     },
     {
       name: "Marketing",
-      link: "management/marketing",
+      link: "/management/marketing",
       icon: <MegaphoneIcon />,
     },
     {
       name: "Production",
-      link: "management/production",
+      link: "/management/production",
       icon: <CogIcon />,
     },
     {
       name: "Finance",
-      link: "management/finance",
+      link: "/management/finance",
       icon: <BanknoteArrowDown />,
     },
     {
       name: "R&D",
-      link: "management/rd",
+      link: "/management/rd",
       icon: <BeakerIcon />,
     },
   ];
@@ -191,9 +192,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="w-full h-full flex justify-between">
-      {/* Sidebar */}
-      <div className="md:w-1/5 overflow-y-auto h-full bg-slate-800/80 border-r border-slate-700 flex flex-col">
-        {/* App title */}
+      <motion.div
+        initial={{ x: -500, y: 0, opacity: 0.2 }}
+        animate={{ x: 0, y: 0, opacity: 1 }}
+        exit={{ x: 500, y: 0, opacity: 0.2 }}
+        transition={{ duration: 1.5, type: "spring" }}
+        className="md:w-1/5 overflow-y-auto h-full bg-slate-800/80 border-r border-slate-700 flex flex-col"
+      >
         <div className="flex flex-col h-full">
           <div className="p-6 text-center border-b border-slate-700">
             <h1 className="text-white text-2xl font-semibold">BusinessSim</h1>
@@ -204,8 +209,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             )}
           </div>
 
-          {/* Navigation sections */}
-          <div className="flex-1 overflow-y-auto py-4 space-y-2">
+          <div className="flex-1 overflow-y-auto py-1">
             <NavSection
               title="MAIN"
               links={mainNavLinks}
@@ -228,11 +232,23 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <LogoutBtn />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Content */}
-      <div className="md:w-4/5 h-screen overflow-auto bg-slate-900">
-        {children}
+
+      <div className="md:w-4/5 h-full overflow-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, x: 500, y: 0 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: 0, x: -500 }}
+            transition={{ duration: 0.5, type: "spring" , stiffness:50 , damping:20, mass:2 }}
+            className="w-full h-full bg-red-900"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
