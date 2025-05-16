@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "gitpush": "git add . && git commit -m 'commit' && git push"
+    "gitpush": "read -p 'Commit message: ' msg && git add . && git commit -m \"$msg\" && git push"
   },
   "dependencies": {
     "@prisma/client": "6.7.0",
