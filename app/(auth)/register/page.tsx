@@ -115,7 +115,9 @@ const Page = () => {
               name={"confirmPassword"}
             />
             {error && (
-              <h2 className="text-md text-red-500 font-mono text-center p-3">{error}</h2>
+              <h2 className="text-md text-red-500 font-mono text-center p-3">
+                {error}
+              </h2>
             )}
             <div className="w-full mt-1 flex justify-center items-center">
               <button

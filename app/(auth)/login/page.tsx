@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "motion/react";
+import { useRouter } from "next/navigation";
 import Inputbox from "../../../ui/Input-Box";
 import PasswordInput from "../../../ui/PasswordInput";
 import { loginUser } from "@/app/_actions/auth";
@@ -11,13 +12,21 @@ import { LogIn } from "lucide-react";
 const Page = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (formData: FormData) => {
     setDisabled(true);
     try {
-      await loginUser(formData);
-      toast.success("Login successful");
-      window.location.href = "/homepage";
+      const result = await loginUser(formData);
+      if (result.success) {
+        toast.success("Login successful");
+        // Use router.push instead of window.location for better Next.js integration
+        router.push("/homepage");
+      } else {
+        toast.error(
+          result.message || "Login failed. Please check your credentials."
+        );
+      }
     } catch (error) {
       toast.error("Login failed. Please check your credentials.");
     } finally {

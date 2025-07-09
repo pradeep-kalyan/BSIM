@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
@@ -14,12 +7,187 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id         String   @id @default(uuid())
-  name       String
-  mail       String   @unique
-  password   String
-  role       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+model user {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password_hash String
+  role          String   @default("user")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  simulations simulation[]
+  companies   company[]
+
+  @@map("users")
+}
+
+model simulation {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  config         String   @default("default")
+  current_period Int      @default(0)
+  status         String   @default("active")
+  created_by     String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  creator           user               @relation(fields: [created_by], references: [id])
+  companies         company[]
+  market_conditions market_condition[]
+  events            event[]
+
+  @@map("simulations")
+}
+
+model company {
+  id                String   @id @default(cuid())
+  simulation_id     String
+  user_id           String
+  name              String
+  description       String?
+  logo_url          String?
+  cash_balance      Float    @default(0)
+  total_assets      Float    @default(0)
+  total_liabilities Float    @default(0)
+  credit_rating     String?
+  brand_value       Float    @default(0)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // Relations
+  simulation          simulation           @relation(fields: [simulation_id], references: [id])
+  user                user                 @relation(fields: [user_id], references: [id])
+  products            product[]
+  decisions           decision[]
+  performance_results performance_result[]
+
+  @@map("companies")
+}
+
+model product {
+  id                    String   @id @default(cuid())
+  company_id            String
+  name                  String
+  description           String?
+  category              String
+  quality_rating        Float    @default(0)
+  innovation_rating     Float    @default(0)
+  sustainability_rating Float    @default(0)
+  production_cost       Float    @default(0)
+  selling_price         Float    @default(0)
+  inventory_level       Int      @default(0)
+  production_capacity   Int      @default(2000)
+  development_cost      Float    @default(0)
+  marketing_budget      Float    @default(0)
+  status                String   @default("development")
+  launch_period         Int?
+  discontinue_period    Int?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  // Relations
+  company              company               @relation(fields: [company_id], references: [id])
+  product_performances product_performance[]
+
+  @@map("products")
+}
+
+model decision {
+  id            String    @id @default(cuid())
+  company_id    String
+  period        Int
+  type          String
+  decision_data String // JSON string for flexibility
+  submitted_at  DateTime  @default(now())
+  processed     Boolean   @default(false)
+  processed_at  DateTime?
+
+  // Relations
+  company company @relation(fields: [company_id], references: [id])
+
+  @@map("decisions")
+}
+
+model market_condition {
+  id                        String   @id @default(cuid())
+  simulation_id             String
+  period                    Int
+  total_market_size         Float
+  segment_distribution      String // JSON string
+  economic_indicators       String // JSON string
+  consumer_preferences      String // JSON string
+  technology_trends         String // JSON string
+  sustainability_importance Float
+  created_at                DateTime @default(now())
+
+  // Relations
+  simulation simulation @relation(fields: [simulation_id], references: [id])
+
+  @@unique([simulation_id, period])
+  @@map("market_conditions")
+}
+
+model performance_result {
+  id                    String   @id @default(cuid())
+  company_id            String
+  period                Int
+  revenue               Float    @default(0)
+  costs                 Float    @default(0)
+  profit                Float    @default(0)
+  market_share          Float    @default(0)
+  cash_flow             Float    @default(0)
+  roi                   Float    @default(0)
+  customer_satisfaction Float    @default(0)
+  employee_satisfaction Float    @default(0)
+  sustainability_score  Float    @default(0)
+  innovation_score      Float    @default(0)
+  brand_value_change    Float    @default(0)
+  created_at            DateTime @default(now())
+
+  // Relations
+  company company @relation(fields: [company_id], references: [id])
+
+  @@unique([company_id, period])
+  @@map("performance_results")
+}
+
+model product_performance {
+  id                    String   @id @default(cuid())
+  product_id            String
+  period                Int
+  sales_volume          Int      @default(0)
+  revenue               Float    @default(0)
+  costs                 Float    @default(0)
+  profit                Float    @default(0)
+  market_share          Float    @default(0)
+  customer_satisfaction Float    @default(0)
+  created_at            DateTime @default(now())
+
+  // Relations
+  product product @relation(fields: [product_id], references: [id])
+
+  @@unique([product_id, period])
+  @@map("product_performances")
+}
+
+model event {
+  id                 String   @id @default(cuid())
+  simulation_id      String
+  period             Int
+  type               String
+  name               String
+  description        String?
+  impact_area        String
+  impact_strength    Float
+  affected_companies String // JSON string of company IDs
+  created_at         DateTime @default(now())
+
+  // Relations
+  simulation simulation @relation(fields: [simulation_id], references: [id])
+
+  @@map("events")
 }

@@ -37,7 +37,7 @@ export const registerUser = async (
     return {
       status: 400,
       message: "Name, email, and password are required.",
-      success: false
+      success: false,
     };
   }
 
@@ -68,7 +68,7 @@ export const registerUser = async (
           status: 400,
           message:
             "This password has been found in a data breach. Please choose a more secure password.",
-          success: false
+          success: false,
         };
       }
     } catch (error) {
@@ -81,14 +81,14 @@ export const registerUser = async (
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { mail: email },
+      where: { email: email },
     });
 
     if (existingUser) {
       return {
         status: 409,
         message: "Email already exists. Please log in or use another email.",
-        success: false
+        success: false,
       };
     }
 
@@ -96,8 +96,8 @@ export const registerUser = async (
     await prisma.user.create({
       data: {
         name: name,
-        mail: email,
-        password: securelyHashedPassword,
+        email: email,
+        password_hash: securelyHashedPassword,
         role: "user",
       },
     });
@@ -105,14 +105,14 @@ export const registerUser = async (
     return {
       status: 200,
       message: "User registered successfully.",
-      success: true
+      success: true,
     };
   } catch (error) {
     console.error("Error creating user:", error);
     return {
       status: 500,
       message: "Failed to create user. Please try again.",
-      success: false
+      success: false,
     };
   }
 };
@@ -127,33 +127,33 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
   const password = formData.get("password") as string;
 
   if (!email || !password) {
-    return { 
-      status: 400, 
+    return {
+      status: 400,
       message: "Please provide both email and password.",
-      success: false
+      success: false,
     };
   }
 
   try {
-    const user = await prisma.user.findUnique({ 
-      where: { mail: email } 
+    const user = await prisma.user.findUnique({
+      where: { email: email },
     });
 
     if (!user) {
-      return { 
-        status: 404, 
+      return {
+        status: 404,
         message: "Account not found. Please register first.",
-        success: false
+        success: false,
       };
     }
 
-    const isPasswordValid = await comparePassword(password, user.password);
+    const isPasswordValid = await comparePassword(password, user.password_hash);
 
     if (!isPasswordValid) {
-      return { 
-        status: 401, 
+      return {
+        status: 401,
         message: "Invalid credentials. Please check your email and password.",
-        success: false
+        success: false,
       };
     }
 
@@ -170,14 +170,14 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
     return {
       status: 200,
       message: "Login successful",
-      success: true
+      success: true,
     };
   } catch (error) {
     console.error("Login error:", error);
     return {
       status: 500,
       message: "An error occurred during login. Please try again.",
-      success: false
+      success: false,
     };
   }
 };
