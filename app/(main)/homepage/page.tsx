@@ -10,7 +10,7 @@ const Page = async () => {
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-center bg-red-500 gap-6 py-8">
-      <div className="max-w-full max-h-20">{data?.companies}</div>
+      <div className="max-w-full max-h-20"></div>
     </div>
   );
 };

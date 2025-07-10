@@ -2,9 +2,8 @@ import React from "react";
 import Inputbox from "@/ui/Input-Box";
 import createSim from "@/app/_actions/createSim";
 import { revalidatePath } from "next/cache";
-import { simulation } from "@prisma/client";
 
-const CreateSim = () => {
+const CreateCom = () => {
   return (
     <div className="w-full h-screen m-5">
       <h2 className="text-left text-2xl text-white/30 ">Create Simulation</h2>
@@ -29,4 +28,4 @@ const CreateSim = () => {
   );
 };
 
-export default CreateSim;
+export default CreateCom;
