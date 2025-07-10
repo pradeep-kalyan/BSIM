@@ -19,6 +19,7 @@ import {
   TagIcon,
   PlusCircleIcon,
   ArrowRight,
+  PlusCircle,
 } from "lucide-react";
 
 interface MainLayoutProps {
@@ -43,7 +44,7 @@ const NavSection = ({
   links: NavLink[];
   currentPath: string;
 }) => (
-  <div className="flex flex-col gap-2 px-4 mb-6">
+  <div className="flex flex-col gap-2 px-4 mb-6 w-full h-screen ">
     <p className="text-slate-400 text-sm font-semibold px-4 py-2">{title}</p>
     {links.map((navItem) => (
       <Link href={navItem.link} key={navItem.name}>
@@ -98,65 +99,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // Main navigation links with icons
   const mainNavLinks: NavLink[] = [
     {
-      name: "Dashboard",
-      link: "/homepage",
-      icon: <HomeIcon />,
-    },
-    {
-      name: "Performance",
-      link: "/performance",
-      icon: <ChartBarIcon />,
-    },
-    {
-      name: "Market",
-      link: "/market",
-      icon: <ShoppingBagIcon />,
-    },
-    {
-      name: "Profile",
-      link: "/profile",
-      icon: <UserIcon />,
-    },
-  ];
-
-  const managementLinks: NavLink[] = [
-    {
-      name: "Human Resource",
-      link: "/management/hr",
-      icon: <UsersIcon />,
-    },
-    {
-      name: "Marketing",
-      link: "/management/marketing",
-      icon: <MegaphoneIcon />,
-    },
-    {
-      name: "Production",
-      link: "/management/production",
-      icon: <CogIcon />,
-    },
-    {
-      name: "Finance",
-      link: "/management/finance",
-      icon: <BanknoteArrowDown />,
-    },
-    {
-      name: "R&D",
-      link: "/management/rd",
-      icon: <BeakerIcon />,
-    },
-  ];
-
-  const productLinks: NavLink[] = [
-    {
-      name: "Product Catalog",
-      link: "/products/catalog",
-      icon: <TagIcon />,
-    },
-    {
-      name: "New Product",
-      link: "/products/create",
-      icon: <PlusCircleIcon />,
+      name: "Simulations",
+      link: "/simulations",
+      icon: <PlusCircle />,
     },
   ];
 
@@ -191,15 +136,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }
 
   return (
-    <div className="w-full h-full flex justify-between">
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
       <motion.div
         initial={{ x: -500, y: 0, opacity: 0.2 }}
         animate={{ x: 0, y: 0, opacity: 1 }}
         exit={{ x: 500, y: 0, opacity: 0.2 }}
         transition={{ duration: 1.5, type: "spring" }}
-        className="md:w-1/5 overflow-y-auto h-full bg-slate-800/80 border-r border-slate-700 flex flex-col"
+        className="md:w-1/5 h-full bg-slate-800/80 border-r border-slate-700"
       >
-        <div className="flex flex-col h-full">
+        {/* Sidebar content */}
+        <div className="flex flex-col h-full w-full">
           <div className="p-6 text-center border-b border-slate-700">
             <h1 className="text-white text-2xl font-semibold">BusinessSim</h1>
             {user && (
@@ -209,20 +156,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto py-1">
+          <div className="flex w-full h-full flex-col">
             <NavSection
               title="MAIN"
               links={mainNavLinks}
-              currentPath={pathname}
-            />
-            <NavSection
-              title="MANAGEMENT"
-              links={managementLinks}
-              currentPath={pathname}
-            />
-            <NavSection
-              title="PRODUCTS"
-              links={productLinks}
               currentPath={pathname}
             />
           </div>
@@ -235,14 +172,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </motion.div>
 
       {/* Main Content */}
-
-      <div className="md:w-4/5 h-full flex">
+      <div className="md:w-4/5 flex-grow h-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
             initial={{ opacity: 0, x: 500, y: 0 }}
             animate={{ opacity: 1, y: 0, x: 0 }}
-            // exit={{ opacity: 0, y: 0, x: 0 }}
             transition={{
               duration: 0.5,
               type: "spring",
@@ -250,7 +185,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               damping: 20,
               mass: 2,
             }}
-            className="w-full h-full"
+            className="w-full min-h-screen "
           >
             {children}
           </motion.div>

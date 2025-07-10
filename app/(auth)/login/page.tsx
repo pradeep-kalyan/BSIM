@@ -21,7 +21,7 @@ const Page = () => {
       if (result.success) {
         toast.success("Login successful");
         // Use router.push instead of window.location for better Next.js integration
-        router.push("/homepage");
+        router.push("/simulations");
       } else {
         toast.error(
           result.message || "Login failed. Please check your credentials."
@@ -61,6 +61,7 @@ const Page = () => {
             <Inputbox
               label={"Email Address"}
               name={"mail"}
+              type={"email"}
               placeholder_text={"Enter your email address"}
             />
             <PasswordInput

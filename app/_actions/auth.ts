@@ -80,16 +80,17 @@ export const registerUser = async (
     const securelyHashedPassword = await hashPassword(password);
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email },
-    });
-
-    if (existingUser) {
-      return {
-        status: 409,
-        message: "Email already exists. Please log in or use another email.",
-        success: false,
-      };
+    if ((await prisma.user.count()) > 0 && await prisma.user.count != 0) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: email },
+      });
+      if (existingUser) {
+        return {
+          status: 409,
+          message: "Email already exists. Please log in or use another email.",
+          success: false,
+        };
+      }
     }
 
     // Create new user if email doesn't exist
