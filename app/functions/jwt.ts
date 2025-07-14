@@ -9,6 +9,7 @@ export interface JWTPayload {
   id: string;
   name: string;
   role: string;
+  email:string;
   iat?: number; // issued at timestamp (added by JWT)
   exp?: number; // expiry timestamp (added by JWT)
 }
@@ -18,14 +19,14 @@ export interface JWTPayload {
  * @returns The encoded secret key as Uint8Array
  * @throws Error if JWT_SECRET is not set
  */
-export const getJwtSecret = async (): Uint8Array => {
+export const getJwtSecret = async (): Promise<Uint8Array> => {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.trim() === "") {
-    console.error("JWT_SECRET environment variable is not set");
     throw new Error("JWT secret is required for authentication");
   }
   return new TextEncoder().encode(secret);
 };
+
 
 /**
  * Generates a JWT token for the given user payload
@@ -38,7 +39,6 @@ export const generateToken = async (
   try {
     // Set token expiry to 30 minutes
     const expirationTime = Math.floor(Date.now() / 1000) + 30 * 60;
-
     // Get the JWT secret first, then use it to sign
     const secret = await getJwtSecret();
     const token = await new SignJWT({ ...payload })
@@ -74,7 +74,7 @@ export const verifyToken = async (
 
     const secret = await getJwtSecret();
     const { payload } = await jwtVerify(token, secret);
-    return payload as JWTPayload;
+    return payload as unknown as JWTPayload;
   } catch (error) {
     console.error("Token verification failed:", error);
     return null;
@@ -147,3 +147,27 @@ export const logoutHandler = async (): Promise<string> => {
     );
   }
 };
+
+export const getCurrentUser = async (): Promise<JWTPayload | null> => {
+  try {
+    const cookieStore = cookies();
+    const token = await getTokenFromCookie();
+
+    if (!token) return null;
+
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(process.env.JWT_SECRET!)
+    );
+
+    return {
+      id: payload.id as string,
+      name: payload.name as string,
+      email: payload.email as string,
+      role: payload.role as string,
+    };
+  } catch (error) {
+    console.error("Error verifying JWT:", error);
+    return null;
+  }
+}
