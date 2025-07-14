@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { checkAuthStatus } from "@/app/_actions/auth_actions";
+import { checkAuthStatus } from "@/app/_actions/auth";
 import { JWTPayload } from "@/app/functions/jwt";
 import LogoutBtn from "../(auth)/_components/Logout";
 import { motion, AnimatePresence, LayoutGroup } from "motion/react";

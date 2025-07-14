@@ -5,7 +5,10 @@ import { comparePassword, hashPassword } from "../functions/Hash";
 import crypto from "crypto";
 import axios from "axios";
 import prisma from "../functions/prisma";
-import { generateToken, setCookie } from "../functions/jwt";
+import { deleteCookie, generateToken, setCookie } from "../functions/jwt";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { getAuthenticatedUser, JWTPayload } from "@/app/functions/jwt";
 
 // Type for incoming form data
 export interface RegisterFormData {
@@ -80,7 +83,8 @@ export const registerUser = async (
     const securelyHashedPassword = await hashPassword(password);
 
     // Check if user already exists
-    if ((await prisma.user.count()) > 0 && await prisma.user.count != 0) {
+    const userCount = await prisma.user.count();
+    if (userCount > 0) {
       const existingUser = await prisma.user.findUnique({
         where: { email: email },
       });
@@ -163,6 +167,7 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
       id: user.id,
       name: user.name,
       role: user.role,
+      email: user.email,
     });
 
     // Set the token in a cookie
@@ -182,3 +187,89 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
     };
   }
 };
+
+/**
+ * Handles user logout by clearing the session cookie
+ * @returns Promise resolving to a success message
+ */
+export const logoutUser = async (): Promise<AuthResponse> => {
+  try {
+    await deleteCookie();
+    return {
+      status: 200,
+      message: "Logout successful",
+      success: true,
+    };
+  } catch (error) {
+    console.error("Logout error:", error);
+    return {
+      status: 500,
+      message: "An error occurred during logout. Please try again.",
+      success: false,
+    };
+  }
+};
+
+export async function updateUser(
+  id: string,
+  data: {
+    name?: string;
+    email?: string;
+    password_hash?: string;
+    role?: string;
+  }
+) {
+  try {
+    await prisma.user.update({
+      where: { id },
+      data: {
+        ...data,
+        updated_at: new Date(),
+      },
+    });
+    revalidatePath("/users");
+    revalidatePath(`/users/${id}`);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw new Error("Failed to update user");
+  }
+}
+
+export async function checkAuthStatus(): Promise<JWTPayload> {
+  const user = await getAuthenticatedUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
+}
+
+/**
+ * Gets the current authenticated user
+ * @returns Promise resolving to user data or null if not authenticated
+ */
+export async function getCurrentUser(): Promise<JWTPayload | null> {
+  try {
+    const user = await getAuthenticatedUser();
+    return user;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
+}
+
+/**
+ * Gets the current authenticated user and throws if not found
+ * @returns Promise resolving to user data
+ * @throws Error if user is not authenticated
+ */
+export async function requireCurrentUser(): Promise<JWTPayload> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    throw new Error("Authentication required");
+  }
+
+  return user;
+}

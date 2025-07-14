@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { checkAuthStatus } from "@/app/_actions/auth_actions";
+import { checkAuthStatus } from "@/app/_actions/auth";
 import { JWTPayload } from "@/app/functions/jwt";
 
 const Page = () => {
@@ -44,7 +44,7 @@ const Page = () => {
               </div>
               <div>
                 <p className="text-gray-600">Email</p>
-                <p className="font-medium">{user.email}</p>
+                <p className="font-medium">{user.role}</p>
               </div>
               <div>
                 <p className="text-gray-600">User ID</p>

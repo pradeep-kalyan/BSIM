@@ -8,7 +8,7 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ companies }) => {
   return (
-    <div className="w-full sm:px-6 lg:px-8 py-6 m-5 flex justify-start items-start">
+    <div className="w-full sm:px-6 lg:px-8 py-6 m-5 flex flex-col justify-start items-start">
       <h2 className="text-2xl font-bold text-white mb-6">Companies</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {companies.map((company) => (

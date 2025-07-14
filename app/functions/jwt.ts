@@ -9,6 +9,7 @@ export interface JWTPayload {
   id: string;
   name: string;
   role: string;
+  email: string; // Added email to the payload
   iat?: number; // issued at timestamp (added by JWT)
   exp?: number; // expiry timestamp (added by JWT)
 }
@@ -18,7 +19,7 @@ export interface JWTPayload {
  * @returns The encoded secret key as Uint8Array
  * @throws Error if JWT_SECRET is not set
  */
-export const getJwtSecret = async (): Uint8Array => {
+export const getJwtSecret = async (): Promise<Uint8Array> => {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.trim() === "") {
     console.error("JWT_SECRET environment variable is not set");
@@ -36,8 +37,8 @@ export const generateToken = async (
   payload: Omit<JWTPayload, "iat" | "exp">
 ): Promise<string> => {
   try {
-    // Set token expiry to 30 minutes
-    const expirationTime = Math.floor(Date.now() / 1000) + 30 * 60;
+    // Set token expiry to 1 hour
+    const expirationTime = Math.floor(Date.now() / 1000) + 60 * 60;
 
     // Get the JWT secret first, then use it to sign
     const secret = await getJwtSecret();
@@ -74,7 +75,7 @@ export const verifyToken = async (
 
     const secret = await getJwtSecret();
     const { payload } = await jwtVerify(token, secret);
-    return payload as JWTPayload;
+    return payload as unknown as JWTPayload;
   } catch (error) {
     console.error("Token verification failed:", error);
     return null;
@@ -130,20 +131,4 @@ export const getAuthenticatedUser = async (): Promise<JWTPayload | null> => {
     return null;
   }
   return verifyToken(token);
-};
-
-/**
- * Handles user logout by deleting the auth token cookie
- * @returns Promise resolving to a success message
- */
-export const logoutHandler = async (): Promise<string> => {
-  try {
-    await deleteCookie();
-    return "Logout successful";
-  } catch (error) {
-    console.error("Logout failed:", error);
-    throw new Error(
-      `Logout failed: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
 };

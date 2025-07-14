@@ -2,7 +2,7 @@
 "use client";
 import { LogOut } from "lucide-react";
 import React from "react";
-import { logoutHandler } from "@/app/functions/jwt";
+import { logoutUser } from "@/app/_actions/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -17,7 +17,7 @@ const Logout = () => {
    */
   const handleLogout = async () => {
     try {
-      await logoutHandler();
+      await logoutUser();
       toast.info("Logout successful");
 
       // Short delay to allow toast to display before redirect

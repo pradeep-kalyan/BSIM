@@ -1,6 +1,10 @@
 import prisma from "@/app/functions/prisma";
 import React from "react";
 import Card from "../_components/ComCard";
+import CreateCom from "../_components/CreateCom";
+import { getServerUser } from "@/app/context/ServerUserContext";
+import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: {
@@ -9,22 +13,47 @@ interface PageProps {
 }
 
 export default async function Page({ params }: PageProps) {
-  const { simulationID } = await params; // Await the entire params object first
+  const { simulationID } = await params;
+  const user = await getServerUser();
 
-  const data = await prisma.simulation.findUnique({
+  // If user is not authenticated, they shouldn't reach here due to middleware
+  // but let's handle it as a safety measure
+  if (!user) {
+    redirect("/login");
+  }
+
+  // First, check if the simulation exists at all
+  const simulation = await prisma.simulation.findUnique({
     where: { id: simulationID },
     include: {
       companies: true,
     },
   });
 
+  // If simulation doesn't exist, return 404
+  if (!simulation) {
+    notFound();
+  }
+
+  // If simulation exists but user is not the owner, redirect to simulations page
+  if (simulation.created_by !== user.id) {
+    redirect("/simulations");
+  }
+
+  const data = simulation;
+
   return (
     <div className="min-h-screen flex flex-col justify-start items-start p-8 bg-slate-900 text-white text-xl font-medium">
-      <h2>Welcome to {data?.name}</h2>
-      {data && data.companies && data.companies.length > 0 ? (
-        <Card companies={data?.companies || []} />
+      <div className="flex justify-between w-full h-fit m-3 p-3">
+        <h2>Welcome to {data.name}</h2>
+      </div>
+      {data.companies && data.companies.length > 0 ? (
+        <>
+          <Card companies={data.companies} />
+          <CreateCom />
+        </>
       ) : (
-        
+        <CreateCom />
       )}
     </div>
   );

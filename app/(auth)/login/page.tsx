@@ -8,11 +8,13 @@ import { loginUser } from "@/app/_actions/auth";
 import { toast, ToastContainer } from "react-toastify";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
+import { useAuth } from "@/app/context/AuthContext";
 
 const Page = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const router = useRouter();
+  const { checkAuth } = useAuth();
 
   const handleSubmit = async (formData: FormData) => {
     setDisabled(true);
@@ -20,6 +22,8 @@ const Page = () => {
       const result = await loginUser(formData);
       if (result.success) {
         toast.success("Login successful");
+        // Check auth status to update the context
+        await checkAuth();
         // Use router.push instead of window.location for better Next.js integration
         router.push("/simulations");
       } else {
