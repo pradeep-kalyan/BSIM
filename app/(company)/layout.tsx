@@ -1,81 +1,22 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { checkAuthStatus } from "@/app/_actions/auth_actions";
 import { JWTPayload } from "@/app/functions/jwt";
 import LogoutBtn from "../(auth)/_components/Logout";
-import { motion, AnimatePresence, LayoutGroup } from "motion/react";
-import {
-  HomeIcon,
-  ChartBarIcon,
-  ShoppingBagIcon,
-  UserIcon,
-  UsersIcon,
-  MegaphoneIcon,
-  CogIcon,
-  BanknoteArrowDown,
-  BeakerIcon,
-  TagIcon,
-  PlusCircleIcon,
-  ArrowRight,
-  PlusCircle,
-} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-interface NavLink {
-  name: string;
-  link: string;
-  icon: React.ReactNode;
-}
-
-/**
- * Navigation section component to reduce repetition
- */
-const NavSection = ({
-  title,
-  links,
-  currentPath,
-}: {
-  title: string;
-  links: NavLink[];
-  currentPath: string;
-}) => (
-  <div className="flex flex-col gap-2 px-4 mb-6 w-full h-screen ">
-    <p className="text-slate-400 text-sm font-semibold px-4 py-2">{title}</p>
-    {links.map((navItem) => (
-      <Link href={navItem.link} key={navItem.name}>
-        <div
-          className={`
-          flex items-center gap-3 text-white py-3 px-4 rounded-lg cursor-pointer transition-all duration-200
-          ${
-            currentPath === navItem.link
-              ? "bg-blue-600 text-white shadow-md"
-              : "text-slate-300 hover:bg-slate-700/50"
-          }
-        `}
-        >
-          <div className="w-5 h-5">{navItem.icon}</div>
-          <span>{navItem.name}</span>
-        </div>
-      </Link>
-    ))}
-  </div>
-);
-
-/**
- * Main layout for dashboard pages with navigation sidebar
- */
 export default function MainLayout({ children }: MainLayoutProps) {
   const [user, setUser] = useState<JWTPayload | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Verify authentication on component mount
   useEffect(() => {
     const verifyAuth = async () => {
       try {
@@ -96,101 +37,70 @@ export default function MainLayout({ children }: MainLayoutProps) {
     verifyAuth();
   }, [router]);
 
-  // Main navigation links with icons
-  const mainNavLinks: NavLink[] = [
-    {
-      name: "Simulations",
-      link: "/simulations",
-      icon: <PlusCircle />,
-    },
-  ];
-
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex justify-center items-center bg-slate-900 text-white">
+      <div className="w-full h-screen flex justify-center items-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white">
         <div className="flex flex-col items-center">
-          <svg
-            className="animate-spin h-8 w-8 text-blue-500 mb-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full animate-spin"></div>
+            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
+          </div>
+          <motion.p 
+            className="mt-6 text-lg text-slate-300"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <p>Loading application...</p>
+            Loading application...
+          </motion.p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Sidebar */}
-      <motion.div
-        initial={{ x: -500, y: 0, opacity: 0.2 }}
-        animate={{ x: 0, y: 0, opacity: 1 }}
-        exit={{ x: 500, y: 0, opacity: 0.2 }}
-        transition={{ duration: 1.5, type: "spring" }}
-        className="md:w-1/5 h-full bg-slate-800/80 border-r border-slate-700"
-      >
-        {/* Sidebar content */}
-        <div className="flex flex-col h-full w-full">
-          <div className="p-6 text-center border-b border-slate-700">
-            <h1 className="text-white text-2xl font-semibold">BusinessSim</h1>
-            {user && (
-              <span className="block text-sm text-blue-400 mt-2">
-                {user.name}
-              </span>
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col">
+      {/* Modern Glass-morphism Navbar */}
+      <header className="w-full bg-white/5 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex justify-between items-center shadow-2xl">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">BS</span>
           </div>
-
-          <div className="flex w-full h-full flex-col">
-            <NavSection
-              title="MAIN"
-              links={mainNavLinks}
-              currentPath={pathname}
-            />
-          </div>
-
-          {/* Logout button at bottom */}
-          <div className="p-4 border-t border-slate-700">
-            <LogoutBtn />
+          <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            BusinessSim
           </div>
         </div>
-      </motion.div>
+        <div className="flex items-center gap-4">
+          {user && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-blue-300 text-sm font-medium">{user.name}</span>
+            </div>
+          )}
+          <LogoutBtn />
+        </div>
+      </header>
 
-      {/* Main Content */}
-      <div className="md:w-4/5 flex-grow h-full">
+      {/* Main Content with Enhanced Animations */}
+      <main className="flex-grow w-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
-            initial={{ opacity: 0, x: 500, y: 0 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.95 }}
             transition={{
-              duration: 0.5,
+              duration: 0.6,
               type: "spring",
-              stiffness: 50,
-              damping: 20,
-              mass: 2,
+              damping: 25,
+              stiffness: 100,
             }}
-            className="w-full min-h-screen "
+            className="w-full max-w-7xl mx-auto px-4 py-8"
           >
             {children}
           </motion.div>
         </AnimatePresence>
-      </div>
+      </main>
     </div>
   );
 }
