@@ -1,0 +1,221 @@
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createCompany } from "@/app/_actions/company";
+import { getCurrentUser } from "@/app/functions/jwt";
+import { Building2, Rocket, ImageIcon } from "lucide-react";
+
+interface Props {
+  simulationID: string;
+  onCreated: () => void;
+}
+
+const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    logo_url: "",
+    cash_balance: 0,
+    total_assets: 0,
+    total_liabilities: 0,
+    credit_rating: "",
+    brand_value: 0,
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: name.match(/balance|assets|liabilities|brand_value/)
+        ? parseFloat(value)
+        : value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const user = await getCurrentUser();
+      if (!user) {
+        setError("Login required to create company.");
+        setLoading(false);
+        return;
+      }
+
+      await createCompany({
+        simulation_id: simulationID,
+        user_id: user.id,
+        ...form,
+      });
+
+      onCreated();
+    } catch (err) {
+      console.error("Failed to create company", err);
+      setError("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-2xl bg-slate-900 p-8 rounded-2xl shadow-md border border-slate-700">
+      <div className="flex items-center gap-2 mb-6">
+        <Building2 size={28} className="text-blue-400" />
+        <h2 className="text-3xl font-semibold text-white">Create Company</h2>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <p className="text-red-400 bg-red-500/10 px-4 py-2 rounded">{error}</p>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Company Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Description
+          </label>
+          <input
+            type="text"
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Logo URL
+          </label>
+          <input
+            type="text"
+            name="logo_url"
+            value={form.logo_url}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+            placeholder="https://example.com/logo.png"
+          />
+
+          {/* Logo Preview */}
+          {form.logo_url && (
+            <div className="mt-3 flex items-center gap-4">
+              <div className="w-20 h-20 border border-slate-700 rounded-md overflow-hidden bg-slate-800">
+                <img
+                  src={form.logo_url}
+                  alt="Logo Preview"
+                  className="w-full h-full object-contain"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              </div>
+              <p className="text-sm text-slate-400">
+                Logo preview
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Financial Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Cash Balance
+            </label>
+            <input
+              type="number"
+              name="cash_balance"
+              value={form.cash_balance}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Total Assets
+            </label>
+            <input
+              type="number"
+              name="total_assets"
+              value={form.total_assets}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Total Liabilities
+            </label>
+            <input
+              type="number"
+              name="total_liabilities"
+              value={form.total_liabilities}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Credit Rating
+            </label>
+            <input
+              type="text"
+              name="credit_rating"
+              value={form.credit_rating}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Brand Value
+          </label>
+          <input
+            type="number"
+            name="brand_value"
+            value={form.brand_value}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+          />
+        </div>
+
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 text-white font-medium rounded-xl transition"
+          >
+            <Rocket size={18} />
+            {loading ? "Creating..." : "Create Company"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CreateCompanyForm;

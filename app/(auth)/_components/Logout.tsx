@@ -32,10 +32,10 @@ const Logout = () => {
 
   return (
     <button
-      className="bg-blue-400 hover:bg-blue-500 cursor-pointer text-white px-8 flex justify-center items-center flex-row py-3 rounded-xl shadow-md font-medium gap-3 transition-colors duration-300 ease-in-out"
+      className="px-4 py-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/10"
       onClick={handleLogout}
     >
-      <LogOut className="w-8 h-8" /> Logout
+      <LogOut className="w-4 h-4" /> Logout
     </button>
   );
 };

@@ -25,7 +25,7 @@ model simulation {
   id                String             @id @default(cuid())
   name              String
   description       String?
-  config            String             @default("default")
+  config            String             @default("{}")
   current_period    Int                @default(0)
   status            String             @default("active")
   created_by        String

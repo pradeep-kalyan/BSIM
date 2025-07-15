@@ -20,13 +20,14 @@ export interface JWTPayload {
  * @throws Error if JWT_SECRET is not set
  */
 export const getJwtSecret = async (): Promise<Uint8Array> => {
+export const getJwtSecret = async (): Promise<Uint8Array> => {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.trim() === "") {
-    console.error("JWT_SECRET environment variable is not set");
     throw new Error("JWT secret is required for authentication");
   }
   return new TextEncoder().encode(secret);
 };
+
 
 /**
  * Generates a JWT token for the given user payload
@@ -75,6 +76,7 @@ export const verifyToken = async (
 
     const secret = await getJwtSecret();
     const { payload } = await jwtVerify(token, secret);
+    return payload as unknown as JWTPayload;
     return payload as unknown as JWTPayload;
   } catch (error) {
     console.error("Token verification failed:", error);
@@ -132,3 +134,43 @@ export const getAuthenticatedUser = async (): Promise<JWTPayload | null> => {
   }
   return verifyToken(token);
 };
+
+/**
+ * Handles user logout by deleting the auth token cookie
+ * @returns Promise resolving to a success message
+ */
+export const logoutHandler = async (): Promise<string> => {
+  try {
+    await deleteCookie();
+    return "Logout successful";
+  } catch (error) {
+    console.error("Logout failed:", error);
+    throw new Error(
+      `Logout failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+};
+
+export const getCurrentUser = async (): Promise<JWTPayload | null> => {
+  try {
+    const cookieStore = cookies();
+    const token = await getTokenFromCookie();
+
+    if (!token) return null;
+
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(process.env.JWT_SECRET!)
+    );
+
+    return {
+      id: payload.id as string,
+      name: payload.name as string,
+      email: payload.email as string,
+      role: payload.role as string,
+    };
+  } catch (error) {
+    console.error("Error verifying JWT:", error);
+    return null;
+  }
+}

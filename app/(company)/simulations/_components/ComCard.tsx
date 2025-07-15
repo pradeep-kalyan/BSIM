@@ -7,6 +7,7 @@ import { useSimulation } from "@/app/context/SimulationContext";
 interface CardProps {
   companies: company[];
   simulationID: string;
+  simulationName: string;
 }
 
 const Card: React.FC<CardProps> = ({ companies, simulationID }) => {
@@ -25,16 +26,15 @@ const Card: React.FC<CardProps> = ({ companies, simulationID }) => {
           <div
             key={company.id}
             className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 transition duration-300 hover:scale-[1.02] hover:shadow-2xl"
-            aria-label={`Simulation: ${company.name}`}
           >
             <Link
               href={`/homepage/${company.id}`}
-              className="text-lg font-semibold text-white mb-2 truncate hover:text-blue-500"
+              className="text-lg font-semibold text-white mb-2 truncate hover:text-blue-500 block"
             >
               {company.name}
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
-              {company.description}
+              {company.description || "No description provided."}
             </p>
           </div>
         ))}
@@ -43,4 +43,4 @@ const Card: React.FC<CardProps> = ({ companies, simulationID }) => {
   );
 };
 
-export default Card;
+export default CompanyList;
