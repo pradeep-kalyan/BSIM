@@ -20,6 +20,7 @@ import {
   PlusCircleIcon,
   ArrowRight,
 } from "lucide-react";
+import { useSimulation } from "../context/SimulationContext";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -73,12 +74,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
   const pathname = usePathname();
+  const { simId, comId } = useSimulation();
 
   // Verify authentication on component mount
   useEffect(() => {
     const verifyAuth = async () => {
       try {
         const userData = await checkAuthStatus();
+
         if (!userData) {
           router.push("/login");
           return;
@@ -99,22 +102,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const mainNavLinks: NavLink[] = [
     {
       name: "Dashboard",
-      link: "/homepage",
+      link: `/homepage/${comId || ""}`,
       icon: <HomeIcon />,
     },
     {
       name: "Performance",
-      link: "/performance",
+      link: `/performance/${comId || ""}`,
       icon: <ChartBarIcon />,
     },
     {
       name: "Market",
-      link: "/market",
+      link: `/market/${comId || ""}`,
       icon: <ShoppingBagIcon />,
     },
     {
       name: "Profile",
-      link: "/profile",
+      link: `/profile/${comId || ""}`,
       icon: <UserIcon />,
     },
   ];
@@ -122,27 +125,27 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const managementLinks: NavLink[] = [
     {
       name: "Human Resource",
-      link: "/management/hr",
+      link: `/management/hr/${comId || ""}`,
       icon: <UsersIcon />,
     },
     {
       name: "Marketing",
-      link: "/management/marketing",
+      link: `/management/marketing/${comId || ""}`,
       icon: <MegaphoneIcon />,
     },
     {
       name: "Production",
-      link: "/management/production",
+      link: `/management/production/${comId || ""}`,
       icon: <CogIcon />,
     },
     {
       name: "Finance",
-      link: "/management/finance",
+      link: `/management/finance/${comId || ""}`,
       icon: <BanknoteArrowDown />,
     },
     {
       name: "R&D",
-      link: "/management/rd",
+      link: `/management/rd/${comId || ""}`,
       icon: <BeakerIcon />,
     },
   ];
@@ -228,6 +231,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           {/* Logout button at bottom */}
+          <div>
+            <Link href={`/simulations/${simId}`}>Back to companies</Link>
+          </div>
           <div className="p-4 border-t border-slate-700">
             <LogoutBtn />
           </div>

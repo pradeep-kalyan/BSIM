@@ -31,7 +31,7 @@ export function useRedirectIfAuthenticated() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/homepage");
+      router.push("/simulations");
     }
   }, [user, loading, router]);
 

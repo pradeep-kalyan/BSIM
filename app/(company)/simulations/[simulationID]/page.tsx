@@ -24,7 +24,7 @@ export default async function Page({ params }: PageProps) {
 
   // First, check if the simulation exists at all
   const simulation = await prisma.simulation.findUnique({
-    where: { id: simulationID },
+    where: { id: simulationID, created_by: user.id },
     include: {
       companies: true,
     },
@@ -40,16 +40,15 @@ export default async function Page({ params }: PageProps) {
     redirect("/simulations");
   }
 
-  const data = simulation;
 
   return (
     <div className="min-h-screen flex flex-col justify-start items-start p-8 bg-slate-900 text-white text-xl font-medium">
       <div className="flex justify-between w-full h-fit m-3 p-3">
-        <h2>Welcome to {data.name}</h2>
+        <h2>Welcome to {simulation.name}</h2>
       </div>
-      {data.companies && data.companies.length > 0 ? (
+      {simulation.companies && simulation.companies.length > 0 ? (
         <>
-          <Card companies={data.companies} />
+          <Card companies={simulation.companies} simulationID={simulationID} />
           <CreateCom />
         </>
       ) : (

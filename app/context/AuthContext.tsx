@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { logoutUser } from "@/app/_actions/auth";
+import { logoutUser, getCurrentUser } from "@/app/_actions/auth";
 
 export interface User {
   id: string;
@@ -35,28 +35,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("🔍 Checking auth status...");
 
-      // Since middleware handles authentication and redirects,
-      // we can make a request to get user data
-      const response = await fetch("/api/user/me", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Use server action instead of fetch request
+      const userData = await getCurrentUser();
 
-      console.log(
-        "📡 Auth check response:",
-        response.status,
-        response.statusText
-      );
-
-      if (response.ok) {
-        const userData = await response.json();
+      if (userData) {
         console.log("✅ User authenticated:", userData);
         setUser(userData);
       } else {
-        // If response is not ok, user is not authenticated
+        // If userData is null, user is not authenticated
         console.log("❌ User not authenticated");
         setUser(null);
       }

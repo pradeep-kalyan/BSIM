@@ -1,10 +1,21 @@
 "use client";
+import { useSimulation } from "@/app/context/SimulationContext";
 import Card from "@/ui/Card";
 import { company, product } from "@prisma/client";
-import { redirect } from "next/navigation";
-import React from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
 
-const HomePage = ({ company }: { company: company }) => {
+type CompanyWithProducts = company & {
+  products: product[];
+};
+
+const HomePage = ({ company }: { company: CompanyWithProducts }) => {
+  const { setComId } = useSimulation();
+  useEffect(() => {
+    setComId(company.id);
+    console.log("Company ID set in context:", company.id);
+  }, [company.id, setComId]);
+  const router = useRouter();
   return (
     <div className="mx-auto h-full w-full overflow-auto bg-slate-900 text-white text-xl font-medium p-8 flex flex-col">
       <div className="bg-[#1f2937] flex justify-between items-center rounded-lg w-full h-fit p-8">
@@ -125,7 +136,7 @@ const HomePage = ({ company }: { company: company }) => {
 
         <div className="mt-4">
           <button
-            onClick={() => redirect("/products/create")}
+            onClick={() => router.push("/products/create")}
             className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
           >
             Develop New Product

@@ -3,7 +3,12 @@
 
 import React from "react";
 import { AuthProvider } from "./AuthContext";
+import { SimulationProvider } from "./SimulationContext";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <AuthProvider>
+      <SimulationProvider>{children}</SimulationProvider>
+    </AuthProvider>
+  );
 }
