@@ -49,6 +49,9 @@ const Page = () => {
     );
   }
 
+  // Optionally, handle case where there are no simulations
+  // (This is already handled in the main render logic below)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white py-10 px-4 relative">
       {/* Create Simulation Top Button */}

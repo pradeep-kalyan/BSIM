@@ -86,8 +86,6 @@ export const registerUser = async (
     // Check if user already exists
     const userCount = await prisma.user.count();
     if (userCount > 0) {
-    const userCount = await prisma.user.count();
-    if (userCount > 0) {
       const existingUser = await prisma.user.findUnique({
         where: { email: email },
       });

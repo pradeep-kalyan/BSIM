@@ -101,9 +101,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
   >
-    <CompanyList companies={companies} simulationName={simulationName} />
-  </motion.div>
-) : (
+    <CompanyList companies={companies} simulationName={simulationName} simulationID={simulationID} />
+  </motion.div> ) : (
   <motion.div
     key="empty"
     initial={{ opacity: 0, y: 20 }}

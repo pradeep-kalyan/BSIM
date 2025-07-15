@@ -20,7 +20,6 @@ export interface JWTPayload {
  * @throws Error if JWT_SECRET is not set
  */
 export const getJwtSecret = async (): Promise<Uint8Array> => {
-export const getJwtSecret = async (): Promise<Uint8Array> => {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.trim() === "") {
     throw new Error("JWT secret is required for authentication");

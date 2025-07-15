@@ -6,21 +6,23 @@ import { useSimulation } from "@/app/context/SimulationContext";
 
 interface CardProps {
   companies: company[];
-  simulationID: string;
   simulationName: string;
+  simulationID?: string; // Optional, if you want to use it for navigation or other purposes
 }
 
-const Card: React.FC<CardProps> = ({ companies, simulationID }) => {
+const CompanyList: React.FC<CardProps> = ({
+  companies,
+  simulationName,
+  simulationID,
+}) => {
   const { setSimId } = useSimulation();
-
   useEffect(() => {
-    setSimId(simulationID);
-    console.log("sim ID set in context:", simulationID);
-  }, [simulationID]);
-
+    setSimId(simulationID as string);
+  }, [setSimId]);
   return (
-    <div className="w-full sm:px-6 lg:px-8 py-6 m-5 flex flex-col justify-start items-start">
-      <h2 className="text-2xl font-bold text-white mb-6">Companies</h2>
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Companies in {simulationName}</h1>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {companies.map((company) => (
           <div

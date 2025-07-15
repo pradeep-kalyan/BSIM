@@ -16,7 +16,7 @@ CREATE TABLE "simulations" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "config" TEXT NOT NULL DEFAULT 'default',
+    "config" TEXT NOT NULL DEFAULT '{}',
     "current_period" INTEGER NOT NULL DEFAULT 0,
     "status" TEXT NOT NULL DEFAULT 'active',
     "created_by" TEXT NOT NULL,

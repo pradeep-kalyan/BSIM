@@ -7,8 +7,9 @@ interface PageProps {
 }
 
 const Page = async ({ params }: PageProps) => {
+  const id = await params;
   const simulation = await prisma.simulation.findUnique({
-    where: { id: params.simulationID },
+    where: { id: id.simulationID },
   });
 
   if (!simulation) {
@@ -20,6 +21,11 @@ const Page = async ({ params }: PageProps) => {
   }
 
   return (
-    <CompanyPage simulationID={simulation.id} simulationName={simulation.name} />
+    <CompanyPage
+      simulationID={simulation.id}
+      simulationName={simulation.name}
+    />
   );
-}
+};
+
+export default Page;
