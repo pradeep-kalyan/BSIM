@@ -168,6 +168,7 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
       id: user.id,
       name: user.name,
       role: user.role,
+      email: user.email,
     });
  
     // Set the token in a cookie

@@ -6,7 +6,7 @@ import { JWTPayload } from "@/app/functions/jwt";
 const Page = () => {
   const [user, setUser] = useState<JWTPayload | null>(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchUserData = async () => {
       try {
