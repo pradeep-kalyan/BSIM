@@ -1,9 +1,9 @@
 "use server";
  
-import { PrismaClient } from "@prisma/client";
+import prisma from "../functions/prisma";
 import { revalidatePath } from "next/cache";
  
-const prisma = new PrismaClient();
+
  
 // Event operations
 export async function getEvents(simulationId: string, period?: number) {

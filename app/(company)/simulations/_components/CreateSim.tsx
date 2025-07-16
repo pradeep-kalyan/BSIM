@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Inputbox from "@/ui/Input-Box";
-import  createSim  from "@/app/_actions/createSim"; // import with named import
+import createSim from "@/app/_actions/createSim"; // import with named import
 import DynamicConfigFields from "./DynamicConfigFields";
 import { FlaskConical, Rocket } from "lucide-react";
 
@@ -17,7 +17,7 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
     await createSim(formData);
     setLoading(false);
 
-    onCreated(); 
+    onCreated();
   };
 
   return (

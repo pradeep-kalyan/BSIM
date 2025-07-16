@@ -1,8 +1,9 @@
 "use server";
- 
 
+import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import prisma from "../functions/prisma";
+
+const prisma = new PrismaClient();
 
 // Company operations
 export async function getCompany(id: string) {
@@ -25,7 +26,7 @@ export async function getCompany(id: string) {
     throw new Error("Failed to fetch company");
   }
 }
- 
+
 export async function getCompaniesBySimulation(simulationId: string) {
   try {
     const companies = await prisma.company.findMany({
@@ -47,7 +48,7 @@ export async function getCompaniesBySimulation(simulationId: string) {
     throw new Error("Failed to fetch companies");
   }
 }
- 
+
 export async function createCompany(data: {
   simulation_id: string;
   user_id: string;
@@ -83,7 +84,7 @@ export async function createCompany(data: {
     throw new Error("Failed to create company");
   }
 }
- 
+
 export async function updateCompany(
   id: string,
   data: {

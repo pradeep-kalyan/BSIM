@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { simulation } from "@prisma/client";
 import Link from "next/link";

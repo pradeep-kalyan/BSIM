@@ -18,7 +18,6 @@ CREATE TABLE `simulations` (
     `name` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NULL,
     `config` VARCHAR(191) NOT NULL DEFAULT '{}',
-    `current_period` INTEGER NOT NULL DEFAULT 0,
     `status` VARCHAR(191) NOT NULL DEFAULT 'active',
     `created_by` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -36,6 +35,8 @@ CREATE TABLE `companies` (
     `description` VARCHAR(191) NULL,
     `logo_url` VARCHAR(191) NULL,
     `cash_balance` DOUBLE NOT NULL DEFAULT 0,
+    `current_period` INTEGER NOT NULL DEFAULT 0,
+    `data` VARCHAR(191) NOT NULL DEFAULT '{}',
     `total_assets` DOUBLE NOT NULL DEFAULT 0,
     `total_liabilities` DOUBLE NOT NULL DEFAULT 0,
     `credit_rating` VARCHAR(191) NULL,
@@ -90,6 +91,7 @@ CREATE TABLE `market_conditions` (
     `id` VARCHAR(191) NOT NULL,
     `simulation_id` VARCHAR(191) NOT NULL,
     `period` INTEGER NOT NULL,
+    `data` VARCHAR(191) NOT NULL DEFAULT '{}',
     `total_market_size` DOUBLE NOT NULL,
     `segment_distribution` VARCHAR(191) NOT NULL,
     `economic_indicators` VARCHAR(191) NOT NULL,
@@ -107,6 +109,7 @@ CREATE TABLE `performance_results` (
     `id` VARCHAR(191) NOT NULL,
     `company_id` VARCHAR(191) NOT NULL,
     `period` INTEGER NOT NULL,
+    `data` VARCHAR(191) NOT NULL DEFAULT '{}',
     `revenue` DOUBLE NOT NULL DEFAULT 0,
     `costs` DOUBLE NOT NULL DEFAULT 0,
     `profit` DOUBLE NOT NULL DEFAULT 0,
@@ -129,6 +132,7 @@ CREATE TABLE `product_performances` (
     `id` VARCHAR(191) NOT NULL,
     `product_id` VARCHAR(191) NOT NULL,
     `period` INTEGER NOT NULL,
+    `data` VARCHAR(191) NOT NULL DEFAULT '{}',
     `sales_volume` INTEGER NOT NULL DEFAULT 0,
     `revenue` DOUBLE NOT NULL DEFAULT 0,
     `costs` DOUBLE NOT NULL DEFAULT 0,
@@ -154,6 +158,21 @@ CREATE TABLE `events` (
     `affected_companies` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `hr_decisions` (
+    `id` VARCHAR(191) NOT NULL,
+    `company_id` VARCHAR(191) NOT NULL,
+    `period` INTEGER NOT NULL,
+    `training_budget` DOUBLE NOT NULL DEFAULT 0,
+    `salary_budget` DOUBLE NOT NULL DEFAULT 0,
+    `hires` INTEGER NOT NULL DEFAULT 0,
+    `fires` INTEGER NOT NULL DEFAULT 0,
+    `submitted_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `hr_decisions_company_id_period_key`(`company_id`, `period`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -183,3 +202,6 @@ ALTER TABLE `product_performances` ADD CONSTRAINT `product_performances_product_
 
 -- AddForeignKey
 ALTER TABLE `events` ADD CONSTRAINT `events_simulation_id_fkey` FOREIGN KEY (`simulation_id`) REFERENCES `simulations`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `hr_decisions` ADD CONSTRAINT `hr_decisions_company_id_fkey` FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

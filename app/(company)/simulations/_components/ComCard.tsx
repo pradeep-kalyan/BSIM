@@ -1,13 +1,24 @@
-import React from "react";
+"use client";
+import React, { useEffect } from "react";
 import { company } from "@prisma/client";
 import Link from "next/link";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 interface CardProps {
   companies: company[];
   simulationName: string;
+  simulationID?: string; // Optional, if you want to use it for navigation or other purposes
 }
 
-const CompanyList: React.FC<CardProps> = ({ companies, simulationName }) => {
+const CompanyList: React.FC<CardProps> = ({
+  companies,
+  simulationName,
+  simulationID,
+}) => {
+  const { setSimId } = useSimulation();
+  useEffect(() => {
+    setSimId(simulationID as string);
+  }, [setSimId]);
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Companies in {simulationName}</h1>
