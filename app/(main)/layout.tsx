@@ -153,12 +153,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const productLinks: NavLink[] = [
     {
       name: "Product Catalog",
-      link: "/products/catalog",
+      link: "/products/catalog/" + (comId || ""),
       icon: <TagIcon />,
     },
     {
       name: "New Product",
-      link: "/products/create",
+      link: "/products/create/" + (comId || ""),
       icon: <PlusCircleIcon />,
     },
   ];

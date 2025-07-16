@@ -1,5 +1,7 @@
-// context/SimulationContext.tsx
-import { createContext, use, useContext, useState } from "react";
+"use client";
+
+import { createContext, useContext, useEffect, useState } from "react";
+import Cookies from "js-cookie";
 
 const SimulationContext = createContext<{
   simId: string | null;
@@ -24,14 +26,55 @@ export const SimulationProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [simId, setSimId] = useState<string | null>(null);
-  const [comId, setComId] = useState<string | null>(null);
+  const [simId, setSimIdState] = useState<string | null>(null);
+  const [comId, setComIdState] = useState<string | null>(null);
 
-  const clearSimId = () => setSimId(null);
-  const clearComId = () => setComId(null);
+  // Load from cookies on first load
+  useEffect(() => {
+    const sim = Cookies.get("simId");
+    const com = Cookies.get("comId");
+
+    console.log("Loaded simId:", sim, "comId:", com);
+
+    if (sim) setSimIdState(sim);
+    if (com) setComIdState(com);
+  }, []);
+
+  const setSimId = (id: string) => {
+    setSimIdState(id);
+    // Set cookie to expire in 6 hours (0.25 days)
+    Cookies.set("simId", id, {
+      expires: 0.25,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+  };
+
+  const setComId = (id: string) => {
+    setComIdState(id);
+    // Set cookie to expire in 6 hours (0.25 days)
+    Cookies.set("comId", id, {
+      expires: 0.25,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+  };
+
+  const clearSimId = () => {
+    setSimIdState(null);
+    Cookies.remove("simId");
+  };
+
+  const clearComId = () => {
+    setComIdState(null);
+    Cookies.remove("comId");
+  };
+
   const clearAll = () => {
-    setSimId(null);
-    setComId(null);
+    clearSimId();
+    clearComId();
   };
 
   return (

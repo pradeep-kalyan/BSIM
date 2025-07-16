@@ -10,9 +10,10 @@ type CompanyWithProducts = company & {
 };
 
 const HomePage = ({ company }: { company: CompanyWithProducts }) => {
-  const { setComId } = useSimulation();
+  const { setComId  } = useSimulation();
   useEffect(() => {
     setComId(company.id);
+    
     console.log("Company ID set in context:", company.id);
   }, [company.id, setComId]);
   const router = useRouter();

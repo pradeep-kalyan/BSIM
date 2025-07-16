@@ -1,9 +1,9 @@
 "use server";
  
-import { PrismaClient } from "@prisma/client";
+import prisma from "../functions/prisma";
 import { revalidatePath } from "next/cache";
  
-const prisma = new PrismaClient();
+
  
 // Market conditions operations
 export async function getMarketConditions(

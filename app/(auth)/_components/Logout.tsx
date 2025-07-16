@@ -5,12 +5,14 @@ import React from "react";
 import { logoutUser } from "@/app/_actions/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 /**
  * Logout button component with animation
  */
 const Logout = () => {
   const router = useRouter();
+  const { clearAll } = useSimulation();
 
   /**
    * Handles the logout process and redirects to login page
@@ -18,6 +20,7 @@ const Logout = () => {
   const handleLogout = async () => {
     try {
       await logoutUser();
+      clearAll();
       toast.info("Logout successful");
 
       // Short delay to allow toast to display before redirect
