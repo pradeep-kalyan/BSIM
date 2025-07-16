@@ -58,7 +58,8 @@ model company {
   decisions           decision[]
   performance_results performance_result[]
   products            product[]
-
+  hr_decisions        hr_decision[]
+  
   @@map("companies")
 }
 
@@ -172,4 +173,20 @@ model event {
   simulation         simulation @relation(fields: [simulation_id], references: [id])
 
   @@map("events")
+}
+
+model hr_decision {
+  id             String   @id @default(cuid())
+  company_id     String
+  period         Int
+  training_budget Float   @default(0)
+  salary_budget   Float   @default(0)
+  hires           Int     @default(0)
+  fires           Int     @default(0)
+  submitted_at    DateTime @default(now())
+
+  company         company  @relation(fields: [company_id], references: [id])
+
+  @@unique([company_id, period])
+  @@map("hr_decisions")
 }
