@@ -26,7 +26,6 @@ model simulation {
   name              String
   description       String?
   config            String             @default("{}")
-  current_period    Int                @default(0)
   status            String             @default("active")
   created_by        String
   created_at        DateTime           @default(now())
@@ -47,6 +46,8 @@ model company {
   description         String?
   logo_url            String?
   cash_balance        Float                @default(0)
+  current_period      Int                  @default(0)
+  data                String               @default("{}")
   total_assets        Float                @default(0)
   total_liabilities   Float                @default(0)
   credit_rating       String?
@@ -106,6 +107,7 @@ model market_condition {
   id                        String     @id @default(cuid())
   simulation_id             String
   period                    Int
+  data                      String     @default("{}")
   total_market_size         Float
   segment_distribution      String
   economic_indicators       String
@@ -123,6 +125,7 @@ model performance_result {
   id                    String   @id @default(cuid())
   company_id            String
   period                Int
+  data                  String   @default("{}")
   revenue               Float    @default(0)
   costs                 Float    @default(0)
   profit                Float    @default(0)
@@ -145,6 +148,7 @@ model product_performance {
   id                    String   @id @default(cuid())
   product_id            String
   period                Int
+  data                  String   @default("{}")
   sales_volume          Int      @default(0)
   revenue               Float    @default(0)
   costs                 Float    @default(0)

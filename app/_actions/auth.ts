@@ -10,7 +10,7 @@ import { deleteCookie, generateToken, setCookie } from "../functions/jwt";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAuthenticatedUser, JWTPayload } from "@/app/functions/jwt";
- 
+
 // Type for incoming form data
 export interface RegisterFormData {
   name: string;
@@ -168,6 +168,7 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
       id: user.id,
       name: user.name,
       role: user.role,
+      email: user.email,
     });
  
     // Set the token in a cookie
@@ -187,7 +188,7 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
     };
   }
 };
- 
+
 /**
  * Handles user logout by clearing the session cookie
  * @returns Promise resolving to a success message
@@ -209,7 +210,7 @@ export const logoutUser = async (): Promise<AuthResponse> => {
     };
   }
 };
- 
+
 export async function updateUser(
   id: string,
   data: {
@@ -234,13 +235,42 @@ export async function updateUser(
     throw new Error("Failed to update user");
   }
 }
- 
+
 export async function checkAuthStatus(): Promise<JWTPayload> {
   const user = await getAuthenticatedUser();
- 
+
   if (!user) {
     redirect("/login");
   }
- 
+
+  return user;
+}
+
+/**
+ * Gets the current authenticated user
+ * @returns Promise resolving to user data or null if not authenticated
+ */
+export async function getCurrentUser(): Promise<JWTPayload | null> {
+  try {
+    const user = await getAuthenticatedUser();
+    return user;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
+}
+
+/**
+ * Gets the current authenticated user and throws if not found
+ * @returns Promise resolving to user data
+ * @throws Error if user is not authenticated
+ */
+export async function requireCurrentUser(): Promise<JWTPayload> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    throw new Error("Authentication required");
+  }
+
   return user;
 }

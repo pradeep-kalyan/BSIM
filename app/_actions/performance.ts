@@ -1,10 +1,9 @@
 "use server";
- 
-import { PrismaClient } from "@prisma/client";
+
 import { revalidatePath } from "next/cache";
- 
-const prisma = new PrismaClient();
- 
+import prisma from "../functions/prisma";
+
+
 // Performance results operations
 export async function getPerformanceResults(companyId: string, period: number) {
   try {
@@ -25,7 +24,7 @@ export async function getPerformanceResults(companyId: string, period: number) {
     throw new Error("Failed to fetch performance results");
   }
 }
- 
+
 export async function getPerformanceHistory(companyId: string) {
   try {
     const results = await prisma.performance_result.findMany({
@@ -41,7 +40,7 @@ export async function getPerformanceHistory(companyId: string) {
     throw new Error("Failed to fetch performance history");
   }
 }
- 
+
 export async function createPerformanceResults(data: {
   company_id: string;
   period: number;

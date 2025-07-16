@@ -32,7 +32,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     setForm((prev) => ({
       ...prev,
       [name]: name.match(/balance|assets|liabilities|brand_value/)
-        ? parseFloat(value)
+        ? value === ""
+          ? 0
+          : parseFloat(value) || 0
         : value,
     }));
   };
@@ -42,6 +44,24 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     setLoading(true);
     setError("");
 
+    // Basic validation
+    if (!form.name.trim()) {
+      setError("Company name is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      form.cash_balance < 0 ||
+      form.total_assets < 0 ||
+      form.total_liabilities < 0 ||
+      form.brand_value < 0
+    ) {
+      setError("Financial values cannot be negative.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const user = await getCurrentUser();
       if (!user) {
@@ -50,16 +70,28 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
-      await createCompany({
+      const companyId = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
         ...form,
       });
 
+      // Reset form on success
+      setForm({
+        name: "",
+        description: "",
+        logo_url: "",
+        cash_balance: 0,
+        total_assets: 0,
+        total_liabilities: 0,
+        credit_rating: "",
+        brand_value: 0,
+      });
+
       onCreated();
     } catch (err) {
       console.error("Failed to create company", err);
-      setError("Something went wrong.");
+      setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -74,7 +106,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <p className="text-red-400 bg-red-500/10 px-4 py-2 rounded">{error}</p>
+          <p className="text-red-400 bg-red-500/10 px-4 py-2 rounded">
+            {error}
+          </p>
         )}
 
         <div>
@@ -128,9 +162,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                   onError={(e) => (e.currentTarget.style.display = "none")}
                 />
               </div>
-              <p className="text-sm text-slate-400">
-                Logo preview
-              </p>
+              <p className="text-sm text-slate-400">Logo preview</p>
             </div>
           )}
         </div>
@@ -140,12 +172,14 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Cash Balance
-            </label>
+            </label>{" "}
             <input
               type="number"
               name="cash_balance"
               value={form.cash_balance}
               onChange={handleChange}
+              min="0"
+              step="0.01"
               className="w-full p-2 rounded bg-slate-800 text-white"
             />
           </div>
@@ -153,12 +187,14 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Total Assets
-            </label>
+            </label>{" "}
             <input
               type="number"
               name="total_assets"
               value={form.total_assets}
               onChange={handleChange}
+              min="0"
+              step="0.01"
               className="w-full p-2 rounded bg-slate-800 text-white"
             />
           </div>
@@ -166,12 +202,14 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               Total Liabilities
-            </label>
+            </label>{" "}
             <input
               type="number"
               name="total_liabilities"
               value={form.total_liabilities}
               onChange={handleChange}
+              min="0"
+              step="0.01"
               className="w-full p-2 rounded bg-slate-800 text-white"
             />
           </div>
@@ -199,6 +237,8 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             name="brand_value"
             value={form.brand_value}
             onChange={handleChange}
+            min="0"
+            step="0.01"
             className="w-full p-2 rounded bg-slate-800 text-white"
           />
         </div>
@@ -206,8 +246,8 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            disabled={loading}
-            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 text-white font-medium rounded-xl transition"
+            disabled={loading || !form.name.trim()}
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition"
           >
             <Rocket size={18} />
             {loading ? "Creating..." : "Create Company"}

@@ -1,37 +1,45 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getSimulations } from "@/app/_actions/createSim";
-import Card from "./_components/SimCard";
-import CreateSim from "./_components/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, PlusCircle, Rocket, LayoutDashboard } from "lucide-react";
-import { useAuth } from "@/app/context/AuthContext";
+import { getProductsByCompany } from "@/app/_actions/products";
+import { product } from "@prisma/client";
+import CreateProduct from "../../_components/CreateProduct";
+import ProductsCard from "../../_components/ProductsCard";
 
-const Page = () => {
-  const [simulations, setSimulations] = useState<any[]>([]);
+const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
+  const resolvedParams = React.use(params);
+  const [products, setProducts] = useState<product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [success, setSuccess] = useState(false);
-  const fetchSimulations = async () => {
-    const data = await getSimulations();
-    setSimulations(data);
-    setInitialLoad(false);
+
+  const fetchProducts = async () => {
+    try {
+      const data = await getProductsByCompany(resolvedParams.companyID);
+      setProducts(data);
+      setInitialLoad(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setInitialLoad(false);
+    }
+  };
+
+  const handleProductCreated = () => {
+    setSuccess(true);
+    setShowForm(false);
+    fetchProducts(); // Refresh the product list
+
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      setSuccess(false);
+    }, 3000);
   };
 
   useEffect(() => {
-    fetchSimulations();
+    fetchProducts();
   }, []);
-
-  const { user } = useAuth();
-
-  const handleSimCreated = async () => {
-    setInitialLoad(true);
-    await fetchSimulations();
-    setShowForm(false);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
-  };
 
   if (initialLoad) {
     return (
@@ -47,27 +55,19 @@ const Page = () => {
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-16 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
           </div>
           <p className="text-slate-300 text-lg font-medium">
-            Loading simulations...
+            Loading products...
           </p>
         </motion.div>
       </div>
     );
   }
 
-  // Optionally, handle case where there are no simulations
-  // (This is already handled in the main render logic below)
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white py-10 px-4 relative">
       {/* Header Section */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 className="text-2xl font-semibold flex items-center gap-2">
-          👋 Welcome back, <span className="text-blue-400">{user?.name}</span>!
-          <span className="ml-2">🚀</span>
-        </h2>
-
-        {/* Create Simulation Button - Better positioned */}
-        {simulations.length > 0 && (
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-white mb-6">Products</h2>
+        {products.length > 0 && (
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -77,17 +77,18 @@ const Page = () => {
             {showForm ? (
               <>
                 <LayoutDashboard className="w-5 h-5" />
-                View Simulations
+                View Products
               </>
             ) : (
               <>
                 <PlusCircle className="w-5 h-5" />
-                Create Simulation
+                Create Product
               </>
             )}
           </motion.button>
         )}
       </div>
+
       {/* Success Notification */}
       <AnimatePresence>
         {success && (
@@ -99,9 +100,7 @@ const Page = () => {
             className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 border border-green-400"
           >
             <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">
-              Simulation created successfully!
-            </span>
+            <span className="font-medium">Product created successfully!</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -118,18 +117,21 @@ const Page = () => {
               transition={{ duration: 0.4 }}
               className="flex justify-center items-center w-full mt-8"
             >
-              <CreateSim onCreated={handleSimCreated} />
+              <CreateProduct
+                companyID={resolvedParams.companyID}
+                onSuccess={handleProductCreated}
+              />
             </motion.div>
-          ) : simulations.length > 0 ? (
+          ) : products.length > 0 ? (
             <motion.div
-              key="simulations-grid"
+              key="products-grid"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5 }}
               className="mt-8"
             >
-              <Card simulations={simulations} />
+              <ProductsCard products={products} />
             </motion.div>
           ) : (
             <motion.div
@@ -148,12 +150,15 @@ const Page = () => {
                   Ready to Start?
                 </h3>
                 <p className="text-slate-300 text-lg mb-8">
-                  Create your first business simulation to begin your
-                  entrepreneurial journey
+                  Create your first product to begin your entrepreneurial
+                  journey
                 </p>
               </div>
 
-              <CreateSim onCreated={handleSimCreated} />
+              <CreateProduct
+                companyID={resolvedParams.companyID}
+                onSuccess={handleProductCreated}
+              />
             </motion.div>
           )}
         </AnimatePresence>
