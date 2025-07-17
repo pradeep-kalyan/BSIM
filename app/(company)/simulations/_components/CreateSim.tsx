@@ -2,13 +2,15 @@
 
 import React, { useState } from "react";
 import Inputbox from "@/ui/Input-Box";
-import  createSim  from "@/app/_actions/createSim"; // import with named import
+import createSim from "@/app/_actions/createSim"; // import with named import
 import DynamicConfigFields from "./DynamicConfigFields";
 import { FlaskConical, Rocket } from "lucide-react";
 
 const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
   const [loading, setLoading] = useState(false);
-
+const [newConfigFields, setNewConfigFields] = useState([
+    { key: "", value: "" },
+  ]);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -17,7 +19,7 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
     await createSim(formData);
     setLoading(false);
 
-    onCreated(); 
+    onCreated();
   };
 
   return (
@@ -44,8 +46,18 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
           name="description"
         />
 
-        {/* Config input fields */}
-        <DynamicConfigFields />
+        <Inputbox
+          label="Grant Access (Email IDs)"
+          type="text"
+          placeholder_text="Enter comma-separated email addresses"
+          id="accessEmails"
+          name="accessEmails"
+        />
+
+              <DynamicConfigFields
+                fields={newConfigFields}
+                setFields={setNewConfigFields}
+              />
 
         <div className="flex justify-end pt-4">
           <button

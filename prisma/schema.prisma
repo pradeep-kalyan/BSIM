@@ -8,34 +8,40 @@ datasource db {
 }
 
 model user {
-  id            String       @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  email         String       @unique
+  email         String   @unique
   password_hash String
-  role          String       @default("user")
-  created_at    DateTime     @default(now())
-  updated_at    DateTime     @updatedAt
-  companies     company[]
-  simulations   simulation[]
+  role          String   @default("user")
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
+  simulations               simulation[]                @relation("UserCreatedSimulations")
+  simulation_access         simulation_access[]         @relation("SimulationAccessUser")
+  companies                 company[]
+company_access            company_access[] 
   @@map("users")
 }
 
 model simulation {
-  id                String             @id @default(cuid())
-  name              String
-  description       String?
-  config            String             @default("{}")
-  current_period    Int                @default(0)
-  status            String             @default("active")
-  created_by        String
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  config         String   @default("{}")
+  current_period Int      @default(0)
+  status         String   @default("active")
+  created_by     String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  creator user @relation("UserCreatedSimulations", fields: [created_by], references: [id])
+
   companies         company[]
   events            event[]
   market_conditions market_condition[]
-  creator           user               @relation(fields: [created_by], references: [id])
 
+  simulation_access          simulation_access[]         @relation("SimulationAccessSim" )
+  
   @@map("simulations")
 }
 
@@ -58,9 +64,39 @@ model company {
   decisions           decision[]
   performance_results performance_result[]
   products            product[]
+  company_access      company_access[]
 
   @@map("companies")
 }
+
+model simulation_access {
+  id            String   @id @default(cuid())
+  simulation_id String
+  user_id       String
+  access_level  String   @default("viewer")
+  granted_at    DateTime @default(now())
+
+  simulation simulation @relation("SimulationAccessSim", fields: [simulation_id], references: [id],onDelete: Cascade)
+  user       user       @relation("SimulationAccessUser", fields: [user_id], references: [id])
+
+  @@unique([simulation_id, user_id])
+  @@map("simulation_access")
+}
+model company_access {
+  id          String   @id @default(cuid())
+  company_id  String
+  user_id     String
+  access_level String   @default("viewer") // Optional: can be 'viewer', 'editor', etc.
+  granted_at  DateTime @default(now())
+
+  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user    user    @relation(fields: [user_id], references: [id])
+
+  @@unique([company_id, user_id])  // Ensures each user only has one access entry per company
+  @@map("company_access")
+}
+
+
 
 model product {
   id                    String                @id @default(cuid())

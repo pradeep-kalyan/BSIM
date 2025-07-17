@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 
-export default function DynamicConfigFields() {
-  const [fields, setFields] = useState([{ key: "", value: "" }]);
+interface Props {
+  fields: { key: string; value: string }[];
+  setFields: (fields: { key: string; value: string }[]) => void;
+}
 
+export default function DynamicConfigFields({ fields, setFields }: Props) {
   const addField = () => {
     setFields([...fields, { key: "", value: "" }]);
   };

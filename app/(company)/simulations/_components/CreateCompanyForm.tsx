@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createCompany } from "@/app/_actions/company";
+import { createCompany, grantAccessByEmail } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
-import { Building2, Rocket, ImageIcon } from "lucide-react";
+import { Building2, Rocket } from "lucide-react";
 
 interface Props {
   simulationID: string;
@@ -24,6 +24,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     brand_value: 0,
   });
 
+  const [accessEmail, setAccessEmail] = useState("");
+  const [accessEmails, setAccessEmails] = useState<string[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,6 +38,17 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         ? parseFloat(value)
         : value,
     }));
+  };
+
+  const handleAddEmail = () => {
+    if (accessEmail && !accessEmails.includes(accessEmail)) {
+      setAccessEmails((prev) => [...prev, accessEmail]);
+      setAccessEmail("");
+    }
+  };
+
+  const handleRemoveEmail = (email: string) => {
+    setAccessEmails((prev) => prev.filter((e) => e !== email));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,11 +64,15 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
-      await createCompany({
+      const company = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
         ...form,
       });
+
+      for (const email of accessEmails) {
+        await grantAccessByEmail(email, company.companyId);
+      }
 
       onCreated();
     } catch (err) {
@@ -116,8 +134,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             className="w-full p-2 rounded bg-slate-800 text-white"
             placeholder="https://example.com/logo.png"
           />
-
-          {/* Logo Preview */}
           {form.logo_url && (
             <div className="mt-3 flex items-center gap-4">
               <div className="w-20 h-20 border border-slate-700 rounded-md overflow-hidden bg-slate-800">
@@ -128,14 +144,11 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                   onError={(e) => (e.currentTarget.style.display = "none")}
                 />
               </div>
-              <p className="text-sm text-slate-400">
-                Logo preview
-              </p>
+              <p className="text-sm text-slate-400">Logo preview</p>
             </div>
           )}
         </div>
 
-        {/* Financial Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
@@ -201,6 +214,49 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             onChange={handleChange}
             className="w-full p-2 rounded bg-slate-800 text-white"
           />
+        </div>
+
+        {/* Add Email Access Section */}
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Grant Access (Email)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={accessEmail}
+              onChange={(e) => setAccessEmail(e.target.value)}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+              placeholder="Enter email to grant access"
+            />
+            <button
+              type="button"
+              onClick={handleAddEmail}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Add
+            </button>
+          </div>
+
+          {accessEmails.length > 0 && (
+            <ul className="mt-3 space-y-1 text-slate-300 text-sm">
+              {accessEmails.map((email, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center justify-between bg-slate-800 p-2 rounded"
+                >
+                  {email}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEmail(email)}
+                    className="text-red-400 hover:text-red-600"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="flex justify-end pt-4">
