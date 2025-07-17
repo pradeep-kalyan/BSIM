@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useRouter } from "next/navigation";
 import Inputbox from "@/ui/Input-Box";
 import { createProduct } from "@/app/_actions/products";
 
@@ -9,11 +10,15 @@ type CreateProductProps = {
 };
 
 const CreateProduct = ({ companyID, onSuccess }: CreateProductProps) => {
+  const router = useRouter();
+
   // Wrap createProduct to ensure it returns void and handle success
   const handleCreateProduct = async (formData: FormData) => {
     try {
       await createProduct(formData);
       onSuccess?.();
+      // Redirect to catalogue page after successful creation
+      router.push(`/products/catalog/${companyID}`);
     } catch (error) {
       console.error("Error creating product:", error);
     }
@@ -157,14 +162,14 @@ const CreateProduct = ({ companyID, onSuccess }: CreateProductProps) => {
                   type="number"
                   placeholder_text="0.00"
                   name="production_cost"
-                  label="Production Cost ($)"
+                  label="Production Cost ($) per 1 product"
                 />
 
                 <Inputbox
                   type="number"
                   placeholder_text="0.00"
                   name="selling_price"
-                  label="Selling Price ($)"
+                  label="Selling Price ($) per 1 product"
                 />
 
                 <Inputbox

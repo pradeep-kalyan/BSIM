@@ -18,7 +18,7 @@ const HomePage = ({ company }: { company: CompanyWithProducts }) => {
   }, [company.id, setComId]);
   const router = useRouter();
   return (
-    <div className="mx-auto h-full w-full overflow-auto bg-slate-900 text-white text-xl font-medium p-8 flex flex-col">
+    <div className="mx-auto h-full w-full overflow-auto bg-slate-900 text-white text-xl font-medium flex flex-col">
       <div className="bg-[#1f2937] flex justify-between items-center rounded-lg w-full h-fit p-8">
         <h1>{company?.name.toUpperCase()}</h1>
         <button className="text-lg bg-blue-400 hover:bg-blue-500 rounded-xl cursor-pointer p-3">

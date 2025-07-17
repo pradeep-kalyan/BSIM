@@ -44,34 +44,22 @@ export async function getProductsByCompany(companyId: string) {
 
 export async function createProduct(formData: FormData) {
   try {
-    if (formData.get("status") === "development") {
-      const company = await prisma.company.findUnique({
-        where: { id: formData.get("company_id") as string },
-        select: { cash_balance: true },
-      });
-      const newCashBalance =
-        (company?.cash_balance || 0) -
-        (parseFloat(formData.get("development_cost") as string) || 0);
+    const inventory_level =
+      parseInt(formData.get("inventory_level") as string) || 0;
+    const marketing_budget =
+      parseFloat(formData.get("marketing_budget") as string) || 0;
+    const company = await prisma.company.findUnique({
+      where: { id: formData.get("company_id") as string },
+      select: { cash_balance: true },
+    });
+    const newCashBalance =
+      (company?.cash_balance || 0) -
+      (parseFloat(formData.get("development_cost") as string) +
+        marketing_budget || 0);
 
-      await prisma.company.update({
-        where: { id: formData.get("company_id") as string },
-        data: {
-          cash_balance: newCashBalance,
-        },
-      });
-    } else if (formData.get("status") === "production") {
-      const company = await prisma.company.findUnique({
-        where: { id: formData.get("company_id") as string },
-        select: { cash_balance: true },
-      });
-      const newCashBalance =
-        (company?.cash_balance || 0) -
-        (parseFloat(formData.get("production_cost") as string) || 0);
-
-      await updateCompany(formData.get("company_id") as string, {
-        cash_balance: newCashBalance,
-      });
-    }
+    await updateCompany(formData.get("company_id") as string, {
+      cash_balance: newCashBalance,
+    });
 
     const product = await prisma.product.create({
       data: {
@@ -197,30 +185,32 @@ export async function getProductPerformanceHistory(productId: string) {
   }
 }
 
-export async function createProductPerformance(data: {
-  product_id: string;
-  period: number;
-  sales_volume?: number;
-  revenue?: number;
-  costs?: number;
-  profit?: number;
-  market_share?: number;
-  customer_satisfaction?: number;
-}) {
+export async function createProductPerformance(formData: FormData) {
+  const product = await getProduct(formData.get("productID") as string);
   try {
+    const sales_volume = parseInt(formData.get("sales") as string) || 0;
+    const revenue = parseFloat(formData.get("revenue") as string) || 0;
+    const costs = (product?.production_cost ?? 0) * sales_volume || 0;
+    const profit = revenue - costs;
+    const cashBalance = product?.company?.cash_balance || 0;
+    const NewCashBalance = cashBalance + profit;
+    await updateCompany(product?.company_id as string, {
+      cash_balance: NewCashBalance,
+    });
     const performance = await prisma.product_performance.create({
       data: {
-        product_id: data.product_id,
-        period: data.period,
-        sales_volume: data.sales_volume || 0,
-        revenue: data.revenue || 0,
-        costs: data.costs || 0,
-        profit: data.profit || 0,
-        market_share: data.market_share || 0,
-        customer_satisfaction: data.customer_satisfaction || 0,
+        product_id: product?.id as string,
+        period: parseInt(formData.get("period") as string) || 1,
+        sales_volume: sales_volume,
+        revenue: parseFloat(formData.get("revenue") as string) || 0,
+        costs: costs,
+        profit: profit,
+        market_share: parseFloat(formData.get("market_share") as string) || 0,
+        customer_satisfaction:
+          parseFloat(formData.get("customer_satisfaction") as string) || 0,
       },
     });
-    revalidatePath(`/products/${data.product_id}`);
+    revalidatePath(`/products/catalog?tab=performance`);
     return performance.id;
   } catch (error) {
     console.error("Error creating product performance:", error);

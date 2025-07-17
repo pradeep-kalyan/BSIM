@@ -242,7 +242,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main Content */}
 
-      <div className="md:w-4/5 h-full flex">
+      <div className="md:w-4/5 max-h-full flex">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
