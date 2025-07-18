@@ -1,28 +1,11 @@
-import { prisma } from "@/app/functions/prisma";
-import HRDecisionPanel from "../../../_components/HRDecisionPanel";
-import { notFound } from "next/navigation";
+"use client";
 
-export default async function HRPage(props: { params: { companyID: string } }) {
-  const { params } = await Promise.resolve(props);
-  const { companyID } = params;
+import { useParams } from "next/navigation";
+import HRDashboard from "@/app/(main)/_components/HRDashboard";
 
-  const company = await prisma.company.findUnique({
-    where: { id: companyID },
-    include: { simulation: true },
-  });
+export default function HRPage() {
+  const params = useParams();
+  const companyID = params?.companyID as string;
 
-  if (!company || !company.simulation) return notFound();
-
-  const performanceHistory = await prisma.performance_result.findMany({
-    where: { company_id: companyID },
-    orderBy: { period: "asc" },
-  });
-
-  return (
-    <HRDecisionPanel
-      companyId={companyID}
-      currentPeriod={company.simulation.current_period ?? 0}
-      initialHistory={performanceHistory}
-    />
-  );
+  return <HRDashboard companyId={companyID} />;
 }

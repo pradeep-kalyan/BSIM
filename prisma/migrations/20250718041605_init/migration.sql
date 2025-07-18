@@ -166,13 +166,27 @@ CREATE TABLE `hr_decisions` (
     `id` VARCHAR(191) NOT NULL,
     `company_id` VARCHAR(191) NOT NULL,
     `period` INTEGER NOT NULL,
-    `training_budget` DOUBLE NOT NULL DEFAULT 0,
-    `salary_budget` DOUBLE NOT NULL DEFAULT 0,
-    `hires` INTEGER NOT NULL DEFAULT 0,
-    `fires` INTEGER NOT NULL DEFAULT 0,
+    `is_submitted` BOOLEAN NOT NULL DEFAULT false,
     `submitted_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `salary_budget` DOUBLE NOT NULL DEFAULT 0,
+    `training_budget` DOUBLE NOT NULL DEFAULT 0,
+    `total_budget` DOUBLE NOT NULL DEFAULT 0,
+    `employee_satisfaction` DOUBLE NOT NULL DEFAULT 0,
+    `recruitment_cost` DOUBLE NOT NULL DEFAULT 0,
+    `firing_cost` DOUBLE NOT NULL DEFAULT 0,
 
     UNIQUE INDEX `hr_decisions_company_id_period_key`(`company_id`, `period`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `hr_role_decisions` (
+    `id` VARCHAR(191) NOT NULL,
+    `hr_decision_id` VARCHAR(191) NOT NULL,
+    `role_name` VARCHAR(191) NOT NULL,
+    `salary_per_head` DOUBLE NOT NULL,
+    `head_count` INTEGER NOT NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -205,3 +219,6 @@ ALTER TABLE `events` ADD CONSTRAINT `events_simulation_id_fkey` FOREIGN KEY (`si
 
 -- AddForeignKey
 ALTER TABLE `hr_decisions` ADD CONSTRAINT `hr_decisions_company_id_fkey` FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `hr_role_decisions` ADD CONSTRAINT `hr_role_decisions_hr_decision_id_fkey` FOREIGN KEY (`hr_decision_id`) REFERENCES `hr_decisions`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
