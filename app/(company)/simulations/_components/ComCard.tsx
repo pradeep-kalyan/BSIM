@@ -17,6 +17,7 @@ interface CompanyCardProps {
   onEdit?: (company: ExtendedCompany) => void;
   onDelete?: (id: string) => void;
   simulationName: string;
+  simulationID?: string; // Optional, if you want to use it for navigation or other purposes
 }
 
 const CompanyList: React.FC<CompanyCardProps> = ({

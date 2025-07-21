@@ -6,10 +6,10 @@ import { getCurrentUser } from "@/app/functions/jwt";
 import CreateSim from "./_components/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, PlusCircle, LayoutDashboard, Rocket } from "lucide-react";
+import { useAuth } from "@/app/context/AuthContext";
 import Card from "./_components/SimCard";
 import EditSimulationForm from "./_components/EditSimulationForm";
 import { ExtendedSimulation } from "./simulation";
-
 
 const Page = () => {
   const [simulations, setSimulations] = useState<ExtendedSimulation[]>([]);
@@ -58,6 +58,8 @@ const Page = () => {
     fetchSimulations();
   }, []);
 
+  const { user } = useAuth();
+
   const handleSimCreated = async () => {
     setInitialLoad(true);
     await fetchSimulations();
@@ -103,6 +105,9 @@ const Page = () => {
     );
   }
 
+  // Optionally, handle case where there are no simulations
+  // (This is already handled in the main render logic below)
+
   return (
     <div className="min-h-screen px-6 py-10 bg-slate-900 text-white relative">
       {/* Tabs */}
@@ -130,7 +135,7 @@ const Page = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="mb-4 bg-green-600 text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2"
+          className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 z-20"
         >
           <CheckCircle className="w-4 h-4" />
           Simulation created successfully!
@@ -205,8 +210,16 @@ const Page = () => {
             <div className="w-24 h-24 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6">
               <Rocket className="w-10 h-10 text-blue-400" />
             </div>
-            <p className="text-lg text-slate-300 mb-4">No simulations yet.</p>
-            <CreateSim onCreated={handleSimCreated} />
+            <p className="text-lg text-slate-300 mb-4">
+              {activeTab === "owned"
+                ? "No owned simulations yet."
+                : activeTab === "shared"
+                ? "No shared simulations yet."
+                : "No simulations available."}
+            </p>
+            {activeTab === "owned" && (
+              <CreateSim onCreated={handleSimCreated} />
+            )}
           </motion.div>
         )}
       </AnimatePresence>

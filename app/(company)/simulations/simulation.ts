@@ -24,3 +24,21 @@ export interface ExtendedSimulation {
     };
   }[];
 }
+export interface CompanyWithAccess {
+  canAccess: boolean;
+  canEdit: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    password_hash: string;
+    created_at: Date;
+    updated_at: Date;
+  };
+  company_access: {
+    user_id: string;
+    can_edit: boolean;
+    can_access: boolean;
+  }[];
+}

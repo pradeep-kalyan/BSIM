@@ -36,6 +36,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
   );
+  const [simId, setSimId] = useState(simulationID);
+
 
   const fetchCompanies = async () => {
     const user = await getCurrentUser();
@@ -51,7 +53,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
 
   useEffect(() => {
     fetchCompanies();
-  }, []);
+    setSimId(simulationID);
+  }, [simulationID]);
 
   const handleCreated = async () => {
     setInitialLoad(true);
@@ -203,11 +206,20 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             <div className="w-24 h-24 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6">
               <Building2 className="w-10 h-10 text-blue-400" />
             </div>
-            <p className="text-lg text-slate-300 mb-4">No companies yet.</p>
-            <CreateCompanyForm
-              simulationID={simulationID}
-              onCreated={handleCreated}
-            />
+<p className="text-lg text-slate-300 mb-4">
+  {activeTab === "owned"
+    ? "No owned companies yet."
+    : activeTab === "shared"
+    ? "No shared companies yet."
+    : "No companies available."}
+</p>
+
+            {activeTab === "owned" && (
+    <CreateCompanyForm
+      simulationID={simulationID}
+      onCreated={handleCreated}
+    />
+  )}
           </motion.div>
         )}
       </AnimatePresence>

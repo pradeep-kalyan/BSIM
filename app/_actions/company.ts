@@ -14,11 +14,16 @@ export async function getCompaniesBySimulation(simulationId: string) {
       where: {
         simulation_id: simulationId,
         OR: [
-          { user_id: user.id }, // Owned companies
+          { user_id: user.id },
           {
             company_access: {
-              some: {
-                user_id: user.id, // Shared access
+              some: { user_id: user.id },
+            },
+          },
+          {
+            simulation: {
+              simulation_access: {
+                some: { user_id: user.id },
               },
             },
           },
@@ -63,6 +68,7 @@ export async function getCompaniesBySimulation(simulationId: string) {
 }
 
 // Create a new company
+
 export async function createCompany(data: {
   simulation_id: string;
   user_id: string;
@@ -76,6 +82,7 @@ export async function createCompany(data: {
   brand_value?: number;
   accessEmails?: string[]; // Optional sharing emails
 }) {
+  // 1. Create the company
   const company = await prisma.company.create({
     data: {
       simulation_id: data.simulation_id,
@@ -91,29 +98,44 @@ export async function createCompany(data: {
     },
   });
 
-  // Grant access to additional emails
+  // 2. Ensure the creator also has simulation access
+  await prisma.simulation_access.upsert({
+    where: {
+      simulation_id_user_id: {
+        simulation_id: data.simulation_id,
+        user_id: data.user_id,
+      },
+    },
+    update: {},
+    create: {
+      simulation_id: data.simulation_id,
+      user_id: data.user_id,
+      access_level: "editor", // or "owner" if needed
+    },
+  });
+
   const failedEmails: string[] = [];
 
+  // 3. Grant access to provided users by email
   if (data.accessEmails?.length) {
     for (const rawEmail of data.accessEmails) {
       const email = rawEmail.trim().toLowerCase();
       if (!email) continue;
 
-      const user = await prisma.user.findUnique({
-        where: { email },
-      });
+      const user = await prisma.user.findUnique({ where: { email } });
 
       if (!user) {
-        console.warn(` User not found for email: ${email}`);
+        console.warn(`User not found for email: ${email}`);
         failedEmails.push(email);
         continue;
       }
 
       if (user.id === data.user_id) {
-        console.info(` Skipping owner email: ${email}`);
+        console.info(`Skipping owner email: ${email}`);
         continue;
       }
 
+      // Grant company access
       await prisma.company_access.upsert({
         where: {
           company_id_user_id: {
@@ -129,10 +151,27 @@ export async function createCompany(data: {
         },
       });
 
+      // Ensure simulation access too
+      await prisma.simulation_access.upsert({
+        where: {
+          simulation_id_user_id: {
+            simulation_id: data.simulation_id,
+            user_id: user.id,
+          },
+        },
+        update: { access_level: "editor" },
+        create: {
+          simulation_id: data.simulation_id,
+          user_id: user.id,
+          access_level: "editor",
+        },
+      });
+
       console.info(`Granted editor access to ${email}`);
     }
   }
 
+  // 4. Revalidate paths
   revalidatePath("/companies");
   revalidatePath(`/simulations/${data.simulation_id}`);
 
@@ -141,6 +180,7 @@ export async function createCompany(data: {
     failedEmails,
   };
 }
+
 
 // Update company details
 export async function updateCompany(
@@ -169,10 +209,19 @@ export async function updateCompany(
 }
 
 // Grant access to a user by email
-export async function grantAccessByEmail(email: string, companyId: string) {
+export async function grantAccessByEmail(companyId: string, email: string) {
   const userToAdd = await prisma.user.findUnique({
     where: { email: email.toLowerCase().trim() },
   });
+    const admin = await getCurrentUser();
+  if (!admin) throw new Error("Unauthorized");
+
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    include: { simulation: true },
+  });
+
+  if (!company) throw new Error("Company not found");
 
   if (!userToAdd) {
     console.error(`No user found for email: ${email}`);
@@ -195,10 +244,23 @@ export async function grantAccessByEmail(email: string, companyId: string) {
       access_level: "viewer",
     },
   });
+    await prisma.simulation_access.upsert({
+    where: {
+      simulation_id_user_id: {
+        simulation_id: company.simulation_id,
+        user_id: userToAdd.id,
+      },
+    },
+    update: {}, // already has access
+    create: {
+      simulation_id: company.simulation_id,
+      user_id: userToAdd.id,
+      access_level: "viewer", // optional: can be "editor" too
+    },
+  });
 
   revalidatePath("/companies");
 }
-
 // Revoke access
 export async function revokeAccessByEmail(companyId: string, email: string) {
   const owner = await getCurrentUser();

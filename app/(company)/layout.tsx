@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { checkAuthStatus } from "@/app/_actions/auth_actions";
+import { checkAuthStatus } from "@/app/_actions/auth";
 import { JWTPayload } from "@/app/functions/jwt";
 import LogoutBtn from "../(auth)/_components/Logout";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,7 +45,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full animate-spin"></div>
             <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
           </div>
-          <motion.p 
+          <motion.p
             className="mt-6 text-lg text-slate-300"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -74,7 +74,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           {user && (
             <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-blue-300 text-sm font-medium">{user.name}</span>
+              <span className="text-blue-300 text-sm font-medium">
+                {user.name}
+              </span>
             </div>
           )}
           <LogoutBtn />

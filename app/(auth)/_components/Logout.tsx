@@ -2,22 +2,25 @@
 "use client";
 import { LogOut } from "lucide-react";
 import React from "react";
-import { logoutHandler } from "@/app/functions/jwt";
+import { logoutUser } from "@/app/_actions/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 /**
  * Logout button component with animation
  */
 const Logout = () => {
   const router = useRouter();
+  const { clearAll } = useSimulation();
 
   /**
    * Handles the logout process and redirects to login page
    */
   const handleLogout = async () => {
     try {
-      await logoutHandler();
+      await logoutUser();
+      clearAll();
       toast.info("Logout successful");
 
       // Short delay to allow toast to display before redirect

@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
 }
 
 model user {
@@ -34,9 +35,9 @@ model simulation {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  creator user @relation("UserCreatedSimulations", fields: [created_by], references: [id])
+  creator user @relation("UserCreatedSimulations", fields: [created_by], references: [id],onDelete: Cascade)
 
-  companies         company[]
+  companies         company[]  
   events            event[]
   market_conditions market_condition[]
 
@@ -53,14 +54,16 @@ model company {
   description         String?
   logo_url            String?
   cash_balance        Float                @default(0)
+  current_period      Int                  @default(0)
+  data                String               @default("{}")
   total_assets        Float                @default(0)
   total_liabilities   Float                @default(0)
   credit_rating       String?
   brand_value         Float                @default(0)
   created_at          DateTime             @default(now())
   updated_at          DateTime             @updatedAt
-  simulation          simulation           @relation(fields: [simulation_id], references: [id])
-  user                user                 @relation(fields: [user_id], references: [id])
+  simulation          simulation           @relation(fields: [simulation_id], references: [id],onDelete: Cascade)
+  user                user                 @relation(fields: [user_id], references: [id],onDelete: Cascade)
   decisions           decision[]
   performance_results performance_result[]
   products            product[]
@@ -77,7 +80,7 @@ model simulation_access {
   granted_at    DateTime @default(now())
 
   simulation simulation @relation("SimulationAccessSim", fields: [simulation_id], references: [id],onDelete: Cascade)
-  user       user       @relation("SimulationAccessUser", fields: [user_id], references: [id])
+  user       user       @relation("SimulationAccessUser", fields: [user_id], references: [id],onDelete: Cascade)
 
   @@unique([simulation_id, user_id])
   @@map("simulation_access")
@@ -90,7 +93,7 @@ model company_access {
   granted_at  DateTime @default(now())
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  user    user    @relation(fields: [user_id], references: [id])
+  user    user    @relation(fields: [user_id], references: [id],onDelete: Cascade)
 
   @@unique([company_id, user_id])  // Ensures each user only has one access entry per company
   @@map("company_access")
@@ -142,6 +145,7 @@ model market_condition {
   id                        String     @id @default(cuid())
   simulation_id             String
   period                    Int
+  data                      String     @default("{}")
   total_market_size         Float
   segment_distribution      String
   economic_indicators       String
@@ -159,6 +163,7 @@ model performance_result {
   id                    String   @id @default(cuid())
   company_id            String
   period                Int
+  data                  String   @default("{}")
   revenue               Float    @default(0)
   costs                 Float    @default(0)
   profit                Float    @default(0)
@@ -181,6 +186,7 @@ model product_performance {
   id                    String   @id @default(cuid())
   product_id            String
   period                Int
+  data                  String   @default("{}")
   sales_volume          Int      @default(0)
   revenue               Float    @default(0)
   costs                 Float    @default(0)
