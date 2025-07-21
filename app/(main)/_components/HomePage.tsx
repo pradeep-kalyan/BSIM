@@ -3,27 +3,44 @@ import { useSimulation } from "@/app/context/SimulationContext";
 import Card from "@/ui/Card";
 import { company, product } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useTransition } from "react";
+import { advancePeriod } from "@/app/_actions/advancePeriod";
 
 type CompanyWithProducts = company & {
   products: product[];
 };
 
 const HomePage = ({ company }: { company: CompanyWithProducts }) => {
-  const { setComId  } = useSimulation();
+  const { setComId } = useSimulation();
+  const [currentPeriod, setCurrentPeriod] = useState(company.current_period);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
   useEffect(() => {
     setComId(company.id);
-    
-    console.log("Company ID set in context:", company.id);
   }, [company.id, setComId]);
-  const router = useRouter();
+
+  const handleAdvance = () => {
+    startTransition(async () => {
+      const next = await advancePeriod(company.id);
+      setCurrentPeriod(next);
+    });
+  };
+
   return (
     <div className="mx-auto h-full w-full overflow-auto bg-slate-900 text-white text-xl font-medium p-8 flex flex-col">
       <div className="bg-[#1f2937] flex justify-between items-center rounded-lg w-full h-fit p-8">
-        <h1>{company?.name.toUpperCase()}</h1>
-        <button className="text-lg bg-blue-400 hover:bg-blue-500 rounded-xl cursor-pointer p-3">
-          Advance to next period
-        </button>
+        <h1 className="text-white text-xl">{company?.name.charAt(0).toUpperCase()+company?.name.slice(1)}</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-white text-lg">{`P${currentPeriod}`}</span>
+          <button
+            onClick={handleAdvance}
+            disabled={isPending}
+            className="text-lg bg-blue-400 hover:bg-blue-500 rounded-xl cursor-pointer p-3 disabled:opacity-50 text-white"
+          >
+            {isPending ? "Advancing..." : `Advance to Next Period`}
+          </button>
+        </div>
       </div>
       <div className="w-full h-auto bg-[#1f2937] rounded-lg p-8 mt-6">
         <h2 className="text-2xl font-semibold">Financial Overview</h2>
@@ -55,8 +72,8 @@ const HomePage = ({ company }: { company: CompanyWithProducts }) => {
           />
         </div>
       </div>
-      {/* //products */}
-      <div className=" rounded-lg shadow-md p-6 mb-6">
+
+      <div className="rounded-lg shadow-md p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Products</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white">
@@ -97,13 +114,12 @@ const HomePage = ({ company }: { company: CompanyWithProducts }) => {
                   </td>
                   <td className="py-2 px-4 border-b border-gray-200 text-black">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        product.status === "active"
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.status === "active"
                           ? "bg-green-100 text-green-800"
                           : product.status === "development"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
                     >
                       {product.status.charAt(0).toUpperCase() +
                         product.status.slice(1)}

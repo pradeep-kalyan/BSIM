@@ -46,7 +46,7 @@ model company {
   description         String?
   logo_url            String?
   cash_balance        Float                @default(0)
-  current_period      Int                  @default(0) // used to track progress
+  current_period      Int                  @default(0) 
   data                String               @default("{}")
   total_assets        Float                @default(0)
   total_liabilities   Float                @default(0)
@@ -182,7 +182,7 @@ model event {
 model hr_decision {
   id                    String             @id @default(cuid())
   company_id            String
-  period                Int
+  period                Int 
   is_submitted          Boolean            @default(false)
   submitted_at          DateTime           @default(now())
 

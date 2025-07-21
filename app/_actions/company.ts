@@ -1,5 +1,5 @@
 "use server";
-
+ 
 import { revalidatePath } from "next/cache";
 import prisma from "../functions/prisma";
 
@@ -24,7 +24,7 @@ export async function getCompany(id: string) {
     throw new Error("Failed to fetch company");
   }
 }
-
+ 
 export async function getCompaniesBySimulation(simulationId: string) {
   try {
     const companies = await prisma.company.findMany({
@@ -46,13 +46,7 @@ export async function getCompaniesBySimulation(simulationId: string) {
     throw new Error("Failed to fetch companies");
   }
 }
-
-interface HRRole {
-  role_name: string;
-  salary_per_head: number;
-  head_count: number;
-}
-
+ 
 export async function createCompany(data: {
   simulation_id: string;
   user_id: string;
@@ -64,10 +58,6 @@ export async function createCompany(data: {
   total_liabilities?: number;
   credit_rating?: string;
   brand_value?: number;
-  hr_decision?: {
-    period: number;
-    roles: HRRole[];
-  };
 }) {
   try {
     const company = await prisma.company.create({
@@ -82,26 +72,8 @@ export async function createCompany(data: {
         total_liabilities: data.total_liabilities || 0,
         credit_rating: data.credit_rating,
         brand_value: data.brand_value || 0,
-        hr_decisions: data.hr_decision
-          ? {
-              create: {
-                period: data.hr_decision.period,
-                is_submitted: false,
-                hr_role_decisions: {
-                  createMany: {
-                    data: data.hr_decision.roles.map(role => ({
-                      role_name: role.role_name,
-                      salary_per_head: role.salary_per_head,
-                      head_count: role.head_count,
-                    })),
-                  },
-                },
-              },
-            }
-          : undefined,
       },
     });
-
     revalidatePath("/companies");
     revalidatePath(`/simulations/${data.simulation_id}`);
     return company.id;
@@ -110,7 +82,7 @@ export async function createCompany(data: {
     throw new Error("Failed to create company");
   }
 }
-
+ 
 export async function updateCompany(
   id: string,
   data: {

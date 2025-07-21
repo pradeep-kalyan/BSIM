@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Trash2, Users, TrendingUp, DollarSign, Award, Building2, Calendar, Loader2 } from "lucide-react";
+import { PlusCircle, Trash2, Users, TrendingUp, DollarSign, Award, Building2, Loader2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { getCompanyData, getHistoricalHRData, getCurrentRoles } from "@/app/_actions/hr-actions"
 import { submitHRDecisionForPeriod } from "@/app/_actions/submitHRDecisionForPeriod";
+import { getCurrentHRDecision } from "@/app/_actions/getCurrentHRDecision";
 
 interface ExistingRole {
     role_name: string;
@@ -58,6 +59,8 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     const [newRoles, setNewRoles] = useState<NewRole[]>([]);
     const [trainingBudget, setTrainingBudget] = useState<number>(0);
     const [employeeSatisfaction, setEmployeeSatisfaction] = useState<number>(50);
+    const [currentDecision, setCurrentDecision] = useState<any>(null);
+    console.log(currentDecision);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -78,7 +81,13 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 // Set default values based on last period
                 if (historical.length > 0) {
                     const lastPeriod = historical[historical.length - 1];
-                    setEmployeeSatisfaction(lastPeriod.employee_satisfaction);
+                    const decision = await getCurrentHRDecision(company.id, company.current_period);
+
+                    setCurrentDecision({
+                        ...lastPeriod,
+                        ...decision,
+                        roles
+                    });
                 }
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to fetch data");
@@ -223,31 +232,19 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-2 mb-2 border border-slate-700">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                                <Building2 className="text-blue-400" />
-                                {companyData.name}
-                            </h1>
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>Period {companyData.current_period}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4" />
-                                    <span>Cash Balance: {formatCurrency(companyData.cash_balance)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div className="max-w-7xl mx-auto mt-2">
 
                 {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
+                        <div className="flex items-center justify-between mb-2">
+                            <Building2 className="h-8 w-8 text-blue-400" />
+                            <span className="text-2xl font-bold text-white text-right">{companyData.name}</span>
+                        </div>
+                        <p className="text-slate-300">Period {companyData.current_period}</p>
+                        <p className="text-sm text-slate-400">Cash: {formatCurrency(companyData.cash_balance)}</p>
+                    </div>
+
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
                         <div className="flex items-center justify-between mb-2">
                             <Users className="h-8 w-8 text-blue-400" />
@@ -294,7 +291,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                                 <LineChart data={historicalData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                                     <XAxis dataKey="period" stroke="#9CA3AF" />
-                                    <YAxis stroke="#9CA3AF" />
+                                    <YAxis stroke="#9CA3AF" domain={['dataMin - 1', 'dataMax + 1']} allowDecimals={true} />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: "#1F2937",
@@ -303,19 +300,24 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                                             color: "#F3F4F6",
                                         }}
                                     />
-                                    <Legend
-                                        wrapperStyle={{ color: "#F3F4F6" }}
+                                    <Legend wrapperStyle={{ color: "#F3F4F6" }} />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="employee_satisfaction"
+                                        stroke="#10B981"
+                                        strokeWidth={2}
+                                        dot={{ r: 4 }}
+                                        activeDot={{ r: 6 }}
+                                        name="Satisfaction %"
                                     />
-                                    <Line type="monotone" dataKey="total_employees" stroke="#3B82F6" strokeWidth={2} name="Employees" />
-                                    <Line type="monotone" dataKey="employee_satisfaction" stroke="#10B981" strokeWidth={2} name="Satisfaction %" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
 
                         {existingRoles.length > 0 && (
                             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-                                <h3 className="text-xl font-semibold text-white mb-1">Role Distribution</h3>
-                                <ResponsiveContainer width="100%" height={250}>
+                                <h3 className="text-xl font-semibold text-white mb-1 px-2">Role Distribution</h3>
+                                <ResponsiveContainer width="100%" height={260}>
                                     <BarChart data={roleDistribution} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                                         <XAxis
@@ -349,7 +351,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
 
                 {/* HR Decision Form */}
                 <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl py-4 px-10 border border-slate-700">
-                    <h2 className="text-2xl font-bold text-white mb-6">HR Decision - Period {companyData.current_period}</h2>
+                    <h2 className="text-2xl font-bold text-white mb-2">HR Decision - Period {companyData.current_period}</h2>
 
                     {/* Existing Roles */}
                     <div className="mb-3">
@@ -399,8 +401,8 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                     </div>
 
                     {/* New Roles */}
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between mb-4">
+                    <div className="mb-4">
+                        <div className="flex items-center justify-between">
                             <h3 className="text-xl font-semibold text-slate-200">Add New Roles</h3>
                             <button
                                 type="button"
@@ -413,7 +415,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                         </div>
 
                         {newRoles.map((role, index) => (
-                            <div key={index} className="grid grid-cols-4 gap-4 mb-4 items-end">
+                            <div key={index} className="grid grid-cols-4 gap-4 items-end ml-4">
                                 <input
                                     type="text"
                                     placeholder="Role Name"
@@ -479,8 +481,8 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                     </div>
 
                     {/* Summary */}
-                    <div className="bg-slate-700/50 rounded-xl p-2 mb-3 mx-4">
-                        <h4 className="text-lg font-semibold text-white mb-4">Decision Summary</h4>
+                    <h4 className="text-lg font-semibold text-white mb-4 pt-2">Decision Summary</h4>
+                    <div className="bg-slate-700/50 rounded-xl p-4 mb-3 mx-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <p className="text-slate-300 text-sm">Salary Budget</p>
@@ -497,7 +499,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                             <div>
                                 <p className="text-slate-300 text-sm">Cash After</p>
                                 <p className={`text-xl font-bold ${companyData.cash_balance - totalBudget < 0 ? 'text-red-400' : 'text-green-400'}`}>
-                                    {formatCurrency(companyData.cash_balance - totalBudget)}
+                                    {formatCurrency(companyData.cash_balance - totalBudget + currentDecision.training_budget)}
                                 </p>
                             </div>
                         </div>

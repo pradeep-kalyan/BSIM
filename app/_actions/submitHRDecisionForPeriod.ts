@@ -33,9 +33,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
         select: { cash_balance: true },
       });
 
-      if (!company) {
-        throw new Error("Company not found");
-      }
+      if (!company) throw new Error("Company not found");
 
       const lastDecision = await tx.hr_decision.findFirst({
         where: { company_id },
@@ -92,43 +90,92 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
         }
       }
 
-      const total_budget = training_budget + recruitment_cost + firing_cost;
+      const total_budget = training_budget + recruitment_cost + firing_cost + salary_budget;
 
-      if (company.cash_balance < total_budget) {
-        throw new Error("Insufficient cash balance");
+      const existingDecision = await tx.hr_decision.findFirst({
+        where: { company_id, period },
+      });
+
+      if (existingDecision) {
+        const delta = total_budget - existingDecision.total_budget;
+
+        if (delta > 0 && company.cash_balance < delta) {
+          throw new Error("Insufficient cash balance for updated decision");
+        }
+
+        if (delta !== 0) {
+          await tx.company.update({
+            where: { id: company_id },
+            data: {
+              cash_balance: { decrement: delta },
+            },
+          });
+        }
+
+        await tx.hr_role_decision.deleteMany({
+          where: { hr_decision_id: existingDecision.id },
+        });
+
+        await tx.hr_decision.update({
+          where: { id: existingDecision.id },
+          data: {
+            is_submitted: true,
+            salary_budget,
+            training_budget,
+            total_budget,
+            employee_satisfaction,
+            recruitment_cost,
+            firing_cost,
+          },
+        });
+
+        await tx.hr_role_decision.createMany({
+          data: newRoleStates.map((r) => ({
+            hr_decision_id: existingDecision.id,
+            role_name: r.role_name,
+            salary_per_head: r.salary_per_head,
+            head_count: r.head_count,
+          })),
+        });
+
+        return existingDecision.id;
+      } else {
+        if (company.cash_balance < total_budget) {
+          throw new Error("Insufficient cash balance");
+        }
+
+        await tx.company.update({
+          where: { id: company_id },
+          data: {
+            cash_balance: { decrement: total_budget },
+          },
+        });
+
+        const newDecision = await tx.hr_decision.create({
+          data: {
+            company_id,
+            period,
+            is_submitted: true,
+            salary_budget,
+            training_budget,
+            total_budget,
+            employee_satisfaction,
+            recruitment_cost,
+            firing_cost,
+          },
+        });
+
+        await tx.hr_role_decision.createMany({
+          data: newRoleStates.map((r) => ({
+            hr_decision_id: newDecision.id,
+            role_name: r.role_name,
+            salary_per_head: r.salary_per_head,
+            head_count: r.head_count,
+          })),
+        });
+
+        return newDecision.id;
       }
-
-      await tx.company.update({
-        where: { id: company_id },
-        data: {
-          cash_balance: {
-            decrement: total_budget,
-          },
-        },
-      });
-
-      const hrDecision = await tx.hr_decision.create({
-        data: {
-          company_id,
-          period,
-          is_submitted: true,
-          salary_budget,
-          training_budget,
-          total_budget,
-          employee_satisfaction,
-          recruitment_cost,
-          firing_cost,
-          roles: {
-            create: newRoleStates.map((r) => ({
-              role_name: r.role_name,
-              salary_per_head: r.salary_per_head,
-              head_count: r.head_count,
-            })),
-          },
-        },
-      });
-
-      return hrDecision.id;
     });
   } catch (error) {
     console.error("Error in HR decision submission:", error);

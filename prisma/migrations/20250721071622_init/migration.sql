@@ -35,7 +35,7 @@ CREATE TABLE `companies` (
     `description` VARCHAR(191) NULL,
     `logo_url` VARCHAR(191) NULL,
     `cash_balance` DOUBLE NOT NULL DEFAULT 0,
-    `current_period` INTEGER NOT NULL DEFAULT 0,
+    `current_period` INTEGER NOT NULL DEFAULT 1,
     `data` VARCHAR(191) NOT NULL DEFAULT '{}',
     `total_assets` DOUBLE NOT NULL DEFAULT 0,
     `total_liabilities` DOUBLE NOT NULL DEFAULT 0,
