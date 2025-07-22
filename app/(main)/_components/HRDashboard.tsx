@@ -6,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { getCompanyData, getHistoricalHRData, getCurrentRoles } from "@/app/_actions/hr-actions"
 import { submitHRDecisionForPeriod } from "@/app/_actions/submitHRDecisionForPeriod";
 import { getCurrentHRDecision } from "@/app/_actions/getCurrentHRDecision";
+import HRComparisonModal from "./HRComparisonModal";
 
 interface ExistingRole {
     role_name: string;
@@ -60,7 +61,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     const [trainingBudget, setTrainingBudget] = useState<number>(0);
     const [employeeSatisfaction, setEmployeeSatisfaction] = useState<number>(50);
     const [currentDecision, setCurrentDecision] = useState<any>(null);
-    console.log(currentDecision);
+    const [showComparison, setShowComparison] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -77,7 +78,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 setCompanyData(company);
                 setHistoricalData(historical);
                 setExistingRoles(roles);
-
+                
                 // Set default values based on last period
                 if (historical.length > 0) {
                     const lastPeriod = historical[historical.length - 1];
@@ -207,8 +208,13 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     const recruitmentCost = existingRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0) +
         newRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0);
 
-    const firingCost = existingRoles.reduce((acc, r) => acc + r.fires * 5000, 0);
-    const totalBudget = trainingBudget + recruitmentCost + firingCost;
+     const firingSavings = existingRoles.reduce(
+        (acc, r) => acc + r.fires * r.salary_per_head, 0
+    );
+
+    // const firingCost = existingRoles.reduce((acc, r) => acc + r.fires * 5000, 0);
+    const firingCost = 0;
+    const totalBudget = trainingBudget + recruitmentCost - firingSavings;
 
     const totalHires = existingRoles.reduce((acc, r) => acc + r.hires, 0) + newRoles.reduce((acc, r) => acc + r.hires, 0);
     const totalFires = existingRoles.reduce((acc, r) => acc + r.fires, 0);
@@ -505,12 +511,30 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                         </div>
                     </div>
 
+                    <HRComparisonModal
+                        isOpen={showComparison}
+                        onClose={() => setShowComparison(false)}
+                        companyData={companyData}
+                        existingRoles={existingRoles}
+                        newRoles={newRoles}
+                        trainingBudget={trainingBudget}
+                        employeeSatisfaction={employeeSatisfaction}
+                        previousDecision={currentDecision}
+                    />
                     {/* Submit Button */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-4">
+                        <button
+                            onClick={() => setShowComparison(true)}
+                            disabled={!currentDecision}
+                            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all"
+                        >
+                            Compare Changes
+                        </button>
+
                         <button
                             onClick={handleSubmit}
                             disabled={submitting || companyData.cash_balance < totalBudget}
-                            className={`p-2 rounded-lg font-semibold transition-all ${submitting || companyData.cash_balance < totalBudget
+                            className={`px-6 py-2 rounded-lg font-semibold transition-all ${submitting || companyData.cash_balance < totalBudget
                                 ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
                                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
                                 }`}
