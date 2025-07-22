@@ -2,7 +2,7 @@
 
 import React from "react";
 import { X, TrendingUp, TrendingDown, Users, DollarSign, Award, Building2 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
 
 interface ExistingRole {
     role_name: string;
@@ -64,7 +64,7 @@ interface HRComparisonModalProps {
     newRoles: NewRole[];
     trainingBudget: number;
     employeeSatisfaction: number;
-    previousDecision: any; // The last submitted decision for current period
+    previousDecision: any; // The last submitted decision
 }
 
 const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
@@ -83,6 +83,7 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
         new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
     const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
+    console.log(previousDecision);
 
     const formatChange = (current: number, previous: number) => {
         const change = current - previous;
@@ -99,7 +100,7 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
         };
     };
 
-    // Current decision calculations (what user is about to submit)
+    // Current decision calculations
     const currentSalaryFromExisting = existingRoles.reduce((acc, r) => {
         const newHeadCount = r.current_head_count + r.hires - r.fires;
         return newHeadCount > 0 ? acc + newHeadCount * r.salary_per_head : acc;
@@ -111,30 +112,18 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
     const currentRecruitmentCost = existingRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0) +
         newRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0);
 
-    const currentFiringSavings = existingRoles.reduce((acc, r) => acc + r.fires * r.salary_per_head, 0);
-    const currentTotalBudget = trainingBudget + currentRecruitmentCost - currentFiringSavings;
-    
+    const currentTotalBudget = trainingBudget + currentRecruitmentCost;
     const currentTotalHires = existingRoles.reduce((acc, r) => acc + r.hires, 0) + newRoles.reduce((acc, r) => acc + r.hires, 0);
     const currentTotalFires = existingRoles.reduce((acc, r) => acc + r.fires, 0);
     const currentEmployees = existingRoles.reduce((acc, r) => acc + r.current_head_count, 0);
     const currentProjectedEmployees = currentEmployees + currentTotalHires - currentTotalFires;
 
-    // Previous decision data (last submitted decision for current period)
+    // Previous decision data
     const previousSalaryBudget = previousDecision.salary_budget || 0;
     const previousTrainingBudget = previousDecision.training_budget || 0;
-    const previousRecruitmentCost = previousDecision.recruitment_cost || 0;
-    const previousFiringSavings = previousDecision.firing_savings || 0;
-    const previousTotalBudget = previousDecision.total_budget || previousTrainingBudget + previousRecruitmentCost - previousFiringSavings;
-    const previousEmployeeSatisfaction = previousDecision.employee_satisfaction || 50;
-    
-    // Calculate previous total employees from roles
-    const previousTotalEmployees = previousDecision.roles ? 
-        previousDecision.roles.reduce((acc: number, r: any) => acc + (r.head_count || 0), 0) : 
-        currentEmployees; // fallback to current if no previous roles data
-
-    // Calculate previous hires/fires if available
-    const previousTotalHires = previousDecision.total_hires || 0;
-    const previousTotalFires = previousDecision.total_fires || 0;
+    const previousTotalBudget = previousDecision.total_budget || 0;
+    const previousEmployeeSatisfaction = previousDecision.employee_satisfaction || 0;
+    const previousTotalEmployees = previousDecision.total_employees || 0;
 
     // Create comparison data
     const comparisonData: ComparisonData = {
@@ -144,12 +133,12 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
             trainingBudget: previousTrainingBudget,
             employeeSatisfaction: previousEmployeeSatisfaction,
             totalEmployees: previousTotalEmployees,
-            totalHires: previousTotalHires,
-            totalFires: previousTotalFires,
+            totalHires: 0,
+            totalFires: 0,
             roles: previousDecision.roles || []
         },
         current: {
-            totalBudget: currentTotalBudget,
+            totalBudget: currentSalaryBudget + trainingBudget,
             salaryBudget: currentSalaryBudget,
             trainingBudget: trainingBudget,
             employeeSatisfaction: employeeSatisfaction,
@@ -196,31 +185,23 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
             current: comparisonData.current.trainingBudget,
         }
     ];
+    const chartData = roleComparisonData(comparisonData);
+    function roleComparisonData(comparisonData: any) {
+        const current = comparisonData.current.roles;
+        const previous = comparisonData.previous.roles;
 
-    // Role comparison data - improved logic
-    const roleComparisonData = () => {
-        const currentRoles = comparisonData.current.roles;
-        const previousRoles = comparisonData.previous.roles;
-
-        // Get all unique role names
-        const allRoleNames = new Set([
-            ...currentRoles.map(r => r.role_name),
-            ...previousRoles.map(r => r.role_name)
-        ]);
-
-        return Array.from(allRoleNames).map(roleName => {
-            const currentRole = currentRoles.find(r => r.role_name === roleName);
-            const previousRole = previousRoles.find(r => r.role_name === roleName);
+        return current.map((role: any) => {
+            const prevRole = previous.find(
+                (r: any) => r.role_name.toLowerCase() === role.role_name.toLowerCase()
+            );
 
             return {
-                role: roleName,
-                previous: previousRole ? previousRole.head_count : 0,
-                current: currentRole ? currentRole.head_count : 0,
+                role: role.role_name,
+                previous: prevRole ? prevRole.current_head_count : 0,
+                current: role.head_count,
             };
         });
-    };
-
-    const chartData = roleComparisonData();
+    }
 
     const satisfactionData = [
         { period: "Previous", value: comparisonData.previous.employeeSatisfaction },
@@ -230,21 +211,33 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
     const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
     const currentBudgetBreakdown = [
+        { name: "Salary", value: comparisonData.current.salaryBudget, color: "#3B82F6" },
         { name: "Training", value: comparisonData.current.trainingBudget, color: "#10B981" },
-        { name: "Recruitment", value: currentRecruitmentCost, color: "#3B82F6" },
     ].filter(item => item.value > 0);
 
     const previousBudgetBreakdown = [
+        { name: "Salary", value: comparisonData.previous.salaryBudget, color: "#3B82F6" },
         { name: "Training", value: comparisonData.previous.trainingBudget, color: "#10B981" },
-        { name: "Recruitment", value: previousRecruitmentCost, color: "#3B82F6" },
     ].filter(item => item.value > 0);
 
-    // Calculate remaining cash correctly
-    const previousRemainingCash = companyData.cash_balance - comparisonData.previous.totalBudget;
-    const currentRemainingCash = companyData.cash_balance - comparisonData.current.totalBudget;
-
     const MetricCard = ({ title, previous, current, formatter, icon: Icon }: any) => {
-        const change = formatChange(current, previous);
+        const change = (() => {
+            const diff = current - previous;
+            const percentChange = previous !== 0 ? ((diff / previous) * 100) : 0;
+            const isPositive = diff > 0;
+            const isZero = diff === 0;
+
+            return {
+                absolute: diff,
+                percentage: percentChange,
+                isPositive,
+                isZero,
+                formatted: isZero
+                    ? "No change"
+                    : `${isPositive ? '+' : ''}${formatter(diff)} (${isPositive ? '+' : ''}${percentChange.toFixed(2)}%)`
+            };
+        })();
+
         return (
             <div className="bg-slate-700/50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -282,62 +275,47 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-800 rounded-xl max-w-7xl w-full max-h-[90vh] overflow-y-auto border border-slate-700">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-700">
-                    <div>
-                        <h2 className="text-2xl font-bold text-white">Decision Comparison</h2>
-                        <p className="text-slate-400">Compare current changes with last submitted decision</p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                    >
-                        <X className="h-5 w-5 text-slate-400" />
-                    </button>
-                </div>
-
+        <div>
+            {/* Key Metrics Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 pb-2">
+                <MetricCard
+                    title="Total Budget"
+                    previous={comparisonData.previous.totalBudget}
+                    current={comparisonData.current.totalBudget}
+                    formatter={formatCurrency}
+                    icon={DollarSign}
+                />
+                <MetricCard
+                    title="Salary Budget"
+                    previous={comparisonData.previous.salaryBudget}
+                    current={comparisonData.current.salaryBudget}
+                    formatter={formatCurrency}
+                    icon={Building2}
+                />
+                <MetricCard
+                    title="Training Budget"
+                    previous={comparisonData.previous.trainingBudget}
+                    current={comparisonData.current.trainingBudget}
+                    formatter={formatCurrency}
+                    icon={Award}
+                />
+                <MetricCard
+                    title="Employee Count"
+                    previous={comparisonData.previous.totalEmployees}
+                    current={comparisonData.current.totalEmployees}
+                    formatter={(val: number) => val.toString()}
+                    icon={Users}
+                />
+                <MetricCard
+                    title="Satisfaction"
+                    previous={comparisonData.previous.employeeSatisfaction}
+                    current={comparisonData.current.employeeSatisfaction}
+                    formatter={(val: number) => val.toFixed(2)}
+                    icon={TrendingUp}
+                />
+            </div>
+            <div className="bg-slate-800 rounded-xl w-full border border-slate-700 p-2">
                 <div className="p-6 space-y-6">
-                    {/* Key Metrics Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <MetricCard
-                            title="Total Budget"
-                            previous={comparisonData.previous.totalBudget}
-                            current={comparisonData.current.totalBudget}
-                            formatter={formatCurrency}
-                            icon={DollarSign}
-                        />
-                        <MetricCard
-                            title="Salary Budget"
-                            previous={comparisonData.previous.salaryBudget}
-                            current={comparisonData.current.salaryBudget}
-                            formatter={formatCurrency}
-                            icon={Building2}
-                        />
-                        <MetricCard
-                            title="Training Budget"
-                            previous={comparisonData.previous.trainingBudget}
-                            current={comparisonData.current.trainingBudget}
-                            formatter={formatCurrency}
-                            icon={Award}
-                        />
-                        <MetricCard
-                            title="Employee Count"
-                            previous={comparisonData.previous.totalEmployees}
-                            current={comparisonData.current.totalEmployees}
-                            formatter={(val: number) => val.toString()}
-                            icon={Users}
-                        />
-                        <MetricCard
-                            title="Satisfaction"
-                            previous={comparisonData.previous.employeeSatisfaction}
-                            current={comparisonData.current.employeeSatisfaction}
-                            formatter={(val: number) => `${val}%`}
-                            icon={TrendingUp}
-                        />
-                    </div>
-
                     {/* Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Budget Comparison */}
@@ -358,8 +336,8 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
                                         formatter={(value: any) => [formatCurrency(value), ""]}
                                     />
                                     <Legend />
-                                    <Bar dataKey="previous" fill="#64748B" name="Previous" />
-                                    <Bar dataKey="current" fill="#3B82F6" name="Current" />
+                                    <Bar dataKey="previous" fill="#3B82F6" name="Previous" />
+                                    <Bar dataKey="current" fill="#10B981" name="Current" />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -381,93 +359,17 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
                                         }}
                                     />
                                     <Legend />
-                                    <Bar dataKey="previous" fill="#64748B" name="Previous" />
+                                    <Bar dataKey="previous" fill="#3B82F6" name="Previous" />
                                     <Bar dataKey="current" fill="#10B981" name="Current" />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
-                    {/* Employee Satisfaction Trend */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-slate-700/30 rounded-lg p-4">
-                            <h3 className="text-lg font-semibold text-white mb-4">Employee Satisfaction</h3>
-                            <ResponsiveContainer width="100%" height={250}>
-                                <LineChart data={satisfactionData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                    <XAxis dataKey="period" stroke="#9CA3AF" />
-                                    <YAxis stroke="#9CA3AF" domain={[0, 100]} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: "#1F2937",
-                                            border: "1px solid #374151",
-                                            borderRadius: "8px",
-                                            color: "#F3F4F6",
-                                        }}
-                                        formatter={(value: any) => [`${value}%`, "Satisfaction"]}
-                                    />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="value"
-                                        stroke="#8B5CF6"
-                                        strokeWidth={3}
-                                        dot={{ r: 6, fill: "#8B5CF6" }}
-                                        activeDot={{ r: 8 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        {/* Budget Breakdown Pie Charts */}
-                        <div className="bg-slate-700/30 rounded-lg p-4">
-                            <h3 className="text-lg font-semibold text-white mb-4">Budget Breakdown Comparison</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <h4 className="text-sm font-medium text-slate-300 mb-2 text-center">Previous</h4>
-                                    <ResponsiveContainer width="100%" height={120}>
-                                        <PieChart>
-                                            <Pie
-                                                data={previousBudgetBreakdown}
-                                                cx="50%"
-                                                cy="50%"
-                                                outerRadius={40}
-                                                dataKey="value"
-                                            >
-                                                {previousBudgetBreakdown.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip formatter={(value: any) => formatCurrency(value)} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-medium text-slate-300 mb-2 text-center">Current</h4>
-                                    <ResponsiveContainer width="100%" height={120}>
-                                        <PieChart>
-                                            <Pie
-                                                data={currentBudgetBreakdown}
-                                                cx="50%"
-                                                cy="50%"
-                                                outerRadius={40}
-                                                dataKey="value"
-                                            >
-                                                {currentBudgetBreakdown.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip formatter={(value: any) => formatCurrency(value)} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Summary Cards */}
-                    <div className="bg-slate-700/30 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Impact Summary</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <h3 className="text-lg font-semibold text-white mb-2">Impact Summary</h3>
+                    <div className="bg-slate-700/30 rounded-lg p-2">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-blue-400">
                                     {currentTotalHires}
@@ -487,30 +389,33 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
                                 </div>
                             </div>
                             <div className="text-center">
-                                <div className={`text-2xl font-bold ${currentRemainingCash < 0 ? 'text-red-400' : 'text-green-400'}`}>
-                                    {formatCurrency(currentRemainingCash)}
+                                <div className={`text-2xl font-bold text-green-400`}>
+                                    {formatCurrency(companyData.cash_balance)}
                                 </div>
                                 <div className="text-sm text-slate-300">Remaining Cash</div>
                                 <div className="text-xs text-slate-400 mt-1">
-                                    After current decision
+                                    Before decision
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <div className={`text-2xl font-bold ${companyData.cash_balance < companyData.cash_balance + previousTotalBudget - comparisonData.current.totalBudget ? 'text-green-400' : satisfactionChange.isZero ? 'text-slate-400' : 'text-red-400'}`}>
+                                    {formatCurrency(companyData.cash_balance + previousTotalBudget - comparisonData.current.totalBudget)}
+                                </div>
+                                <div className="text-sm text-slate-300">Remaining Cash</div>
+                                <div className="text-xs text-slate-400 mt-1">
+                                    After decision
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end gap-4 pt-4 border-t border-slate-700">
+                    <div className="flex justify-end gap-4">
                         <button
                             onClick={onClose}
-                            className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors"
+                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
                         >
-                            Close
-                        </button>
-                        <button
-                            onClick={onClose}
-                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                        >
-                            Continue with Current Decision
+                            Back to Decision
                         </button>
                     </div>
                 </div>

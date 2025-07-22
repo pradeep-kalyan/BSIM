@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Trash2, Users, TrendingUp, DollarSign, Award, Building2, Loader2 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
+import { PlusCircle, Trash2, Users, TrendingUp, DollarSign, Award, Building2, Loader2, FireExtinguisher } from "lucide-react";
 import { getCompanyData, getHistoricalHRData, getCurrentRoles } from "@/app/_actions/hr-actions"
 import { submitHRDecisionForPeriod } from "@/app/_actions/submitHRDecisionForPeriod";
 import { getCurrentHRDecision } from "@/app/_actions/getCurrentHRDecision";
@@ -78,7 +77,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 setCompanyData(company);
                 setHistoricalData(historical);
                 setExistingRoles(roles);
-                
+
                 // Set default values based on last period
                 if (historical.length > 0) {
                     const lastPeriod = historical[historical.length - 1];
@@ -208,309 +207,25 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     const recruitmentCost = existingRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0) +
         newRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0);
 
-     const firingSavings = existingRoles.reduce(
-        (acc, r) => acc + r.fires * r.salary_per_head, 0
+    const firedSalary = existingRoles.reduce(
+        (acc, r) => acc + r.fires * r.salary_per_head,
+        0
     );
-
     // const firingCost = existingRoles.reduce((acc, r) => acc + r.fires * 5000, 0);
-    const firingCost = 0;
-    const totalBudget = trainingBudget + recruitmentCost - firingSavings;
+    const totalBudget = trainingBudget + recruitmentCost;
 
     const totalHires = existingRoles.reduce((acc, r) => acc + r.hires, 0) + newRoles.reduce((acc, r) => acc + r.hires, 0);
     const totalFires = existingRoles.reduce((acc, r) => acc + r.fires, 0);
     const currentEmployees = existingRoles.reduce((acc, r) => acc + r.current_head_count, 0);
     const projectedEmployees = currentEmployees + totalHires - totalFires;
 
-    // Chart data
-    const roleDistribution = existingRoles.map(role => ({
-        name: role.role_name,
-        current: role.current_head_count,
-        projected: role.current_head_count + role.hires - role.fires
-    }));
-
-    const budgetBreakdown = [
-        { name: "Training", value: trainingBudget, color: "#3B82F6" },
-        { name: "Recruitment", value: recruitmentCost, color: "#10B981" },
-        { name: "Firing", value: firingCost, color: "#EF4444" }
-    ].filter(item => item.value > 0);
-
     const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
-            <div className="max-w-7xl mx-auto mt-2">
 
-                {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <Building2 className="h-8 w-8 text-blue-400" />
-                            <span className="text-2xl font-bold text-white text-right">{companyData.name}</span>
-                        </div>
-                        <p className="text-slate-300">Period {companyData.current_period}</p>
-                        <p className="text-sm text-slate-400">Cash: {formatCurrency(companyData.cash_balance)}</p>
-                    </div>
-
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <Users className="h-8 w-8 text-blue-400" />
-                            <span className="text-2xl font-bold text-white">{projectedEmployees}</span>
-                        </div>
-                        <p className="text-slate-300">Projected Employees</p>
-                        <p className="text-sm text-slate-400">Current: {currentEmployees}</p>
-                    </div>
-
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <TrendingUp className="h-8 w-8 text-green-400" />
-                            <span className="text-2xl font-bold text-white">{totalHires}</span>
-                        </div>
-                        <p className="text-slate-300">New Hires</p>
-                        <p className="text-sm text-slate-400">Fires: {totalFires}</p>
-                    </div>
-
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <DollarSign className="h-8 w-8 text-yellow-400" />
-                            <span className="text-2xl font-bold text-white">{formatCurrency(totalBudget)}</span>
-                        </div>
-                        <p className="text-slate-300">Total HR Budget</p>
-                        <p className="text-sm text-slate-400">Salary: {formatCurrency(salaryBudget)}</p>
-                    </div>
-
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <Award className="h-8 w-8 text-purple-400" />
-                            <span className="text-2xl font-bold text-white">{employeeSatisfaction}%</span>
-                        </div>
-                        <p className="text-slate-300">Employee Satisfaction</p>
-                        <p className="text-sm text-slate-400">Target: 75%+</p>
-                    </div>
-                </div>
-
-                {/* Charts */}
-                {historicalData.length > 0 && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-2">
-                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-                            <h3 className="text-xl font-semibold text-white mb-4">Historical Trends</h3>
-                            <ResponsiveContainer width="100%" height={250}>
-                                <LineChart data={historicalData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                    <XAxis dataKey="period" stroke="#9CA3AF" />
-                                    <YAxis stroke="#9CA3AF" domain={['dataMin - 1', 'dataMax + 1']} allowDecimals={true} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: "#1F2937",
-                                            border: "1px solid #374151",
-                                            borderRadius: "8px",
-                                            color: "#F3F4F6",
-                                        }}
-                                    />
-                                    <Legend wrapperStyle={{ color: "#F3F4F6" }} />
-                                    <Line
-                                        type="monotone"
-                                        dataKey="employee_satisfaction"
-                                        stroke="#10B981"
-                                        strokeWidth={2}
-                                        dot={{ r: 4 }}
-                                        activeDot={{ r: 6 }}
-                                        name="Satisfaction %"
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        {existingRoles.length > 0 && (
-                            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-                                <h3 className="text-xl font-semibold text-white mb-1 px-2">Role Distribution</h3>
-                                <ResponsiveContainer width="100%" height={260}>
-                                    <BarChart data={roleDistribution} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                                        <XAxis
-                                            dataKey="name"
-                                            stroke="#9CA3AF"
-                                            angle={-30}
-                                            textAnchor="end"
-                                            height={25}
-                                            interval={0}
-                                        />
-                                        <YAxis stroke="#9CA3AF" />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: "#1F2937",
-                                                border: "1px solid #374151",
-                                                borderRadius: "8px",
-                                                color: "#F3F4F6",
-                                            }}
-                                        />
-                                        <Legend
-                                            wrapperStyle={{ color: "#F3F4F6" }}
-                                        />
-                                        <Bar dataKey="current" fill="#3B82F6" name="Current" />
-                                        <Bar dataKey="projected" fill="#10B981" name="Projected" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* HR Decision Form */}
-                <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl py-4 px-10 border border-slate-700">
-                    <h2 className="text-2xl font-bold text-white mb-2">HR Decision - Period {companyData.current_period}</h2>
-
-                    {/* Existing Roles */}
-                    <div className="mb-3">
-                        <h3 className="text-xl font-semibold text-slate-200 mb-4">Existing Roles</h3>
-                        <div className="overflow-x-auto border border-slate-600 px-8 pt-2 mx-4 rounded-lg">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="text-left text-slate-300 border-b border-slate-600">
-                                        <th>Role</th>
-                                        <th>Salary</th>
-                                        <th>Current Count</th>
-                                        <th>Hires</th>
-                                        <th>Fires</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {existingRoles.map((role, index) => (
-                                        <tr key={index} className="border-b border-slate-700">
-                                            <td className="py-1 text-white">{role.role_name}</td>
-                                            <td className="py-1 text-slate-300">{formatCurrency(role.salary_per_head)}</td>
-                                            <td className="py-1 text-slate-300">{role.current_head_count}</td>
-                                            <td className="py-1">
-                                                <input
-                                                    type="number"
-                                                    placeholder="0"
-                                                    min={0}
-                                                    value={role.hires}
-                                                    onChange={(e) => handleExistingRoleChange(index, "hires", parseInt(e.target.value) || 0)}
-                                                    className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                                                />
-                                            </td>
-                                            <td className="py-1">
-                                                <input
-                                                    type="number"
-                                                    placeholder="0"
-                                                    min={0}
-                                                    value={role.fires}
-                                                    onChange={(e) => handleExistingRoleChange(index, "fires", parseInt(e.target.value) || 0)}
-                                                    className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                                                />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* New Roles */}
-                    <div className="mb-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-semibold text-slate-200">Add New Roles</h3>
-                            <button
-                                type="button"
-                                onClick={addNewRole}
-                                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                                <PlusCircle size={20} />
-                                Add Role
-                            </button>
-                        </div>
-
-                        {newRoles.map((role, index) => (
-                            <div key={index} className="grid grid-cols-4 gap-4 items-end ml-4">
-                                <input
-                                    type="text"
-                                    placeholder="Role Name"
-                                    value={role.role_name}
-                                    onChange={(e) => handleNewRoleChange(index, "role_name", e.target.value)}
-                                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Salary"
-                                    min={0}
-                                    value={role.salary_per_head}
-                                    onChange={(e) => handleNewRoleChange(index, "salary_per_head", parseFloat(e.target.value) || 0)}
-                                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Hires"
-                                    min={0}
-                                    value={role.hires}
-                                    onChange={(e) => handleNewRoleChange(index, "hires", parseInt(e.target.value) || 0)}
-                                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => removeNewRole(index)}
-                                    className="text-red-400 hover:text-red-300 p-2"
-                                >
-                                    <Trash2 size={18} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Budget and Satisfaction */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 mx-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                Training Budget
-                            </label>
-                            <input
-                                type="number"
-                                value={trainingBudget}
-                                onChange={(e) => setTrainingBudget(parseFloat(e.target.value) || 0)}
-                                min={0}
-                                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                Employee Satisfaction (%)
-                            </label>
-                            <input
-                                type="number"
-                                value={employeeSatisfaction}
-                                onChange={(e) => setEmployeeSatisfaction(parseFloat(e.target.value) || 0)}
-                                min={0}
-                                max={100}
-                                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Summary */}
-                    <h4 className="text-lg font-semibold text-white mb-4 pt-2">Decision Summary</h4>
-                    <div className="bg-slate-700/50 rounded-xl p-4 mb-3 mx-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                                <p className="text-slate-300 text-sm">Salary Budget</p>
-                                <p className="text-xl font-bold text-white">{formatCurrency(salaryBudget)}</p>
-                            </div>
-                            <div>
-                                <p className="text-slate-300 text-sm">Total HR Budget</p>
-                                <p className="text-xl font-bold text-white">{formatCurrency(totalBudget)}</p>
-                            </div>
-                            <div>
-                                <p className="text-slate-300 text-sm">Net Hiring</p>
-                                <p className="text-xl font-bold text-white">{totalHires - totalFires}</p>
-                            </div>
-                            <div>
-                                <p className="text-slate-300 text-sm">Cash After</p>
-                                <p className={`text-xl font-bold ${companyData.cash_balance - totalBudget < 0 ? 'text-red-400' : 'text-green-400'}`}>
-                                    {formatCurrency(companyData.cash_balance - totalBudget + currentDecision.training_budget)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
+            {showComparison && (
+                <div className="max-w-7xl mx-auto mt-2">
                     <HRComparisonModal
                         isOpen={showComparison}
                         onClose={() => setShowComparison(false)}
@@ -521,42 +236,256 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                         employeeSatisfaction={employeeSatisfaction}
                         previousDecision={currentDecision}
                     />
-                    {/* Submit Button */}
-                    <div className="flex justify-end gap-4">
-                        <button
-                            onClick={() => setShowComparison(true)}
-                            disabled={!currentDecision}
-                            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all"
-                        >
-                            Compare Changes
-                        </button>
+                </div>
+            )}
 
-                        <button
-                            onClick={handleSubmit}
-                            disabled={submitting || companyData.cash_balance < totalBudget}
-                            className={`px-6 py-2 rounded-lg font-semibold transition-all ${submitting || companyData.cash_balance < totalBudget
-                                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
-                                }`}
-                        >
-                            {submitting ? (
-                                <span className="flex items-center gap-2">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Submitting...
-                                </span>
-                            ) : (
-                                'Submit HR Decision'
-                            )}
-                        </button>
+            {/* Key Metrics */}
+            {!showComparison && (
+                <div className="max-w-7xl mx-auto mt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
+                            <div className="flex items-center justify-between mb-2">
+                                <Building2 className="h-8 w-8 text-blue-400" />
+                                <span className="text-2xl font-bold text-white text-right">{companyData.name}</span>
+                            </div>
+                            <p className="text-slate-300">Period {companyData.current_period}</p>
+                            <p className="text-sm text-slate-400">Cash: {formatCurrency(companyData.cash_balance)}</p>
+                        </div>
+
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+                            <div className="flex items-center justify-between mb-2">
+                                <Users className="h-8 w-8 text-blue-400" />
+                                <span className="text-2xl font-bold text-white">{projectedEmployees}</span>
+                            </div>
+                            <p className="text-slate-300">Projected Employees</p>
+                            <p className="text-sm text-slate-400">Current: {currentEmployees}</p>
+                        </div>
+
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
+                            <div className="flex items-center justify-between mb-2">
+                                <TrendingUp className="h-8 w-8 text-green-400" />
+                                <span className="text-2xl font-bold text-white">{totalHires}</span>
+                            </div>
+                            <p className="text-slate-300">New Hires</p>
+                            <p className="text-sm text-slate-400">Fires: {totalFires}</p>
+                        </div>
+
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
+                            <div className="flex items-center justify-between mb-2">
+                                <DollarSign className="h-8 w-8 text-yellow-400" />
+                                <span className="text-2xl font-bold text-white">{formatCurrency(totalBudget)}</span>
+                            </div>
+                            <p className="text-slate-300">HR Budget</p>
+                            <p className="text-sm text-slate-400"> Total: {formatCurrency(salaryBudget + totalBudget)}</p>
+                        </div>
+
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
+                            <div className="flex items-center justify-between mb-2">
+                                <Award className="h-8 w-8 text-purple-400" />
+                                <span className="text-2xl font-bold text-white">{employeeSatisfaction}%</span>
+                            </div>
+                            <p className="text-slate-300">Employee Satisfaction</p>
+                            <p className="text-sm text-slate-400">Salary :{formatCurrency(salaryBudget)}</p>
+                        </div>
                     </div>
 
-                    {companyData.cash_balance < totalBudget && (
-                        <p className="text-red-400 text-sm mt-2">
-                            Insufficient cash balance. Required: {formatCurrency(totalBudget)}, Available: {formatCurrency(companyData.cash_balance)}
-                        </p>
-                    )}
+                    {/* HR Decision Form */}
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl py-4 px-10 border border-slate-700">
+                        <h2 className="text-2xl font-bold text-white mb-2">HR Decision - Period {companyData.current_period}</h2>
+
+                        {/* Existing Roles */}
+                        <div className="mb-3">
+                            <h3 className="text-xl font-semibold text-slate-200 mb-4">Existing Roles</h3>
+                            <div className="overflow-x-auto border border-slate-600 px-8 pt-2 mx-4 rounded-lg">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="text-left text-slate-300 border-b border-slate-600">
+                                            <th>Role</th>
+                                            <th>Salary</th>
+                                            <th>Current Count</th>
+                                            <th>Hires</th>
+                                            <th>Fires</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {existingRoles.map((role, index) => (
+                                            <tr key={index} className="border-b border-slate-700">
+                                                <td className="py-1 text-white">{role.role_name}</td>
+                                                <td className="py-1 text-slate-300">{formatCurrency(role.salary_per_head)}</td>
+                                                <td className="py-1 text-slate-300">{role.current_head_count}</td>
+                                                <td className="py-1">
+                                                    <input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        min={0}
+                                                        value={role.hires}
+                                                        onChange={(e) => handleExistingRoleChange(index, "hires", parseInt(e.target.value) || 0)}
+                                                        className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                                                    />
+                                                </td>
+                                                <td className="py-1">
+                                                    <input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        min={0}
+                                                        value={role.fires}
+                                                        onChange={(e) => handleExistingRoleChange(index, "fires", parseInt(e.target.value) || 0)}
+                                                        className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* New Roles */}
+                        <div className="mb-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-semibold text-slate-200">Add New Roles</h3>
+                                <button
+                                    type="button"
+                                    onClick={addNewRole}
+                                    className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                    <PlusCircle size={20} />
+                                    Add Role
+                                </button>
+                            </div>
+
+                            {newRoles.map((role, index) => (
+                                <div key={index} className="grid grid-cols-4 gap-4 items-end ml-4">
+                                    <input
+                                        type="text"
+                                        placeholder="Role Name"
+                                        value={role.role_name}
+                                        onChange={(e) => handleNewRoleChange(index, "role_name", e.target.value)}
+                                        className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Salary"
+                                        min={0}
+                                        value={role.salary_per_head}
+                                        onChange={(e) => handleNewRoleChange(index, "salary_per_head", parseFloat(e.target.value) || 0)}
+                                        className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Hires"
+                                        min={0}
+                                        value={role.hires}
+                                        onChange={(e) => handleNewRoleChange(index, "hires", parseInt(e.target.value) || 0)}
+                                        className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeNewRole(index)}
+                                        className="text-red-400 hover:text-red-300 p-2"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Budget and Satisfaction */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 mx-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Training Budget
+                                </label>
+                                <input
+                                    type="number"
+                                    value={trainingBudget}
+                                    onChange={(e) => setTrainingBudget(parseFloat(e.target.value) || 0)}
+                                    min={0}
+                                    className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Employee Satisfaction (%)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={employeeSatisfaction}
+                                    onChange={(e) => setEmployeeSatisfaction(parseFloat(e.target.value) || 0)}
+                                    min={0}
+                                    max={100}
+                                    className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Summary */}
+                        <h4 className="text-lg font-semibold text-white mb-4 pt-2">Decision Summary</h4>
+                        <div className="bg-slate-700/50 rounded-xl p-4 mb-3 mx-4">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div>
+                                    <p className="text-slate-300 text-sm">Salary Budget</p>
+                                    <p className="text-xl font-bold text-white">{formatCurrency(salaryBudget)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-slate-300 text-sm">HR Budget</p>
+                                    <p className="text-xl font-bold text-white">{formatCurrency(totalBudget)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-slate-300 text-sm">Total Budget</p>
+                                    <p className="text-xl font-bold text-white">{formatCurrency(totalBudget + salaryBudget)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-slate-300 text-sm">Net Hiring</p>
+                                    <p className="text-xl font-bold text-white">{totalHires - totalFires}</p>
+                                </div>
+                                <div>
+                                    <p className="text-slate-300 text-sm">Cash After</p>
+                                    <p className={`text-xl font-bold ${companyData.cash_balance - totalBudget < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                        {formatCurrency(companyData.cash_balance + currentDecision.training_budget + firedSalary - totalBudget)}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowComparison(true)}
+                                disabled={!currentDecision}
+                                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all"
+                            >
+                                Preview Changes
+                            </button>
+
+                            <button
+                                onClick={handleSubmit}
+                                disabled={submitting || companyData.cash_balance < totalBudget}
+                                className={`px-6 py-2 rounded-lg font-semibold transition-all ${submitting || companyData.cash_balance < totalBudget
+                                    ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl'
+                                    }`}
+                            >
+                                {submitting ? (
+                                    <span className="flex items-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Submitting...
+                                    </span>
+                                ) : (
+                                    'Submit HR Decision'
+                                )}
+                            </button>
+                        </div>
+
+                        {companyData.cash_balance < totalBudget && (
+                            <p className="text-red-400 text-sm mt-2">
+                                Insufficient cash balance. Required: {formatCurrency(totalBudget)}, Available: {formatCurrency(companyData.cash_balance)}
+                            </p>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

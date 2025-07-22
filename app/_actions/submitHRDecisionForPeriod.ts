@@ -73,7 +73,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
 
             salary_budget += newHeadCount * prev.salary_per_head;
             recruitment_cost += role.hires * prev.salary_per_head;
-            firing_cost += role.fires * 5000;
+            firing_cost = 0;
           }
         } else {
           const newHeadCount = role.hires;
