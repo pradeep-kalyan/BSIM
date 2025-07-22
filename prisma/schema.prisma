@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider             = "postgresql"
+  url                  = env("DATABASE_URL")
   referentialIntegrity = "prisma"
 }
 
@@ -17,10 +17,12 @@ model user {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  simulations               simulation[]                @relation("UserCreatedSimulations")
-  simulation_access         simulation_access[]         @relation("SimulationAccessUser")
-  companies                 company[]
-company_access            company_access[] 
+  simulations       simulation[]        @relation("UserCreatedSimulations")
+  simulation_access simulation_access[] @relation("SimulationAccessUser")
+  companies         company[]
+  company_access    company_access[]
+  decisions         FinanceDecision[]
+budgetRequests   BudgetRequest[] 
   @@map("users")
 }
 
@@ -35,14 +37,14 @@ model simulation {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  creator user @relation("UserCreatedSimulations", fields: [created_by], references: [id],onDelete: Cascade)
+  creator user @relation("UserCreatedSimulations", fields: [created_by], references: [id], onDelete: Cascade)
 
-  companies         company[]  
+  companies         company[]
   events            event[]
   market_conditions market_condition[]
 
-  simulation_access          simulation_access[]         @relation("SimulationAccessSim" )
-  
+  simulation_access simulation_access[] @relation("SimulationAccessSim")
+
   @@map("simulations")
 }
 
@@ -54,7 +56,7 @@ model company {
   description         String?
   logo_url            String?
   cash_balance        Float                @default(0)
-  current_period      Int                  @default(0)
+  current_period      Int                  @default(1)
   data                String               @default("{}")
   total_assets        Float                @default(0)
   total_liabilities   Float                @default(0)
@@ -62,13 +64,14 @@ model company {
   brand_value         Float                @default(0)
   created_at          DateTime             @default(now())
   updated_at          DateTime             @updatedAt
-  simulation          simulation           @relation(fields: [simulation_id], references: [id],onDelete: Cascade)
-  user                user                 @relation(fields: [user_id], references: [id],onDelete: Cascade)
+  simulation          simulation           @relation(fields: [simulation_id], references: [id], onDelete: Cascade)
+  user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
   decisions           decision[]
   performance_results performance_result[]
   products            product[]
   company_access      company_access[]
-
+  financeDecisions    FinanceDecision[]
+  budgetRequests   BudgetRequest[] 
   @@map("companies")
 }
 
@@ -79,27 +82,26 @@ model simulation_access {
   access_level  String   @default("viewer")
   granted_at    DateTime @default(now())
 
-  simulation simulation @relation("SimulationAccessSim", fields: [simulation_id], references: [id],onDelete: Cascade)
-  user       user       @relation("SimulationAccessUser", fields: [user_id], references: [id],onDelete: Cascade)
+  simulation simulation @relation("SimulationAccessSim", fields: [simulation_id], references: [id], onDelete: Cascade)
+  user       user       @relation("SimulationAccessUser", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([simulation_id, user_id])
   @@map("simulation_access")
 }
+
 model company_access {
-  id          String   @id @default(cuid())
-  company_id  String
-  user_id     String
+  id           String   @id @default(cuid())
+  company_id   String
+  user_id      String
   access_level String   @default("viewer") // Optional: can be 'viewer', 'editor', etc.
-  granted_at  DateTime @default(now())
+  granted_at   DateTime @default(now())
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  user    user    @relation(fields: [user_id], references: [id],onDelete: Cascade)
+  user    user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@unique([company_id, user_id])  // Ensures each user only has one access entry per company
+  @@unique([company_id, user_id]) // Ensures each user only has one access entry per company
   @@map("company_access")
 }
-
-
 
 model product {
   id                    String                @id @default(cuid())
@@ -214,4 +216,45 @@ model event {
   simulation         simulation @relation(fields: [simulation_id], references: [id])
 
   @@map("events")
+}
+
+model FinanceDecision {
+  id               String   @id @default(cuid())
+  companyId        String
+  userId           String
+  period           Int
+  investmentAmount Float    @default(0)
+  loanAmount       Float    @default(0)
+  repayLoan        Float    @default(0)
+  dividendPayout   Float    @default(0)
+  equityIssue      Float    @default(0)
+  notes            String?
+  processed        Boolean  @default(false)
+  submittedAt      DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  company company? @relation(fields: [companyId], references: [id])
+  user    user     @relation(fields: [userId], references: [id])
+
+  @@unique([companyId, period])
+  @@map("finance_decisions")
+}
+model BudgetRequest {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String
+  period      Int
+  department  String
+  amount      Float
+  notes       String?
+  status      String   @default("pending") // 'pending', 'approved', 'rejected'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company company @relation(fields: [companyId], references: [id])
+  user    user    @relation(fields: [userId], references: [id])
+
+  @@unique([companyId, period, department])
+  @@map("budget_requests")
 }

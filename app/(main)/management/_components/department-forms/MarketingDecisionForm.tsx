@@ -1,12 +1,12 @@
 import React from "react";
 import DecisionTab from "../../_components/DecisionTab";
 
-const page = () => {
+const MarketingDecisionForm = () => {
   return (
     <div className="p-4">
-      <DecisionTab />
+      Page
     </div>
   );
 };
 
-export default page;
+export default MarketingDecisionForm;

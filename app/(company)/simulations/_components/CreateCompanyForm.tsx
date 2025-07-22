@@ -87,7 +87,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         simulation_id: simulationID,
         user_id: user.id,
         ...form,
-        accessEmails, // 🟢 passed directly with the payload
+        accessEmails, 
       });
 
       onCreated();

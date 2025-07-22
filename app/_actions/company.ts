@@ -3,6 +3,7 @@
 import prisma from "@/app/functions/prisma";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { revalidatePath } from "next/cache";
+import { useSimulation } from "../context/SimulationContext";
 
 // Get companies accessible to current user
 export async function getCompaniesBySimulation(simulationId: string) {
@@ -307,3 +308,4 @@ export async function deleteCompany(companyId: string) {
 
   revalidatePath("/companies");
 }
+

@@ -38,7 +38,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   );
   const [simId, setSimId] = useState(simulationID);
 
-
   const fetchCompanies = async () => {
     const user = await getCurrentUser();
     if (!user) return;
@@ -125,17 +124,17 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
       </div>
 
       {/* Success Toast */}
-       {success && (
-         <motion.div
-           initial={{ opacity: 0, y: -10 }}
-           animate={{ opacity: 1, y: 0 }}
-           exit={{ opacity: 0, y: -10 }}
-           className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 z-20"
-         >
-           <CheckCircle className="w-4 h-4" />
-           Company created successfully!
-         </motion.div>
-       )}
+      {success && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded-md shadow-md flex items-center gap-2 z-20"
+        >
+          <CheckCircle className="w-4 h-4" />
+          Company created successfully!
+        </motion.div>
+      )}
 
       {/* Company Counter */}
       <div className="mb-6 flex  text-slate-400 text-sm">
@@ -206,20 +205,20 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             <div className="w-24 h-24 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6">
               <Building2 className="w-10 h-10 text-blue-400" />
             </div>
-<p className="text-lg text-slate-300 mb-4">
-  {activeTab === "owned"
-    ? "No owned companies yet."
-    : activeTab === "shared"
-    ? "No shared companies yet."
-    : "No companies available."}
-</p>
+            <p className="text-lg text-slate-300 mb-4">
+              {activeTab === "owned"
+                ? "No owned companies yet."
+                : activeTab === "shared"
+                ? "No shared companies yet."
+                : "No companies available."}
+            </p>
 
             {activeTab === "owned" && (
-    <CreateCompanyForm
-      simulationID={simulationID}
-      onCreated={handleCreated}
-    />
-  )}
+              <CreateCompanyForm
+                simulationID={simulationID}
+                onCreated={handleCreated}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>

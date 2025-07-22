@@ -54,7 +54,9 @@ const DecisionTab = () => {
       {/* Main Content */}
       <div className="mt-6">
         {showCreateForm ? (
-          <CreateDecision department={department} />
+          <CreateDecision
+        department={department}
+      />
         ) : (
           <ViewDecisions department={department} />
         )}
