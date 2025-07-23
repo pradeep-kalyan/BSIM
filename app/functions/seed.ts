@@ -65,15 +65,15 @@ async function main(): Promise<void> {
   console.log("🌱 Starting database seed...");
 
   // Clear existing data
-  await prisma.event.deleteMany();
-  await prisma.product_performance.deleteMany();
-  await prisma.performance_result.deleteMany();
-  await prisma.market_condition.deleteMany();
-  await prisma.decision.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.company.deleteMany();
-  await prisma.simulation.deleteMany();
-  await prisma.user.deleteMany();
+  // await prisma.event.deleteMany();
+  // await prisma.product_performance.deleteMany();
+  // await prisma.performance_result.deleteMany();
+  // await prisma.market_condition.deleteMany();
+  // await prisma.decision.deleteMany();
+  // await prisma.product.deleteMany();
+  // await prisma.company.deleteMany();
+  // await prisma.simulation.deleteMany();
+  // await prisma.user.deleteMany();
 
   // Create Users
   const hashedPassword =

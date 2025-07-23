@@ -3,8 +3,10 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCompany } from "@/app/_actions/company";
+import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 import { getCurrentUser } from "@/app/functions/jwt";
-import { Building2, Rocket, ImageIcon } from "lucide-react";
+import { Building2, Rocket, ImageIcon, PlusCircle, Trash2 } from "lucide-react";
+import HRDecisionForm from "./HRDecisionForm";
 
 interface Props {
   simulationID: string;
@@ -24,8 +26,20 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     brand_value: 0,
   });
 
+  const [hrRoles, setHrRoles] = useState([
+    { role_name: "", salary_per_head: 0, head_count: 0 },
+  ]);
+  const [salaryBudget, setSalaryBudget] = useState(0);
+  const [trainingBudget, setTrainingBudget] = useState(0);
+  const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const totalSalary = hrRoles.reduce(
+    (acc, r) => acc + r.salary_per_head * r.head_count,
+    0
+  );
+  const totalBudget = totalSalary + trainingBudget;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,12 +53,33 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     }));
   };
 
+  const handleHrChange = (index: number, field: string, value: string | number) => {
+    setHrRoles((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]:
+          field === "salary_per_head" || field === "head_count"
+            ? parseFloat(value as string) || 0
+            : value,
+      };
+      return updated;
+    });
+  };
+
+  const addHrRole = () => {
+    setHrRoles((prev) => [...prev, { role_name: "", salary_per_head: 0, head_count: 0 }]);
+  };
+
+  const removeHrRole = (index: number) => {
+    setHrRoles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    // Basic validation
     if (!form.name.trim()) {
       setError("Company name is required.");
       setLoading(false);
@@ -76,7 +111,17 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         ...form,
       });
 
-      // Reset form on success
+      await createHRDecisionWithRoles({
+        company_id: companyId,
+        period: 0,
+        is_submitted: true,
+        salary_budget: totalSalary,
+        training_budget: trainingBudget,
+        total_budget: totalBudget,
+        employee_satisfaction: employeeSatisfaction,
+        roles: hrRoles.filter((r) => r.role_name.trim() !== ""),
+      });
+
       setForm({
         name: "",
         description: "",
@@ -87,7 +132,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         credit_rating: "",
         brand_value: 0,
       });
-
+      setHrRoles([{ role_name: "", salary_per_head: 0, head_count: 0 }]);
+      setTrainingBudget(0);
+      setEmployeeSatisfaction(0);
       onCreated();
     } catch (err) {
       console.error("Failed to create company", err);
@@ -112,9 +159,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Company Name
-          </label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">Company Name</label>
           <input
             type="text"
             name="name"
@@ -126,9 +171,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
           <input
             type="text"
             name="description"
@@ -139,9 +182,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Logo URL
-          </label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">Logo URL</label>
           <input
             type="text"
             name="logo_url"
@@ -150,8 +191,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             className="w-full p-2 rounded bg-slate-800 text-white"
             placeholder="https://example.com/logo.png"
           />
-
-          {/* Logo Preview */}
           {form.logo_url && (
             <div className="mt-3 flex items-center gap-4">
               <div className="w-20 h-20 border border-slate-700 rounded-md overflow-hidden bg-slate-800">
@@ -167,12 +206,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           )}
         </div>
 
-        {/* Financial Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Cash Balance
-            </label>{" "}
+            <label className="block text-sm font-medium text-slate-300 mb-1">Cash Balance</label>
             <input
               type="number"
               name="cash_balance"
@@ -185,9 +221,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Total Assets
-            </label>{" "}
+            <label className="block text-sm font-medium text-slate-300 mb-1">Total Assets</label>
             <input
               type="number"
               name="total_assets"
@@ -200,9 +234,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Total Liabilities
-            </label>{" "}
+            <label className="block text-sm font-medium text-slate-300 mb-1">Total Liabilities</label>
             <input
               type="number"
               name="total_liabilities"
@@ -215,9 +247,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Credit Rating
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Credit Rating</label>
             <input
               type="text"
               name="credit_rating"
@@ -229,9 +259,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Brand Value
-          </label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">Brand Value</label>
           <input
             type="number"
             name="brand_value"
@@ -242,6 +270,17 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             className="w-full p-2 rounded bg-slate-800 text-white"
           />
         </div>
+        
+        <HRDecisionForm
+          hrRoles={hrRoles}
+          onRoleChange={handleHrChange}
+          onAddRole={addHrRole}
+          onRemoveRole={removeHrRole}
+          trainingBudget={trainingBudget}
+          onTrainingBudgetChange={setTrainingBudget}
+          employeeSatisfaction={employeeSatisfaction}
+          onEmployeeSatisfactionChange={setEmployeeSatisfaction}
+        />
 
         <div className="flex justify-end pt-4">
           <button
