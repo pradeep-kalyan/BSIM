@@ -1,47 +1,91 @@
 "use client";
-import React, { useEffect } from "react";
-import { company } from "@prisma/client";
-import Link from "next/link";
-import { useSimulation } from "@/app/context/SimulationContext";
 
-interface CardProps {
-  companies: company[];
+import React from "react";
+import Link from "next/link";
+import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { company } from "@prisma/client";
+
+interface ExtendedCompany extends company {
+  canAccess?: boolean;
+  canEdit?: boolean;
+  user_id: string; // The creator's user ID
+}
+
+interface CompanyCardProps {
+  companies: ExtendedCompany[];
+  currentUserId?: string;
+  onEdit?: (company: ExtendedCompany) => void;
+  onDelete?: (id: string) => void;
   simulationName: string;
   simulationID?: string; // Optional, if you want to use it for navigation or other purposes
 }
 
-const CompanyList: React.FC<CardProps> = ({
+const CompanyList: React.FC<CompanyCardProps> = ({
   companies,
+  currentUserId,
+  onEdit,
+  onDelete,
   simulationName,
-  simulationID,
 }) => {
-  const { setSimId } = useSimulation();
-  useEffect(() => {
-    setSimId(simulationID as string);
-  }, [setSimId]);
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this company?")) {
+      onDelete?.(id);
+    }
+  };
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6">Companies in {simulationName}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {companies.map((company) => (
-          <div
-            key={company.id}
-            className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 transition duration-300 hover:scale-[1.02] hover:shadow-2xl"
-          >
-            <Link
-              href={`/homepage/${company.id}`}
-              className="text-lg font-semibold text-white mb-2 truncate hover:text-blue-500 block"
+        {companies.map((company) => {
+          const isOwner = company.user_id === currentUserId;
+
+          return (
+            <div
+              key={company.id}
+              className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 flex flex-col justify-between relative"
             >
-              {company.name}
-            </Link>
-            <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
-              {company.description || "No description provided."}
-            </p>
-          </div>
-        ))}
+              {isOwner && (
+                <div className="absolute top-3 right-3 flex gap-2">
+                  <button
+                    onClick={() => onEdit?.(company)}
+                    className="p-2 bg-green-700 hover:bg-green-800 text-white rounded-full"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(company.id)}
+                    className="p-2 bg-red-700 hover:bg-red-800 text-white rounded-full"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-lg font-semibold mb-2 text-white truncate">
+                  {company.name}
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
+                  {company.description || "No description provided."}
+                </p>
+              </div>
+
+              <div className="flex justify-start mt-2">
+                {(isOwner || company.canAccess) && (
+                  <Link
+                    href={`/homepage/${company.id}`}
+                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-md"
+                  >
+                    <ExternalLink size={16} />
+                    Open
+                  </Link>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    
   );
 };
 

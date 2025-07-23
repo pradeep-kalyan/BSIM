@@ -3,11 +3,10 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCompany } from "@/app/_actions/company";
-import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 import { getCurrentUser } from "@/app/functions/jwt";
-import { Building2, Rocket, ImageIcon, PlusCircle, Trash2 } from "lucide-react";
-import HRDecisionForm from "./HRDecisionForm";
-
+import { Building2, Rocket } from "lucide-react";
+import HRDecisionForm from "@/app/(main)/management/_components/department-forms/HRDecisionForm";
+import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 interface Props {
   simulationID: string;
   onCreated: () => void;
@@ -25,22 +24,22 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     credit_rating: "",
     brand_value: 0,
   });
-
-  const [hrRoles, setHrRoles] = useState([
+ const [hrRoles, setHrRoles] = useState([
     { role_name: "", salary_per_head: 0, head_count: 0 },
   ]);
   const [salaryBudget, setSalaryBudget] = useState(0);
   const [trainingBudget, setTrainingBudget] = useState(0);
   const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
+  const [accessEmail, setAccessEmail] = useState("");
+  const [accessEmails, setAccessEmails] = useState<string[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const totalSalary = hrRoles.reduce(
+const totalSalary = hrRoles.reduce(
     (acc, r) => acc + r.salary_per_head * r.head_count,
     0
   );
   const totalBudget = totalSalary + trainingBudget;
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -52,7 +51,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         : value,
     }));
   };
-
   const handleHrChange = (index: number, field: string, value: string | number) => {
     setHrRoles((prev) => {
       const updated = [...prev];
@@ -66,13 +64,22 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       return updated;
     });
   };
-
-  const addHrRole = () => {
+const addHrRole = () => {
     setHrRoles((prev) => [...prev, { role_name: "", salary_per_head: 0, head_count: 0 }]);
   };
 
   const removeHrRole = (index: number) => {
     setHrRoles((prev) => prev.filter((_, i) => i !== index));
+  };
+  const handleAddEmail = () => {
+    if (accessEmail && !accessEmails.includes(accessEmail)) {
+      setAccessEmails((prev) => [...prev, accessEmail]);
+      setAccessEmail("");
+    }
+  };
+
+  const handleRemoveEmail = (email: string) => {
+    setAccessEmails((prev) => prev.filter((e) => e !== email));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,10 +112,11 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
-      const companyId = await createCompany({
+      const {companyId} = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
         ...form,
+         accessEmails
       });
 
       await createHRDecisionWithRoles({
@@ -144,6 +152,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     }
   };
 
+
   return (
     <div className="w-full max-w-2xl bg-slate-900 p-8 rounded-2xl shadow-md border border-slate-700">
       <div className="flex items-center gap-2 mb-6">
@@ -159,7 +168,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Company Name</label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Company Name
+          </label>
           <input
             type="text"
             name="name"
@@ -171,7 +182,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Description
+          </label>
           <input
             type="text"
             name="description"
@@ -182,7 +195,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Logo URL</label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Logo URL
+          </label>
           <input
             type="text"
             name="logo_url"
@@ -208,7 +223,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Cash Balance</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Cash Balance
+            </label>
             <input
               type="number"
               name="cash_balance"
@@ -221,7 +238,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Total Assets</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Total Assets
+            </label>
             <input
               type="number"
               name="total_assets"
@@ -234,7 +253,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Total Liabilities</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Total Liabilities
+            </label>
             <input
               type="number"
               name="total_liabilities"
@@ -247,7 +268,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Credit Rating</label>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Credit Rating
+            </label>
             <input
               type="text"
               name="credit_rating"
@@ -259,7 +282,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">Brand Value</label>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Brand Value
+          </label>
           <input
             type="number"
             name="brand_value"
@@ -270,7 +295,48 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             className="w-full p-2 rounded bg-slate-800 text-white"
           />
         </div>
-        
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Grant Access (Email)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={accessEmail}
+              onChange={(e) => setAccessEmail(e.target.value)}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+              placeholder="Enter email to grant access"
+            />
+            <button
+              type="button"
+              onClick={handleAddEmail}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Add
+            </button>
+          </div>
+
+          {accessEmails.length > 0 && (
+            <ul className="mt-3 space-y-1 text-slate-300 text-sm">
+              {accessEmails.map((email, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center justify-between bg-slate-800 p-2 rounded"
+                >
+                  {email}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveEmail(email)}
+                    className="text-red-400 hover:text-red-600"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <HRDecisionForm
           hrRoles={hrRoles}
           onRoleChange={handleHrChange}
@@ -281,7 +347,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           employeeSatisfaction={employeeSatisfaction}
           onEmployeeSatisfactionChange={setEmployeeSatisfaction}
         />
-
         <div className="flex justify-end pt-4">
           <button
             type="submit"
