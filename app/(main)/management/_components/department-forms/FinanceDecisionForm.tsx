@@ -25,7 +25,6 @@ const FinanceDecisionForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Submitted allocations:", allocations);
-    // TODO: handle backend submission via action or API
   };
 
   return (

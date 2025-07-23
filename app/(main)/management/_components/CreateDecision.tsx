@@ -11,23 +11,41 @@ interface Props {
   department: string;
 }
 
-const CreateDecision = ({ department}: Props) => {
+const allowedDepartments = ["finance", "hr", "marketing", "production", "rd"];
+
+const CreateDecision = ({
+  department,
+  onSuccess,
+}: {
+  department: string;
+  onSuccess: () => void;
+}) => {
+  const normalized = department.toLowerCase();
+
   const renderForm = () => {
-    switch (department.toLowerCase()) {
+    switch (normalized) {
       case "finance":
-        return <FinanceDecisionForm  />;
+        return <FinanceDecisionForm />;
       case "hr":
-        return <HRDecisionForm />;
+        return <HRDecisionForm  />;
       case "marketing":
-        return <MarketingDecisionForm />;
+        return <MarketingDecisionForm  />;
       case "production":
-        return <ProductionDecisionForm />;
+        return <ProductionDecisionForm  />;
       case "rd":
-        return <RDDecisionForm  />;
+        return <RDDecisionForm onSuccess={onSuccess} />;
       default:
-        return <div>Unsupported department</div>;
+        return null;
     }
   };
+
+  if (!["finance", "hr", "marketing", "production", "rd"].includes(normalized)) {
+    return (
+      <div className="border p-4 rounded-lg bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100">
+        Invalid department: <strong>{department}</strong>
+      </div>
+    );
+  }
 
   return (
     <div className="border p-4 rounded-lg bg-slate-800/60">
