@@ -35,7 +35,7 @@ CREATE TABLE "companies" (
     "description" TEXT,
     "logo_url" TEXT,
     "cash_balance" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "current_period" INTEGER NOT NULL DEFAULT 0,
+    "current_period" INTEGER NOT NULL DEFAULT 1,
     "data" TEXT NOT NULL DEFAULT '{}',
     "total_assets" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "total_liabilities" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -180,6 +180,70 @@ CREATE TABLE "events" (
     CONSTRAINT "events_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "finance_decisions" (
+    "id" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "period" INTEGER NOT NULL,
+    "investmentAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "loanAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "repayLoan" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "dividendPayout" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "equityIssue" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "notes" TEXT,
+    "processed" BOOLEAN NOT NULL DEFAULT false,
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "finance_decisions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "budget_requests" (
+    "id" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "period" INTEGER NOT NULL,
+    "department" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "notes" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "budget_requests_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "hr_decisions" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "period" INTEGER NOT NULL,
+    "is_submitted" BOOLEAN NOT NULL DEFAULT false,
+    "submitted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "salary_budget" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "training_budget" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "total_budget" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "employee_satisfaction" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "recruitment_cost" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "firing_cost" DOUBLE PRECISION NOT NULL DEFAULT 0,
+
+    CONSTRAINT "hr_decisions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "hr_role_decisions" (
+    "id" TEXT NOT NULL,
+    "hr_decision_id" TEXT NOT NULL,
+    "role_name" TEXT NOT NULL,
+    "salary_per_head" DOUBLE PRECISION NOT NULL,
+    "head_count" INTEGER NOT NULL,
+
+    CONSTRAINT "hr_role_decisions_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -197,3 +261,12 @@ CREATE UNIQUE INDEX "performance_results_company_id_period_key" ON "performance_
 
 -- CreateIndex
 CREATE UNIQUE INDEX "product_performances_product_id_period_key" ON "product_performances"("product_id", "period");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "finance_decisions_companyId_period_key" ON "finance_decisions"("companyId", "period");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "budget_requests_companyId_period_department_key" ON "budget_requests"("companyId", "period", "department");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "hr_decisions_company_id_period_key" ON "hr_decisions"("company_id", "period");

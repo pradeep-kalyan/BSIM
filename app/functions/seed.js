@@ -44,6 +44,35 @@ function main() {
             switch (_a.label) {
                 case 0:
                     console.log("🌱 Starting database seed...");
+                    // Clear existing data
+                    return [4 /*yield*/, prisma_1.default.event.deleteMany()];
+                case 1:
+                    // Clear existing data
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.product_performance.deleteMany()];
+                case 2:
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.performance_result.deleteMany()];
+                case 3:
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.market_condition.deleteMany()];
+                case 4:
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.decision.deleteMany()];
+                case 5:
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.product.deleteMany()];
+                case 6:
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.company.deleteMany()];
+                case 7:
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.simulation.deleteMany()];
+                case 8:
+                    _a.sent();
+                    return [4 /*yield*/, prisma_1.default.user.deleteMany()];
+                case 9:
+                    _a.sent();
                     hashedPassword = "$2y$10$oV0RDjW0/9FIJ87.db7Oied03ymlfQQOLY0u.JGznOm8Dpit6fniq";
                     return [4 /*yield*/, Promise.all([
                             prisma_1.default.user.create({
@@ -79,7 +108,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 1:
+                case 10:
                     users = _a.sent();
                     console.log("✅ Created users");
                     electronicsConfig = {
@@ -102,7 +131,6 @@ function main() {
                                     name: "Global Electronics Market",
                                     description: "A comprehensive simulation of the global electronics market including smartphones, laptops, and wearables",
                                     config: JSON.stringify(electronicsConfig),
-                                    current_period: 3,
                                     status: "active",
                                     created_by: users[0].id,
                                 },
@@ -112,13 +140,12 @@ function main() {
                                     name: "Sustainable Fashion Industry",
                                     description: "Simulation focused on sustainable fashion and apparel industry dynamics",
                                     config: JSON.stringify(fashionConfig),
-                                    current_period: 2,
                                     status: "active",
                                     created_by: users[0].id,
                                 },
                             }),
                         ])];
-                case 2:
+                case 11:
                     simulations = _a.sent();
                     console.log("✅ Created simulations");
                     return [4 /*yield*/, Promise.all([
@@ -181,7 +208,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 3:
+                case 12:
                     companies = _a.sent();
                     console.log("✅ Created companies");
                     return [4 /*yield*/, Promise.all([
@@ -285,7 +312,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 4:
+                case 13:
                     products = _a.sent();
                     console.log("✅ Created products");
                     electronicsSegments = {
@@ -395,7 +422,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 5:
+                case 14:
                     marketConditions = _a.sent();
                     console.log("✅ Created market conditions");
                     return [4 /*yield*/, Promise.all([
@@ -454,7 +481,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 6:
+                case 15:
                     performanceResults = _a.sent();
                     console.log("✅ Created performance results");
                     marketingDecision = {
@@ -507,7 +534,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 7:
+                case 16:
                     decisions = _a.sent();
                     console.log("✅ Created decisions");
                     return [4 /*yield*/, Promise.all([
@@ -548,7 +575,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 8:
+                case 17:
                     events = _a.sent();
                     console.log("✅ Created events");
                     return [4 /*yield*/, Promise.all([
@@ -589,7 +616,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 9:
+                case 18:
                     productPerformances = _a.sent();
                     console.log("✅ Created product performances");
                     console.log("🎉 Seed completed successfully!");

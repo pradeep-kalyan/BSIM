@@ -70,6 +70,7 @@ model company {
   performance_results performance_result[]
   products            product[]
   company_access      company_access[]
+  hr_decisions        hr_decision[]
   financeDecisions    FinanceDecision[]
   budgetRequests   BudgetRequest[] 
   @@map("companies")
@@ -257,4 +258,35 @@ model BudgetRequest {
 
   @@unique([companyId, period, department])
   @@map("budget_requests")
+}
+model hr_decision {
+  id                    String             @id @default(cuid())
+  company_id            String
+  period                Int 
+  is_submitted          Boolean            @default(false)
+  submitted_at          DateTime           @default(now())
+ 
+  salary_budget         Float              @default(0)
+  training_budget       Float              @default(0)
+  total_budget          Float              @default(0)
+  employee_satisfaction Float              @default(0)
+  recruitment_cost       Float              @default(0) 
+  firing_cost            Float              @default(0)  
+  company               company            @relation(fields: [company_id], references: [id])
+  roles                 hr_role_decision[]
+ 
+  @@unique([company_id, period])
+  @@map("hr_decisions")
+}
+ 
+model hr_role_decision {
+  id              String     @id @default(cuid())
+  hr_decision_id  String
+  role_name       String
+  salary_per_head Float
+  head_count      Int
+ 
+  hr_decision     hr_decision @relation(fields: [hr_decision_id], references: [id])
+ 
+  @@map("hr_role_decisions")
 }

@@ -2,14 +2,27 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, PlusCircle, Rocket, LayoutDashboard } from "lucide-react";
+import {
+  CheckCircle,
+  PlusCircle,
+  Rocket,
+  LayoutDashboard,
+} from "lucide-react";
 import { getProductsByCompany } from "@/app/_actions/products";
 import { product } from "@prisma/client";
 import CreateProduct from "../../_components/CreateProduct";
 import ProductsCard from "../../_components/ProductsCard";
 
-const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
-  const resolvedParams = React.use(params);
+interface PageProps {
+  params: {
+    companyID: string;
+    simulationID: string;
+  };
+}
+
+const Page = ({ params }: PageProps) => {
+  const { companyID, simulationID } = params;
+
   const [products, setProducts] = useState<product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -17,7 +30,7 @@ const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
 
   const fetchProducts = async () => {
     try {
-      const data = await getProductsByCompany(resolvedParams.companyID);
+      const data = await getProductsByCompany(companyID);
       setProducts(data);
       setInitialLoad(false);
     } catch (error) {
@@ -29,9 +42,8 @@ const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
   const handleProductCreated = () => {
     setSuccess(true);
     setShowForm(false);
-    fetchProducts(); // Refresh the product list
+    fetchProducts();
 
-    // Hide success message after 3 seconds
     setTimeout(() => {
       setSuccess(false);
     }, 3000);
@@ -64,7 +76,6 @@ const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white py-10 px-4 relative">
-      {/* Header Section */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-white mb-6">Products</h2>
         {products.length > 0 && (
@@ -89,7 +100,6 @@ const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
         )}
       </div>
 
-      {/* Success Notification */}
       <AnimatePresence>
         {success && (
           <motion.div
@@ -105,7 +115,6 @@ const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
       <div className="relative z-10">
         <AnimatePresence mode="wait">
           {showForm ? (
@@ -118,8 +127,9 @@ const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
               className="flex justify-center items-center w-full mt-8"
             >
               <CreateProduct
-                companyID={resolvedParams.companyID}
-                onSuccess={handleProductCreated}
+                companyID={companyID}
+                simulationID={simulationID}
+                onCreated={handleProductCreated}
               />
             </motion.div>
           ) : products.length > 0 ? (
@@ -156,15 +166,15 @@ const Page = ({ params }: { params: Promise<{ companyID: string }> }) => {
               </div>
 
               <CreateProduct
-                companyID={resolvedParams.companyID}
-                onSuccess={handleProductCreated}
+                companyID={companyID}
+                simulationID={simulationID}
+                onCreated={handleProductCreated}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Background Glow Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>

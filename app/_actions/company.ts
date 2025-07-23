@@ -307,15 +307,3 @@ export async function deleteCompany(companyId: string) {
 
   revalidatePath("/companies");
 }
-
-export async function getUserCompany(userId: string, simulationId: string) {
-  return await prisma.company.findFirst({
-    where: {
-      simulation_id: simulationId,
-      OR: [
-        { user_id: userId },
-        { company_access: { some: { user_id: userId } } },
-      ],
-    },
-  });
-}

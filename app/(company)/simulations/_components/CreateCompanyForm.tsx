@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { createCompany } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { Building2, Rocket } from "lucide-react";
-
+import HRDecisionForm from "@/app/(main)/management/_components/department-forms/HRDecisionForm";
+import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 interface Props {
   simulationID: string;
   onCreated: () => void;
@@ -23,13 +24,22 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     credit_rating: "",
     brand_value: 0,
   });
-
+ const [hrRoles, setHrRoles] = useState([
+    { role_name: "", salary_per_head: 0, head_count: 0 },
+  ]);
+  const [salaryBudget, setSalaryBudget] = useState(0);
+  const [trainingBudget, setTrainingBudget] = useState(0);
+  const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
   const [accessEmail, setAccessEmail] = useState("");
   const [accessEmails, setAccessEmails] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
+const totalSalary = hrRoles.reduce(
+    (acc, r) => acc + r.salary_per_head * r.head_count,
+    0
+  );
+  const totalBudget = totalSalary + trainingBudget;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -41,7 +51,26 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         : value,
     }));
   };
+  const handleHrChange = (index: number, field: string, value: string | number) => {
+    setHrRoles((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]:
+          field === "salary_per_head" || field === "head_count"
+            ? parseFloat(value as string) || 0
+            : value,
+      };
+      return updated;
+    });
+  };
+const addHrRole = () => {
+    setHrRoles((prev) => [...prev, { role_name: "", salary_per_head: 0, head_count: 0 }]);
+  };
 
+  const removeHrRole = (index: number) => {
+    setHrRoles((prev) => prev.filter((_, i) => i !== index));
+  };
   const handleAddEmail = () => {
     if (accessEmail && !accessEmails.includes(accessEmail)) {
       setAccessEmails((prev) => [...prev, accessEmail]);
@@ -83,13 +112,37 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
-      const company = await createCompany({
+      const {companyId} = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
         ...form,
-        accessEmails, 
+         accessEmails
       });
 
+      await createHRDecisionWithRoles({
+        company_id: companyId,
+        period: 0,
+        is_submitted: true,
+        salary_budget: totalSalary,
+        training_budget: trainingBudget,
+        total_budget: totalBudget,
+        employee_satisfaction: employeeSatisfaction,
+        roles: hrRoles.filter((r) => r.role_name.trim() !== ""),
+      });
+
+      setForm({
+        name: "",
+        description: "",
+        logo_url: "",
+        cash_balance: 0,
+        total_assets: 0,
+        total_liabilities: 0,
+        credit_rating: "",
+        brand_value: 0,
+      });
+      setHrRoles([{ role_name: "", salary_per_head: 0, head_count: 0 }]);
+      setTrainingBudget(0);
+      setEmployeeSatisfaction(0);
       onCreated();
     } catch (err) {
       console.error("Failed to create company", err);
@@ -98,6 +151,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="w-full max-w-2xl bg-slate-900 p-8 rounded-2xl shadow-md border border-slate-700">
@@ -283,7 +337,16 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             </ul>
           )}
         </div>
-
+        <HRDecisionForm
+          hrRoles={hrRoles}
+          onRoleChange={handleHrChange}
+          onAddRole={addHrRole}
+          onRemoveRole={removeHrRole}
+          trainingBudget={trainingBudget}
+          onTrainingBudgetChange={setTrainingBudget}
+          employeeSatisfaction={employeeSatisfaction}
+          onEmployeeSatisfactionChange={setEmployeeSatisfaction}
+        />
         <div className="flex justify-end pt-4">
           <button
             type="submit"

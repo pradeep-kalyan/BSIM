@@ -1,12 +1,11 @@
-import React from "react";
-import DecisionTab from "../../_components/DecisionTab";
+"use client";
 
-const page = () => {
-  return (
-    <div className="p-4">
-      <DecisionTab />
-    </div>
-  );
-};
+import { useParams } from "next/navigation";
+import HRDashboard from "@/app/(main)/_components/HRDashboard";
 
-export default page;
+export default function HRPage() {
+  const params = useParams();
+  const companyID = params?.companyID as string;
+
+  return <HRDashboard companyId={companyID} />;
+}

@@ -131,7 +131,7 @@ const page = async ({ params }: { params: { companyID: string } }) => {
         <div className="mb-6">
           <h2 className="text-3xl font-bold mb-2">{company.name}</h2>
           <p className="text-gray-300 text-lg">
-            Period {company.current_period} | Cash:{" "}
+            Period {} | Cash:{" "}
             {formatCurrency(company.cash_balance)}
           </p>
         </div>
