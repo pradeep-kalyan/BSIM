@@ -3,13 +3,13 @@ import prisma from "@/app/functions/prisma";
 import CompanyPage from "./CompanyPage";
 
 interface PageProps {
-  params: { simulationID: string };
+  params: Promise<{ simulationID: string }>;
 }
 
 const Page = async ({ params }: PageProps) => {
-  const id = await params;
+  const { simulationID } = await params;
   const simulation = await prisma.simulation.findUnique({
-    where: { id: id.simulationID },
+    where: { id: simulationID },
   });
 
   if (!simulation) {

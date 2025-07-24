@@ -2,104 +2,62 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CheckCircle,
-  PlusCircle,
-  Rocket,
-  LayoutDashboard,
-} from "lucide-react";
+import { CheckCircle, PlusCircle, BarChart3 } from "lucide-react";
 import { getProductsByCompany } from "@/app/_actions/products";
 import { product } from "@prisma/client";
 import CreateProduct from "../../_components/CreateProduct";
-import ProductsCard from "../../_components/ProductsCard";
+import ProductPerf from "../../_components/ProductPerf";
+import { useRouter } from "next/navigation";
+import { useSimulation } from "@/app/context/SimulationContext";
+
+type TabType = "create" | "performance";
 
 interface PageProps {
-  params: {
-    companyID: string;
-    simulationID: string;
-  };
+  params: Promise<{ companyID: string }>;
 }
 
 const Page = ({ params }: PageProps) => {
-  const { companyID, simulationID } = params;
-
+  const { companyID } = React.use(params);
+  const { comId, simId } = useSimulation();
   const [products, setProducts] = useState<product[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>("create");
   const [success, setSuccess] = useState(false);
+  const [showForm, setShowForm] = useState(true);
+  const router = useRouter();
 
   const fetchProducts = async () => {
     try {
-      const data = await getProductsByCompany(companyID);
+      const data = await getProductsByCompany(comId!);
       setProducts(data);
-      setInitialLoad(false);
     } catch (error) {
       console.error("Error fetching products:", error);
-      setInitialLoad(false);
     }
   };
 
   const handleProductCreated = () => {
     setSuccess(true);
     setShowForm(false);
-    fetchProducts();
-
     setTimeout(() => {
       setSuccess(false);
-    }, 3000);
+      router.push(`/products/catalog/${companyID}`);
+    }, 2000);
+  };
+
+  const handlePerformanceCreated = () => {
+    setSuccess(true);
+    setTimeout(() => {
+      setSuccess(false);
+      router.push(`/products/catalog/${comId}?tab=performance`);
+    }, 2000);
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  if (initialLoad) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white flex justify-center items-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <div className="relative mb-6">
-            <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-16 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
-          </div>
-          <p className="text-slate-300 text-lg font-medium">
-            Loading products...
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white py-10 px-4 relative">
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold text-white mb-6">Products</h2>
-        {products.length > 0 && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowForm((prev) => !prev)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg text-white font-medium shadow-lg transition-all duration-200 self-start sm:self-auto"
-          >
-            {showForm ? (
-              <>
-                <LayoutDashboard className="w-5 h-5" />
-                View Products
-              </>
-            ) : (
-              <>
-                <PlusCircle className="w-5 h-5" />
-                Create Product
-              </>
-            )}
-          </motion.button>
-        )}
-      </div>
-
+    <div className="h-full text-white py-10 px-4 relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Success Notification */}
       <AnimatePresence>
         {success && (
           <motion.div
@@ -110,75 +68,90 @@ const Page = ({ params }: PageProps) => {
             className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 border border-green-400"
           >
             <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">Product created successfully!</span>
+            <span className="font-medium">
+              {activeTab === "create"
+                ? "Product created successfully!"
+                : "Performance data created successfully!"}
+            </span>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* Tab Navigation */}
+      <div className="flex justify-center mb-10">
+        <div className="flex bg-slate-800/60 backdrop-blur-sm rounded-full p-1 border border-slate-700/40 shadow-inner shadow-slate-800/40">
+          {[
+            {
+              key: "create",
+              label: "Create Product",
+              icon: PlusCircle,
+              color: "blue",
+            },
+            {
+              key: "performance",
+              label: "Manage Performance",
+              icon: BarChart3,
+              color: "purple",
+            },
+          ].map(({ key, label, icon: Icon, color }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key as TabType)}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-medium transition-all duration-300 ${
+                activeTab === key
+                  ? `bg-${color}-500 text-white shadow-md shadow-${color}-500/30`
+                  : "text-slate-400 hover:text-white hover:bg-slate-700/40"
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab Content */}
       <div className="relative z-10">
         <AnimatePresence mode="wait">
-          {showForm ? (
+          {activeTab === "create" ? (
             <motion.div
-              key="create-form"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4 }}
-              className="flex justify-center items-center w-full mt-8"
+              key="create-tab"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              <CreateProduct
-                companyID={companyID}
-                simulationID={simulationID}
-                onCreated={handleProductCreated}
-              />
-            </motion.div>
-          ) : products.length > 0 ? (
-            <motion.div
-              key="products-grid"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="mt-8"
-            >
-              <ProductsCard products={products} />
+              {showForm && (
+                <CreateProduct
+                  companyID={companyID}
+                  simulationID={simId}
+                  onCreated={handleProductCreated}
+                />
+              )}
             </motion.div>
           ) : (
             <motion.div
-              key="empty-state"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="flex justify-center items-center w-full min-h-[500px] flex-col mt-8"
+              key="performance-tab"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="text-center mb-8 max-w-md mx-auto">
-                <div className="w-24 h-24 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <Rocket className="w-12 h-12 text-blue-400" />
-                </div>
-                <h3 className="text-3xl font-bold text-white mb-4">
-                  Ready to Start?
-                </h3>
-                <p className="text-slate-300 text-lg mb-8">
-                  Create your first product to begin your entrepreneurial
-                  journey
-                </p>
-              </div>
-
-              <CreateProduct
-                companyID={companyID}
-                simulationID={simulationID}
-                onCreated={handleProductCreated}
+              <ProductPerf
+                products={products}
+                company_id={companyID}
+                onSuccess={handlePerformanceCreated}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
+      {/* Background Pulses */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-pink-500/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute top-[10%] left-[20%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-[10%] right-[15%] w-[300px] h-[300px] bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-[250px] h-[250px] -translate-x-1/2 -translate-y-1/2 bg-pink-500/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
     </div>
   );

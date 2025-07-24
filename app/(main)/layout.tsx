@@ -5,7 +5,7 @@ import Link from "next/link";
 import { checkAuthStatus } from "@/app/_actions/auth";
 import { JWTPayload } from "@/app/functions/jwt";
 import LogoutBtn from "../(auth)/_components/Logout";
-import { motion, AnimatePresence, LayoutGroup } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   HomeIcon,
   ChartBarIcon,
@@ -18,7 +18,6 @@ import {
   BeakerIcon,
   TagIcon,
   PlusCircleIcon,
-  ArrowRight,
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
 
@@ -242,7 +241,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main Content */}
 
-      <div className="md:w-4/5 h-full flex">
+      <div className="md:w-4/5 max-h-full flex">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}

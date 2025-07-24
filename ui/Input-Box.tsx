@@ -9,6 +9,7 @@ interface InputboxProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
+  props?: React.InputHTMLAttributes<HTMLInputElement>;
 }
 
 const Inputbox: React.FC<InputboxProps> = ({
@@ -20,6 +21,7 @@ const Inputbox: React.FC<InputboxProps> = ({
   value,
   onChange,
   required = true,
+  props,
 }) => {
   return (
     <div className="flex flex-col w-full bg-transparent rounded-md">
@@ -38,6 +40,7 @@ const Inputbox: React.FC<InputboxProps> = ({
         value={value}
         onChange={onChange}
         required={required}
+        {...props}
       />
     </div>
   );
