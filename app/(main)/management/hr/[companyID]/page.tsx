@@ -1,7 +1,11 @@
-import React from "react";
+"use client";
 
-const page = () => {
-  return <div>page</div>;
-};
+import { useParams } from "next/navigation";
+import HRDashboard from "@/app/(main)/_components/HRDashboard";
 
-export default page;
+export default function HRPage() {
+  const params = useParams();
+  const companyID = params?.companyID as string;
+
+  return <HRDashboard companyId={companyID} />;
+}

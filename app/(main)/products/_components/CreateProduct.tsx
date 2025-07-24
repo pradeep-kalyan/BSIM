@@ -1,13 +1,116 @@
 "use client";
+<<<<<<< HEAD
 import React from "react";
 import { useRouter } from "next/navigation";
 import Inputbox from "@/ui/Input-Box";
 import { createProduct } from "@/app/_actions/products";
+=======
+>>>>>>> 02760c2242a0c670c98a8b91a88aad551ba6f4d7
 
-type CreateProductProps = {
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createCompany } from "@/app/_actions/company";
+import { createHRDecisionWithRoles } from "@/app/_actions/hr";
+import { getCurrentUser } from "@/app/functions/jwt";
+import { Building2, Rocket, ImageIcon, PlusCircle, Trash2 } from "lucide-react";
+import HRDecisionForm from "../../management/_components/department-forms/HRDecisionForm";
+
+interface Props {
+  simulationID: string;
   companyID: string;
-  onSuccess?: () => void;
-};
+  onCreated: () => void;
+}
+
+const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    logo_url: "",
+    cash_balance: 0,
+    total_assets: 0,
+    total_liabilities: 0,
+    credit_rating: "",
+    brand_value: 0,
+  });
+
+  const [hrRoles, setHrRoles] = useState([
+    { role_name: "", salary_per_head: 0, head_count: 0 },
+  ]);
+  const [salaryBudget, setSalaryBudget] = useState(0);
+  const [trainingBudget, setTrainingBudget] = useState(0);
+  const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const totalSalary = hrRoles.reduce(
+    (acc, r) => acc + r.salary_per_head * r.head_count,
+    0
+  );
+  const totalBudget = totalSalary + trainingBudget;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: name.match(/balance|assets|liabilities|brand_value/)
+        ? value === ""
+          ? 0
+          : parseFloat(value) || 0
+        : value,
+    }));
+  };
+
+  const handleHrChange = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
+    setHrRoles((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]:
+          field === "salary_per_head" || field === "head_count"
+            ? parseFloat(value as string) || 0
+            : value,
+      };
+      return updated;
+    });
+  };
+
+  const addHrRole = () => {
+    setHrRoles((prev) => [
+      ...prev,
+      { role_name: "", salary_per_head: 0, head_count: 0 },
+    ]);
+  };
+
+  const removeHrRole = (index: number) => {
+    setHrRoles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (!form.name.trim()) {
+      setError("Company name is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      form.cash_balance < 0 ||
+      form.total_assets < 0 ||
+      form.total_liabilities < 0 ||
+      form.brand_value < 0
+    ) {
+      setError("Financial values cannot be negative.");
+      setLoading(false);
+      return;
+    }
 
 const CreateProduct = ({ companyID, onSuccess }: CreateProductProps) => {
   const router = useRouter();
@@ -288,8 +391,167 @@ const CreateProduct = ({ companyID, onSuccess }: CreateProductProps) => {
           </form>
         </div>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {error && (
+          <p className="text-red-400 bg-red-500/10 px-4 py-2 rounded">
+            {error}
+          </p>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Company Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Description
+          </label>
+          <input
+            type="text"
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Logo URL
+          </label>
+          <input
+            type="text"
+            name="logo_url"
+            value={form.logo_url}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+            placeholder="https://example.com/logo.png"
+          />
+          {form.logo_url && (
+            <div className="mt-3 flex items-center gap-4">
+              <div className="w-20 h-20 border border-slate-700 rounded-md overflow-hidden bg-slate-800">
+                <img
+                  src={form.logo_url}
+                  alt="Logo Preview"
+                  className="w-full h-full object-contain"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              </div>
+              <p className="text-sm text-slate-400">Logo preview</p>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Cash Balance
+            </label>
+            <input
+              type="number"
+              name="cash_balance"
+              value={form.cash_balance}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Total Assets
+            </label>
+            <input
+              type="number"
+              name="total_assets"
+              value={form.total_assets}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Total Liabilities
+            </label>
+            <input
+              type="number"
+              name="total_liabilities"
+              value={form.total_liabilities}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">
+              Credit Rating
+            </label>
+            <input
+              type="text"
+              name="credit_rating"
+              value={form.credit_rating}
+              onChange={handleChange}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            Brand Value
+          </label>
+          <input
+            type="number"
+            name="brand_value"
+            value={form.brand_value}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
+            className="w-full p-2 rounded bg-slate-800 text-white"
+          />
+        </div>
+
+        <HRDecisionForm
+          hrRoles={hrRoles}
+          onRoleChange={handleHrChange}
+          onAddRole={addHrRole}
+          onRemoveRole={removeHrRole}
+          trainingBudget={trainingBudget}
+          onTrainingBudgetChange={setTrainingBudget}
+          employeeSatisfaction={employeeSatisfaction}
+          onEmployeeSatisfactionChange={setEmployeeSatisfaction}
+        />
+
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={loading || !form.name.trim()}
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition"
+          >
+            <Rocket size={18} />
+            {loading ? "Creating..." : "Create Company"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default CreateProduct;
+export default CreateCompanyForm;

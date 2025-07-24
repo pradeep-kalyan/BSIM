@@ -17,6 +17,7 @@ CREATE TABLE "simulations" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "config" TEXT NOT NULL DEFAULT '{}',
+    "current_period" INTEGER NOT NULL DEFAULT 0,
     "status" TEXT NOT NULL DEFAULT 'active',
     "created_by" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -34,7 +35,7 @@ CREATE TABLE "companies" (
     "description" TEXT,
     "logo_url" TEXT,
     "cash_balance" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "current_period" INTEGER NOT NULL DEFAULT 0,
+    "current_period" INTEGER NOT NULL DEFAULT 1,
     "data" TEXT NOT NULL DEFAULT '{}',
     "total_assets" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "total_liabilities" DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -44,6 +45,28 @@ CREATE TABLE "companies" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "companies_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "simulation_access" (
+    "id" TEXT NOT NULL,
+    "simulation_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "access_level" TEXT NOT NULL DEFAULT 'viewer',
+    "granted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "simulation_access_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "company_access" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "access_level" TEXT NOT NULL DEFAULT 'viewer',
+    "granted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "company_access_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -69,6 +92,20 @@ CREATE TABLE "products" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "decisions" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "period" INTEGER NOT NULL,
+    "type" TEXT NOT NULL,
+    "decision_data" TEXT NOT NULL,
+    "submitted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "processed" BOOLEAN NOT NULL DEFAULT false,
+    "processed_at" TIMESTAMP(3),
+
+    CONSTRAINT "decisions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -144,6 +181,42 @@ CREATE TABLE "events" (
 );
 
 -- CreateTable
+CREATE TABLE "finance_decisions" (
+    "id" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "period" INTEGER NOT NULL,
+    "investmentAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "loanAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "repayLoan" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "dividendPayout" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "equityIssue" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "notes" TEXT,
+    "processed" BOOLEAN NOT NULL DEFAULT false,
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "finance_decisions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "budget_requests" (
+    "id" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "period" INTEGER NOT NULL,
+    "department" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "notes" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "budget_requests_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "hr_decisions" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
@@ -171,79 +244,14 @@ CREATE TABLE "hr_role_decisions" (
     CONSTRAINT "hr_role_decisions_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "production_decisions" (
-    "id" TEXT NOT NULL,
-    "company_id" TEXT NOT NULL,
-    "period" INTEGER NOT NULL,
-    "inventory_level" INTEGER NOT NULL DEFAULT 0,
-    "production_capacity" INTEGER NOT NULL DEFAULT 2000,
-    "processed" BOOLEAN NOT NULL DEFAULT false,
-    "submitted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "production_decisions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "finance_decisions" (
-    "id" TEXT NOT NULL,
-    "companyId" TEXT NOT NULL,
-    "period" INTEGER NOT NULL,
-    "investmentAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "loanAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "repayLoan" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "dividendPayout" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "equityIssue" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "notes" TEXT,
-    "processed" BOOLEAN NOT NULL DEFAULT false,
-    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "finance_decisions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "marketing_decisions" (
-    "id" TEXT NOT NULL,
-    "companyId" TEXT NOT NULL,
-    "period" INTEGER NOT NULL,
-    "processed" BOOLEAN NOT NULL DEFAULT false,
-    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "campaignType" TEXT NOT NULL,
-    "budget" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "targetSegment" TEXT,
-    "prBudget" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "socialMediaBudget" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "productFocus" TEXT,
-    "notes" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "marketing_decisions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "rnd_decisions" (
-    "id" TEXT NOT NULL,
-    "companyId" TEXT NOT NULL,
-    "period" INTEGER NOT NULL,
-    "processed" BOOLEAN NOT NULL DEFAULT false,
-    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "researchBudget" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "productInnovationBudget" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "processImprovementBudget" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "sustainabilityBudget" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "patentApplications" INTEGER NOT NULL DEFAULT 0,
-    "notes" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "rnd_decisions_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "simulation_access_simulation_id_user_id_key" ON "simulation_access"("simulation_id", "user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "company_access_company_id_user_id_key" ON "company_access"("company_id", "user_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "market_conditions_simulation_id_period_key" ON "market_conditions"("simulation_id", "period");
@@ -255,58 +263,10 @@ CREATE UNIQUE INDEX "performance_results_company_id_period_key" ON "performance_
 CREATE UNIQUE INDEX "product_performances_product_id_period_key" ON "product_performances"("product_id", "period");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "hr_decisions_company_id_period_key" ON "hr_decisions"("company_id", "period");
-
--- CreateIndex
-CREATE UNIQUE INDEX "production_decisions_company_id_period_key" ON "production_decisions"("company_id", "period");
-
--- CreateIndex
 CREATE UNIQUE INDEX "finance_decisions_companyId_period_key" ON "finance_decisions"("companyId", "period");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "marketing_decisions_companyId_period_key" ON "marketing_decisions"("companyId", "period");
+CREATE UNIQUE INDEX "budget_requests_companyId_period_department_key" ON "budget_requests"("companyId", "period", "department");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "rnd_decisions_companyId_period_key" ON "rnd_decisions"("companyId", "period");
-
--- AddForeignKey
-ALTER TABLE "simulations" ADD CONSTRAINT "simulations_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "companies" ADD CONSTRAINT "companies_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "simulations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "companies" ADD CONSTRAINT "companies_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "products" ADD CONSTRAINT "products_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "market_conditions" ADD CONSTRAINT "market_conditions_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "simulations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "performance_results" ADD CONSTRAINT "performance_results_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "product_performances" ADD CONSTRAINT "product_performances_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "events" ADD CONSTRAINT "events_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "simulations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "hr_decisions" ADD CONSTRAINT "hr_decisions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "hr_role_decisions" ADD CONSTRAINT "hr_role_decisions_hr_decision_id_fkey" FOREIGN KEY ("hr_decision_id") REFERENCES "hr_decisions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "production_decisions" ADD CONSTRAINT "production_decisions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "finance_decisions" ADD CONSTRAINT "finance_decisions_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "marketing_decisions" ADD CONSTRAINT "marketing_decisions_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "rnd_decisions" ADD CONSTRAINT "rnd_decisions_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+CREATE UNIQUE INDEX "hr_decisions_company_id_period_key" ON "hr_decisions"("company_id", "period");
