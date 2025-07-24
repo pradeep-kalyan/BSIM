@@ -2,8 +2,8 @@ import React from "react";
 import ProductTabsInterface from "../../_components/ProductTabs";
 import { prisma } from "@/app/functions/prisma";
 
-const Page = async ({ params }: { params: { companyID: string } }) => {
-  const companyID = params.companyID;
+const Page = async ({ params }: { params: Promise<{ companyID: string }> }) => {
+  const { companyID } = await params;
 
   // Get company with current_period and all product performance data
   const company = await prisma.company.findUnique({

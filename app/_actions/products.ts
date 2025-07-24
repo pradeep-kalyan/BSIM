@@ -1,9 +1,9 @@
 "use server";
 
-import { redirect } from "next/dist/server/api-utils";
 import prisma from "../functions/prisma";
 import { revalidatePath } from "next/cache";
 import { updateCompany } from "./company";
+import { redirect } from "next/navigation";
 
 // Product operations
 export async function getProduct(id: string) {
@@ -82,9 +82,7 @@ export async function createProduct(formData: FormData) {
         selling_price: formData.get("selling_price")
           ? parseFloat(formData.get("selling_price") as string)
           : 0,
-        inventory_level: formData.get("inventory_level")
-          ? parseInt(formData.get("inventory_level") as string)
-          : 0,
+        inventory_level: inventory_level,
         production_capacity: formData.get("production_capacity")
           ? parseInt(formData.get("production_capacity") as string)
           : 2000,
@@ -105,6 +103,7 @@ export async function createProduct(formData: FormData) {
     });
     revalidatePath("/products");
     revalidatePath(`/companies/${formData.get("company_id")}`);
+    redirect(`/products/catalog`);
     return product.id;
   } catch (error) {
     console.error("Error creating product:", error);
@@ -215,5 +214,52 @@ export async function createProductPerformance(formData: FormData) {
   } catch (error) {
     console.error("Error creating product performance:", error);
     throw new Error("Failed to create product performance");
+  }
+}
+
+export async function CreateProductionDecision(formData: FormData) {
+  try {
+    // This function would create a production decision
+    // For now, I'll create a placeholder implementation
+    const companyId = formData.get("company_id") as string;
+    const period = parseInt(formData.get("period") as string);
+    const decisionData = {
+      inventory_level: parseInt(formData.get("inventory_level") as string) || 0,
+      production_capacity:
+        parseInt(formData.get("production_capacity") as string) || 0,
+    };
+
+    const decision = await prisma.decision.create({
+      data: {
+        company_id: companyId,
+        period,
+        type: "production",
+        decision_data: JSON.stringify(decisionData),
+      },
+    });
+
+    revalidatePath("/management/production");
+    return decision.id;
+  } catch (error) {
+    console.error("Error creating production decision:", error);
+    throw new Error("Failed to create production decision");
+  }
+}
+
+export async function getProductionDecisions(companyId: string) {
+  try {
+    const decisions = await prisma.decision.findMany({
+      where: {
+        company_id: companyId,
+        type: "production",
+      },
+      orderBy: {
+        period: "desc",
+      },
+    });
+    return decisions;
+  } catch (error) {
+    console.error("Error fetching production decisions:", error);
+    throw new Error("Failed to fetch production decisions");
   }
 }

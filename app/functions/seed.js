@@ -39,41 +39,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var prisma_1 = require("./prisma");
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var hashedPassword, users, electronicsConfig, fashionConfig, simulations, companies, products, electronicsSegments, electronicsSegmentsPeriod2, fashionSegments, economicIndicatorsPeriod1, economicIndicatorsPeriod2, fashionEconomicIndicators, electronicsConsumerPrefs, electronicsConsumerPrefsPeriod2, fashionConsumerPrefs, electronicsTechTrends, electronicsTechTrendsPeriod2, fashionTechTrends, marketConditions, performanceResults, marketingDecision, rdDecision, productionDecision, decisions, events, productPerformances;
+        var hashedPassword, users, electronicsConfig, fashionConfig, simulations, companies, products, marketConditions, performanceResults, marketingDecision, rdDecision, productionDecision, events, productPerformances;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log("🌱 Starting database seed...");
-                    // Clear existing data
-                    return [4 /*yield*/, prisma_1.default.event.deleteMany()];
-                case 1:
-                    // Clear existing data
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.product_performance.deleteMany()];
-                case 2:
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.performance_result.deleteMany()];
-                case 3:
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.market_condition.deleteMany()];
-                case 4:
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.decision.deleteMany()];
-                case 5:
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.product.deleteMany()];
-                case 6:
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.company.deleteMany()];
-                case 7:
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.simulation.deleteMany()];
-                case 8:
-                    _a.sent();
-                    return [4 /*yield*/, prisma_1.default.user.deleteMany()];
-                case 9:
-                    _a.sent();
                     hashedPassword = "$2y$10$oV0RDjW0/9FIJ87.db7Oied03ymlfQQOLY0u.JGznOm8Dpit6fniq";
+                    console.log("🌱 Starting database seed...");
                     return [4 /*yield*/, Promise.all([
                             prisma_1.default.user.create({
                                 data: {
@@ -108,7 +79,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 10:
+                case 1:
                     users = _a.sent();
                     console.log("✅ Created users");
                     electronicsConfig = {
@@ -145,7 +116,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 11:
+                case 2:
                     simulations = _a.sent();
                     console.log("✅ Created simulations");
                     return [4 /*yield*/, Promise.all([
@@ -208,7 +179,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 12:
+                case 3:
                     companies = _a.sent();
                     console.log("✅ Created companies");
                     return [4 /*yield*/, Promise.all([
@@ -251,7 +222,7 @@ function main() {
                                     launch_period: 2,
                                 },
                             }),
-                            // Digital Dynamics Products
+                            // Digital Dynamics Product
                             prisma_1.default.product.create({
                                 data: {
                                     company_id: companies[1].id,
@@ -271,7 +242,7 @@ function main() {
                                     launch_period: 1,
                                 },
                             }),
-                            // EcoThread Products
+                            // EcoThread Product
                             prisma_1.default.product.create({
                                 data: {
                                     company_id: companies[2].id,
@@ -291,7 +262,7 @@ function main() {
                                     launch_period: 1,
                                 },
                             }),
-                            // Urban Style Products
+                            // Urban Style Product
                             prisma_1.default.product.create({
                                 data: {
                                     company_id: companies[3].id,
@@ -312,75 +283,9 @@ function main() {
                                 },
                             }),
                         ])];
-                case 13:
+                case 4:
                     products = _a.sent();
                     console.log("✅ Created products");
-                    electronicsSegments = {
-                        smartphones: 0.45,
-                        tablets: 0.25,
-                        accessories: 0.3,
-                    };
-                    electronicsSegmentsPeriod2 = {
-                        smartphones: 0.44,
-                        tablets: 0.26,
-                        accessories: 0.3,
-                    };
-                    fashionSegments = {
-                        casual_wear: 0.5,
-                        formal_wear: 0.3,
-                        accessories: 0.2,
-                    };
-                    economicIndicatorsPeriod1 = {
-                        gdp_growth: 0.032,
-                        inflation_rate: 0.025,
-                        unemployment: 0.045,
-                        consumer_confidence: 0.68,
-                    };
-                    economicIndicatorsPeriod2 = {
-                        gdp_growth: 0.028,
-                        inflation_rate: 0.031,
-                        unemployment: 0.042,
-                        consumer_confidence: 0.71,
-                    };
-                    fashionEconomicIndicators = {
-                        gdp_growth: 0.025,
-                        inflation_rate: 0.028,
-                        unemployment: 0.048,
-                        consumer_confidence: 0.65,
-                    };
-                    electronicsConsumerPrefs = {
-                        price_sensitivity: 0.7,
-                        brand_loyalty: 0.4,
-                        feature_importance: 0.8,
-                        sustainability_concern: 0.3,
-                    };
-                    electronicsConsumerPrefsPeriod2 = {
-                        price_sensitivity: 0.72,
-                        brand_loyalty: 0.42,
-                        feature_importance: 0.82,
-                        sustainability_concern: 0.38,
-                    };
-                    fashionConsumerPrefs = {
-                        price_sensitivity: 0.75,
-                        brand_loyalty: 0.35,
-                        style_importance: 0.85,
-                        sustainability_concern: 0.55,
-                    };
-                    electronicsTechTrends = {
-                        ai_adoption: 0.6,
-                        "5g_penetration": 0.4,
-                        iot_growth: 0.5,
-                    };
-                    electronicsTechTrendsPeriod2 = {
-                        ai_adoption: 0.65,
-                        "5g_penetration": 0.48,
-                        iot_growth: 0.55,
-                    };
-                    fashionTechTrends = {
-                        ecommerce_growth: 0.8,
-                        social_media_influence: 0.9,
-                        virtual_fitting: 0.2,
-                    };
                     return [4 /*yield*/, Promise.all([
                             // Electronics Market - Period 1
                             prisma_1.default.market_condition.create({
@@ -388,10 +293,28 @@ function main() {
                                     simulation_id: simulations[0].id,
                                     period: 1,
                                     total_market_size: 50000000,
-                                    segment_distribution: JSON.stringify(electronicsSegments),
-                                    economic_indicators: JSON.stringify(economicIndicatorsPeriod1),
-                                    consumer_preferences: JSON.stringify(electronicsConsumerPrefs),
-                                    technology_trends: JSON.stringify(electronicsTechTrends),
+                                    segment_distribution: JSON.stringify({
+                                        smartphones: 0.45,
+                                        tablets: 0.25,
+                                        accessories: 0.3,
+                                    }),
+                                    economic_indicators: JSON.stringify({
+                                        gdp_growth: 0.032,
+                                        inflation_rate: 0.025,
+                                        unemployment: 0.045,
+                                        consumer_confidence: 0.68,
+                                    }),
+                                    consumer_preferences: JSON.stringify({
+                                        price_sensitivity: 0.7,
+                                        brand_loyalty: 0.4,
+                                        feature_importance: 0.8,
+                                        sustainability_concern: 0.3,
+                                    }),
+                                    technology_trends: JSON.stringify({
+                                        ai_adoption: 0.6,
+                                        "5g_penetration": 0.4,
+                                        iot_growth: 0.5,
+                                    }),
                                     sustainability_importance: 0.35,
                                 },
                             }),
@@ -401,10 +324,28 @@ function main() {
                                     simulation_id: simulations[0].id,
                                     period: 2,
                                     total_market_size: 52000000,
-                                    segment_distribution: JSON.stringify(electronicsSegmentsPeriod2),
-                                    economic_indicators: JSON.stringify(economicIndicatorsPeriod2),
-                                    consumer_preferences: JSON.stringify(electronicsConsumerPrefsPeriod2),
-                                    technology_trends: JSON.stringify(electronicsTechTrendsPeriod2),
+                                    segment_distribution: JSON.stringify({
+                                        smartphones: 0.44,
+                                        tablets: 0.26,
+                                        accessories: 0.3,
+                                    }),
+                                    economic_indicators: JSON.stringify({
+                                        gdp_growth: 0.028,
+                                        inflation_rate: 0.031,
+                                        unemployment: 0.042,
+                                        consumer_confidence: 0.71,
+                                    }),
+                                    consumer_preferences: JSON.stringify({
+                                        price_sensitivity: 0.72,
+                                        brand_loyalty: 0.42,
+                                        feature_importance: 0.82,
+                                        sustainability_concern: 0.38,
+                                    }),
+                                    technology_trends: JSON.stringify({
+                                        ai_adoption: 0.65,
+                                        "5g_penetration": 0.48,
+                                        iot_growth: 0.55,
+                                    }),
                                     sustainability_importance: 0.38,
                                 },
                             }),
@@ -414,19 +355,36 @@ function main() {
                                     simulation_id: simulations[1].id,
                                     period: 1,
                                     total_market_size: 25000000,
-                                    segment_distribution: JSON.stringify(fashionSegments),
-                                    economic_indicators: JSON.stringify(fashionEconomicIndicators),
-                                    consumer_preferences: JSON.stringify(fashionConsumerPrefs),
-                                    technology_trends: JSON.stringify(fashionTechTrends),
+                                    segment_distribution: JSON.stringify({
+                                        casual_wear: 0.5,
+                                        formal_wear: 0.3,
+                                        accessories: 0.2,
+                                    }),
+                                    economic_indicators: JSON.stringify({
+                                        gdp_growth: 0.025,
+                                        inflation_rate: 0.028,
+                                        unemployment: 0.048,
+                                        consumer_confidence: 0.65,
+                                    }),
+                                    consumer_preferences: JSON.stringify({
+                                        price_sensitivity: 0.75,
+                                        brand_loyalty: 0.35,
+                                        style_importance: 0.85,
+                                        sustainability_concern: 0.55,
+                                    }),
+                                    technology_trends: JSON.stringify({
+                                        ecommerce_growth: 0.8,
+                                        social_media_influence: 0.9,
+                                        virtual_fitting: 0.2,
+                                    }),
                                     sustainability_importance: 0.55,
                                 },
                             }),
                         ])];
-                case 14:
+                case 5:
                     marketConditions = _a.sent();
                     console.log("✅ Created market conditions");
                     return [4 /*yield*/, Promise.all([
-                            // TechNova - Period 1
                             prisma_1.default.performance_result.create({
                                 data: {
                                     company_id: companies[0].id,
@@ -444,7 +402,6 @@ function main() {
                                     brand_value_change: 15000,
                                 },
                             }),
-                            // Digital Dynamics - Period 1
                             prisma_1.default.performance_result.create({
                                 data: {
                                     company_id: companies[1].id,
@@ -462,7 +419,6 @@ function main() {
                                     brand_value_change: 12000,
                                 },
                             }),
-                            // EcoThread - Period 1
                             prisma_1.default.performance_result.create({
                                 data: {
                                     company_id: companies[2].id,
@@ -481,7 +437,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 15:
+                case 6:
                     performanceResults = _a.sent();
                     console.log("✅ Created performance results");
                     marketingDecision = {
@@ -503,40 +459,6 @@ function main() {
                         quality_investment: 50000,
                         sustainability_measures: ["recycled_materials", "carbon_offset"],
                     };
-                    return [4 /*yield*/, Promise.all([
-                            prisma_1.default.decision.create({
-                                data: {
-                                    company_id: companies[0].id,
-                                    period: 2,
-                                    type: "marketing",
-                                    decision_data: JSON.stringify(marketingDecision),
-                                    processed: true,
-                                    processed_at: new Date(),
-                                },
-                            }),
-                            prisma_1.default.decision.create({
-                                data: {
-                                    company_id: companies[0].id,
-                                    period: 2,
-                                    type: "rd",
-                                    decision_data: JSON.stringify(rdDecision),
-                                    processed: true,
-                                    processed_at: new Date(),
-                                },
-                            }),
-                            prisma_1.default.decision.create({
-                                data: {
-                                    company_id: companies[1].id,
-                                    period: 2,
-                                    type: "production",
-                                    decision_data: JSON.stringify(productionDecision),
-                                    processed: false,
-                                },
-                            }),
-                        ])];
-                case 16:
-                    decisions = _a.sent();
-                    console.log("✅ Created decisions");
                     return [4 /*yield*/, Promise.all([
                             prisma_1.default.event.create({
                                 data: {
@@ -575,7 +497,7 @@ function main() {
                                 },
                             }),
                         ])];
-                case 17:
+                case 7:
                     events = _a.sent();
                     console.log("✅ Created events");
                     return [4 /*yield*/, Promise.all([
@@ -616,11 +538,10 @@ function main() {
                                 },
                             }),
                         ])];
-                case 18:
+                case 8:
                     productPerformances = _a.sent();
                     console.log("✅ Created product performances");
                     console.log("🎉 Seed completed successfully!");
-                    // Print summary
                     console.log("\n📊 Database Summary:");
                     console.log("- Users: ".concat(users.length));
                     console.log("- Simulations: ".concat(simulations.length));
@@ -628,7 +549,7 @@ function main() {
                     console.log("- Products: ".concat(products.length));
                     console.log("- Market Conditions: ".concat(marketConditions.length));
                     console.log("- Performance Results: ".concat(performanceResults.length));
-                    console.log("- Decisions: ".concat(decisions.length));
+                    // console.log(`- Decisions: ${decisions.length}`);
                     console.log("- Events: ".concat(events.length));
                     console.log("- Product Performances: ".concat(productPerformances.length));
                     return [2 /*return*/];

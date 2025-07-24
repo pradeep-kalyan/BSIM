@@ -13,9 +13,15 @@ type Decision = {
   period: number;
   processed: boolean;
   company_id: string;
+  type: string;
+  decision_data: string;
+  submitted_at: Date;
+  processed_at: Date | null;
+};
+
+type ProductionDecisionData = {
   inventory_level: number;
   production_capacity: number;
-  submitted_at: Date;
 };
 
 type DecisionTabProps = {
@@ -54,8 +60,16 @@ function DecisionsList({ decisions }: { decisions: Decision[] }) {
           </div>
           <div>
             <span>
-              Inventory: {decision.inventory_level} units /{" "}
-              {decision.production_capacity} units
+              {(() => {
+                try {
+                  const data = JSON.parse(
+                    decision.decision_data
+                  ) as ProductionDecisionData;
+                  return `Inventory: ${data.inventory_level} units / ${data.production_capacity} units`;
+                } catch {
+                  return "Invalid decision data";
+                }
+              })()}
             </span>
           </div>
         </li>
@@ -73,7 +87,7 @@ export default function DecisionTab({
 }: DecisionTabProps) {
   const simulation = useSimulation();
   const comId = companyID || simulation?.comId;
-  const period = simulation?.period;
+  // const period = simulation?.period; // This property doesn't exist in SimulationContext
 
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,13 +110,35 @@ export default function DecisionTab({
   useEffect(() => {
     fetchDecisions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [comId, period]);
+  }, [comId]);
 
   // After new decision added
-  const handleDecisionCreated = (decision: Decision) => {
+  const handleDecisionCreated = (decision: {
+    id: string;
+    period: number;
+    processed: boolean;
+    company_id: string;
+    inventory_level: number;
+    production_capacity: number;
+    submitted_at: Date;
+  }) => {
+    // Convert to our Decision type format
+    const newDecision: Decision = {
+      id: decision.id,
+      period: decision.period,
+      processed: decision.processed,
+      company_id: decision.company_id,
+      type: "production",
+      decision_data: JSON.stringify({
+        inventory_level: decision.inventory_level,
+        production_capacity: decision.production_capacity,
+      }),
+      submitted_at: decision.submitted_at,
+      processed_at: null,
+    };
     setShowForm(false);
-    setDecisions((prev) => [decision, ...prev]);
-    if (onDecisionCreated) onDecisionCreated(decision);
+    setDecisions((prev) => [newDecision, ...prev]);
+    if (onDecisionCreated) onDecisionCreated(newDecision);
   };
 
   return (
@@ -141,7 +177,7 @@ export default function DecisionTab({
             <ProductionDecisionForm
               companyID={comId}
               onCreated={handleDecisionCreated}
-              period={period}
+              period={1}
             />
           </motion.div>
         )}

@@ -36,7 +36,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
   );
-  const [simId, setSimId] = useState(simulationID);
+  // Removed unused setSimId state
 
   const fetchCompanies = async () => {
     const user = await getCurrentUser();
@@ -52,7 +52,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
 
   useEffect(() => {
     fetchCompanies();
-    setSimId(simulationID);
+    // Removed setSimId(simulationID) as it's unnecessary
   }, [simulationID]);
 
   const handleCreated = async () => {

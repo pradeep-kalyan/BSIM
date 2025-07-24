@@ -94,11 +94,13 @@ const Page = () => {
               label={"User Name"}
               placeholder_text={"eg. John Doe"}
               name={"userName"}
+              type={"text"}
             />
             <Inputbox
               label={"Email Address"}
               placeholder_text={"eg. johndoe@gmail.com"}
               name={"mail"}
+              type={"email"}
             />
             <PasswordInput
               label={"Password"}

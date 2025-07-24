@@ -6,7 +6,7 @@ import { getCurrentUser } from "@/app/functions/jwt";
 import CreateSim from "./_components/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, PlusCircle, LayoutDashboard, Rocket } from "lucide-react";
-import { useAuth } from "@/app/context/AuthContext";
+
 import Card from "./_components/SimCard";
 import EditSimulationForm from "./_components/EditSimulationForm";
 import { ExtendedSimulation } from "./simulation";
@@ -21,8 +21,8 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "created_at">("name");
+  const [searchQuery] = useState("");
+  const [sortBy] = useState<"name" | "created_at">("name");
 
   const fetchSimulations = async () => {
     const data = await getSimulations();
@@ -58,7 +58,6 @@ const Page = () => {
     fetchSimulations();
   }, []);
 
-  const { user } = useAuth();
 
   const handleSimCreated = async () => {
     setInitialLoad(true);
@@ -105,8 +104,7 @@ const Page = () => {
     );
   }
 
-  // Optionally, handle case where there are no simulations
-  // (This is already handled in the main render logic below)
+
 
   return (
     <div className="min-h-screen px-6 py-10 bg-slate-900 text-white relative">

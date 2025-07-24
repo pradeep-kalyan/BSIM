@@ -1,6 +1,20 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp, LucideIcon } from "lucide-react";
 
-const Card = ({ title, value, change, icon: Icon, color = "blue" }) => (
+interface CardProps {
+  title: string;
+  value: string | number;
+  change?: number;
+  icon: LucideIcon;
+  color?: string;
+}
+
+const Card = ({
+  title,
+  value,
+  change,
+  icon: Icon,
+  color = "blue",
+}: CardProps) => (
   <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
     <div className="flex items-center justify-between">
       <div>

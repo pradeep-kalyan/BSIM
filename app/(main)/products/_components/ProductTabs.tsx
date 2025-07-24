@@ -2,8 +2,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -18,11 +16,8 @@ import {
   Star,
   DollarSign,
   ShoppingCart,
-  Eye,
-  Plus,
 } from "lucide-react";
 import { product, product_performance } from "@prisma/client";
-import ProductPerf from "./ProductPerf";
 
 type ProductWithPerformance = product & {
   product_performances: product_performance[];
@@ -31,8 +26,6 @@ type ProductWithPerformance = product & {
 const ProductTabsInterface = ({
   products,
   performance,
-  company_id,
-  current_period,
   RatingProducts,
   RevenueProducts,
   UnitsProducts,
@@ -83,7 +76,7 @@ const ProductTabsInterface = ({
     });
 
     // Sort based on the selected criteria - prioritize products with performance data
-    let sortedProducts = [...productsWithPerf];
+    const sortedProducts = [...productsWithPerf];
 
     if (sortBy === "revenue") {
       sortedProducts.sort((a, b) => {
@@ -124,14 +117,6 @@ const ProductTabsInterface = ({
     return sortedProducts.slice(0, 10);
   }, [sortBy, RatingProducts, RevenueProducts, UnitsProducts]);
 
-  const salesData = [
-    { month: "Jan", sales: 12400, orders: 245, revenue: 18500 },
-    { month: "Feb", sales: 15600, orders: 312, revenue: 23400 },
-    { month: "Mar", sales: 18200, orders: 398, revenue: 28900 },
-    { month: "Apr", sales: 22100, orders: 445, revenue: 33200 },
-    { month: "May", sales: 19800, orders: 389, revenue: 29700 },
-    { month: "Jun", sales: 25300, orders: 512, revenue: 38100 },
-  ];
 
   const TabButton = ({
     id,

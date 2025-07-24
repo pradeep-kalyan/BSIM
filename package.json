@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "node app/functions/seed",
-    "gitpush": "read -p 'Commit message: ' msg && git add . && git commit -m \"$msg\" && git push"
+    "gitpush": "read -p 'Commit message: ' msg && git add . && git commit -m \"$msg\" && git push",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
@@ -20,7 +21,6 @@
     "lucide-react": "^0.510.0",
     "motion": "^12.11.4",
     "next": "15.3.2",
-    "next-auth": "^4.24.11",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-toastify": "^11.0.5",
@@ -33,7 +33,6 @@
     "@tailwindcss/postcss": "^4.1.7",
     "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/next-auth": "^3.13.0",
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",

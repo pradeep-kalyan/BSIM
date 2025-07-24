@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-import { BarChart3, Rocket, LayoutDashboard } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { product } from "@prisma/client";
 import Inputbox from "@/ui/Input-Box";
 import { createProductPerformance } from "@/app/_actions/products";

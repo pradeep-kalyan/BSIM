@@ -54,10 +54,17 @@ export default function ProductionDecisionForm({
     setLoading(true);
 
     try {
-      await CreateProductionDecision({
-        ...form,
-        company_id: currentCompanyId ?? "",
-      });
+      // Create FormData object
+      const formData = new FormData();
+      formData.append("company_id", currentCompanyId ?? "");
+      formData.append("period", form.period.toString());
+      formData.append("inventory_level", form.inventory_level.toString());
+      formData.append(
+        "production_capacity",
+        form.production_capacity.toString()
+      );
+
+      await CreateProductionDecision(formData);
 
       // Create decision object to pass to callback
       const decision = {

@@ -13,54 +13,24 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
-import { TrendingUp, DollarSign, Target, Star, LucideIcon } from "lucide-react";
+import { TrendingUp, DollarSign, Target, Star } from "lucide-react";
 import MarketingDecisionForm from "@/app/(main)/_components/MarketingDescision";
 
+// Colorblind-friendly palette
+
 // Types
-interface ProductPerformance {
-  id: string;
-  product_id: string;
+interface ProductPerformanceType {
   period: number;
-  data: string;
-  sales_volume: number;
   revenue: number;
-  costs: number;
-  profit: number;
-  market_share: number;
-  customer_satisfaction: number;
-  created_at: Date;
+  profit?: number;
+  // Add other fields as needed
 }
 
 interface ProductType {
   id: string;
   name: string;
   marketing_budget: number;
-  product_performances: ProductPerformance[];
-}
-
-interface Company {
-  id: string;
-  name: string;
-  products: ProductType[];
-}
-
-interface BudgetAllocationData {
-  name: string;
-  value: number;
-  percentage: string;
-}
-
-interface SpendVsRevenueData {
-  name: string;
-  marketing_budget: number;
-  revenue: number;
-}
-
-interface PerformanceTrendData {
-  period: number;
-  revenue: number;
-  roi: number;
-  market_share: number;
+  product_performances: ProductPerformanceType[];
 }
 interface MarketingDashboardProps {
   data: {
@@ -87,8 +57,8 @@ interface MarketingDashboardProps {
       revenue: number;
       marketShare: number;
     }>;
-    company?: Company;
   };
+  company?: any;
 }
 
 // Card component for reuse
@@ -102,7 +72,7 @@ function MarketingCard({
   title: string;
   value: string;
   change?: string | number;
-  icon: LucideIcon;
+  icon: any;
   color?: string;
 }) {
   let trendColor = "";
@@ -139,7 +109,11 @@ function MarketingCard({
 }
 
 // Budget Allocation BarChart (horizontal, with labels)
-function BudgetAllocationBarChart({ data }: { data: BudgetAllocationData[] }) {
+function BudgetAllocationBarChart({
+  data,
+}: {
+  data: Array<{ name: string; value: number }>;
+}) {
   return (
     <ResponsiveContainer width="100%" height={Math.max(60 * data.length, 220)}>
       <BarChart
@@ -150,7 +124,7 @@ function BudgetAllocationBarChart({ data }: { data: BudgetAllocationData[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
         <XAxis type="number" stroke="#9CA3AF" />
         <YAxis dataKey="name" type="category" stroke="#9CA3AF" width={180} />
-        <Tooltip formatter={(v) => `$${(v as number).toLocaleString()}`} />
+        <Tooltip formatter={(v) => `$${v.toLocaleString()}`} />
         <Legend />
         <Bar dataKey="value" fill="#8884d8" name="Budget ($)">
           <LabelList
@@ -165,7 +139,11 @@ function BudgetAllocationBarChart({ data }: { data: BudgetAllocationData[] }) {
 }
 
 // Marketing Spend vs Revenue Chart
-function SpendVsRevenueChart({ data }: { data: SpendVsRevenueData[] }) {
+function SpendVsRevenueChart({
+  data,
+}: {
+  data: Array<{ name: string; marketing_budget: number; revenue: number }>;
+}) {
   // Sort by revenue for better UX
   const sorted = [...data].sort((a, b) => b.revenue - a.revenue);
   return (
@@ -196,14 +174,14 @@ function SpendVsRevenueChart({ data }: { data: SpendVsRevenueData[] }) {
           <LabelList
             dataKey="marketing_budget"
             position="top"
-            formatter={(v) => `$${(v as number).toLocaleString()}`}
+            formatter={(v) => (v ? `$${v.toLocaleString()}` : "$0")}
           />
         </Bar>
         <Bar dataKey="revenue" fill="#fdae61" name="Revenue ($)">
           <LabelList
             dataKey="revenue"
             position="top"
-            formatter={(v) => `$${(v as number).toLocaleString()}`}
+            formatter={(v) => (v ? `$${v.toLocaleString()}` : "$0")}
           />
         </Bar>
         {/* If you want to show profit (if you have that data) */}
@@ -214,7 +192,16 @@ function SpendVsRevenueChart({ data }: { data: SpendVsRevenueData[] }) {
 }
 
 // Performance Trend Line Chart
-function PerformanceTrendsChart({ data }: { data: PerformanceTrendData[] }) {
+function PerformanceTrendsChart({
+  data,
+}: {
+  data: Array<{
+    period: number;
+    revenue: number;
+    roi: number;
+    market_share: number;
+  }>;
+}) {
   return (
     <ResponsiveContainer width="100%" height={400}>
       <LineChart data={data}>
@@ -307,7 +294,7 @@ export function MarketingDashboard({ data }: MarketingDashboardProps) {
   }));
 
   // All products (try company.products, else fallback to best/worst)
-  const allProducts: ProductType[] = data.company?.products || [
+  const allProducts: ProductType[] = (data as any)?.company?.products || [
     ...(data.bestProductMarketShare?.product
       ? [data.bestProductMarketShare.product]
       : []),
