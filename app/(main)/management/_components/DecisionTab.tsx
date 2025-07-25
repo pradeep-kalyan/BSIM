@@ -58,7 +58,8 @@ const DecisionTab = () => {
             onSuccess={() => setShowCreateForm(false)} // ✅ FIXED
           />
         ) : (
-          <ViewDecisions department={department} />
+          // <ViewDecisions department={department} />
+          ""
         )}
       </div>
     </div>

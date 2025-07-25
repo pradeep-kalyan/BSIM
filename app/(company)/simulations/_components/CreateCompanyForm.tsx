@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createCompany } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { Building2, Rocket } from "lucide-react";
-import HRDecisionForm from "@/app/(main)/management/_components/department-forms/HRDecisionForm";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 interface Props {
   simulationID: string;
