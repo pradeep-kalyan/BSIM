@@ -27,7 +27,7 @@ export async function getCompanyData(companyId: string) {
 
 export async function getHistoricalHRData(companyId: string) {
   try {
-    const historicalData = await prisma.hr_decision.findMany({
+    const historicalData = await prisma.hR.findMany({
       where: { company_id: companyId },
       orderBy: { period: "asc" },
       include: {
@@ -54,7 +54,7 @@ export async function getHistoricalHRData(companyId: string) {
 
 export async function getCurrentRoles(companyId: string) {
   try {
-    const lastDecision = await prisma.hr_decision.findFirst({
+    const lastDecision = await prisma.hR.findFirst({
       where: { company_id: companyId },
       orderBy: { period: "desc" },
       include: { roles: true },

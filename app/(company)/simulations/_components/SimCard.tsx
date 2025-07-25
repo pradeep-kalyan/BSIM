@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { simulation } from "@prisma/client";
 import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { ExtendedSimulation } from "../simulation";
 

@@ -6,6 +6,7 @@ import { createCompany } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { Building2, Rocket } from "lucide-react";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
+import HRDecisionForm from "@/app/(main)/_components/HRdecisionform";
 interface Props {
   simulationID: string;
   onCreated: () => void;
@@ -23,7 +24,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     credit_rating: "",
     brand_value: 0,
   });
- const [hrRoles, setHrRoles] = useState([
+  const [hrRoles, setHrRoles] = useState([
     { role_name: "", salary_per_head: 0, head_count: 0 },
   ]);
   const [salaryBudget, setSalaryBudget] = useState(0);
@@ -34,7 +35,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-const totalSalary = hrRoles.reduce(
+  const totalSalary = hrRoles.reduce(
     (acc, r) => acc + r.salary_per_head * r.head_count,
     0
   );
@@ -50,7 +51,11 @@ const totalSalary = hrRoles.reduce(
         : value,
     }));
   };
-  const handleHrChange = (index: number, field: string, value: string | number) => {
+  const handleHrChange = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
     setHrRoles((prev) => {
       const updated = [...prev];
       updated[index] = {
@@ -63,8 +68,11 @@ const totalSalary = hrRoles.reduce(
       return updated;
     });
   };
-const addHrRole = () => {
-    setHrRoles((prev) => [...prev, { role_name: "", salary_per_head: 0, head_count: 0 }]);
+  const addHrRole = () => {
+    setHrRoles((prev) => [
+      ...prev,
+      { role_name: "", salary_per_head: 0, head_count: 0 },
+    ]);
   };
 
   const removeHrRole = (index: number) => {
@@ -111,11 +119,11 @@ const addHrRole = () => {
         return;
       }
 
-      const {companyId} = await createCompany({
+      const { companyId } = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
         ...form,
-         accessEmails
+        accessEmails,
       });
 
       await createHRDecisionWithRoles({
@@ -150,7 +158,6 @@ const addHrRole = () => {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="w-full max-w-2xl bg-slate-900 p-8 rounded-2xl shadow-md border border-slate-700">

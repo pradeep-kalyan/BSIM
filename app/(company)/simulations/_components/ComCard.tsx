@@ -25,7 +25,6 @@ const CompanyList: React.FC<CompanyCardProps> = ({
   currentUserId,
   onEdit,
   onDelete,
-  simulationName,
 }) => {
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this company?")) {

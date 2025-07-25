@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider     = "postgresql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql" // Change to "mysql" if needed
+  url      = env("DATABASE_URL")
+  // relationMode = "prisma" // Uncomment for MySQL if needed
 }
 
-model user {
+model User {
   id            String   @id @default(cuid())
   name          String
   email         String   @unique
@@ -17,17 +17,17 @@ model user {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  simulations       simulation[]        @relation("UserCreatedSimulations")
-  simulation_access simulation_access[] @relation("SimulationAccessUser")
-  companies         company[]
-  company_access    company_access[]
-  decisions         FinanceDecision[]
-  budgetRequests    BudgetRequest[]
+  simulations       Simulation[]       @relation("UserCreatedSimulations")
+  simulation_access SimulationAccess[] @relation("SimulationAccessUser")
+  companies         Company[]
+  company_access    CompanyAccess[]
+
+  finance_decisions Finance[]
 
   @@map("users")
 }
 
-model simulation {
+model Simulation {
   id             String   @id @default(cuid())
   name           String
   description    String?
@@ -38,167 +38,228 @@ model simulation {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  creator user @relation("UserCreatedSimulations", fields: [created_by], references: [id], onDelete: Cascade)
+  creator           User               @relation("UserCreatedSimulations", fields: [created_by], references: [id], onDelete: Cascade)
+  companies         Company[]
+  simulation_access SimulationAccess[] @relation("SimulationAccessSim")
 
-  companies         company[]
-  events            event[]
-  market_conditions market_condition[]
-
-  simulation_access simulation_access[] @relation("SimulationAccessSim")
-
-  @@map("simulations")
   @@index([created_by])
+  @@map("simulations")
 }
 
-model company {
-  id                  String               @id @default(cuid())
-  simulation_id       String
-  user_id             String
-  name                String
-  description         String?
-  logo_url            String?
-  cash_balance        Float                @default(0)
-  current_period      Int                  @default(1)
-  data                String               @default("{}")
-  total_assets        Float                @default(0)
-  total_liabilities   Float                @default(0)
-  credit_rating       String?
-  brand_value         Float                @default(0)
-  created_at          DateTime             @default(now())
-  updated_at          DateTime             @updatedAt
-  simulation          simulation           @relation(fields: [simulation_id], references: [id], onDelete: Cascade)
-  user                user                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  decisions           decision[]
-  performance_results performance_result[]
-  products            product[]
-  company_access      company_access[]
-  hr_decisions        hr_decision[]
-  financeDecisions    FinanceDecision[]
-  budgetRequests      BudgetRequest[]
+model Company {
+  id                String   @id @default(cuid())
+  simulation_id     String
+  user_id           String
+  name              String
+  description       String?
+  logo_url          String?
+  cash_balance      Float    @default(0)
+  current_period    Int      @default(1)
+  data              String   @default("{}")
+  total_assets      Float    @default(0)
+  total_liabilities Float    @default(0)
+  credit_rating     String?
+  brand_value       Float    @default(0)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 
-  @@map("companies")
+  simulation Simulation @relation(fields: [simulation_id], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  products          Product[]
+  company_access    CompanyAccess[]
+  hr_decisions      HrDecision[]
+  finance_decisions Finance[]
+
+  rd_decisions         Rd[]
+  production_decisions Production[]
+  marketing_decisions  Marketing[]
+
   @@index([simulation_id])
   @@index([user_id])
+  @@map("companies")
 }
 
-model simulation_access {
+model SimulationAccess {
   id            String   @id @default(cuid())
   simulation_id String
   user_id       String
   access_level  String   @default("viewer")
   granted_at    DateTime @default(now())
 
-  simulation simulation @relation("SimulationAccessSim", fields: [simulation_id], references: [id], onDelete: Cascade)
-  user       user       @relation("SimulationAccessUser", fields: [user_id], references: [id], onDelete: Cascade)
+  simulation Simulation @relation("SimulationAccessSim", fields: [simulation_id], references: [id], onDelete: Cascade)
+  user       User       @relation("SimulationAccessUser", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([simulation_id, user_id])
-  @@map("simulation_access")
   @@index([simulation_id])
   @@index([user_id])
+  @@map("simulation_access")
 }
 
-model company_access {
+model CompanyAccess {
   id           String   @id @default(cuid())
   company_id   String
   user_id      String
-  access_level String   @default("viewer") // Optional: can be 'viewer', 'editor', etc.
+  access_level String   @default("viewer")
   granted_at   DateTime @default(now())
 
-  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  user    user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@unique([company_id, user_id]) // Ensures each user only has one access entry per company
-  @@map("company_access")
+  @@unique([company_id, user_id])
   @@index([company_id])
   @@index([user_id])
+  @@map("company_access")
 }
 
-model product {
-  id                    String                @id @default(cuid())
-  company_id            String
-  name                  String
-  description           String?
-  category              String
-  quality_rating        Float                 @default(0)
-  innovation_rating     Float                 @default(0)
-  sustainability_rating Float                 @default(0)
-  production_cost       Float                 @default(0)
-  selling_price         Float                 @default(0)
-  inventory_level       Int                   @default(0)
-  production_capacity   Int                   @default(2000)
-  development_cost      Float                 @default(0)
-  marketing_budget      Float                 @default(0)
-  status                String                @default("development")
-  launch_period         Int?
-  discontinue_period    Int?
-  created_at            DateTime              @default(now())
-  updated_at            DateTime              @updatedAt
-  product_performances  product_performance[]
-  company               company               @relation(fields: [company_id], references: [id])
-
-  @@map("products")
-  @@index([company_id])
-}
-
-model decision {
-  id            String    @id @default(cuid())
-  company_id    String
-  period        Int
-  type          String
-  decision_data String
-  submitted_at  DateTime  @default(now())
-  processed     Boolean   @default(false)
-  processed_at  DateTime?
-  company       company   @relation(fields: [company_id], references: [id])
-
-  @@map("decisions")
-  @@index([company_id])
-}
-
-model market_condition {
-  id                        String     @id @default(cuid())
-  simulation_id             String
-  period                    Int
-  data                      String     @default("{}")
-  total_market_size         Float
-  segment_distribution      String
-  economic_indicators       String
-  consumer_preferences      String
-  technology_trends         String
-  sustainability_importance Float
-  created_at                DateTime   @default(now())
-  simulation                simulation @relation(fields: [simulation_id], references: [id])
-
-  @@unique([simulation_id, period])
-  @@map("market_conditions")
-  @@index([simulation_id])
-}
-
-model performance_result {
+model Product {
   id                    String   @id @default(cuid())
   company_id            String
-  period                Int
-  data                  String   @default("{}")
-  revenue               Float    @default(0)
-  costs                 Float    @default(0)
-  profit                Float    @default(0)
-  market_share          Float    @default(0)
-  cash_flow             Float    @default(0)
-  roi                   Float    @default(0)
-  customer_satisfaction Float    @default(0)
-  employee_satisfaction Float    @default(0)
-  sustainability_score  Float    @default(0)
-  innovation_score      Float    @default(0)
-  brand_value_change    Float    @default(0)
+  name                  String   @unique
+  description           String?
+  category              String
+  quality_rating        Float    @default(0)
+  innovation_rating     Float    @default(0)
+  sustainability_rating Float    @default(0)
+  production_cost       Float    @default(0)
+  selling_price         Float    @default(0)
+  inventory_level       Int      @default(0)
+  production_capacity   Int      @default(2000)
+  development_cost      Float    @default(0)
+  marketing_budget      Float    @default(0)
+  status                String   @default("development")
+  launch_period         Int?
+  discontinue_period    Int?
   created_at            DateTime @default(now())
-  company               company  @relation(fields: [company_id], references: [id])
+  updated_at            DateTime @updatedAt
 
-  @@unique([company_id, period])
-  @@map("performance_results")
+  product_performances ProductPerformance[]
+  company              Company              @relation(fields: [company_id], references: [id])
+
   @@index([company_id])
+  @@map("products")
 }
 
-model product_performance {
+model Finance {
+  id         String  @id @default(cuid())
+  company_id String
+  user_id    String?
+  period     Int
+
+  // Financial Results
+  total_revenue     Float     @default(0)
+  net_profit        Float     @default(0)
+  cash_balance      Float     @default(0)
+  operating_costs   Float     @default(0)
+  roi               Float     @default(0)
+  burn_rate         Float     @default(0)
+  finalised         Boolean   @default(false)
+  // Finance Decision Fields
+  investment_amount Float     @default(0)
+  loan_amount       Float     @default(0)
+  repay_loan        Float     @default(0)
+  dividend_payout   Float     @default(0)
+  equity_issue      Float     @default(0)
+  notes             String?
+  processed         Boolean   @default(false)
+  submitted_at      DateTime  @default(now())
+  processed_at      DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [user_id], references: [id])
+
+  @@unique([company_id, period])
+  @@index([company_id])
+  @@index([user_id])
+  @@map("finance")
+}
+
+model Production {
+  id              String   @id @default(cuid())
+  company_id      String
+  period          Int
+  units_produced  Int
+  cost_per_unit   Int
+  inventory_value Int
+  defect_rate     Int
+  finalised       Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+model HrDecision {
+  id           String   @id @default(cuid())
+  company_id   String
+  period       Int
+  is_submitted Boolean  @default(false)
+  submitted_at DateTime @default(now())
+
+  salary_budget         Float @default(0)
+  training_budget       Float @default(0)
+  total_budget          Float @default(0)
+  employee_satisfaction Float @default(0)
+  recruitment_cost      Float @default(0)
+  firing_cost           Float @default(0)
+
+  company Company          @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  roles   HrRoleDecision[]
+
+  @@unique([company_id, period])
+  @@index([company_id])
+  @@map("hr_decisions")
+}
+
+model HrRoleDecision {
+  id              String @id @default(cuid())
+  hr_decision_id  String
+  role_name       String
+  salary_per_head Float
+  head_count      Int
+
+  hr_decision HrDecision @relation(fields: [hr_decision_id], references: [id])
+
+  @@index([hr_decision_id])
+  @@map("hr_role_decisions")
+}
+
+model Rd {
+  id                String   @id @default(cuid())
+  company_id        String
+  period            Int
+  budget            Int
+  pip               Int
+  time_to_market    Int
+  total_development Int
+  patented          Int
+  quality_changes   Int
+  finalised         Boolean  @default(false)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+model Marketing {
+  id              String   @id @default(cuid())
+  company_id      String
+  period          Int
+  budget          Int
+  offline         Int
+  online          Int
+  roi             Int
+  conversion_rate Int
+  finalised       Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+model ProductPerformance {
   id                    String   @id @default(cuid())
   product_id            String
   period                Int
@@ -210,106 +271,10 @@ model product_performance {
   market_share          Float    @default(0)
   customer_satisfaction Float    @default(0)
   created_at            DateTime @default(now())
-  product               product  @relation(fields: [product_id], references: [id])
+
+  product Product @relation(fields: [product_id], references: [id])
 
   @@unique([product_id, period])
-  @@map("product_performances")
   @@index([product_id])
-}
-
-model event {
-  id                 String     @id @default(cuid())
-  simulation_id      String
-  period             Int
-  type               String
-  name               String
-  description        String?
-  impact_area        String
-  impact_strength    Float
-  affected_companies String
-  created_at         DateTime   @default(now())
-  simulation         simulation @relation(fields: [simulation_id], references: [id])
-
-  @@map("events")
-  @@index([simulation_id])
-}
-
-model FinanceDecision {
-  id               String   @id @default(cuid())
-  companyId        String
-  userId           String
-  period           Int
-  investmentAmount Float    @default(0)
-  loanAmount       Float    @default(0)
-  repayLoan        Float    @default(0)
-  dividendPayout   Float    @default(0)
-  equityIssue      Float    @default(0)
-  notes            String?
-  processed        Boolean  @default(false)
-  submittedAt      DateTime @default(now())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  company company? @relation(fields: [companyId], references: [id])
-  user    user     @relation(fields: [userId], references: [id])
-
-  @@unique([companyId, period])
-  @@map("finance_decisions")
-  @@index([companyId])
-  @@index([userId])
-}
-
-model BudgetRequest {
-  id         String   @id @default(cuid())
-  companyId  String
-  userId     String
-  period     Int
-  department String
-  amount     Float
-  notes      String?
-  status     String   @default("pending") // 'pending', 'approved', 'rejected'
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  company company @relation(fields: [companyId], references: [id])
-  user    user    @relation(fields: [userId], references: [id])
-
-  @@unique([companyId, period, department])
-  @@map("budget_requests")
-  @@index([companyId])
-  @@index([userId])
-}
-
-model hr_decision {
-  id           String   @id @default(cuid())
-  company_id   String
-  period       Int
-  is_submitted Boolean  @default(false)
-  submitted_at DateTime @default(now())
-
-  salary_budget         Float              @default(0)
-  training_budget       Float              @default(0)
-  total_budget          Float              @default(0)
-  employee_satisfaction Float              @default(0)
-  recruitment_cost      Float              @default(0)
-  firing_cost           Float              @default(0)
-  company               company            @relation(fields: [company_id], references: [id])
-  roles                 hr_role_decision[]
-
-  @@unique([company_id, period])
-  @@map("hr_decisions")
-  @@index([company_id])
-}
-
-model hr_role_decision {
-  id              String @id @default(cuid())
-  hr_decision_id  String
-  role_name       String
-  salary_per_head Float
-  head_count      Int
-
-  hr_decision hr_decision @relation(fields: [hr_decision_id], references: [id])
-
-  @@map("hr_role_decisions")
-  @@index([hr_decision_id])
+  @@map("product_performances")
 }

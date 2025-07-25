@@ -33,7 +33,6 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Fetch company
       const company = await tx.company.findUnique({
         where: { id: company_id },
         select: { cash_balance: true },
@@ -47,22 +46,18 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
         throw new Error("Insufficient company cash balance");
       }
 
-      // 2. Deduct total_budget from company
       await tx.company.update({
         where: { id: company_id },
         data: {
-          cash_balance: {
-            decrement: total_budget,
-          },
+          cash_balance: { decrement: total_budget },
         },
       });
 
-      // 3. Create HR decision
-      const hrDecision = await tx.hr_decision.create({
+      // Create HR record using correct model name 'hr'
+      const hrDecision = await tx.hR.create({
         data: {
           company_id,
           period,
-          is_submitted,
           salary_budget,
           training_budget,
           total_budget,

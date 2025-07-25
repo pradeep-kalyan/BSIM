@@ -52,7 +52,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
 
   useEffect(() => {
     fetchCompanies();
-    // Removed setSimId(simulationID) as it's unnecessary
   }, [simulationID]);
 
   const handleCreated = async () => {

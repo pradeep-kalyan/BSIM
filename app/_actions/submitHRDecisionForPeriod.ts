@@ -18,13 +18,8 @@ interface SubmitHRDecisionInput {
 }
 
 export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
-  const {
-    company_id,
-    period,
-    training_budget,
-    employee_satisfaction,
-    roles,
-  } = input;
+  const { company_id, period, training_budget, employee_satisfaction, roles } =
+    input;
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -35,7 +30,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
 
       if (!company) throw new Error("Company not found");
 
-      const lastDecision = await tx.hr_decision.findFirst({
+      const lastDecision = await tx.hR.findFirst({
         where: { company_id },
         orderBy: { period: "desc" },
         include: { roles: true },
@@ -90,9 +85,10 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
         }
       }
 
-      const total_budget = training_budget + recruitment_cost + firing_cost + salary_budget;
+      const total_budget =
+        training_budget + recruitment_cost + firing_cost + salary_budget;
 
-      const existingDecision = await tx.hr_decision.findFirst({
+      const existingDecision = await tx.hR.findFirst({
         where: { company_id, period },
       });
 
@@ -116,10 +112,9 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
           where: { hr_decision_id: existingDecision.id },
         });
 
-        await tx.hr_decision.update({
+        await tx.hR.update({
           where: { id: existingDecision.id },
           data: {
-            is_submitted: true,
             salary_budget,
             training_budget,
             total_budget,
@@ -151,11 +146,10 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
           },
         });
 
-        const newDecision = await tx.hr_decision.create({
+        const newDecision = await tx.hR.create({
           data: {
             company_id,
             period,
-            is_submitted: true,
             salary_budget,
             training_budget,
             total_budget,

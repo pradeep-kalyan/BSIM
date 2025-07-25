@@ -28,7 +28,7 @@ const HomePage = ({ company }: { company: CompanyWithProducts }) => {
   };
 
   return (
-    <div className="mx-auto h-full w-full overflow-auto bg-slate-900 text-white text-xl font-medium flex flex-col">
+    <div className="h-full container mx-auto w-full overflow-auto bg-slate-900 text-white text-xl font-medium flex flex-col">
       <div className="bg-[#1f2937] flex justify-between items-center rounded-lg w-full h-fit p-8">
         <h1 className="text-white text-xl">
           {company?.name.charAt(0).toUpperCase() + company?.name.slice(1)}
