@@ -32,7 +32,7 @@ export const SimulationProvider = ({
   // Load from cookies on first load
   useEffect(() => {
     const sim = Cookies.get("simId");
-    const com = Cookies.get("comId");
+    const com = Cookies.get("comId")
 
     console.log("Loaded simId:", sim, "comId:", com);
 

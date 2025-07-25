@@ -181,7 +181,6 @@ export async function createCompany(data: {
   };
 }
 
-
 // Update company details
 export async function updateCompany(
   companyId: string,
@@ -213,7 +212,7 @@ export async function grantAccessByEmail(companyId: string, email: string) {
   const userToAdd = await prisma.user.findUnique({
     where: { email: email.toLowerCase().trim() },
   });
-    const admin = await getCurrentUser();
+  const admin = await getCurrentUser();
   if (!admin) throw new Error("Unauthorized");
 
   const company = await prisma.company.findUnique({
@@ -244,7 +243,7 @@ export async function grantAccessByEmail(companyId: string, email: string) {
       access_level: "viewer",
     },
   });
-    await prisma.simulation_access.upsert({
+  await prisma.simulation_access.upsert({
     where: {
       simulation_id_user_id: {
         simulation_id: company.simulation_id,
@@ -306,4 +305,18 @@ export async function deleteCompany(companyId: string) {
   });
 
   revalidatePath("/companies");
+}
+
+export async function getCompany(companyId: string) {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    include: {
+      products: true,
+    },
+  });
+
+  return company;
 }

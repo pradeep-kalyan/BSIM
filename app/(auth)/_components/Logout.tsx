@@ -35,10 +35,11 @@ const Logout = () => {
 
   return (
     <button
-      className="px-4 py-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/10"
+      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-lg text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm border border-white/10"
       onClick={handleLogout}
     >
-      <LogOut className="w-4 h-4" /> Logout
+      <LogOut className="w-4 h-4" />
+      <span>Logout</span>
     </button>
   );
 };

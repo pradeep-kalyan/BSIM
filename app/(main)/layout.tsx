@@ -5,7 +5,7 @@ import Link from "next/link";
 import { checkAuthStatus } from "@/app/_actions/auth";
 import { JWTPayload } from "@/app/functions/jwt";
 import LogoutBtn from "../(auth)/_components/Logout";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import {
   HomeIcon,
   ChartBarIcon,
@@ -18,6 +18,7 @@ import {
   BeakerIcon,
   TagIcon,
   PlusCircleIcon,
+  ArrowRight,
 } from "lucide-react";
 import { useSimulation } from "../context/SimulationContext";
 
@@ -73,7 +74,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
   const pathname = usePathname();
-  const { simId, comId } = useSimulation();
+  const { comId } = useSimulation();
 
   // Verify authentication on component mount
   useEffect(() => {
@@ -193,16 +194,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }
 
   return (
-    <div className="w-full h-full flex justify-between">
+    <div className="w-full h-screen flex">
+      {/* Sidebar - Fixed width, full height, independently scrollable */}
       <motion.div
         initial={{ x: -500, y: 0, opacity: 0.2 }}
         animate={{ x: 0, y: 0, opacity: 1 }}
         exit={{ x: 500, y: 0, opacity: 0.2 }}
         transition={{ duration: 1.5, type: "spring" }}
-        className="md:w-1/5 overflow-y-auto h-full bg-slate-800/80 border-r border-slate-700 flex flex-col"
+        className="w-80 flex-shrink-0 h-full bg-slate-800/80 border-r border-slate-700 flex flex-col"
       >
         <div className="flex flex-col h-full">
-          <div className="p-6 text-center border-b border-slate-700">
+          {/* Header - Fixed at top */}
+          <div className="flex-shrink-0 p-6 text-center border-b border-slate-700">
             <h1 className="text-white text-2xl font-semibold">BusinessSim</h1>
             {user && (
               <span className="block text-sm text-blue-400 mt-2">
@@ -211,6 +214,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             )}
           </div>
 
+          {/* Navigation - Scrollable content */}
           <div className="flex-1 overflow-y-auto py-1">
             <NavSection
               title="MAIN"
@@ -229,25 +233,29 @@ export default function MainLayout({ children }: MainLayoutProps) {
             />
           </div>
 
-          {/* Logout button at bottom */}
-          <div>
-            <Link href={`/simulations/${simId}`}>Back to companies</Link>
-          </div>
-          <div className="p-4 border-t border-slate-700">
-            <LogoutBtn />
+          {/* Footer - Fixed at bottom */}
+          <div className="flex-shrink-0">
+            <div className="p-4 border-t border-slate-700">
+              <Link
+                href="/simulations"
+                className="flex items-center justify-center gap-2 text-blue-400 hover:text-blue-300 mb-3 py-2 px-4 rounded-lg hover:bg-slate-700/50 transition-all duration-200"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180" />
+                Back to Simulations
+              </Link>
+              <LogoutBtn />
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Main Content */}
-
-      <div className="md:w-4/5 max-h-full flex">
+      {/* Main Content - Takes remaining space, independently scrollable */}
+      <div className="flex-1 h-full overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
             initial={{ opacity: 0, x: 500, y: 0 }}
             animate={{ opacity: 1, y: 0, x: 0 }}
-            // exit={{ opacity: 0, y: 0, x: 0 }}
             transition={{
               duration: 0.5,
               type: "spring",
@@ -255,7 +263,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               damping: 20,
               mass: 2,
             }}
-            className="w-full h-full"
+            className="w-full h-full overflow-y-auto"
           >
             {children}
           </motion.div>
