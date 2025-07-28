@@ -53,8 +53,8 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
         },
       });
 
-      // Create HR record using correct model name 'hr'
-      const hrDecision = await tx.hR.create({
+      // Create HR record using correct model name
+      const hrDecision = await tx.hr_decision.create({
         data: {
           company_id,
           period,

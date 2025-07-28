@@ -3,12 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // Change to "mysql" if needed
+  provider = "postgresql"
   url      = env("DATABASE_URL")
-  // relationMode = "prisma" // Uncomment for MySQL if needed
 }
 
-model User {
+model user {
   id            String   @id @default(cuid())
   name          String
   email         String   @unique
@@ -17,17 +16,17 @@ model User {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  simulations       Simulation[]       @relation("UserCreatedSimulations")
-  simulation_access SimulationAccess[] @relation("SimulationAccessUser")
-  companies         Company[]
-  company_access    CompanyAccess[]
+  simulations       simulation[]        @relation("user_created_simulations")
+  simulation_access simulation_access[] @relation("simulation_access_user")
+  companies         company[]
+  company_access    company_access[]
 
-  finance_decisions Finance[]
+  finance_decisions finance[]
 
   @@map("users")
 }
 
-model Simulation {
+model simulation {
   id             String   @id @default(cuid())
   name           String
   description    String?
@@ -38,15 +37,15 @@ model Simulation {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  creator           User               @relation("UserCreatedSimulations", fields: [created_by], references: [id], onDelete: Cascade)
-  companies         Company[]
-  simulation_access SimulationAccess[] @relation("SimulationAccessSim")
+  creator           user                @relation("user_created_simulations", fields: [created_by], references: [id], onDelete: Cascade)
+  companies         company[]
+  simulation_access simulation_access[] @relation("simulation_access_sim")
 
   @@index([created_by])
   @@map("simulations")
 }
 
-model Company {
+model company {
   id                String   @id @default(cuid())
   simulation_id     String
   user_id           String
@@ -63,32 +62,31 @@ model Company {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
-  simulation Simulation @relation(fields: [simulation_id], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  simulation simulation @relation(fields: [simulation_id], references: [id], onDelete: Cascade)
+  user       user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  products          Product[]
-  company_access    CompanyAccess[]
-  hr_decisions      HrDecision[]
-  finance_decisions Finance[]
-
-  rd_decisions         Rd[]
-  production_decisions Production[]
-  marketing_decisions  Marketing[]
+  products             product[]
+  company_access       company_access[]
+  hr_decisions         hr_decision[]
+  finance_decisions    finance[]
+  rd_decisions         rd[]
+  production_decisions production[]
+  marketing_decisions  marketing[]
 
   @@index([simulation_id])
   @@index([user_id])
   @@map("companies")
 }
 
-model SimulationAccess {
+model simulation_access {
   id            String   @id @default(cuid())
   simulation_id String
   user_id       String
   access_level  String   @default("viewer")
   granted_at    DateTime @default(now())
 
-  simulation Simulation @relation("SimulationAccessSim", fields: [simulation_id], references: [id], onDelete: Cascade)
-  user       User       @relation("SimulationAccessUser", fields: [user_id], references: [id], onDelete: Cascade)
+  simulation simulation @relation("simulation_access_sim", fields: [simulation_id], references: [id], onDelete: Cascade)
+  user       user       @relation("simulation_access_user", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([simulation_id, user_id])
   @@index([simulation_id])
@@ -96,15 +94,15 @@ model SimulationAccess {
   @@map("simulation_access")
 }
 
-model CompanyAccess {
+model company_access {
   id           String   @id @default(cuid())
   company_id   String
   user_id      String
   access_level String   @default("viewer")
   granted_at   DateTime @default(now())
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user    user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([company_id, user_id])
   @@index([company_id])
@@ -112,7 +110,7 @@ model CompanyAccess {
   @@map("company_access")
 }
 
-model Product {
+model product {
   id                    String   @id @default(cuid())
   company_id            String
   name                  String   @unique
@@ -133,20 +131,19 @@ model Product {
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
 
-  product_performances ProductPerformance[]
-  company              Company              @relation(fields: [company_id], references: [id])
+  product_performances product_performance[]
+  company              company               @relation(fields: [company_id], references: [id])
 
   @@index([company_id])
   @@map("products")
 }
 
-model Finance {
+model finance {
   id         String  @id @default(cuid())
   company_id String
   user_id    String?
   period     Int
 
-  // Financial Results
   total_revenue     Float     @default(0)
   net_profit        Float     @default(0)
   cash_balance      Float     @default(0)
@@ -154,7 +151,6 @@ model Finance {
   roi               Float     @default(0)
   burn_rate         Float     @default(0)
   finalised         Boolean   @default(false)
-  // Finance Decision Fields
   investment_amount Float     @default(0)
   loan_amount       Float     @default(0)
   repay_loan        Float     @default(0)
@@ -167,8 +163,8 @@ model Finance {
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  user    User?   @relation(fields: [user_id], references: [id])
+  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user    user?   @relation(fields: [user_id], references: [id])
 
   @@unique([company_id, period])
   @@index([company_id])
@@ -176,7 +172,7 @@ model Finance {
   @@map("finance")
 }
 
-model Production {
+model production {
   id              String   @id @default(cuid())
   company_id      String
   period          Int
@@ -188,10 +184,10 @@ model Production {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
-model HrDecision {
+model hr_decision {
   id           String   @id @default(cuid())
   company_id   String
   period       Int
@@ -205,28 +201,28 @@ model HrDecision {
   recruitment_cost      Float @default(0)
   firing_cost           Float @default(0)
 
-  company Company          @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  roles   HrRoleDecision[]
+  company company            @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  roles   hr_role_decision[]
 
   @@unique([company_id, period])
   @@index([company_id])
   @@map("hr_decisions")
 }
 
-model HrRoleDecision {
+model hr_role_decision {
   id              String @id @default(cuid())
   hr_decision_id  String
   role_name       String
   salary_per_head Float
   head_count      Int
 
-  hr_decision HrDecision @relation(fields: [hr_decision_id], references: [id])
+  hr_decision hr_decision @relation(fields: [hr_decision_id], references: [id])
 
   @@index([hr_decision_id])
   @@map("hr_role_decisions")
 }
 
-model Rd {
+model rd {
   id                String   @id @default(cuid())
   company_id        String
   period            Int
@@ -240,10 +236,10 @@ model Rd {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
-model Marketing {
+model marketing {
   id              String   @id @default(cuid())
   company_id      String
   period          Int
@@ -256,10 +252,10 @@ model Marketing {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 }
 
-model ProductPerformance {
+model product_performance {
   id                    String   @id @default(cuid())
   product_id            String
   period                Int
@@ -272,7 +268,7 @@ model ProductPerformance {
   customer_satisfaction Float    @default(0)
   created_at            DateTime @default(now())
 
-  product Product @relation(fields: [product_id], references: [id])
+  product product @relation(fields: [product_id], references: [id])
 
   @@unique([product_id, period])
   @@index([product_id])
