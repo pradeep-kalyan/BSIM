@@ -1,33 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createCompany } from "@/app/_actions/Company";
+import { createCompany } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { Building2, Rocket } from "lucide-react";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
+import { useCompanyForm } from "@/app/context/FormContext";
 import HRDecisionForm from "@/app/(main)/_components/HRdecisionform";
+import Image from "next/image";
 interface Props {
   simulationID: string;
   onCreated: () => void;
 }
 
 const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
-  const router = useRouter();
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    logo_url: "",
-    cash_balance: 0,
-    total_assets: 0,
-    total_liabilities: 0,
-    credit_rating: "",
-    brand_value: 0,
-  });
+
+  // Use FormContext for company form
+  const { data: companyData, updateData: updateCompanyData } = useCompanyForm();
+
   const [hrRoles, setHrRoles] = useState([
     { role_name: "", salary_per_head: 0, head_count: 0 },
   ]);
-  const [salaryBudget, setSalaryBudget] = useState(0);
   const [trainingBudget, setTrainingBudget] = useState(0);
   const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
   const [accessEmail, setAccessEmail] = useState("");
@@ -35,6 +28,18 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Create form object from FormContext data
+  const form = {
+    name: companyData.name || "",
+    description: companyData.description || "",
+    logo_url: "",
+    cash_balance: companyData.initial_capital || 0,
+    total_assets: 0,
+    total_liabilities: 0,
+    credit_rating: "",
+    brand_value: 0,
+  };
   const totalSalary = hrRoles.reduce(
     (acc, r) => acc + r.salary_per_head * r.head_count,
     0
@@ -42,14 +47,17 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
   const totalBudget = totalSalary + trainingBudget;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: name.match(/balance|assets|liabilities|brand_value/)
-        ? value === ""
-          ? 0
-          : parseFloat(value) || 0
-        : value,
-    }));
+
+    if (name === "name") {
+      updateCompanyData({ name: value });
+    } else if (name === "description") {
+      updateCompanyData({ description: value });
+    } else if (name === "cash_balance") {
+      updateCompanyData({
+        initial_capital: value === "" ? 0 : parseFloat(value) || 0,
+      });
+    }
+    // For other fields, we'll handle them separately if needed
   };
   const handleHrChange = (
     index: number,
@@ -137,15 +145,12 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         roles: hrRoles.filter((r) => r.role_name.trim() !== ""),
       });
 
-      setForm({
+      // Reset form using FormContext
+      updateCompanyData({
         name: "",
         description: "",
-        logo_url: "",
-        cash_balance: 0,
-        total_assets: 0,
-        total_liabilities: 0,
-        credit_rating: "",
-        brand_value: 0,
+        initial_capital: 0,
+        company_type: "",
       });
       setHrRoles([{ role_name: "", salary_per_head: 0, head_count: 0 }]);
       setTrainingBudget(0);
@@ -215,7 +220,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           {form.logo_url && (
             <div className="mt-3 flex items-center gap-4">
               <div className="w-20 h-20 border border-slate-700 rounded-md overflow-hidden bg-slate-800">
-                <img
+                <Image
                   src={form.logo_url}
                   alt="Logo Preview"
                   className="w-full h-full object-contain"

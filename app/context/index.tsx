@@ -4,11 +4,14 @@
 import React from "react";
 import { AuthProvider } from "./AuthContext";
 import { SimulationProvider } from "./SimulationContext";
+import { FormProvider } from "./FormContext";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <SimulationProvider>{children}</SimulationProvider>
+      <SimulationProvider>
+        <FormProvider>{children}</FormProvider>
+      </SimulationProvider>
     </AuthProvider>
   );
 }

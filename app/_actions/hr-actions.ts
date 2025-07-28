@@ -35,7 +35,7 @@ export async function getHistoricalHRData(companyId: string) {
       },
     });
 
-    return historicalData.map(decision => ({
+    return historicalData.map((decision) => ({
       period: decision.period,
       total_budget: decision.total_budget,
       salary_budget: decision.salary_budget,
@@ -43,7 +43,10 @@ export async function getHistoricalHRData(companyId: string) {
       employee_satisfaction: decision.employee_satisfaction,
       recruitment_cost: decision.recruitment_cost,
       firing_cost: decision.firing_cost,
-      total_employees: decision.roles.reduce((acc:number, role:any) => acc + role.head_count, 0),
+      total_employees: decision.roles.reduce(
+        (acc, role) => acc + role.head_count,
+        0
+      ),
       roles: decision.roles,
     }));
   } catch (error) {
@@ -64,7 +67,7 @@ export async function getCurrentRoles(companyId: string) {
       return [];
     }
 
-    return lastDecision.roles.map(role => ({
+    return lastDecision.roles.map((role) => ({
       role_name: role.role_name,
       salary_per_head: role.salary_per_head,
       current_head_count: role.head_count,

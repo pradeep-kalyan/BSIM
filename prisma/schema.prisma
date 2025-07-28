@@ -185,6 +185,9 @@ model production {
   updated_at      DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, period])
+  @@index([company_id])
 }
 
 model hr_decision {
@@ -237,6 +240,9 @@ model rd {
   updated_at        DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, period])
+  @@index([company_id])
 }
 
 model marketing {
@@ -253,6 +259,9 @@ model marketing {
   updated_at      DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, period])
+  @@index([company_id])
 }
 
 model product_performance {
