@@ -30,7 +30,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
 
       if (!company) throw new Error("Company not found");
 
-      const lastDecision = await tx.hR.findFirst({
+      const lastDecision = await tx.hr_decision.findFirst({
         where: { company_id },
         orderBy: { period: "desc" },
         include: { roles: true },
@@ -88,7 +88,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
       const total_budget =
         training_budget + recruitment_cost + firing_cost + salary_budget;
 
-      const existingDecision = await tx.hR.findFirst({
+      const existingDecision = await tx.hr_decision.findFirst({
         where: { company_id, period },
       });
 
@@ -112,7 +112,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
           where: { hr_decision_id: existingDecision.id },
         });
 
-        await tx.hR.update({
+        await tx.hr_decision.update({
           where: { id: existingDecision.id },
           data: {
             salary_budget,
@@ -146,7 +146,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
           },
         });
 
-        const newDecision = await tx.hR.create({
+        const newDecision = await tx.hr_decision.create({
           data: {
             company_id,
             period,

@@ -23,7 +23,6 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
   const {
     company_id,
     period,
-    is_submitted,
     salary_budget,
     training_budget,
     total_budget,

@@ -150,7 +150,6 @@ export const logoutHandler = async (): Promise<string> => {
 
 export const getCurrentUser = async (): Promise<JWTPayload | null> => {
   try {
-    const cookieStore = await cookies();
     const token = await getTokenFromCookie();
 
     if (!token) return null;

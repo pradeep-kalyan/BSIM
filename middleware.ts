@@ -23,13 +23,7 @@ const publicRoutes = ["/"];
 /**
  * Get JWT secret for token verification
  */
-async function getJwtSecret(): Promise<Uint8Array> {
-  const secret = process.env.JWT_SECRET;
-  if (!secret || secret.trim() === "") {
-    throw new Error("JWT secret is required for authentication");
-  }
-  return new TextEncoder().encode(secret);
-}
+
 
 /**
  * Verify JWT token from cookies

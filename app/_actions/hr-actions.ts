@@ -27,7 +27,7 @@ export async function getCompanyData(companyId: string) {
 
 export async function getHistoricalHRData(companyId: string) {
   try {
-    const historicalData = await prisma.hR.findMany({
+    const historicalData = await prisma.hr_decision.findMany({
       where: { company_id: companyId },
       orderBy: { period: "asc" },
       include: {
@@ -43,7 +43,7 @@ export async function getHistoricalHRData(companyId: string) {
       employee_satisfaction: decision.employee_satisfaction,
       recruitment_cost: decision.recruitment_cost,
       firing_cost: decision.firing_cost,
-      total_employees: decision.roles.reduce((acc, role) => acc + role.head_count, 0),
+      total_employees: decision.roles.reduce((acc:number, role:any) => acc + role.head_count, 0),
       roles: decision.roles,
     }));
   } catch (error) {
@@ -54,7 +54,7 @@ export async function getHistoricalHRData(companyId: string) {
 
 export async function getCurrentRoles(companyId: string) {
   try {
-    const lastDecision = await prisma.hR.findFirst({
+    const lastDecision = await prisma.hr_decision.findFirst({
       where: { company_id: companyId },
       orderBy: { period: "desc" },
       include: { roles: true },

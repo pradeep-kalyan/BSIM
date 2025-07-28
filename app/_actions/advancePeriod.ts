@@ -17,7 +17,7 @@ export async function advancePeriod(companyId: string) {
 
     const nextPeriod = company.current_period + 1;
 
-    const existing = await tx.hR.findUnique({
+    const existing = await tx.hr_decision.findUnique({
       where: {
         company_id_period: {
           company_id: companyId,
@@ -27,7 +27,7 @@ export async function advancePeriod(companyId: string) {
     });
 
     if (!existing) {
-      const lastDecision = await tx.hR.findFirst({
+      const lastDecision = await tx.hr_decision.findFirst({
         where: { company_id: companyId },
         orderBy: { period: "desc" },
         include: { roles: true },
@@ -54,7 +54,7 @@ export async function advancePeriod(companyId: string) {
         },
       });
 
-      await tx.hR.create({
+      await tx.hr_decision.create({
         data: {
           company_id: companyId,
           period: nextPeriod,

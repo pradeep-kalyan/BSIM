@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createCompany } from "@/app/_actions/company";
+import { createCompany } from "@/app/_actions/Company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { Building2, Rocket } from "lucide-react";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
