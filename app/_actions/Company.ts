@@ -1,6 +1,7 @@
 "use server";
- 
 
+import prisma from "@/app/functions/prisma";
+import { getCurrentUser } from "@/app/functions/jwt";
 import { revalidatePath } from "next/cache";
 import prisma from "../functions/prisma";
 

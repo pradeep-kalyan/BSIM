@@ -66,6 +66,12 @@ export async function getCompaniesBySimulation(simulationId: string) {
   }
 }
 
+// Get first comapany
+export async function getFirstCompany(simulationId: string) {
+  const companies = await getCompaniesBySimulation(simulationId);
+  return companies.length > 0 ? companies[0] : null;
+}
+
 // Create a new company
 
 export async function createCompany(data: {
@@ -304,18 +310,4 @@ export async function deleteCompany(companyId: string) {
   });
 
   revalidatePath("/companies");
-}
-
-export async function getCompany(companyId: string) {
-  const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
-
-  const company = await prisma.company.findUnique({
-    where: { id: companyId },
-    include: {
-      products: true,
-    },
-  });
-
-  return company;
 }
