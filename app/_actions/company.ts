@@ -67,13 +67,20 @@ export async function getCompaniesBySimulation(simulationId: string) {
         products: true,
         company_access: {
           include: {
+<<<<<<< HEAD
             user: true,
+=======
+            user: true, 
+>>>>>>> 0dc7c23ba99a1efd1dce62dac9803a653519ee16
           },
         },
         _count: {
           select: {
             products: true,
+<<<<<<< HEAD
             // decisions: true,
+=======
+>>>>>>> 0dc7c23ba99a1efd1dce62dac9803a653519ee16
           },
         },
       },

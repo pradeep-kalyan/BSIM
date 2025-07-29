@@ -2,7 +2,7 @@
 
 import prisma from "../functions/prisma";
 import { revalidatePath } from "next/cache";
-import { updateCompany } from "./company";
+import { updateCompany } from "./Company";
 import { redirect } from "next/navigation";
 
 // Product operations
@@ -216,4 +216,3 @@ export async function createProductPerformance(formData: FormData) {
     throw new Error("Failed to create product performance");
   }
 }
-

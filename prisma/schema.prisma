@@ -134,7 +134,7 @@ model product {
   updated_at            DateTime @updatedAt
 
   product_performances product_performance[]
-  company              company               @relation(fields: [company_id], references: [id])
+  company              company               @relation(fields: [company_id], references: [id],onDelete: Cascade)
 
   @@index([company_id])
   @@map("products")
@@ -166,7 +166,7 @@ model finance {
   updated_at        DateTime  @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  user    user?   @relation(fields: [user_id], references: [id])
+  user    user?   @relation(fields: [user_id], references: [id],onDelete: Cascade)
 
   @@unique([company_id, period])
   @@index([company_id])
@@ -218,7 +218,7 @@ model hr_role_decision {
   salary_per_head Float
   head_count      Int
 
-  hr_decision hr_decision @relation(fields: [hr_decision_id], references: [id])
+  hr_decision hr_decision @relation(fields: [hr_decision_id], references: [id],onDelete: Cascade)
 
   @@index([hr_decision_id])
   @@map("hr_role_decisions")
@@ -270,7 +270,7 @@ model product_performance {
   customer_satisfaction Float    @default(0)
   created_at            DateTime @default(now())
 
-  product product @relation(fields: [product_id], references: [id])
+  product product @relation(fields: [product_id], references: [id],onDelete: Cascade)
 
   @@unique([product_id, period])
   @@index([product_id])

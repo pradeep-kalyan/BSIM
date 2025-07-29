@@ -5,6 +5,16 @@ import {
   updateCompany,
   grantAccessByEmail,
   revokeAccessByEmail,
+} from "@/app/_actions/Company";
+import {
+  Loader2,
+  Save,
+  X,
+  Plus,
+  Mail,
+  Building2,
+  DollarSign,
+  TrendingUp,
 } from "@/app/_actions/company";
 import {
   Loader2,
@@ -19,6 +29,7 @@ import {
   Users,
   Image,
   FileText,
+  Star,
   Star,
 } from "lucide-react";
 
@@ -96,9 +107,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -115,9 +126,13 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">Edit Company</h2>
-              <p className="text-sm text-slate-400">Update company information and manage access</p>
+              <p className="text-sm text-slate-400">
+                Update company information and manage access
+              </p>
             </div>
           </div>
+          <button
+            type="button"
           <button
             type="button"
             onClick={onClose}
@@ -131,7 +146,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
         <div className="bg-gradient-to-r from-slate-900/50 to-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
           <div className="flex items-center gap-3 mb-6">
             <Building2 className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-semibold text-white">Company Information</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Company Information
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -187,7 +204,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
         <div className="bg-gradient-to-r from-slate-900/50 to-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
           <div className="flex items-center gap-3 mb-6">
             <DollarSign className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-semibold text-white">Financial Information</h3>
+            <h3 className="text-lg font-semibold text-white">
+              Financial Information
+            </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -207,7 +226,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 />
                 <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <p className="text-xs text-slate-500">{formatCurrency(formData.cash_balance)}</p>
+              <p className="text-xs text-slate-500">
+                {formatCurrency(formData.cash_balance)}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -226,7 +247,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 />
                 <TrendingUp className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <p className="text-xs text-slate-500">{formatCurrency(formData.total_assets)}</p>
+              <p className="text-xs text-slate-500">
+                {formatCurrency(formData.total_assets)}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -245,7 +268,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 />
                 <Shield className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <p className="text-xs text-slate-500">{formatCurrency(formData.total_liabilities)}</p>
+              <p className="text-xs text-slate-500">
+                {formatCurrency(formData.total_liabilities)}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -264,7 +289,27 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 />
                 <Star className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <p className="text-xs text-slate-500">{formatCurrency(formData.brand_value)}</p>
+              <p className="text-xs text-slate-500">
+                {formatCurrency(formData.brand_value)}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                <DollarSign className="w-4 h-4" />
+                Marketing Budget
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="marketing_budget"
+                  className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 pl-10 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                  value={formData.marketing_budget}
+                  onChange={handleChange}
+                />
+                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              </div>
+              <p className="text-xs text-slate-500">{formatCurrency(formData.marketing_budget)}</p>
             </div>
 
             <div className="space-y-2">
@@ -292,11 +337,15 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-white">Access Control</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Access Control
+              </h3>
             </div>
             <div className="flex items-center gap-2 px-3 py-1 bg-gray-500/20 rounded-full">
               <Users className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-300">{accessList.length} users</span>
+              <span className="text-sm font-medium text-gray-300">
+                {accessList.length} users
+              </span>
             </div>
           </div>
 
@@ -319,6 +368,7 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
               >
                 <Plus className="w-4 h-4" />
                 Add
+                Add
               </button>
             </div>
 
@@ -338,7 +388,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                         <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center">
                           <Mail className="w-4 h-4 text-gray-400" />
                         </div>
-                        <span className="text-sm font-medium text-white">{email}</span>
+                        <span className="text-sm font-medium text-white">
+                          {email}
+                        </span>
                       </div>
                       <button
                         onClick={() => handleRemoveEmail(email)}
@@ -356,6 +408,7 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
         </div>
 
         {/* Action Buttons */}
+        <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
         <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
           <div className="flex justify-end gap-3">
             <button
@@ -384,7 +437,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
             </button>
           </div>
         </div>
-
       </form>
     </div>
   );
