@@ -102,9 +102,9 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   }
 
   return (
-    <div className="min-h-screen px-6 py-10 bg-slate-900 text-white relative">
+    <div className="min-h-screen px-3 py-5 bg-slate-900 text-white relative">
       {/* Tab Filters */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-3 flex justify-between items-center">
         <div className="flex gap-2">
           {["owned", "shared", "all"].map((tab) => (
             <button

@@ -1,15 +1,15 @@
 "use server";
-
+ 
 import prisma from "@/app/functions/prisma";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { revalidatePath } from "next/cache";
-
+ 
 // Get companies accessible to current user
 export async function getCompaniesBySimulation(simulationId: string) {
   try {
     const user = await getCurrentUser();
     if (!user) return [];
-
+ 
     const companies = await prisma.company.findMany({
       where: {
         simulation_id: simulationId,
@@ -34,13 +34,13 @@ export async function getCompaniesBySimulation(simulationId: string) {
         products: true,
         company_access: {
           include: {
-            user: true, // Include user info for debugging
+            user: true, 
           },
         },
         _count: {
           select: {
             products: true,
-            decisions: true,
+            // decisions: true,
           },
         },
       },
@@ -48,13 +48,13 @@ export async function getCompaniesBySimulation(simulationId: string) {
         created_at: "asc",
       },
     });
-
+ 
     return companies.map((company) => {
       const isOwner = company.user_id === user.id;
       const accessEntry = company.company_access.find(
         (access) => access.user_id === user.id
       );
-
+ 
       return {
         ...company,
         canAccess: isOwner || !!accessEntry,
@@ -66,15 +66,15 @@ export async function getCompaniesBySimulation(simulationId: string) {
     throw new Error("Failed to fetch companies");
   }
 }
-
+ 
 // Get first comapany
 export async function getFirstCompany(simulationId: string) {
   const companies = await getCompaniesBySimulation(simulationId);
   return companies.length > 0 ? companies[0] : null;
 }
-
+ 
 // Create a new company
-
+ 
 export async function createCompany(data: {
   simulation_id: string;
   user_id: string;
@@ -103,7 +103,7 @@ export async function createCompany(data: {
       brand_value: data.brand_value ?? 0,
     },
   });
-
+ 
   // 2. Ensure the creator also has simulation access
   await prisma.simulation_access.upsert({
     where: {
@@ -119,28 +119,28 @@ export async function createCompany(data: {
       access_level: "editor", // or "owner" if needed
     },
   });
-
+ 
   const failedEmails: string[] = [];
-
+ 
   // 3. Grant access to provided users by email
   if (data.accessEmails?.length) {
     for (const rawEmail of data.accessEmails) {
       const email = rawEmail.trim().toLowerCase();
       if (!email) continue;
-
+ 
       const user = await prisma.user.findUnique({ where: { email } });
-
+ 
       if (!user) {
         console.warn(`User not found for email: ${email}`);
         failedEmails.push(email);
         continue;
       }
-
+ 
       if (user.id === data.user_id) {
         console.info(`Skipping owner email: ${email}`);
         continue;
       }
-
+ 
       // Grant company access
       await prisma.company_access.upsert({
         where: {
@@ -156,7 +156,7 @@ export async function createCompany(data: {
           access_level: "editor",
         },
       });
-
+ 
       // Ensure simulation access too
       await prisma.simulation_access.upsert({
         where: {
@@ -172,21 +172,22 @@ export async function createCompany(data: {
           access_level: "editor",
         },
       });
-
+ 
       console.info(`Granted editor access to ${email}`);
     }
   }
-
+ 
   // 4. Revalidate paths
   revalidatePath("/companies");
   revalidatePath(`/simulations/${data.simulation_id}`);
-
+ 
   return {
     companyId: company.id,
     failedEmails,
   };
 }
-
+ 
+ 
 // Update company details
 export async function updateCompany(
   companyId: string,
@@ -208,31 +209,31 @@ export async function updateCompany(
       updated_at: new Date(),
     },
   });
-
+ 
   revalidatePath("/companies");
   revalidatePath(`/companies/${companyId}`);
 }
-
+ 
 // Grant access to a user by email
 export async function grantAccessByEmail(companyId: string, email: string) {
   const userToAdd = await prisma.user.findUnique({
     where: { email: email.toLowerCase().trim() },
   });
-  const admin = await getCurrentUser();
+    const admin = await getCurrentUser();
   if (!admin) throw new Error("Unauthorized");
-
+ 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
     include: { simulation: true },
   });
-
+ 
   if (!company) throw new Error("Company not found");
-
+ 
   if (!userToAdd) {
     console.error(`No user found for email: ${email}`);
     return;
   }
-
+ 
   await prisma.company_access.upsert({
     where: {
       company_id_user_id: {
@@ -249,7 +250,7 @@ export async function grantAccessByEmail(companyId: string, email: string) {
       access_level: "viewer",
     },
   });
-  await prisma.simulation_access.upsert({
+    await prisma.simulation_access.upsert({
     where: {
       simulation_id_user_id: {
         simulation_id: company.simulation_id,
@@ -263,52 +264,53 @@ export async function grantAccessByEmail(companyId: string, email: string) {
       access_level: "viewer", // optional: can be "editor" too
     },
   });
-
+ 
   revalidatePath("/companies");
 }
 // Revoke access
 export async function revokeAccessByEmail(companyId: string, email: string) {
   const owner = await getCurrentUser();
   if (!owner) throw new Error("Unauthorized");
-
+ 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
   });
-
+ 
   if (!company || company.user_id !== owner.id)
     throw new Error("Forbidden: not owner");
-
+ 
   const user = await prisma.user.findUnique({
     where: { email },
   });
-
+ 
   if (!user) return;
-
+ 
   await prisma.company_access.deleteMany({
     where: {
       company_id: companyId,
       user_id: user.id,
     },
   });
-
+ 
   revalidatePath(`/companies/${companyId}`);
 }
-
+ 
 // Optional: delete company (by owner only)
 export async function deleteCompany(companyId: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
-
+ 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
   });
-
+ 
   if (!company || company.user_id !== user.id)
     throw new Error("Forbidden: not owner");
-
+ 
   await prisma.company.delete({
     where: { id: companyId },
   });
-
+ 
   revalidatePath("/companies");
 }
+ 

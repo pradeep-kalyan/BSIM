@@ -37,7 +37,7 @@ const HRDecisionForm = ({
   const totalBudget = totalSalary + trainingBudget;
 
   return (
-    <div className="pt-6">
+    <div>
       <h3 className="text-xl font-semibold text-slate-200 flex items-center gap-2 mb-3">
         HR Roles
         <button
@@ -45,7 +45,10 @@ const HRDecisionForm = ({
           onClick={onAddRole}
           className="text-blue-400 hover:text-blue-500 transition"
         >
-          <PlusCircle size={20} />
+          <div className="flex items-center gap-2">
+            <PlusCircle size={20} />
+            <span>Add</span>
+          </div>
         </button>
       </h3>
 
