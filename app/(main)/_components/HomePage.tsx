@@ -1,171 +1,613 @@
 "use client";
-import { useSimulation } from "@/app/context/SimulationContext";
-import Card from "@/ui/Card";
-import { company, product } from "@prisma/client";
+import React, { useEffect, useState, useTransition, useCallback } from "react";
+import {
+  DollarSign,
+  TrendingUp,
+  Users,
+  Package,
+  Target,
+  BarChart3,
+  Briefcase,
+  ChevronRight,
+  Plus,
+  Factory,
+  Lightbulb,
+  Calendar,
+  Award,
+  Building2,
+  Play,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { CompanyData } from "../homepage/[companyID]/types";
+import DashboardCard from "@/ui/Card";
+import QuickStat from "@/ui/QuickStat";
+import ChartCard from "@/ui/ChartCard";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState, useTransition } from "react";
-import { advancePeriod } from "@/app/_actions/advancePeriod";
+import { useSimulation } from "@/app/context/SimulationContext";
+interface HomePageProps {
+  company?: CompanyData;
+}
 
-type CompanyWithProducts = company & {
-  products: product[];
-};
-
-const HomePage = ({ company }: { company: CompanyWithProducts }) => {
-  const { setComId } = useSimulation();
-  const [currentPeriod, setCurrentPeriod] = useState(company.current_period);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-
-  useEffect(() => {
-    setComId(company.id);
-  }, [company.id, setComId]);
-
-  const handleAdvance = () => {
-    startTransition(async () => {
-      const next = await advancePeriod(company.id);
-      setCurrentPeriod(next);
-    });
-  };
+// Move CustomTooltip outside component to prevent recreation on every render
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (
+    !active ||
+    !payload ||
+    !payload.length ||
+    payload.every((entry: any) => entry.value === 0 || entry.value == null)
+  ) {
+    return null;
+  }
 
   return (
-    <div className="h-full container mx-auto w-full overflow-auto bg-slate-900 text-white text-xl font-medium flex flex-col">
-      <div className="bg-[#1f2937] flex justify-between items-center rounded-lg w-full h-fit p-8">
-        <h1 className="text-white text-xl">
-          {company?.name.charAt(0).toUpperCase() + company?.name.slice(1)}
-        </h1>
-        <div className="flex items-center gap-4">
-          <span className="text-white text-lg">{`P${currentPeriod}`}</span>
-          <button
-            onClick={handleAdvance}
-            disabled={isPending}
-            className="text-lg bg-blue-400 hover:bg-blue-500 rounded-xl cursor-pointer p-3 disabled:opacity-50 text-white"
-          >
-            {isPending ? "Advancing..." : `Advance to Next Period`}
-          </button>
-        </div>
+    <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
+      {label && <p className="font-medium mb-1 text-gray-200">{label}</p>}
+      {payload.map((entry: any, index: number) => (
+        <p key={index} className="text-gray-100">
+          <span className="font-medium" style={{ color: entry.color }}>
+            {entry.name}:
+          </span>{" "}
+          {typeof entry.value === "number"
+            ? entry.value.toLocaleString()
+            : entry.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+// Specialized tooltip for financial data
+const FinancialTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
+        {label && <p className="font-medium mb-1 text-gray-200">{label}</p>}
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-gray-100">
+            <span className="font-medium" style={{ color: entry.color }}>
+              {entry.name}:
+            </span>{" "}
+            ${((entry.value as number) / 1000).toFixed(0)}K
+          </p>
+        ))}
       </div>
-      <div className="w-full h-auto bg-[#1f2937] rounded-lg p-8 mt-6">
-        <h2 className="text-2xl font-semibold">Financial Overview</h2>
-        <hr className="m-3 text-gray-500" />
-        <div className="grid md:grid-cols-3 grid-cols-1 gap-4 w-full h-fit p-8">
-          <Card
-            width={"300px"}
-            height={"150px"}
-            title={"Cash Balance"}
-            content={company?.cash_balance}
-            contentColor={"#89baf4"}
-            color={"#1e3a8a"}
-          />
-          <Card
-            width={"300px"}
-            height={"150px"}
-            title={"Total Assets"}
-            content={company?.total_assets}
-            contentColor={"#76da9a"}
-            color={"#14532d"}
-          />
-          <Card
-            width={"300px"}
-            height={"150px"}
-            title={"Total Liabilities"}
-            content={company?.total_liabilities}
-            contentColor={"#d47a7a"}
-            color={"#7f1d1d"}
-          />
+    );
+  }
+  return null;
+};
+
+// Specialized tooltip for pie charts
+const PieTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length && payload[0].value != null) {
+    return (
+      <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
+        <p className="font-medium text-gray-200">{payload[0].name}</p>
+        <p className="text-gray-100">
+          Value: ${((payload[0].value as number) / 1000).toFixed(0)}K
+        </p>
+        <p className="text-gray-100">
+          Percentage: {payload[0].payload.percentage}%
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const HomePage: React.FC<HomePageProps> = ({ company }) => {
+  const { setComId } = useSimulation();
+  const comID = company?.id;
+  useEffect(() => {
+    setComId(comID || "");
+  }, [comID]);
+  const [currentPeriod, setCurrentPeriod] = useState(
+    company?.current_period || 1
+  );
+  const [isPending, startTransition] = useTransition();
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [hoveringBar, setHoveringBar] = useState(false);
+
+  // Mock data based on your schema
+  const mockData = {
+    revenue: [
+      { period: "P1", revenue: 850000, profit: 120000, costs: 730000 },
+      { period: "P2", revenue: 920000, profit: 140000, costs: 780000 },
+      { period: "P3", revenue: 1100000, profit: 180000, costs: 920000 },
+      { period: "P4", revenue: 1350000, profit: 240000, costs: 1110000 },
+      { period: "P5", revenue: 1650000, profit: 320000, costs: 1330000 },
+    ],
+    departmentBudgets: [
+      { name: "R&D", value: 850000, color: "#3B82F6", percentage: 28 },
+      { name: "Production", value: 1200000, color: "#10B981", percentage: 40 },
+      { name: "Marketing", value: 650000, color: "#F59E0B", percentage: 22 },
+      { name: "HR", value: 300000, color: "#EF4444", percentage: 10 },
+    ],
+    productPerformance: [
+      {
+        name: "Smart Widget Pro",
+        sales: 1220,
+        revenue: 374000,
+        marketShare: 32,
+        satisfaction: 4.2,
+      },
+      {
+        name: "Digital Assistant",
+        sales: 850,
+        revenue: 169000,
+        marketShare: 18,
+        satisfaction: 3.8,
+      },
+      {
+        name: "IoT Sensor Hub",
+        sales: 650,
+        revenue: 195000,
+        marketShare: 15,
+        satisfaction: 4.5,
+      },
+    ],
+    hrMetrics: [
+      {
+        department: "Engineering",
+        employees: 45,
+        satisfaction: 4.2,
+        newHires: 5,
+      },
+      { department: "Sales", employees: 28, satisfaction: 3.8, newHires: 3 },
+      {
+        department: "Marketing",
+        employees: 22,
+        satisfaction: 4.5,
+        newHires: 2,
+      },
+      {
+        department: "Operations",
+        employees: 18,
+        satisfaction: 4.0,
+        newHires: 1,
+      },
+    ],
+    productionData: [
+      { month: "Jan", produced: 1200, defects: 24, efficiency: 98 },
+      { month: "Feb", produced: 1350, defects: 18, efficiency: 99 },
+      { month: "Mar", produced: 1180, defects: 32, efficiency: 97 },
+      { month: "Apr", produced: 1420, defects: 15, efficiency: 99.5 },
+      { month: "May", produced: 1650, defects: 12, efficiency: 99.8 },
+    ],
+  };
+
+  const handleAdvance = useCallback(() => {
+    startTransition(async () => {
+      // Simulate period advancement - replace with your actual function
+      setCurrentPeriod((prev) => prev + 1);
+    });
+  }, []);
+  const router = useRouter();
+  const handleSimulate = useCallback(() => {
+    router.push(`/simulate/${comID}`);
+  }, [router]);
+
+  const handleBarMouseOver = useCallback(() => {
+    setHoveringBar(true);
+  }, []);
+
+  const handleBarMouseOut = useCallback(() => {
+    setHoveringBar(false);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-900 text-white">
+      {/* CSS for animations */}
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-slide-in-left {
+          animation: slideInLeft 0.5s ease-out forwards;
+        }
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+      `}</style>
+
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="animate-slide-in-left">
+              <h1 className="text-4xl font-bold mb-2">
+                {company?.name || "TechCorp Industries"}
+              </h1>
+              <p className="text-blue-100 text-lg">
+                Business Simulation Dashboard
+              </p>
+              <div className="flex items-center mt-3 space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Calendar size={16} />
+                  <span className="text-sm">
+                    Current Period: {currentPeriod}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="text-right animate-fade-in-up">
+              {/* <div className="mb-4">
+                <div className="text-3xl font-bold">Period {currentPeriod}</div>
+              </div> */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSimulate}
+                  disabled={isSimulating}
+                  className="bg-purple-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  {isSimulating ? "Simulating..." : "Simulate"}
+                  <Play size={20} />
+                </button>
+                {/* <button
+                  onClick={handleAdvance}
+                  disabled={isPending}
+                  className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  {isPending ? "Processing..." : "Advance to Next Period"}
+                  <ChevronRight size={20} />
+                </button> */}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Products</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Quality
-                </th>
-                <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Inventory
-                </th>
-                <th className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {company?.products?.map((product: product) => (
-                <tr key={product.id}>
-                  <td className="py-2 px-4 border-b border-gray-200 text-black">
-                    {product.name}
-                  </td>
-                  <td className="py-2 px-4 border-b border-gray-200 text-black">
-                    {product.category.charAt(0).toUpperCase() +
-                      product.category.slice(1)}
-                  </td>
-                  <td className="py-2 px-4 border-b border-gray-200 text-black">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        product.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : product.status === "development"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {product.status.charAt(0).toUpperCase() +
-                        product.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="py-2 px-4 border-b border-gray-200 text-black">
-                    {product.quality_rating.toFixed(2)}
-                  </td>
-                  <td className="py-2 px-4 border-b border-gray-200 text-black">
-                    ${product.selling_price}
-                  </td>
-                  <td className="py-2 px-4 border-b border-gray-200 text-black">
-                    {product.inventory_level}
-                  </td>
-                  <td className="py-2 px-4 border-b border-gray-200 text-black">
-                    <button className="text-blue-600 hover:text-blue-900 mr-2 text-[16px] cursor-pointer">
-                      Produce
-                    </button>
-                    <button className="text-green-600 hover:text-green-900 mr-2 text-[16px] cursor-pointer">
-                      Adjust Price
-                    </button>
-                    <button className="text-purple-600 hover:text-purple-900 text-[16px] cursor-pointer">
-                      Marketing
-                    </button>
-                  </td>
-                </tr>
+      <div className="container mx-auto px-6 py-8 space-y-8">
+        {/* Key Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
+          <DashboardCard
+            title="Cash Balance"
+            value={`$${((company?.cash_balance || 2450000) / 1000000).toFixed(
+              1
+            )}M`}
+            subtitle="Available Funds"
+            icon={DollarSign}
+            change={currentPeriod > 1 ? 12.5 : undefined}
+            className="stagger-2"
+          />
+
+          <DashboardCard
+            title="Net Worth"
+            value={`$${(
+              ((company?.total_assets || 8750000) -
+                (company?.total_liabilities || 3200000)) /
+              1000000
+            ).toFixed(1)}M`}
+            subtitle="Assets - Liabilities"
+            icon={TrendingUp}
+            change={currentPeriod > 1 ? 8.3 : undefined}
+            className="stagger-2"
+          />
+          <DashboardCard
+            title="Total Revenue"
+            value="$1.65M"
+            subtitle="Current Period"
+            icon={BarChart3}
+            change={currentPeriod > 1 ? 15.2 : undefined}
+            className="stagger-3"
+          />
+          <DashboardCard
+            title="Active Products"
+            value={
+              company?.products?.filter((p) => p.status === "active").length ||
+              3
+            }
+            subtitle="In Market"
+            icon={Package}
+            change={currentPeriod > 1 ? 0 : undefined}
+            className="stagger-4"
+          />
+        </div>
+
+        {/* Revenue & Financial Performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ChartCard
+            title="Revenue & Profit Trend"
+            subtitle="Last 5 periods"
+            className="lg:col-span-2"
+          >
+            <ResponsiveContainer width="100%" height={450}>
+              <AreaChart data={mockData.revenue}>
+                <defs>
+                  <linearGradient
+                    id="revenueGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1} />
+                  </linearGradient>
+                  <linearGradient
+                    id="profitGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="period" stroke="#9CA3AF" />
+                <YAxis
+                  stroke="#9CA3AF"
+                  tickFormatter={(value) => `$${value / 1000}K`}
+                />
+                <Tooltip
+                  content={<FinancialTooltip />}
+                  isAnimationActive={false}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#revenueGradient)"
+                  name="Revenue"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#10B981"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#profitGradient)"
+                  name="Profit"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="Department Budgets" subtitle="Current allocation">
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={mockData.departmentBudgets}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={120}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {mockData.departmentBudgets.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<PieTooltip />} isAnimationActive={false} />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+            <div className="grid grid-cols-1 gap-2 mt-4">
+              {mockData.departmentBudgets.map((dept) => (
+                <div
+                  key={dept.name}
+                  className="flex items-center justify-between p-2 rounded bg-white/5"
+                >
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: dept.color }}
+                    ></div>
+                    <span className="text-sm text-gray-300">{dept.name}</span>
+                  </div>
+                  <span className="text-sm font-medium text-white">
+                    {dept.percentage}%
+                  </span>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </ChartCard>
         </div>
 
-        <div className="mt-4">
-          <button
-            onClick={() => router.push("/products/create/" + company?.id)}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Develop New Product
-          </button>
+        {/* Department Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <ChartCard title="HR Overview" className="lg:col-span-1">
+            <div className="space-y-4">
+              <QuickStat
+                label="Total Employees"
+                value="113"
+                icon={Users}
+                color="blue"
+                trend={currentPeriod > 1 ? 8.3 : undefined}
+              />
+              <QuickStat
+                label="New Hires"
+                value="11"
+                icon={Plus}
+                color="green"
+                trend={currentPeriod > 1 ? 15 : undefined}
+              />
+              <QuickStat
+                label="Avg Satisfaction"
+                value="4.1"
+                icon={Award}
+                color="yellow"
+                trend={currentPeriod > 1 ? 5 : undefined}
+              />
+              <QuickStat
+                label="Training Budget"
+                value="$85K"
+                icon={Briefcase}
+                color="purple"
+                trend={currentPeriod > 1 ? -2 : undefined}
+              />
+            </div>
+          </ChartCard>
+
+          <ChartCard title="Production Metrics" className="lg:col-span-2">
+            <ResponsiveContainer width="100%" height={450}>
+              <BarChart data={mockData.productionData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="month" stroke="#9CA3AF" />
+                <YAxis stroke="#9CA3AF" />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: "transparent" }}
+                  isAnimationActive={false}
+                />
+                <Bar
+                  dataKey="produced"
+                  fill="#3B82F6"
+                  name="Units Produced"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  dataKey="defects"
+                  fill="#EF4444"
+                  name="Defects"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title="R&D Pipeline" className="lg:col-span-1">
+            <div className="space-y-4">
+              <QuickStat
+                label="Active Projects"
+                value="7"
+                icon={Lightbulb}
+                color="yellow"
+                trend={currentPeriod > 1 ? 12 : undefined}
+              />
+              <QuickStat
+                label="Patents Filed"
+                value="3"
+                icon={Award}
+                color="purple"
+                trend={currentPeriod > 1 ? 50 : undefined}
+              />
+              <QuickStat
+                label="R&D Budget"
+                value="$850K"
+                icon={Factory}
+                color="blue"
+                trend={currentPeriod > 1 ? -5 : undefined}
+              />
+              <QuickStat
+                label="Time to Market"
+                value="8 mo"
+                icon={Target}
+                color="green"
+                trend={currentPeriod > 1 ? -15 : undefined}
+              />
+            </div>
+          </ChartCard>
         </div>
-        <div className="w-full h-auto bg-[#1f2937] rounded-lg p-8 mt-6">
-          <h2 className="text-2xl font-semibold">Market Overview</h2>
-          <hr className="m-3 text-gray-500" />
-        </div>
+
+        {/* Product Performance */}
+        <ChartCard
+          title="Product Portfolio Performance"
+          subtitle="Current period metrics"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-2">
+                Sales Performance – Period {currentPeriod}
+              </h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={mockData.productPerformance}
+                  layout="vertical"
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis
+                    type="number"
+                    tick={{ fill: "#6B7280" }}
+                    stroke="#9CA3AF"
+                    domain={[0, "dataMax + 200"]}
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    tick={{ fill: "#6B7280" }}
+                    stroke="#9CA3AF"
+                    width={150}
+                  />
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{ fill: "transparent" }}
+                    isAnimationActive={false}
+                  />
+                  <Bar
+                    dataKey="sales"
+                    fill="#3B82F6"
+                    radius={[0, 6, 6, 0]}
+                    barSize={20}
+                    onMouseOver={handleBarMouseOver}
+                    onMouseOut={handleBarMouseOut}
+                    name="Sales"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-2">
+                Market Share
+              </h4>
+              <div className="space-y-4">
+                {mockData.productPerformance.map((product, index) => (
+                  <div key={product.name} className="p-4 rounded-lg bg-white/5">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-white">
+                        {product.name}
+                      </span>
+                      <span className="text-sm text-gray-400">
+                        {product.marketShare}% market share
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                        style={{ width: `${product.marketShare * 2}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-400">
+                      <span>
+                        Revenue: ${(product.revenue / 1000).toFixed(0)}K
+                      </span>
+                      <span>Rating: {product.satisfaction}/5.0</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ChartCard>
       </div>
     </div>
   );
