@@ -4,7 +4,7 @@ import prisma from "../functions/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function advancePeriod(companyId: string) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: any) => {
     const company = await tx.company.findUnique({
       where: { id: companyId },
       select: {
@@ -65,7 +65,7 @@ export async function advancePeriod(companyId: string) {
           recruitment_cost: 0,
           firing_cost: 0,
           roles: {
-            create: lastDecision.roles.map(role => ({
+            create: lastDecision.roles.map((role: any) => ({
               role_name: role.role_name,
               salary_per_head: role.salary_per_head,
               head_count: role.head_count,
