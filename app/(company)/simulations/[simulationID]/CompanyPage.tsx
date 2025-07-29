@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   getCompaniesBySimulation,
   deleteCompany,
-} from "@/app/_actions/company";
+} from "@/app/_actions/Company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import CreateCompanyForm from "../_components/CreateCompanyForm";
 import CompanyList from "../_components/ComCard";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import EditCompanyForm from "../_components/EditCompanyForm";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 interface Props {
   simulationID: string;
@@ -50,7 +51,10 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     setInitialLoad(false);
   };
 
+  const { setSimId } = useSimulation();
+
   useEffect(() => {
+    setSimId(simulationID);
     fetchCompanies();
   }, [simulationID]);
 

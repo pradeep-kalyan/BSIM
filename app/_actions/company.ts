@@ -34,13 +34,12 @@ export async function getCompaniesBySimulation(simulationId: string) {
         products: true,
         company_access: {
           include: {
-            user: true, // Include user info for debugging
+            user: true, 
           },
         },
         _count: {
           select: {
             products: true,
-            decisions: true,
           },
         },
       },
