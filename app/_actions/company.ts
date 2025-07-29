@@ -67,24 +67,13 @@ export async function getCompaniesBySimulation(simulationId: string) {
         products: true,
         company_access: {
           include: {
-<<<<<<< HEAD
-<<<<<<< HEAD
             user: true,
-=======
-            user: true, 
->>>>>>> 0dc7c23ba99a1efd1dce62dac9803a653519ee16
-=======
-            user: true,
->>>>>>> 336ea2c (bug fixes in create company page)
           },
         },
         _count: {
           select: {
             products: true,
-<<<<<<< HEAD
             // decisions: true,
-=======
->>>>>>> 0dc7c23ba99a1efd1dce62dac9803a653519ee16
           },
         },
       },
@@ -93,10 +82,10 @@ export async function getCompaniesBySimulation(simulationId: string) {
       },
     });
 
-    return companies.map((company) => {
+    return companies.map((company: any) => {
       const isOwner = company.user_id === user.id;
       const accessEntry = company.company_access.find(
-        (access) => access.user_id === user.id
+        (access: any) => access.user_id === user.id
       );
 
       return {

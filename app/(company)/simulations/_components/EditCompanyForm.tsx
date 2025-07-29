@@ -5,16 +5,6 @@ import {
   updateCompany,
   grantAccessByEmail,
   revokeAccessByEmail,
-} from "@/app/_actions/Company";
-import {
-  Loader2,
-  Save,
-  X,
-  Plus,
-  Mail,
-  Building2,
-  DollarSign,
-  TrendingUp,
 } from "@/app/_actions/company";
 import {
   Loader2,
@@ -30,10 +20,6 @@ import {
   Image,
   FileText,
   Star,
-<<<<<<< HEAD
-  Star,
-=======
->>>>>>> 336ea2c (bug fixes in create company page)
 } from "lucide-react";
 
 interface Props {
@@ -136,11 +122,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
           </div>
           <button
             type="button"
-<<<<<<< HEAD
-          <button
-            type="button"
-=======
->>>>>>> 336ea2c (bug fixes in create company page)
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200"
           >
@@ -392,10 +373,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
               >
                 <Plus className="w-4 h-4" />
                 Add
-<<<<<<< HEAD
-                Add
-=======
->>>>>>> 336ea2c (bug fixes in create company page)
               </button>
             </div>
 
@@ -436,10 +413,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
 
         {/* Action Buttons */}
         <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
-<<<<<<< HEAD
-        <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
-=======
->>>>>>> 336ea2c (bug fixes in create company page)
           <div className="flex justify-end gap-3">
             <button
               type="button"

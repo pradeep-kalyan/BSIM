@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   getCompaniesBySimulation,
   deleteCompany,
-} from "@/app/_actions/Company";
+} from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import CreateCompanyForm from "../_components/CreateCompanyForm";
 import CompanyList from "../_components/ComCard";
@@ -46,8 +46,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     const companies = await getCompaniesBySimulation(simulationID);
     setCurrentUserId(user.id);
 
-    setOwnedCompanies(companies.filter((c) => c.user_id === user.id));
-    setAccessibleCompanies(companies.filter((c) => c.user_id !== user.id));
+    setOwnedCompanies(companies.filter((c:any) => c.user_id === user.id));
+    setAccessibleCompanies(companies.filter((c:any) => c.user_id !== user.id));
     setInitialLoad(false);
   };
 
