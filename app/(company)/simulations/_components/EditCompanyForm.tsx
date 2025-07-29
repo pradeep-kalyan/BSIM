@@ -6,20 +6,20 @@ import {
   grantAccessByEmail,
   revokeAccessByEmail,
 } from "@/app/_actions/company";
-import { 
-  Loader2, 
-  Save, 
-  X, 
-  Plus, 
-  Mail, 
-  Building2, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  Loader2,
+  Save,
+  X,
+  Plus,
+  Mail,
+  Building2,
+  DollarSign,
+  TrendingUp,
   Shield,
   Users,
   Image,
   FileText,
-  Star
+  Star,
 } from "lucide-react";
 
 interface Props {
@@ -31,7 +31,7 @@ interface Props {
     cash_balance?: number;
     total_assets?: number;
     total_liabilities?: number;
-    credit_rating?: string | null;
+    marketing_budget?: number;
     brand_value?: number;
     company_access?: { user: { email: string } }[];
   };
@@ -47,7 +47,7 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
     cash_balance: company.cash_balance || 0,
     total_assets: company.total_assets || 0,
     total_liabilities: company.total_liabilities || 0,
-    credit_rating: company.credit_rating || "",
+    marketing_budget: company.marketing_budget || 0,
     brand_value: company.brand_value || 0,
   });
 
@@ -65,9 +65,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
       ...prev,
       [name]:
         name === "cash_balance" ||
-        name === "total_assets" ||
-        name === "total_liabilities" ||
-        name === "brand_value"
+          name === "total_assets" ||
+          name === "total_liabilities" ||
+          name === "brand_value"
           ? Number(value)
           : value,
     }));
@@ -118,8 +118,8 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
               <p className="text-sm text-slate-400">Update company information and manage access</p>
             </div>
           </div>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200"
           >
@@ -163,21 +163,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 value={formData.logo_url}
                 onChange={handleChange}
                 placeholder="https://example.com/logo.png"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <Star className="w-4 h-4" />
-                Credit Rating
-              </label>
-              <input
-                type="text"
-                name="credit_rating"
-                className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-                value={formData.credit_rating}
-                onChange={handleChange}
-                placeholder="AAA, AA+, etc."
               />
             </div>
 
@@ -281,6 +266,24 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
               </div>
               <p className="text-xs text-slate-500">{formatCurrency(formData.brand_value)}</p>
             </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                <DollarSign className="w-4 h-4" />
+                Marketing Budget
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="marketing_budget"
+                  className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 pl-10 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                  value={formData.marketing_budget}
+                  onChange={handleChange}
+                />
+                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              </div>
+              <p className="text-xs text-slate-500">{formatCurrency(formData.marketing_budget)}</p>
+            </div>
           </div>
         </div>
 
@@ -315,7 +318,7 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 className="px-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 "
               >
                 <Plus className="w-4 h-4" />
-                Add 
+                Add
               </button>
             </div>
 
@@ -353,7 +356,7 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
         </div>
 
         {/* Action Buttons */}
-                <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
+        <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
           <div className="flex justify-end gap-3">
             <button
               type="button"

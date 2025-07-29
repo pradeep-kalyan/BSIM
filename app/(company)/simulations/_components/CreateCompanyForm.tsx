@@ -8,7 +8,7 @@ import { Building2, Rocket } from "lucide-react";
 import HRDecisionForm from "@/app/(main)/_components/HRdecisionform";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 import ProductForm from "./ProductForm";
-import { createCompanyWithProducts } from "@/app/_actions/createCompanyWithProducts";
+// import { createCompanyWithProducts } from "@/app/_actions/createCompanyWithProducts";
 
 interface Props {
   simulationID: string;
@@ -43,7 +43,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     cash_balance: 0,
     total_assets: 0,
     total_liabilities: 0,
-    credit_rating: "",
+    marketing_budget: 0,
     brand_value: 0,
   });
 
@@ -51,15 +51,15 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     const loadFirstCompany = async () => {
       try {
         const firstCompany = await getFirstCompany(simulationID);
+
         if (firstCompany) {
           setForm((prev) => ({
             ...prev,
             description: firstCompany.description || "",
-            logo_url: firstCompany.logo_url || "",
             cash_balance: firstCompany.cash_balance || 0,
             total_assets: firstCompany.total_assets || 0,
             total_liabilities: firstCompany.total_liabilities || 0,
-            credit_rating: firstCompany.credit_rating || "",
+            marketing_budget: firstCompany.marketing_budget || 0,
             brand_value: firstCompany.brand_value || 0,
           }));
         }
@@ -93,7 +93,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: name.match(/balance|assets|liabilities|brand_value/)
+      [name]: name.match(/balance|assets|liabilities|brand_value|marketing_budget/)
         ? value === ""
           ? 0
           : parseFloat(value) || 0
@@ -156,6 +156,12 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       return;
     }
 
+    if (form.marketing_budget > form.cash_balance) {
+      setError("Marketing budget cannot be greater than cash balance.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const user = await getCurrentUser();
       if (!user) {
@@ -164,19 +170,20 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
-      await createCompanyWithProducts({
-        name: form.name,
-        description: form.description,
-        simulationId: simulationID,
-        userId: user.id,
-        products,
-      });
-
-      const { companyId } = await createCompany({
+      // Create company with products 
+      const { companyId, failedEmails } = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
-        ...form,
-        accessEmails
+        name: form.name,
+        description: form.description,
+        logo_url: form.logo_url,
+        cash_balance: form.cash_balance,
+        total_assets: form.total_assets,
+        total_liabilities: form.total_liabilities,
+        marketing_budget: form.marketing_budget,
+        brand_value: form.brand_value,
+        products,
+        accessEmails,
       });
 
       await createHRDecisionWithRoles({
@@ -190,6 +197,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         roles: hrRoles.filter((r) => r.role_name.trim() !== ""),
       });
 
+      // Reset form state
       setForm({
         name: "",
         description: "",
@@ -197,13 +205,14 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         cash_balance: 0,
         total_assets: 0,
         total_liabilities: 0,
-        credit_rating: "",
+        marketing_budget: 0,
         brand_value: 0,
       });
       setHrRoles([{ role_name: "", salary_per_head: 0, head_count: 0 }]);
       setTrainingBudget(0);
       setEmployeeSatisfaction(0);
       onCreated();
+
     } catch (err) {
       console.error("Failed to create company", err);
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -296,7 +305,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                  Company Name *
+                  Company Name
                 </label>
                 <input
                   type="text"
@@ -341,7 +350,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
               </div>
 
               <div className="lg:col-span-1 flex flex-col items-center justify-center">
-                <p className="text-xs text-slate-400 mt-1 mb-1">Logo Preview</p>
+                <p className="text-xs text-slate-400 mb-1">Logo Preview</p>
                 <div className="w-24 h-24 border-2 border-dashed border-slate-600 rounded bg-slate-800/30 flex items-center justify-center overflow-hidden">
                   {form.logo_url ? (
                     <img
@@ -372,7 +381,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Cash Balance</label>
+                  <label className="text-sm font-medium text-slate-300">Company Budget</label>
                   <input
                     type="number"
                     name="cash_balance"
@@ -424,14 +433,15 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Credit Rating</label>
+                  <label className="text-sm font-medium text-slate-300">Marketing Budget</label>
                   <input
-                    type="text"
-                    name="credit_rating"
-                    value={form.credit_rating}
+                    type="number"
+                    name="marketing_budget"
+                    value={form.marketing_budget}
                     onChange={handleChange}
+                    min="0"
+                    step="0.01"
                     className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
-                    placeholder="e.g: A+, A, etc."
                   />
                 </div>
 
