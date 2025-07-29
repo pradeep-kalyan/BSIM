@@ -35,10 +35,11 @@ CREATE TABLE "companies" (
     "description" TEXT,
     "logo_url" TEXT,
     "cash_balance" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "current_period" INTEGER NOT NULL DEFAULT 1,
+    "current_period" INTEGER NOT NULL DEFAULT 0,
     "data" TEXT NOT NULL DEFAULT '{}',
     "total_assets" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "total_liabilities" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "marketing_budget" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "credit_rating" TEXT,
     "brand_value" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -123,7 +124,7 @@ CREATE TABLE "finance" (
 );
 
 -- CreateTable
-CREATE TABLE "Production" (
+CREATE TABLE "production" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -135,7 +136,7 @@ CREATE TABLE "Production" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Production_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "production_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -167,7 +168,7 @@ CREATE TABLE "hr_role_decisions" (
 );
 
 -- CreateTable
-CREATE TABLE "Rd" (
+CREATE TABLE "rd" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -181,11 +182,11 @@ CREATE TABLE "Rd" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Rd_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "rd_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Marketing" (
+CREATE TABLE "marketing" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -198,7 +199,7 @@ CREATE TABLE "Marketing" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Marketing_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "marketing_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -249,6 +250,9 @@ CREATE INDEX "company_access_user_id_idx" ON "company_access"("user_id");
 CREATE UNIQUE INDEX "company_access_company_id_user_id_key" ON "company_access"("company_id", "user_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "products_name_key" ON "products"("name");
+
+-- CreateIndex
 CREATE INDEX "products_company_id_idx" ON "products"("company_id");
 
 -- CreateIndex
@@ -261,6 +265,12 @@ CREATE INDEX "finance_user_id_idx" ON "finance"("user_id");
 CREATE UNIQUE INDEX "finance_company_id_period_key" ON "finance"("company_id", "period");
 
 -- CreateIndex
+CREATE INDEX "production_company_id_idx" ON "production"("company_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "production_company_id_period_key" ON "production"("company_id", "period");
+
+-- CreateIndex
 CREATE INDEX "hr_decisions_company_id_idx" ON "hr_decisions"("company_id");
 
 -- CreateIndex
@@ -268,6 +278,18 @@ CREATE UNIQUE INDEX "hr_decisions_company_id_period_key" ON "hr_decisions"("comp
 
 -- CreateIndex
 CREATE INDEX "hr_role_decisions_hr_decision_id_idx" ON "hr_role_decisions"("hr_decision_id");
+
+-- CreateIndex
+CREATE INDEX "rd_company_id_idx" ON "rd"("company_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "rd_company_id_period_key" ON "rd"("company_id", "period");
+
+-- CreateIndex
+CREATE INDEX "marketing_company_id_idx" ON "marketing"("company_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "marketing_company_id_period_key" ON "marketing"("company_id", "period");
 
 -- CreateIndex
 CREATE INDEX "product_performances_product_id_idx" ON "product_performances"("product_id");
@@ -297,28 +319,28 @@ ALTER TABLE "company_access" ADD CONSTRAINT "company_access_company_id_fkey" FOR
 ALTER TABLE "company_access" ADD CONSTRAINT "company_access_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "products" ADD CONSTRAINT "products_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "products" ADD CONSTRAINT "products_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "finance" ADD CONSTRAINT "finance_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "finance" ADD CONSTRAINT "finance_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "finance" ADD CONSTRAINT "finance_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Production" ADD CONSTRAINT "Production_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "production" ADD CONSTRAINT "production_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "hr_decisions" ADD CONSTRAINT "hr_decisions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "hr_role_decisions" ADD CONSTRAINT "hr_role_decisions_hr_decision_id_fkey" FOREIGN KEY ("hr_decision_id") REFERENCES "hr_decisions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "hr_role_decisions" ADD CONSTRAINT "hr_role_decisions_hr_decision_id_fkey" FOREIGN KEY ("hr_decision_id") REFERENCES "hr_decisions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Rd" ADD CONSTRAINT "Rd_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "rd" ADD CONSTRAINT "rd_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Marketing" ADD CONSTRAINT "Marketing_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "marketing" ADD CONSTRAINT "marketing_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_performances" ADD CONSTRAINT "product_performances_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "product_performances" ADD CONSTRAINT "product_performances_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;

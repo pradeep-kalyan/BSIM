@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import EditCompanyForm from "../_components/EditCompanyForm";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 interface Props {
   simulationID: string;
@@ -45,12 +46,15 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     const companies = await getCompaniesBySimulation(simulationID);
     setCurrentUserId(user.id);
 
-    setOwnedCompanies(companies.filter((c) => c.user_id === user.id));
-    setAccessibleCompanies(companies.filter((c) => c.user_id !== user.id));
+    setOwnedCompanies(companies.filter((c:any) => c.user_id === user.id));
+    setAccessibleCompanies(companies.filter((c:any) => c.user_id !== user.id));
     setInitialLoad(false);
   };
 
+  const { setSimId } = useSimulation();
+
   useEffect(() => {
+    setSimId(simulationID);
     fetchCompanies();
   }, [simulationID]);
 
@@ -102,9 +106,9 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   }
 
   return (
-    <div className="min-h-screen px-6 py-10 bg-slate-900 text-white relative">
+    <div className="min-h-screen px-3 py-5 bg-slate-900 text-white relative">
       {/* Tab Filters */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-3 flex justify-between items-center">
         <div className="flex gap-2">
           {["owned", "shared", "all"].map((tab) => (
             <button

@@ -1,26 +1,83 @@
 "use client";
 
-import React, { useState } from "react";
-import { createCompany } from "@/app/_actions/company";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createCompany, getFirstCompany } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { Building2, Rocket } from "lucide-react";
-import { createHRDecisionWithRoles } from "@/app/_actions/hr";
-import { useCompanyForm } from "@/app/context/FormContext";
 import HRDecisionForm from "@/app/(main)/_components/HRdecisionform";
+import { createHRDecisionWithRoles } from "@/app/_actions/hr";
+import ProductForm from "./ProductForm";
 import Image from "next/image";
+// import { createCompanyWithProducts } from "@/app/_actions/createCompanyWithProducts";
+
 interface Props {
   simulationID: string;
   onCreated: () => void;
 }
 
+interface ProductInput {
+  name: string;
+  description?: string;
+  category: string;
+  quality_rating?: number;
+  innovation_rating?: number;
+  sustainability_rating?: number;
+  production_cost?: number;
+  selling_price?: number;
+  inventory_level?: number;
+  production_capacity?: number;
+  development_cost?: number;
+  marketing_budget?: number;
+  status?: string;
+  launch_period?: number;
+  discontinue_period?: number;
+}
+
 const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
+  const router = useRouter();
+  const [products, setProducts] = useState<ProductInput[]>([]);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    logo_url: "",
+    cash_balance: 0,
+    total_assets: 0,
+    total_liabilities: 0,
+    marketing_budget: 0,
+    brand_value: 0,
+  });
 
-  // Use FormContext for company form
-  const { data: companyData, updateData: updateCompanyData } = useCompanyForm();
+  useEffect(() => {
+    const loadFirstCompany = async () => {
+      try {
+        const firstCompany = await getFirstCompany(simulationID);
 
+        if (firstCompany) {
+          setForm((prev) => ({
+            ...prev,
+            description: firstCompany.description || "",
+            logo_url: firstCompany.logo_url || "",
+            cash_balance: firstCompany.cash_balance || 0,
+            total_assets: firstCompany.total_assets || 0,
+            total_liabilities: firstCompany.total_liabilities || 0,
+            marketing_budget: firstCompany.marketing_budget || 0,
+            brand_value: firstCompany.brand_value || 0,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial data:", err);
+      }
+    };
+
+    loadFirstCompany();
+  }, [simulationID]);
+
+  const [currentStep, setCurrentStep] = useState(0);
   const [hrRoles, setHrRoles] = useState([
     { role_name: "", salary_per_head: 0, head_count: 0 },
   ]);
+  const [salaryBudget, setSalaryBudget] = useState(0);
   const [trainingBudget, setTrainingBudget] = useState(0);
   const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
   const [accessEmail, setAccessEmail] = useState("");
@@ -28,37 +85,26 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Create form object from FormContext data
-  const form = {
-    name: companyData.name || "",
-    description: companyData.description || "",
-    logo_url: "",
-    cash_balance: companyData.initial_capital || 0,
-    total_assets: 0,
-    total_liabilities: 0,
-    credit_rating: "",
-    brand_value: 0,
-  };
   const totalSalary = hrRoles.reduce(
     (acc, r) => acc + r.salary_per_head * r.head_count,
     0
   );
   const totalBudget = totalSalary + trainingBudget;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-
-    if (name === "name") {
-      updateCompanyData({ name: value });
-    } else if (name === "description") {
-      updateCompanyData({ description: value });
-    } else if (name === "cash_balance") {
-      updateCompanyData({
-        initial_capital: value === "" ? 0 : parseFloat(value) || 0,
-      });
-    }
-    // For other fields, we'll handle them separately if needed
+    setForm((prev) => ({
+      ...prev,
+      [name]: name.match(
+        /balance|assets|liabilities|brand_value|marketing_budget/
+      )
+        ? value === ""
+          ? 0
+          : parseFloat(value) || 0
+        : value,
+    }));
   };
+
   const handleHrChange = (
     index: number,
     field: string,
@@ -76,6 +122,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       return updated;
     });
   };
+
   const addHrRole = () => {
     setHrRoles((prev) => [
       ...prev,
@@ -86,6 +133,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
   const removeHrRole = (index: number) => {
     setHrRoles((prev) => prev.filter((_, i) => i !== index));
   };
+
   const handleAddEmail = () => {
     if (accessEmail && !accessEmails.includes(accessEmail)) {
       setAccessEmails((prev) => [...prev, accessEmail]);
@@ -127,10 +175,19 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
-      const { companyId } = await createCompany({
+      // Create company with products
+      const { companyId, failedEmails } = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
-        ...form,
+        name: form.name,
+        description: form.description,
+        logo_url: form.logo_url,
+        cash_balance: form.cash_balance,
+        total_assets: form.total_assets,
+        total_liabilities: form.total_liabilities,
+        marketing_budget: form.marketing_budget,
+        brand_value: form.brand_value,
+        products,
         accessEmails,
       });
 
@@ -145,12 +202,16 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         roles: hrRoles.filter((r) => r.role_name.trim() !== ""),
       });
 
-      // Reset form using FormContext
-      updateCompanyData({
+      // Reset form state
+      setForm({
         name: "",
         description: "",
-        initial_capital: 0,
-        company_type: "",
+        logo_url: "",
+        cash_balance: 0,
+        total_assets: 0,
+        total_liabilities: 0,
+        marketing_budget: 0,
+        brand_value: 0,
       });
       setHrRoles([{ role_name: "", salary_per_head: 0, head_count: 0 }]);
       setTrainingBudget(0);
@@ -164,209 +225,453 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     }
   };
 
+  const steps = [
+    {
+      id: 0,
+      title: "Company Details",
+      description: "Basic company information",
+    },
+    { id: 1, title: "HR Setup", description: "Roles and team structure" },
+    { id: 2, title: "Products", description: "Company products and services" },
+  ];
+
+  const canProceedToNext = () => {
+    switch (currentStep) {
+      case 0:
+        return form.name.trim() !== "";
+      case 1:
+        return hrRoles.some((role) => role.role_name.trim() !== "");
+      case 2:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const handleNext = () => {
+    if (canProceedToNext() && currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
   return (
-    <div className="w-full max-w-2xl bg-slate-900 p-8 rounded-2xl shadow-md border border-slate-700">
-      <div className="flex items-center gap-2 mb-6">
-        <Building2 size={28} className="text-blue-400" />
-        <h2 className="text-3xl font-semibold text-white">Create Company</h2>
+    <div className="w-full max-w-4xl mx-auto bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700/50 backdrop-blur-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-500/20 rounded-xl">
+            <Building2 size={32} className="text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-white">Create Company</h2>
+            <p className="text-slate-400">Set up your business simulation</p>
+          </div>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="flex items-center gap-2">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex items-center">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                  currentStep === index
+                    ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                    : currentStep > index
+                    ? "bg-green-500 text-white"
+                    : "bg-slate-700 text-slate-400"
+                }`}
+              >
+                {currentStep > index ? "✓" : index + 1}
+              </div>
+              {index < steps.length - 1 && (
+                <div
+                  className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${
+                    currentStep > index ? "bg-green-500" : "bg-slate-700"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
-          <p className="text-red-400 bg-red-500/10 px-4 py-2 rounded">
-            {error}
-          </p>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Company Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full p-2 rounded bg-slate-800 text-white"
-            required
-          />
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 p-2 bg-red-500/10 border border-red-500/20 rounded">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            <p className="text-red-400 text-sm font-medium">{error}</p>
+          </div>
         </div>
+      )}
 
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Description
-          </label>
-          <input
-            type="text"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            className="w-full p-2 rounded bg-slate-800 text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Logo URL
-          </label>
-          <input
-            type="text"
-            name="logo_url"
-            value={form.logo_url}
-            onChange={handleChange}
-            className="w-full p-2 rounded bg-slate-800 text-white"
-            placeholder="https://example.com/logo.png"
-          />
-          {form.logo_url && (
-            <div className="mt-3 flex items-center gap-4">
-              <div className="w-20 h-20 border border-slate-700 rounded-md overflow-hidden bg-slate-800">
-                <Image
-                  src={form.logo_url}
-                  alt="Logo Preview"
-                  className="w-full h-full object-contain"
-                  onError={(e) => (e.currentTarget.style.display = "none")}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Step 0: Company Details */}
+        {currentStep === 0 && (
+          <div className="space-y-6 animate-in slide-in-from-right-5 duration-300">
+            {/* Company Name & Logo Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                  placeholder="Enter company name"
+                  required
                 />
               </div>
-              <p className="text-sm text-slate-400">Logo preview</p>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                  Logo URL
+                </label>
+                <input
+                  type="url"
+                  name="logo_url"
+                  value={form.logo_url}
+                  onChange={handleChange}
+                  className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+                  placeholder="https://example.com/logo.png"
+                />
+              </div>
             </div>
-          )}
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Cash Balance
-            </label>
-            <input
-              type="number"
-              name="cash_balance"
-              value={form.cash_balance}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full p-2 rounded bg-slate-800 text-white"
-            />
-          </div>
+            {/* Description with Logo Preview */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3 space-y-2">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  rows={3}
+                  className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white placeholder-slate-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 resize-none"
+                  placeholder="Brief description of your company..."
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Total Assets
-            </label>
-            <input
-              type="number"
-              name="total_assets"
-              value={form.total_assets}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full p-2 rounded bg-slate-800 text-white"
-            />
-          </div>
+              <div className="lg:col-span-1 flex flex-col items-center justify-center">
+                <p className="text-xs text-slate-400 mt-1 mb-1">Logo Preview</p>
+                <div className="w-24 h-24 border-2 border-dashed border-slate-600 rounded bg-slate-800/30 flex items-center justify-center overflow-hidden">
+                  {form.logo_url ? (
+                    <Image
+                      src={form.logo_url}
+                      alt="Logo Preview"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallbackElement = e.currentTarget
+                          .nextElementSibling as HTMLElement | null;
+                        if (fallbackElement) {
+                          fallbackElement.style.display = "flex";
+                        }
+                      }}
+                      width={24}
+                      height={24}
+                    />
+                  ) : null}
+                  <div className="hidden flex-col items-center text-slate-500 text-xs">
+                    <span>Invalid URL</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Total Liabilities
-            </label>
-            <input
-              type="number"
-              name="total_liabilities"
-              value={form.total_liabilities}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full p-2 rounded bg-slate-800 text-white"
-            />
-          </div>
+            {/* Financial Information */}
+            <div className="space-y-2">
+              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                Financial Information
+              </h4>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Credit Rating
-            </label>
-            <input
-              type="text"
-              name="credit_rating"
-              value={form.credit_rating}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-slate-800 text-white"
-            />
-          </div>
-        </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Company Budget
+                  </label>
+                  <input
+                    type="number"
+                    name="cash_balance"
+                    value={form.cash_balance}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                  />
+                </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Brand Value
-          </label>
-          <input
-            type="number"
-            name="brand_value"
-            value={form.brand_value}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            className="w-full p-2 rounded bg-slate-800 text-white"
-          />
-        </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Total Assets
+                  </label>
+                  <input
+                    type="number"
+                    name="total_assets"
+                    value={form.total_assets}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                  />
+                </div>
 
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Grant Access (Email)
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              value={accessEmail}
-              onChange={(e) => setAccessEmail(e.target.value)}
-              className="w-full p-2 rounded bg-slate-800 text-white"
-              placeholder="Enter email to grant access"
-            />
-            <button
-              type="button"
-              onClick={handleAddEmail}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Add
-            </button>
-          </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Total Liabilities
+                  </label>
+                  <input
+                    type="number"
+                    name="total_liabilities"
+                    value={form.total_liabilities}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                  />
+                </div>
 
-          {accessEmails.length > 0 && (
-            <ul className="mt-3 space-y-1 text-slate-300 text-sm">
-              {accessEmails.map((email, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center justify-between bg-slate-800 p-2 rounded"
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Brand Value
+                  </label>
+                  <input
+                    type="number"
+                    name="brand_value"
+                    value={form.brand_value}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Marketing Budget
+                  </label>
+                  <input
+                    type="number"
+                    name="marketing_budget"
+                    value={form.marketing_budget}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Access Management */}
+            <div className="space-y-2">
+              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
+                Access Management
+              </h4>
+
+              <div className="flex gap-3">
+                <input
+                  type="email"
+                  value={accessEmail}
+                  onChange={(e) => setAccessEmail(e.target.value)}
+                  className="flex-1 p-2 rounded bg-slate-800/50 border border-slate-700 text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                  placeholder="Enter email to grant access"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddEmail}
+                  disabled={!accessEmail || accessEmails.includes(accessEmail)}
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded transition-all duration-200"
                 >
-                  {email}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveEmail(email)}
-                    className="text-red-400 hover:text-red-600"
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <HRDecisionForm
-          hrRoles={hrRoles}
-          onRoleChange={handleHrChange}
-          onAddRole={addHrRole}
-          onRemoveRole={removeHrRole}
-          trainingBudget={trainingBudget}
-          onTrainingBudgetChange={setTrainingBudget}
-          employeeSatisfaction={employeeSatisfaction}
-          onEmployeeSatisfactionChange={setEmployeeSatisfaction}
-        />
-        <div className="flex justify-end pt-4">
+                  Add
+                </button>
+              </div>
+
+              {accessEmails.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Access Granted To ({accessEmails.length})
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-32 overflow-y-auto">
+                    {accessEmails.map((email, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700 rounded"
+                      >
+                        <span className="text-white text-sm truncate">
+                          {email}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEmail(email)}
+                          className="ml-2 text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 1: HR Setup */}
+        {currentStep === 1 && (
+          <div className="animate-in slide-in-from-right-5 duration-300">
+            <HRDecisionForm
+              hrRoles={hrRoles}
+              onRoleChange={handleHrChange}
+              onAddRole={addHrRole}
+              onRemoveRole={removeHrRole}
+              trainingBudget={trainingBudget}
+              onTrainingBudgetChange={setTrainingBudget}
+              employeeSatisfaction={employeeSatisfaction}
+              onEmployeeSatisfactionChange={setEmployeeSatisfaction}
+            />
+
+            {/* HR Summary */}
+            <div className="mt-6 p-2 bg-slate-800/30 border border-slate-700 rounded">
+              <h5 className="text-white font-medium mb-2">Budget Summary</h5>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="text-slate-400">Total Salary:</span>
+                  <p className="text-white font-medium">
+                    ${totalSalary.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Training Budget:</span>
+                  <p className="text-white font-medium">
+                    ${trainingBudget.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-slate-400">Total Budget:</span>
+                  <p className="text-white font-medium">
+                    ${totalBudget.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Products */}
+        {currentStep === 2 && (
+          <div className="animate-in slide-in-from-right-5 duration-300">
+            <ProductForm onChange={setProducts} />
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-700">
           <button
-            type="submit"
-            disabled={loading || !form.name.trim()}
-            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition"
+            type="button"
+            onClick={handlePrevious}
+            disabled={currentStep === 0}
+            className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${
+              currentStep === 0
+                ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                : "bg-slate-700 hover:bg-slate-600 text-white"
+            }`}
           >
-            <Rocket size={18} />
-            {loading ? "Creating..." : "Create Company"}
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Previous
           </button>
+
+          <div className="flex items-center gap-3">
+            {currentStep < steps.length - 1 ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={!canProceedToNext()}
+                className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${
+                  canProceedToNext()
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
+                    : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                }`}
+              >
+                Next
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading || !form.name.trim()}
+                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded shadow-lg shadow-blue-600/25 transition-all duration-200"
+              >
+                <Rocket size={18} />
+                {loading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Creating...
+                  </>
+                ) : (
+                  "Create Company"
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>
