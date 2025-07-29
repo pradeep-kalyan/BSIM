@@ -22,7 +22,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
     input;
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const company = await tx.company.findUnique({
         where: { id: company_id },
         select: { cash_balance: true },

@@ -31,7 +31,7 @@ export async function getSimulations() {
     },
   });
 
-  return simulations.map((sim) => {
+  return simulations.map((sim: any) => {
     let parsedConfig: any = {};
     try {
       parsedConfig =
@@ -41,7 +41,7 @@ export async function getSimulations() {
     }
 
     const isOwner = sim.created_by === user.id;
-    const accessEntry = sim.simulation_access.find((a) => a.user_id === user.id);
+    const accessEntry = sim.simulation_access.find((a: any) => a.user_id === user.id);
     const hasAccess = isOwner || !!accessEntry;
     const canEdit = accessEntry?.access_level === "editor" || isOwner;
 

@@ -31,7 +31,7 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
   } = input;
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const company = await tx.company.findUnique({
         where: { id: company_id },
         select: { cash_balance: true },

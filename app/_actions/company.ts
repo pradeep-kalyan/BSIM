@@ -4,6 +4,39 @@ import prisma from "@/app/functions/prisma";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { revalidatePath } from "next/cache";
 
+interface ProductInput {
+  name: string;
+  description?: string;
+  category: string;
+  quality_rating?: number;
+  innovation_rating?: number;
+  sustainability_rating?: number;
+  production_cost?: number;
+  selling_price?: number;
+  inventory_level?: number;
+  production_capacity?: number;
+  development_cost?: number;
+  marketing_budget?: number;
+  status?: string;
+  launch_period?: number;
+  discontinue_period?: number;
+}
+
+interface CreateCompanyInput {
+  simulation_id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  logo_url?: string;
+  cash_balance?: number;
+  total_assets?: number;
+  total_liabilities?: number;
+  marketing_budget?: number;
+  brand_value?: number;
+  products?: ProductInput[];
+  accessEmails?: string[];
+}
+
 // Get companies accessible to current user
 export async function getCompaniesBySimulation(simulationId: string) {
   try {
@@ -34,12 +67,13 @@ export async function getCompaniesBySimulation(simulationId: string) {
         products: true,
         company_access: {
           include: {
-            user: true, 
+            user: true,
           },
         },
         _count: {
           select: {
             products: true,
+            // decisions: true,
           },
         },
       },
@@ -48,10 +82,10 @@ export async function getCompaniesBySimulation(simulationId: string) {
       },
     });
 
-    return companies.map((company) => {
+    return companies.map((company: any) => {
       const isOwner = company.user_id === user.id;
       const accessEntry = company.company_access.find(
-        (access) => access.user_id === user.id
+        (access: any) => access.user_id === user.id
       );
 
       return {
@@ -73,21 +107,17 @@ export async function getFirstCompany(simulationId: string) {
 }
 
 // Create a new company
+export async function createCompany(data: CreateCompanyInput) {
+  // Adjust cash balance by subtracting marketing budget
+  const initialCash = data.cash_balance ?? 0;
+  const marketingBudget = data.marketing_budget ?? 0;
+  const adjustedCashBalance = initialCash - marketingBudget;
 
-export async function createCompany(data: {
-  simulation_id: string;
-  user_id: string;
-  name: string;
-  description?: string;
-  logo_url?: string;
-  cash_balance?: number;
-  total_assets?: number;
-  total_liabilities?: number;
-  credit_rating?: string;
-  brand_value?: number;
-  accessEmails?: string[]; // Optional sharing emails
-}) {
-  // 1. Create the company
+  if (adjustedCashBalance < 0) {
+    throw new Error("Marketing budget cannot be greater than cash balance.");
+  }
+
+  // 1. Create company with nested products in a single transaction
   const company = await prisma.company.create({
     data: {
       simulation_id: data.simulation_id,
@@ -95,15 +125,37 @@ export async function createCompany(data: {
       name: data.name,
       description: data.description,
       logo_url: data.logo_url,
-      cash_balance: data.cash_balance ?? 0,
+      cash_balance: adjustedCashBalance,
       total_assets: data.total_assets ?? 0,
       total_liabilities: data.total_liabilities ?? 0,
-      credit_rating: data.credit_rating,
+      marketing_budget: marketingBudget,
       brand_value: data.brand_value ?? 0,
+      products:
+        data.products && data.products.length > 0
+          ? {
+            create: data.products.map((p) => ({
+              name: p.name,
+              description: p.description,
+              category: p.category,
+              quality_rating: p.quality_rating,
+              innovation_rating: p.innovation_rating,
+              sustainability_rating: p.sustainability_rating,
+              production_cost: p.production_cost,
+              selling_price: p.selling_price,
+              inventory_level: p.inventory_level,
+              production_capacity: p.production_capacity,
+              development_cost: p.development_cost,
+              marketing_budget: p.marketing_budget,
+              status: p.status,
+              launch_period: p.launch_period,
+              discontinue_period: p.discontinue_period,
+            })),
+          }
+          : undefined,
     },
   });
 
-  // 2. Ensure the creator also has simulation access
+  // 2. Ensure creator has simulation access (upsert)
   await prisma.simulation_access.upsert({
     where: {
       simulation_id_user_id: {
@@ -115,20 +167,18 @@ export async function createCompany(data: {
     create: {
       simulation_id: data.simulation_id,
       user_id: data.user_id,
-      access_level: "editor", // or "owner" if needed
+      access_level: "editor",
     },
   });
 
+  // 3. Grant access to others by email
   const failedEmails: string[] = [];
-
-  // 3. Grant access to provided users by email
   if (data.accessEmails?.length) {
     for (const rawEmail of data.accessEmails) {
       const email = rawEmail.trim().toLowerCase();
       if (!email) continue;
 
       const user = await prisma.user.findUnique({ where: { email } });
-
       if (!user) {
         console.warn(`User not found for email: ${email}`);
         failedEmails.push(email);
@@ -136,7 +186,7 @@ export async function createCompany(data: {
       }
 
       if (user.id === data.user_id) {
-        console.info(`Skipping owner email: ${email}`);
+        // Don't re-add creator
         continue;
       }
 
@@ -176,7 +226,7 @@ export async function createCompany(data: {
     }
   }
 
-  // 4. Revalidate paths
+  // 4. Revalidate paths for fresh data
   revalidatePath("/companies");
   revalidatePath(`/simulations/${data.simulation_id}`);
 
@@ -196,7 +246,7 @@ export async function updateCompany(
     cash_balance?: number;
     total_assets?: number;
     total_liabilities?: number;
-    credit_rating?: string;
+    marketing_budget?: number;
     brand_value?: number;
   }
 ) {
@@ -305,6 +355,76 @@ export async function deleteCompany(companyId: string) {
   if (!company || company.user_id !== user.id)
     throw new Error("Forbidden: not owner");
 
+  // Delete hr_role_decision records related to hr_decisions of this company
+  await prisma.hr_role_decision.deleteMany({
+    where: {
+      hr_decision: {
+        company_id: companyId,
+      },
+    },
+  });
+
+  // Delete hr_decision records related to this company
+  await prisma.hr_decision.deleteMany({
+    where: {
+      company_id: companyId,
+    },
+  });
+
+  // Delete product_performance records (depends on product)
+  // Prisma should cascade delete product_performance on product delete if set,
+  // but being explicit in code for safety:
+  await prisma.product_performance.deleteMany({
+    where: {
+      product: {
+        company_id: companyId,
+      },
+    },
+  });
+
+  // Delete products
+  await prisma.product.deleteMany({
+    where: {
+      company_id: companyId,
+    },
+  });
+
+  // Delete finance decisions related to company
+  await prisma.finance.deleteMany({
+    where: {
+      company_id: companyId,
+    },
+  });
+
+  // Delete production decisions
+  await prisma.production.deleteMany({
+    where: {
+      company_id: companyId,
+    },
+  });
+
+  // Delete R&D decisions
+  await prisma.rd.deleteMany({
+    where: {
+      company_id: companyId,
+    },
+  });
+
+  // Delete marketing decisions
+  await prisma.marketing.deleteMany({
+    where: {
+      company_id: companyId,
+    },
+  });
+
+  // Delete company_access records for this company
+  await prisma.company_access.deleteMany({
+    where: {
+      company_id: companyId,
+    },
+  });
+
+  // Now finally delete the company
   await prisma.company.delete({
     where: { id: companyId },
   });
