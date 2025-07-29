@@ -30,7 +30,10 @@ import {
   Image,
   FileText,
   Star,
+<<<<<<< HEAD
   Star,
+=======
+>>>>>>> 336ea2c (bug fixes in create company page)
 } from "lucide-react";
 
 interface Props {
@@ -133,8 +136,11 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
           </div>
           <button
             type="button"
+<<<<<<< HEAD
           <button
             type="button"
+=======
+>>>>>>> 336ea2c (bug fixes in create company page)
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all duration-200"
           >
@@ -329,6 +335,24 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
               </div>
               <p className="text-xs text-slate-500">{formatCurrency(formData.marketing_budget)}</p>
             </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                <DollarSign className="w-4 h-4" />
+                Marketing Budget
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="marketing_budget"
+                  className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 pl-10 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                  value={formData.marketing_budget}
+                  onChange={handleChange}
+                />
+                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              </div>
+              <p className="text-xs text-slate-500">{formatCurrency(formData.marketing_budget)}</p>
+            </div>
           </div>
         </div>
 
@@ -368,7 +392,10 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
               >
                 <Plus className="w-4 h-4" />
                 Add
+<<<<<<< HEAD
                 Add
+=======
+>>>>>>> 336ea2c (bug fixes in create company page)
               </button>
             </div>
 
@@ -409,7 +436,10 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
 
         {/* Action Buttons */}
         <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
+<<<<<<< HEAD
         <div className="sticky bottom-0 left-0 right-0 bg-slate-900 pt-6 pb-4 mt-auto border-t border-slate-700/50 z-10">
+=======
+>>>>>>> 336ea2c (bug fixes in create company page)
           <div className="flex justify-end gap-3">
             <button
               type="button"

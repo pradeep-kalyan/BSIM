@@ -68,10 +68,14 @@ export async function getCompaniesBySimulation(simulationId: string) {
         company_access: {
           include: {
 <<<<<<< HEAD
+<<<<<<< HEAD
             user: true,
 =======
             user: true, 
 >>>>>>> 0dc7c23ba99a1efd1dce62dac9803a653519ee16
+=======
+            user: true,
+>>>>>>> 336ea2c (bug fixes in create company page)
           },
         },
         _count: {
