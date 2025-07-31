@@ -6,20 +6,20 @@ import Cookies from "js-cookie";
 const SimulationContext = createContext<{
   simId: string | null;
   comId: string | null;
-  currentPeriod: number | null;
+  period: number | null;
   setSimId: (id: string) => void;
   setComId: (id: string) => void;
-  setCurrentPeriod: (period: number) => void;
+  setPeriod: (id: number) => void;
   clearSimId: () => void;
   clearComId: () => void;
   clearAll: () => void;
 }>({
   simId: null,
   comId: null,
-  currentPeriod: null,
+  period: null,
   setSimId: () => {},
   setComId: () => {},
-  setCurrentPeriod: () => {},
+  setPeriod: () => {},
   clearSimId: () => {},
   clearComId: () => {},
   clearAll: () => {},
@@ -32,20 +32,22 @@ export const SimulationProvider = ({
 }) => {
   const [simId, setSimIdState] = useState<string | null>(null);
   const [comId, setComIdState] = useState<string | null>(null);
-  const [currentPeriod, setCurrentPeriod] = useState<number | null>(null);
+  const [period, setPeriodState] = useState<number | null>(null);
+
   // Load from cookies on first load
   useEffect(() => {
     const sim = Cookies.get("simId");
     const com = Cookies.get("comId");
-    const period = Cookies.get("currentPeriod");
+    const period = Cookies.get("period");
+
     console.log("Loaded simId:", sim, "comId:", com);
 
     if (sim) setSimIdState(sim);
     if (com) setComIdState(com);
-    if (period) setCurrentPeriod(Number(period));
+    if (period) setPeriodState(parseInt(period));
   }, []);
   const setCurrentPeriodWrapper = (period: number) => {
-    setCurrentPeriod(period);
+      setPeriod(period);
     Cookies.set("currentPeriod", period.toString(), {
       expires: 0.25,
       secure: true,
@@ -76,6 +78,17 @@ export const SimulationProvider = ({
     });
   };
 
+  const setPeriod = (id: number) => {
+    setPeriodState(id);
+    // Set cookie to expire in 6 hours (0.25 days)
+    Cookies.set("period", id.toString(), {
+      expires: 0.25,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+  };
+
   const clearSimId = () => {
     setSimIdState(null);
     Cookies.remove("simId");
@@ -86,11 +99,15 @@ export const SimulationProvider = ({
     Cookies.remove("comId");
   };
 
+  const clearPeriod = () => {
+    setPeriodState(null);
+    Cookies.remove("period");
+  };
+
   const clearAll = () => {
     clearSimId();
     clearComId();
-    setCurrentPeriod(null);
-    Cookies.remove("currentPeriod");
+    clearPeriod();
   };
 
   return (
@@ -98,13 +115,14 @@ export const SimulationProvider = ({
       value={{
         simId,
         comId,
-        currentPeriod,
+        period,
         setSimId,
         setComId,
-        setCurrentPeriod: setCurrentPeriodWrapper,
+        setPeriod: setCurrentPeriodWrapper,
         clearSimId,
         clearComId,
         clearAll,
+
       }}
     >
       {children}

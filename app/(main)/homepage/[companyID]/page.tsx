@@ -10,7 +10,7 @@ type CompanyWithProducts = company & {
 };
 
 const Page = async ({ params }: { params: { companyID: string } }) => {
-  const { companyID } = params;
+  const { companyID } = await params;
 
   const companyData = await prisma.company.findUnique({
     where: { id: companyID },

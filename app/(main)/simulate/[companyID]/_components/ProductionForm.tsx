@@ -1,436 +1,374 @@
 "use client";
+
+import { IndianRupee, Factory, Package, AlertTriangle } from "lucide-react";
+import React, { useEffect } from "react";
+import DashboardCard from "@/ui/Card";
+import { Check, TriangleAlert } from "lucide-react";
 import {
-  IndianRupee,
-  Factory,
-  Package,
-  AlertTriangle,
-  TrendingUp,
-  BarChart3,
-  Loader2,
-} from "lucide-react";
-import React, { useState, useEffect } from "react";
-import DashboardCard from "./Card";
-import {
-  getCompanyData,
-  getHistoricalProductionData,
-  getCurrentProductionDecision,
-  submitProductionDecisionForPeriod,
-} from "@/app/_actions/production-actions";
+  useCashBalance,
+  useCompanyForm,
+  useProductionForm,
+} from "@/app/context/FormContext";
+import { useSimulation } from "@/app/context/SimulationContext";
+import { CreateProduction, createProductionSchema } from "../_utils/validator";
 
-interface CompanyData {
-  id: string;
-  name: string;
-  current_period: number;
-  cash_balance: number;
-}
+const formatNumber = (num: number) =>
+  num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-interface HistoricalData {
-  period: number;
-  units_produced: number;
-  cost_per_unit: number;
-  inventory_value: number;
-  defect_rate: number;
-}
+const ProductionForm = () => {
+  const { data, setError, getError, updateData } = useProductionForm();
+  const { updateProductionBudgetImpact, getProjectedCashBalance } =
+    useCashBalance();
+  const { period, comId } = useSimulation();
+  const { data: companyData } = useCompanyForm();
+  const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState(false);
+  const [projected, setProject] = React.useState(0);
 
-interface ProductionFormProps {
-  companyId: string;
-}
-
-const ProductionForm: React.FC<ProductionFormProps> = ({ companyId }) => {
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
-
-  const [productionData, setProductionData] = useState({
-    current: {
-      units_produced: 0,
-      cost_per_unit: 0,
-      inventory_value: 0,
-      defect_rate: 0,
-    },
-    previous: {
-      units_produced: 0,
-      cost_per_unit: 0,
-      inventory_value: 0,
-      defect_rate: 0,
-    },
-  });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value === "" ? "" : e.target.value;
+    updateData({ [e.target.name]: Number(value) });
+    setError(e.target.name, "");
+    // Don't clear budget alert on every change - let validation handle it
+    setSuccess(false); // Reset success state when user makes changes
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    const currentcash = getProjectedCashBalance();
+    setProject(currentcash);
+  }, []);
 
-        const [company, historical] = await Promise.all([
-          getCompanyData(companyId),
-          getHistoricalProductionData(companyId),
-        ]);
+  const frozenData = React.useMemo(
+    () => ({
+      units_to_produce: data?.units_to_produce ?? 0,
+      cost_per_unit: data?.cost_per_unit ?? 0,
+      defect_rate: data?.defect_rate ?? 0,
+      production_capacity: data?.production_capacity ?? 0,
+      storage_capacity: data?.storage_capacity ?? 0,
+    }),
+    []
+  );
 
-        setCompanyData(company);
-        setHistoricalData(historical);
+  const totalCost =
+    data?.units_to_produce *
+    data?.cost_per_unit *
+    (1 + data?.defect_rate / 100);
 
-        // Set default values based on last period
-        if (historical.length > 0) {
-          const lastPeriod = historical[historical.length - 1];
-          const decision = await getCurrentProductionDecision(
-            company.id,
-            company.current_period
-          );
+  const handleValidate = () => {
+    // Reset states at the beginning
+    setSuccess(false);
+    setBudgetAlert(null);
 
-          setProductionData({
-            current: {
-              units_produced:
-                decision?.units_produced || lastPeriod.units_produced || 0,
-              cost_per_unit:
-                decision?.cost_per_unit || lastPeriod.cost_per_unit || 0,
-              inventory_value:
-                decision?.inventory_value || lastPeriod.inventory_value || 0,
-              defect_rate: decision?.defect_rate || lastPeriod.defect_rate || 0,
-            },
-            previous: {
-              units_produced: lastPeriod.units_produced,
-              cost_per_unit: lastPeriod.cost_per_unit,
-              inventory_value: lastPeriod.inventory_value,
-              defect_rate: lastPeriod.defect_rate,
-            },
-          });
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
+    const production_cost =
+      data.units_to_produce * data.cost_per_unit * (1 + data.defect_rate / 100);
+    const inventory_value = data.units_to_produce * data.cost_per_unit;
+
+    console.log("Raw form data:", data);
+
+    const formData: CreateProduction = {
+      company_id: comId ?? "",
+      period: period ?? 0,
+      production_capacity: Number(data.production_capacity),
+      inventory_value,
+      storage_capacity: Number(data.storage_capacity),
+      cash_balance: companyData?.cash_balance ?? 0,
+      defect_rate: Number(data.defect_rate),
+      units_to_produce: Number(data.units_to_produce),
+      cost_per_unit: Number(data.cost_per_unit),
+      production_cost,
     };
 
-    fetchData();
-  }, [companyId]);
-
-  const handleInputChange = (
-    field: keyof typeof productionData.current,
-    value: number
-  ) => {
-    setProductionData((prev) => ({
-      ...prev,
-      current: {
-        ...prev.current,
-        [field]: value,
+    console.log("Processed formData for validation:", {
+      units_to_produce: formData.units_to_produce,
+      production_capacity: formData.production_capacity,
+      shouldError: formData.units_to_produce > formData.production_capacity,
+      types: {
+        units: typeof formData.units_to_produce,
+        capacity: typeof formData.production_capacity,
       },
-    }));
-  };
+    });
 
-  const handleSubmit = async () => {
-    if (!companyData) return;
+    console.log("Validation data:", {
+      production_cost,
+      cash_balance: companyData?.cash_balance ?? 0,
+      willExceedBudget: production_cost > (companyData?.cash_balance ?? 0),
+    });
 
-    try {
-      setSubmitting(true);
-      setError(null);
+    const result = createProductionSchema.safeParse(formData);
+    console.log("Validation result:", result);
 
-      await submitProductionDecisionForPeriod({
-        company_id: companyId,
-        period: companyData.current_period,
-        units_produced: productionData.current.units_produced,
-        cost_per_unit: productionData.current.cost_per_unit,
-        inventory_value: productionData.current.inventory_value,
-        defect_rate: productionData.current.defect_rate,
-      });
+    const fieldKeys = [
+      "units_to_produce",
+      "cost_per_unit",
+      "defect_rate",
+      "production_capacity",
+      "storage_capacity",
+    ];
 
-      // Refresh the page after submission
-      window.location.reload();
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to submit production decision"
-      );
-    } finally {
-      setSubmitting(false);
+    // Clear old errors
+    fieldKeys.forEach((key) => setError(key, ""));
+
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const path = issue.path?.[0];
+        if (path === "production_cost") {
+          setBudgetAlert(
+            `⚠️ ${issue.message}. Required: ₹${formatNumber(
+              Math.round(production_cost)
+            )}, Available: ₹${formatNumber(companyData?.cash_balance ?? 0)}`
+          );
+        } else if (typeof path === "string" && fieldKeys.includes(path)) {
+          setError(path, issue.message);
+        } else {
+          console.warn("Unhandled validation issue:", issue.message);
+        }
+      }
+      return;
     }
+
+    // Budget warning
+    if ((companyData?.cash_balance ?? 0) < production_cost) {
+      setBudgetAlert(
+        `⚠️ Insufficient cash balance. Required: ₹${formatNumber(
+          Math.round(production_cost)
+        )}, Available: ₹${formatNumber(companyData?.cash_balance ?? 0)}`
+      );
+      setSuccess(false); // Don't show success if there's a budget issue
+    } else {
+      setBudgetAlert(null);
+      setSuccess(true);
+    }
+
+    updateProductionBudgetImpact(production_cost);
+    console.log("✅ Validated successfully", result.data);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-4" />
-          <p className="text-slate-300">Loading production dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">Error: {error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!companyData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <p className="text-slate-300">No company data found</p>
-      </div>
-    );
-  }
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-
-  const calculateChange = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
-
-  const unitsChange = calculateChange(
-    productionData.current.units_produced,
-    productionData.previous.units_produced
-  );
-  const costChange = calculateChange(
-    productionData.current.cost_per_unit,
-    productionData.previous.cost_per_unit
-  );
-  const inventoryChange = calculateChange(
-    productionData.current.inventory_value,
-    productionData.previous.inventory_value
-  );
-
-  const totalProductionCost =
-    productionData.current.units_produced *
-    productionData.current.cost_per_unit;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
-      <div className="max-w-7xl mx-auto mt-2">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-white">
-                Production Dashboard
-              </h1>
-              <p className="text-slate-400">
-                Period {companyData.current_period} • {companyData.name}
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
+      <div className="max-w-5xl mx-auto py-8">
+        <header className="mb-10 flex flex-col gap-2">
+          <h1 className="text-4xl font-extrabold text-blue-300">
+            Production Dashboard
+          </h1>
+          <span className="text-lg text-slate-400 tracking-wide">
+            Period {period} • {companyData?.name}
+          </span>
+        </header>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <section className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
           <DashboardCard
-            title="Units to Produce"
-            value={productionData.current.units_produced.toLocaleString()}
-            subtitle="Production Target"
+            title="Production Capacity"
+            value={frozenData.production_capacity}
+            subtitle="Maximum units producible per period"
             icon={Factory}
-            size="small"
-            gradient={true}
-            change={unitsChange}
+            size="large"
           />
           <DashboardCard
-            title="Cost per Unit"
-            value={formatCurrency(productionData.current.cost_per_unit)}
-            subtitle="Manufacturing Cost"
-            icon={IndianRupee}
-            size="small"
-            gradient={true}
-            change={costChange}
+            title="Planned Units"
+            value={frozenData.units_to_produce}
+            subtitle="Units scheduled for production"
+            icon={Package}
+            size="large"
+          />
+          <DashboardCard
+            title="Storage Capacity"
+            value={frozenData.storage_capacity}
+            subtitle="Maximum storage capacity"
+            icon={Package}
+            size="large"
           />
           <DashboardCard
             title="Inventory Value"
-            value={formatCurrency(productionData.current.inventory_value)}
-            subtitle="Current Inventory"
-            icon={Package}
-            size="small"
-            gradient={true}
-            change={inventoryChange}
+            value={`₹${formatNumber(
+              Math.round(frozenData.units_to_produce * frozenData.cost_per_unit)
+            )}`}
+            subtitle="Value of planned inventory"
+            icon={IndianRupee}
+            size="large"
           />
           <DashboardCard
             title="Defect Rate"
-            value={`${productionData.current.defect_rate}%`}
-            subtitle="Quality Control"
+            value={`${frozenData.defect_rate}%`}
+            subtitle="Expected defect percentage"
             icon={AlertTriangle}
-            size="small"
-            gradient={true}
-            change={calculateChange(
-              productionData.current.defect_rate,
-              productionData.previous.defect_rate
-            )}
+            size="large"
           />
-        </div>
+        </section>
 
-        {/* Historical Performance */}
-        {historicalData.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-              <div className="flex items-center justify-between mb-4">
-                <TrendingUp className="h-8 w-8 text-green-400" />
-              </div>
-              <div className="text-3xl font-bold text-white mb-2">
-                {productionData.previous.units_produced.toLocaleString()}
-              </div>
-              <div className="text-slate-400 text-sm">Previous Production</div>
-            </div>
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-              <div className="flex items-center justify-between mb-4">
-                <BarChart3 className="h-8 w-8 text-red-400" />
-              </div>
-              <div className="text-3xl font-bold text-white mb-2">
-                {productionData.previous.defect_rate}%
-              </div>
-              <div className="text-slate-400 text-sm">Previous Defect Rate</div>
-            </div>
-          </div>
-        )}
-
-        {/* Production Decision Form */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleValidate();
+          }}
+          className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700"
+          noValidate
+        >
           <h2 className="text-2xl font-bold text-white mb-6">
             Set Production Strategy
           </h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {[
+              {
+                id: "units_to_produce",
+                label: "Units to Produce",
+                value: data?.units_to_produce ?? 0,
+                type: "number",
+                step: 1,
+                min: 0,
+                placeholder: "Enter number of units to produce",
+              },
+              {
+                id: "cost_per_unit",
+                label: "Cost per Unit (₹)",
+                value: data?.cost_per_unit ?? 0,
+                type: "number",
+                step: 0.01,
+                min: 0,
+                placeholder: "Manufacturing cost per unit",
+              },
+              {
+                id: "defect_rate",
+                label: "Expected Defect Rate (%)",
+                value: data?.defect_rate ?? 0,
+                type: "number",
+                step: 0.1,
+                min: 0,
+                max: 100,
+                placeholder: "Expected defect rate percentage",
+              },
+              {
+                id: "production_capacity",
+                label: "Production Capacity (Units)",
+                value: data?.production_capacity ?? 0,
+                type: "number",
+                step: 1,
+                min: 0,
+                placeholder: "Maximum production capacity per period",
+              },
+              {
+                id: "storage_capacity",
+                label: "Storage Capacity (Units)",
+                value: data?.storage_capacity ?? 0,
+                type: "number",
+                step: 1,
+                min: 0,
+                placeholder: "Maximum storage capacity for finished goods",
+              },
+            ].map((field) => (
+              <div key={field.id}>
+                <label
+                  htmlFor={field.id}
+                  className="block text-slate-200 font-semibold mb-1"
+                >
+                  {field.label}
+                </label>
+                <input
+                  id={field.id}
+                  name={field.id}
+                  type={field.type}
+                  step={field.step}
+                  min={field.min}
+                  max={field.max}
+                  value={field.value}
+                  onChange={handleChange}
+                  placeholder={field.placeholder}
+                  className={`w-full p-3 rounded-lg bg-slate-700 text-white border ${
+                    getError(field.id) ? "border-rose-500" : "border-slate-600"
+                  } focus:ring-2 focus:ring-emerald-400`}
+                />
+                {getError(field.id) && (
+                  <p className="text-rose-400 text-xs mt-1">
+                    {getError(field.id)}
+                  </p>
+                )}
+              </div>
+            ))}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Units to Produce */}
+            {/* Read-only Inventory Value */}
             <div>
-              <label className="block text-white text-sm font-semibold mb-2">
-                Units to Produce
+              <label
+                htmlFor="inventory_value"
+                className="block text-slate-200 font-semibold mb-1"
+              >
+                Inventory Value (₹)
               </label>
               <input
-                type="number"
-                value={productionData.current.units_produced}
-                onChange={(e) =>
-                  handleInputChange(
-                    "units_produced",
-                    parseInt(e.target.value) || 0
-                  )
-                }
-                placeholder="Number of units to produce"
-                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-              />
-            </div>
-
-            {/* Cost per Unit */}
-            <div>
-              <label className="block text-white text-sm font-semibold mb-2">
-                Cost per Unit
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={productionData.current.cost_per_unit}
-                onChange={(e) =>
-                  handleInputChange(
-                    "cost_per_unit",
-                    parseFloat(e.target.value) || 0
-                  )
-                }
-                placeholder="Manufacturing cost per unit"
-                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-              />
-            </div>
-
-            {/* Inventory Value */}
-            <div>
-              <label className="block text-white text-sm font-semibold mb-2">
-                Inventory Value
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={productionData.current.inventory_value}
-                onChange={(e) =>
-                  handleInputChange(
-                    "inventory_value",
-                    parseFloat(e.target.value) || 0
-                  )
-                }
-                placeholder="Current inventory value"
-                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-              />
-            </div>
-
-            {/* Defect Rate */}
-            <div>
-              <label className="block text-white text-sm font-semibold mb-2">
-                Target Defect Rate (%)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
-                value={productionData.current.defect_rate}
-                onChange={(e) =>
-                  handleInputChange(
-                    "defect_rate",
-                    parseFloat(e.target.value) || 0
-                  )
-                }
-                placeholder="Acceptable defect rate percentage"
-                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                id="inventory_value"
+                name="inventory_value"
+                type="text"
+                value={formatNumber(
+                  Math.round(data?.units_to_produce * data?.cost_per_unit)
+                )}
+                readOnly
+                placeholder="Calculated inventory value"
+                className="w-full p-3 rounded-lg bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed"
               />
             </div>
           </div>
 
-          {/* Total Cost Display */}
-          <div className="mt-6 bg-slate-700/50 rounded-lg p-4">
-            <div className="text-center">
-              <p className="text-slate-300 text-sm">Total Production Cost</p>
-              <p className="text-2xl font-bold text-white">
-                {formatCurrency(totalProductionCost)}
-              </p>
+          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <div className="text-xl text-blue-400 font-semibold">
+                Total Production Cost (incl.
+                {Math.round(
+                  (data?.units_to_produce * data?.defect_rate) / 100
+                )}{" "}
+                defected units): ₹{formatNumber(Math.round(totalCost))}
+              </div>
+              <div className="text-sm space-y-1">
+                <div className="text-slate-300">
+                  Available Cash Balance: ₹{formatNumber(projected ?? 0)}
+                </div>
+                <div
+                  className={`font-semibold ${
+                    totalCost > (projected ?? 0)
+                      ? "text-rose-400"
+                      : "text-emerald-400"
+                  }`}
+                >
+                  Remaining after production: ₹
+                  {formatNumber(Math.round(projected - totalCost))}
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex gap-4 pt-6">
             <button
-              onClick={handleSubmit}
-              disabled={
-                submitting ||
-                productionData.current.units_produced <= 0 ||
-                productionData.current.cost_per_unit <= 0 ||
-                companyData.cash_balance < totalProductionCost
-              }
-              className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Production Decision"
-              )}
+              Validate
             </button>
           </div>
 
-          {/* Budget Validation */}
-          {companyData.cash_balance < totalProductionCost && (
-            <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 mt-4">
-              <p className="text-red-200 text-sm">
-                ⚠️ Insufficient cash balance. Required:{" "}
-                {formatCurrency(totalProductionCost)}, Available:{" "}
-                {formatCurrency(companyData.cash_balance)}
-              </p>
+          {(budgetAlert || success) && (
+            <div className="mt-6 space-y-4">
+              {budgetAlert && (
+                <div
+                  className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse"
+                  role="alert"
+                >
+                  <div className="flex items-start gap-3">
+                    <TriangleAlert className="text-rose-500 mt-0.5" />
+                    <p className="text-sm">{budgetAlert}</p>
+                  </div>
+                </div>
+              )}
+
+              {success && !budgetAlert && (
+                <div
+                  className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce"
+                  role="alert"
+                >
+                  <div className="flex items-center gap-3">
+                    <Check className="text-green-400 text-xl" />
+                    <p className="text-xl font-semibold">
+                      Form Validated Successfully
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </form>
       </div>
     </div>
   );

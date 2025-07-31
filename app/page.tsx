@@ -6,7 +6,7 @@ export default function Home() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push("/register");
+    router.push("/login");
   };
 
   return (
@@ -38,9 +38,9 @@ export default function Home() {
           </p>
 
           <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-            Transform your business ideas into reality with our comprehensive simulation platform. 
-            Model complex scenarios, analyze market dynamics, and make data-driven decisions 
-            in a risk-free environment.
+            Transform your business ideas into reality with our comprehensive
+            simulation platform. Model complex scenarios, analyze market
+            dynamics, and make data-driven decisions in a risk-free environment.
           </p>
 
           {/* CTA Buttons */}
@@ -60,7 +60,11 @@ export default function Home() {
 
       <style jsx>{`
         .bg-grid-pattern {
-          background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+          background-image: radial-gradient(
+            circle at 1px 1px,
+            rgba(255, 255, 255, 0.15) 1px,
+            transparent 0
+          );
           background-size: 40px 40px;
         }
       `}</style>

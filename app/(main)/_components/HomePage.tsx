@@ -110,20 +110,19 @@ const PieTooltip = ({ active, payload }: any) => {
 };
 
 const HomePage: React.FC<HomePageProps> = ({ company }) => {
-  const [currentPeriod] = useState(
-    company?.current_period || 1
-  );
-  const { setComId,setCurrentPeriod } = useSimulation();
+  const { setComId, setPeriod } = useSimulation();
   const comID = company?.id;
-  const current_period=company?.current_period;
+  const period = company?.current_period;
   useEffect(() => {
     setComId(comID || "");
-    setCurrentPeriod(current_period || 1);
-  }, [comID]);
-  
-  const [isPending, startTransition] = useTransition();
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [hoveringBar, setHoveringBar] = useState(false);
+    setPeriod(period || 1);
+  }, [comID, period, setComId, setPeriod]);
+  const [currentPeriod, setCurrentPeriod] = useState(
+    company?.current_period || 1
+  );
+  const [, startTransition] = useTransition();
+  const [isSimulating] = useState(false);
+  const [, setHoveringBar] = useState(false);
 
   // Mock data based on your schema
   const mockData = {

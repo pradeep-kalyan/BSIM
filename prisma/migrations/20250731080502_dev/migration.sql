@@ -128,8 +128,10 @@ CREATE TABLE "production" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
-    "units_produced" INTEGER NOT NULL,
+    "units_to_produce" INTEGER NOT NULL,
     "cost_per_unit" INTEGER NOT NULL,
+    "production_capacity" INTEGER NOT NULL DEFAULT 0,
+    "storage_capacity" INTEGER DEFAULT 0,
     "inventory_value" INTEGER NOT NULL,
     "defect_rate" INTEGER NOT NULL,
     "finalised" BOOLEAN NOT NULL DEFAULT false,
@@ -265,6 +267,12 @@ CREATE INDEX "finance_user_id_idx" ON "finance"("user_id");
 CREATE UNIQUE INDEX "finance_company_id_period_key" ON "finance"("company_id", "period");
 
 -- CreateIndex
+CREATE INDEX "production_company_id_idx" ON "production"("company_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "production_company_id_period_key" ON "production"("company_id", "period");
+
+-- CreateIndex
 CREATE INDEX "hr_decisions_company_id_idx" ON "hr_decisions"("company_id");
 
 -- CreateIndex
@@ -272,6 +280,18 @@ CREATE UNIQUE INDEX "hr_decisions_company_id_period_key" ON "hr_decisions"("comp
 
 -- CreateIndex
 CREATE INDEX "hr_role_decisions_hr_decision_id_idx" ON "hr_role_decisions"("hr_decision_id");
+
+-- CreateIndex
+CREATE INDEX "rd_company_id_idx" ON "rd"("company_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "rd_company_id_period_key" ON "rd"("company_id", "period");
+
+-- CreateIndex
+CREATE INDEX "marketing_company_id_idx" ON "marketing"("company_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "marketing_company_id_period_key" ON "marketing"("company_id", "period");
 
 -- CreateIndex
 CREATE INDEX "product_performances_product_id_idx" ON "product_performances"("product_id");

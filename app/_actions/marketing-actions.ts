@@ -1,25 +1,6 @@
 "use server";
 
 import prisma from "../functions/prisma";
-import { revalidatePath } from "next/cache";
-
-interface MarketingDecision {
-  company_id: string;
-  period: number;
-  budget: number;
-  offline: number;
-  online: number;
-}
-
-interface HistoricalMarketingData {
-  period: number;
-  budget: number;
-  offline: number;
-  online: number;
-  roi: number;
-  conversion_rate: number;
-  finalised: boolean;
-}
 
 export async function getCompanyData(companyId: string) {
   try {
@@ -33,9 +14,7 @@ export async function getCompanyData(companyId: string) {
       },
     });
 
-    if (!company) {
-      throw new Error("Company not found");
-    }
+    if (!company) throw new Error("Company not found");
 
     return company;
   } catch (error) {
@@ -44,28 +23,23 @@ export async function getCompanyData(companyId: string) {
   }
 }
 
-export async function getHistoricalMarketingData(
-  companyId: string
-): Promise<HistoricalMarketingData[]> {
+export async function getHistoricalMarketingData(companyId: string) {
   try {
-    const marketingData = await prisma.marketing.findMany({
+    const history = await prisma.marketing.findMany({
       where: { company_id: companyId },
       orderBy: { period: "asc" },
-      select: {
-        period: true,
-        budget: true,
-        offline: true,
-        online: true,
-        roi: true,
-        conversion_rate: true,
-        finalised: true,
-      },
     });
 
-    return marketingData;
+    return history.map((entry) => ({
+      period: entry.period,
+      budget: entry.budget,
+      online: entry.online,
+      offline: entry.offline,
+      finalised: entry.finalised,
+    }));
   } catch (error) {
-    console.error("Error fetching historical marketing data:", error);
-    throw new Error("Failed to fetch historical marketing data");
+    console.error("Error fetching marketing history:", error);
+    throw new Error("Failed to fetch marketing history");
   }
 }
 
@@ -75,19 +49,14 @@ export async function getCurrentMarketingDecision(
 ) {
   try {
     const decision = await prisma.marketing.findFirst({
-      where: {
-        company_id: companyId,
-        period: period,
-      },
+      where: { company_id: companyId, period },
       select: {
         id: true,
         company_id: true,
         period: true,
         budget: true,
-        offline: true,
         online: true,
-        roi: true,
-        conversion_rate: true,
+        offline: true,
         finalised: true,
         created_at: true,
         updated_at: true,
@@ -101,71 +70,92 @@ export async function getCurrentMarketingDecision(
   }
 }
 
-export async function submitMarketingDecisionForPeriod(
-  decision: MarketingDecision
-) {
+export async function submitMarketingDecisionForPeriod({
+  company_id,
+  period,
+  budget,
+  online,
+  offline,
+}: {
+  company_id: string;
+  period: number;
+  budget: number;
+  online: number;
+  offline: number;
+}) {
   try {
-    // Validate inputs
-    if (decision.budget < 0 || decision.offline < 0 || decision.online < 0) {
-      throw new Error("Budget values cannot be negative");
-    }
+    return await prisma.$transaction(async (tx) => {
+      const company = await tx.company.findUnique({
+        where: { id: company_id },
+        select: { cash_balance: true },
+      });
 
-    if (decision.offline + decision.online !== decision.budget) {
-      throw new Error("Online and offline budgets must sum to total budget");
-    }
+      if (!company) throw new Error("Company not found");
 
-    // Calculate ROI and conversion rate (simplified calculation)
-    const roi = Math.round(Math.random() * 15 + 5); // 5-20% ROI
-    const conversion_rate = Math.round((decision.budget / 10000) * 100) / 100; // Simplified conversion rate
+      if (online + offline !== budget) {
+        throw new Error("Online and offline must add up to total budget");
+      }
 
-    // Check if decision already exists
-    const existingDecision = await prisma.marketing.findFirst({
-      where: {
-        company_id: decision.company_id,
-        period: decision.period,
-      },
+      if (company.cash_balance < budget) {
+        throw new Error("Insufficient cash balance for marketing decision");
+      }
+
+      const existingDecision = await tx.marketing.findFirst({
+        where: { company_id, period },
+      });
+
+      if (existingDecision) {
+        const previousBudget = existingDecision.budget;
+        const delta = budget - previousBudget;
+
+        if (delta > 0 && company.cash_balance < delta) {
+          throw new Error("Insufficient cash balance for updated budget");
+        }
+
+        if (delta !== 0) {
+          await tx.company.update({
+            where: { id: company_id },
+            data: {
+              cash_balance: { decrement: delta },
+            },
+          });
+        }
+
+        await tx.marketing.update({
+          where: { id: existingDecision.id },
+          data: {
+            budget,
+            online,
+            offline,
+            finalised: true,
+          },
+        });
+
+        return existingDecision.id;
+      } else {
+        await tx.company.update({
+          where: { id: company_id },
+          data: {
+            cash_balance: { decrement: budget },
+          },
+        });
+
+        const newDecision = await tx.marketing.create({
+          data: {
+            company_id,
+            period,
+            budget,
+            online,
+            offline,
+            finalised: true,
+          },
+        });
+
+        return newDecision.id;
+      }
     });
-
-    if (existingDecision) {
-      // Update existing decision
-      await prisma.marketing.update({
-        where: { id: existingDecision.id },
-        data: {
-          budget: decision.budget,
-          offline: decision.offline,
-          online: decision.online,
-          roi: roi,
-          conversion_rate: conversion_rate,
-          finalised: true,
-        },
-      });
-    } else {
-      // Create new decision
-      await prisma.marketing.create({
-        data: {
-          company_id: decision.company_id,
-          period: decision.period,
-          budget: decision.budget,
-          offline: decision.offline,
-          online: decision.online,
-          roi: roi,
-          conversion_rate: conversion_rate,
-          finalised: true,
-        },
-      });
-    }
-
-    revalidatePath(`/simulate/${decision.company_id}`);
-    return {
-      success: true,
-      message: "Marketing decision submitted successfully",
-    };
   } catch (error) {
-    console.error("Error submitting marketing decision:", error);
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to submit marketing decision"
-    );
+    console.error("Error in marketing decision submission:", error);
+    throw new Error("Failed to submit marketing decision");
   }
 }

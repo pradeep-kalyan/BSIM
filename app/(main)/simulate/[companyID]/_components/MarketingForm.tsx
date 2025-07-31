@@ -1,266 +1,225 @@
 "use client";
 
-import {
-  IndianRupee,
-  Globe,
-  Store,
-  Loader2,
-  Eye,
-} from "lucide-react";
-import React, { useState, useEffect } from "react";
-import Inputbox from "@/ui/Input-Box";
+import { IndianRupee, Globe, Store, Check, TriangleAlert } from "lucide-react";
+import React, { useState } from "react";
 import DashboardCard from "@/ui/Card";
-import MarketingComparisonModal from "./MarketingComparison";
+import Inputbox from "@/ui/Input-Box";
 import {
-  getCompanyData,
-  getHistoricalMarketingData,
-  getCurrentMarketingDecision,
-  submitMarketingDecisionForPeriod,
-} from "@/app/_actions/marketing-actions";
-import { useMarketingForm } from "@/app/context/FormContext";
+  useMarketingForm,
+  useCashBalance,
+  useCompanyForm,
+} from "@/app/context/FormContext";
+import { useSimulation } from "@/app/context/SimulationContext";
 
-interface CompanyData {
-  id: string;
-  name: string;
-  current_period: number;
-  cash_balance: number;
-}
+const formatCurrency = (val: number) =>
+  `₹${val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
-interface HistoricalData {
-  period: number;
-  budget: number;
-  offline: number;
-  online: number;
-  roi: number;
-  conversion_rate: number;
-}
+const percent = (part: number, total: number) =>
+  total > 0 ? ((part / total) * 100).toFixed(1) + "%" : "0%";
 
-interface MarketingFormProps {
-  companyId: string;
-}
+const MarketingForm = ({ companyId }: { companyId: string }) => {
+  const { data: marketingData, updateData, setError } = useMarketingForm();
+  const { projectedCashBalance } = useCashBalance();
+  const { data: companyData } = useCompanyForm();
+  const { period } = useSimulation();
 
-const MarketingForm: React.FC<MarketingFormProps> = ({ companyId }) => {
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [showComparison, setShowComparison] = useState(false);
-  const [previousData, setPreviousData] = useState({
-    budget: 0,
-    online: 0,
-    offline: 0,
-    roi: 0,
-    conversion_rate: 0,
-  });
-  const {
-    data: marketingDataRaw,
-    updateData,
-    setError,
-    getError,
-  } = useMarketingForm();
+  const [success, setSuccess] = useState(false);
+  const [budgetError, setBudgetError] = useState<string | null>(null);
+  const [isValidated, setIsValidated] = useState(false);
 
-  const marketingData = {
-    budget: marketingDataRaw.budget ?? 0,
-    online: marketingDataRaw.online ?? 0,
-    offline: marketingDataRaw.offline ?? 0,
-    roi: marketingDataRaw.roi ?? 0,
-    conversion_rate: marketingDataRaw.conversion_rate ?? 0,
+  const frozenData = {
+    budget: marketingData.budget,
+    online: marketingData.online,
+    offline: marketingData.offline,
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(false);
-        const [company, historical] = await Promise.all([
-          getCompanyData(companyId),
-          getHistoricalMarketingData(companyId),
-        ]);
-        setCompanyData(company);
-        setHistoricalData(historical);
-
-        if (historical.length > 0) {
-          const last = historical[historical.length - 1];
-          const decision = await getCurrentMarketingDecision(
-            company.id,
-            company.current_period
-          );
-
-          updateData({
-            budget: decision?.budget ?? last.budget,
-            online: decision?.online ?? last.online,
-            offline: decision?.offline ?? last.offline,
-          });
-
-          setPreviousData(last);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [companyId]);
 
   const handleBudgetChange = (
     field: "budget" | "online" | "offline",
     value: number
   ) => {
-    const online = marketingData.online;
-    const offline = marketingData.offline;
+    setSuccess(false);
+    setIsValidated(false);
+
+    // Ensure value is not negative
+    if (value < 0) value = 0;
 
     if (field === "budget") {
-      const total = online + offline || 1;
+      const half = Math.floor(value / 2);
       updateData({
         budget: value,
-        online: Math.round(value * (online / total)),
-        offline: Math.round(value * (offline / total)),
+        online: half,
+        offline: value - half,
       });
     } else {
-      const newOnline = field === "online" ? value : online;
-      const newOffline = field === "offline" ? value : offline;
+      const newOnline = field === "online" ? value : marketingData.online;
+      const newOffline = field === "offline" ? value : marketingData.offline;
       updateData({
         online: newOnline,
         offline: newOffline,
         budget: newOnline + newOffline,
       });
     }
+
+    setBudgetError(null);
   };
 
-  const handleSubmit = async () => {
-    if (!companyData) return;
+  const handleValidate = () => {
+    setBudgetError(null);
+    setIsValidated(false);
+    setSuccess(false);
 
-    const { budget, online, offline } = marketingData;
-
-    if ((online || 0) + (offline || 0) !== (budget || 0)) {
-      setError("marketing", "Online + Offline must equal Total Budget");
+    if (marketingData.online + marketingData.offline !== marketingData.budget) {
+      setBudgetError(" Online + Offline must equal total budget.");
       return;
     }
 
-    try {
-      setSubmitting(true);
-      await submitMarketingDecisionForPeriod({
-        company_id: companyId,
-        period: companyData.current_period,
-        budget: budget || 0,
-        online: online || 0,
-        offline: offline || 0,
-      });
-    } catch (error) {
-      console.error("Submission error:", error);
-      setError("marketing", "Failed to submit decision");
-    } finally {
-      setSubmitting(false);
+    if (marketingData.budget > projectedCashBalance) {
+      setBudgetError(
+        ` Insufficient cash balance. Required: ₹${formatCurrency(
+          marketingData.budget
+        )}, Available: ${formatCurrency(projectedCashBalance)}`
+      );
+      return;
     }
+    setSuccess(true);
+    setIsValidated(true);
   };
 
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(val);
-
-  const percent = (part: number, total: number) =>
-    total > 0 ? ((part / total) * 100).toFixed(1) + "%" : "0%";
-
   return (
-    <div className="p-4 bg-slate-900 min-h-screen">
-      {showComparison && companyData && (
-        <MarketingComparisonModal
-          isOpen={showComparison}
-          onClose={() => setShowComparison(false)}
-          companyData={companyData}
-          currentDecision={marketingData}
-          previousDecision={previousData}
-        />
-      )}
+    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
+      <div className="max-w-5xl mx-auto py-8">
+        <header className="mb-10 flex flex-col gap-2">
+          <h1 className="text-4xl font-extrabold text-blue-300">
+            Marketing Dashboard
+          </h1>
+          <span className="text-lg text-slate-400 tracking-wide">
+            Period {period} • {companyData?.name}
+          </span>
+        </header>
 
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h1 className="text-3xl text-white font-bold">Marketing Dashboard</h1>
-          <p className="text-slate-400">
-            {companyData?.name ?? "Loading..."} – Period {companyData?.current_period ?? "-"}
-          </p>
-        </div>
-        <button
-          onClick={() => setShowComparison(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <DashboardCard
+            title="Total Budget"
+            value={formatCurrency(frozenData.budget)}
+            subtitle="Marketing Budget"
+            icon={IndianRupee}
+            size="large"
+          />
+          <DashboardCard
+            title="Online Marketing"
+            value={formatCurrency(frozenData.online)}
+            subtitle="Digital Channels"
+            icon={Globe}
+            size="large"
+          />
+          <DashboardCard
+            title="Offline Marketing"
+            value={formatCurrency(frozenData.offline)}
+            subtitle="Traditional Channels"
+            icon={Store}
+            size="large"
+          />
+        </section>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleValidate();
+          }}
+          className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700"
         >
-          <Eye className="w-4 h-4" />
-          View Analysis
-        </button>
-      </div>
+          <h2 className="text-2xl font-bold text-white mb-6">
+            Set Marketing Strategy
+          </h2>
 
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
-        <DashboardCard
-          title="Total Budget"
-          value={formatCurrency(marketingData.budget)}
-          subtitle="Marketing Budget"
-          icon={IndianRupee}
-          change={(marketingData.budget - previousData.budget) / (previousData.budget || 1)}
-        />
-        <DashboardCard
-          title="Online Marketing"
-          value={formatCurrency(marketingData.online)}
-          subtitle="Digital Channels"
-          icon={Globe}
-          change={(marketingData.online - previousData.online) / (previousData.online || 1)}
-        />
-        <DashboardCard
-          title="Offline Marketing"
-          value={formatCurrency(marketingData.offline)}
-          subtitle="Traditional Channels"
-          icon={Store}
-          change={(marketingData.offline - previousData.offline) / (previousData.offline || 1)}
-        />
-      </div>
-
-      <div className="space-y-6 bg-slate-800/40 p-6 rounded-lg border border-slate-700">
-        <h2 className="text-white text-xl font-bold">Set Marketing Budget</h2>
-
-        <Inputbox
-          label="Total Marketing Budget"
-          name="budget"
-          type="number"
-          value={marketingData.budget.toString()}
-          onChange={(e) => handleBudgetChange("budget", parseInt(e.target.value) || 0)}
-        />
-
-        <Inputbox
-          label="Online Marketing Budget"
-          name="online"
-          type="number"
-          value={marketingData.online.toString()}
-          onChange={(e) => handleBudgetChange("online", parseInt(e.target.value) || 0)}
-        />
-        <p className="text-xs text-slate-400">
-          {percent(marketingData.online, marketingData.budget)} of total
-        </p>
-
-        <Inputbox
-          label="Offline Marketing Budget"
-          name="offline"
-          type="number"
-          value={marketingData.offline.toString()}
-          onChange={(e) => handleBudgetChange("offline", parseInt(e.target.value) || 0)}
-        />
-        <p className="text-xs text-slate-400">
-          {percent(marketingData.offline, marketingData.budget)} of total
-        </p>
-
-        {marketingData.online + marketingData.offline !== marketingData.budget && (
-          <div className="text-yellow-300 text-sm">
-            ⚠️ Online + Offline budgets do not match total!
+          <div className="grid gap-6 md:grid-cols-2">
+            <Inputbox
+              label="Total Marketing Budget (₹)"
+              name="budget"
+              type="number"
+              value={marketingData.budget.toString()}
+              onChange={(e) =>
+                handleBudgetChange("budget", parseInt(e.target.value) || 0)
+              }
+            />
+            <Inputbox
+              label="Online Marketing (₹)"
+              name="online"
+              type="number"
+              value={marketingData.online.toString()}
+              onChange={(e) =>
+                handleBudgetChange("online", parseInt(e.target.value) || 0)
+              }
+            />
+            <Inputbox
+              label="Offline Marketing (₹)"
+              name="offline"
+              type="number"
+              value={marketingData.offline.toString()}
+              onChange={(e) =>
+                handleBudgetChange("offline", parseInt(e.target.value) || 0)
+              }
+            />
           </div>
-        )}
 
-        <button
-          onClick={handleSubmit}
-          disabled={submitting || marketingData.budget <= 0}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-slate-600"
-        >
-          {submitting ? "Submitting..." : "Submit Marketing Decision"}
-        </button>
+          <div className="mt-4 text-sm text-slate-400 space-y-1">
+            <p>Online: {percent(marketingData.online, marketingData.budget)}</p>
+            <p>
+              Offline: {percent(marketingData.offline, marketingData.budget)}
+            </p>
+          </div>
+
+          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <div className="text-slate-300 text-sm">
+                Available Cash Balance: {formatCurrency(projectedCashBalance)}
+              </div>
+              <div
+                className={`font-semibold ${
+                  marketingData.budget > projectedCashBalance
+                    ? "text-rose-400"
+                    : "text-emerald-400"
+                }`}
+              >
+                Remaining After Marketing:
+                {formatCurrency(projectedCashBalance - marketingData.budget)}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
+              >
+                Validate
+              </button>
+            </div>
+          </div>
+
+          {(budgetError || success) && (
+            <div className="mt-6 space-y-4">
+              {budgetError && (
+                <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
+                  <div className="flex items-start gap-3">
+                    <TriangleAlert className="text-rose-500 mt-0.5" />
+                    <p className="text-sm">{budgetError}</p>
+                  </div>
+                </div>
+              )}
+
+              {success && (
+                <div className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce">
+                  <div className="flex items-center gap-3">
+                    <Check className="text-green-400 text-xl" />
+                    <p className="text-xl font-semibold">
+                      Marketing Validate Successfully!
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </form>
       </div>
     </div>
   );

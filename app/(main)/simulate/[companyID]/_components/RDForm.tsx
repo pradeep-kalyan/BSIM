@@ -1,370 +1,232 @@
 "use client";
 
+import React, { useState } from "react";
 import {
   IndianRupee,
   FlaskConical,
-  Lightbulb,
   Timer,
-  BarChart3,
-  Loader2,
+  Check,
+  TriangleAlert,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
 import DashboardCard from "@/ui/Card";
-import {
-  getCompanyData,
-  getHistoricalRDData,
-  getCurrentRDDecision,
-  submitRDDecisionForPeriod,
-} from "@/app/_actions/rd-actions";
-import RdComparison from "./RdComparison";
-import { useRDForm, useCashBalance, useForm } from "@/app/context/FormContext";
+import { useRDForm, useCashBalance, useCompanyForm } from "@/app/context/FormContext";
+import { useSimulation } from "@/app/context/SimulationContext";
 
-interface CompanyData {
-  id: string;
-  name: string;
-  current_period: number;
-  cash_balance: number;
-}
+const formatCurrency = (val: number) =>
+  `₹${val.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
-interface HistoricalData {
-  period: number;
-  budget: number;
-  pip: number;
-  time_to_market: number;
-  total_development: number;
-  patented: number;
-  quality_changes: number;
-}
+const RDForm = () => {
+  const { data, updateData, getError, setError } = useRDForm();
+  const { projectedCashBalance, updateRDBudgetImpact } = useCashBalance();
+  const { data: companyData } = useCompanyForm();
+  const { period } = useSimulation();
 
-interface RDFormProps {
-  companyId: string;
-}
+  const [success, setSuccess] = useState(false);
+  const [budgetAlert, setBudgetAlert] = useState<string | null>(null);
 
-const RDForm: React.FC<RDFormProps> = ({ companyId }) => {
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const fieldDefs: {
+    id: keyof typeof data;
+    label: string;
+    placeholder: string;
+    min?: number;
+    step?: number;
+  }[] = [
+    {
+      id: "budget",
+      label: "R&D Budget (₹)",
+      placeholder: "Enter total R&D budget",
+      min: 0,
+      step: 1,
+    },
+    {
+      id: "pip",
+      label: "Products in Pipeline",
+      placeholder: "Upcoming products in development",
+      min: 0,
+      step: 1,
+    },
+    {
+      id: "time_to_market",
+      label: "Time to Market (months)",
+      placeholder: "Avg. time to market",
+      min: 0,
+      step: 1,
+    },
+    {
+      id: "total_development",
+      label: "Total Development Cost (₹)",
+      placeholder: "Expected cost of all developments",
+      min: 0,
+      step: 1,
+    },
+    {
+      id: "patented",
+      label: "Patents Expected",
+      placeholder: "Number of patents expected",
+      min: 0,
+      step: 1,
+    },
+    {
+      id: "quality_changes",
+      label: "Quality Improvements (%)",
+      placeholder: "Quality improvement target (%)",
+      min: 0,
+      step: 0.1,
+    },
+  ];
 
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
-  const [previousData, setPreviousData] = useState<Partial<HistoricalData>>({});
-  const [showComparison, setShowComparison] = useState(false);
-
-  const { data: rdData, updateData } = useRDForm();
-  const { projectedCashBalance, setOriginalCashBalance } = useCashBalance();
-  const { state } = useForm();
-
-
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchData = async () => {
-      try {
-        setError(null);
-
-        const [company, historical] = await Promise.all([
-          getCompanyData(companyId),
-          getHistoricalRDData(companyId),
-        ]);
-
-        if (cancelled) return;
-
-        setCompanyData(company);
-        setOriginalCashBalance(company.cash_balance); 
-        setHistoricalData(historical);
-
-        const hasUserModified = Object.values(rdData).some(
-          (val) => val !== undefined && val !== 0
-        );
-
-        if (!hasUserModified && historical.length > 0) {
-          const lastPeriod = historical[historical.length - 1];
-          const decision = await getCurrentRDDecision(
-            company.id,
-            company.current_period
-          );
-
-          updateData({
-            budget: decision?.budget ?? lastPeriod.budget ?? 0,
-            pip: decision?.pip ?? lastPeriod.pip ?? 0,
-            time_to_market:
-              decision?.time_to_market ?? lastPeriod.time_to_market ?? 0,
-            total_development:
-              decision?.total_development ?? lastPeriod.total_development ?? 0,
-            patented: decision?.patented ?? lastPeriod.patented ?? 0,
-            quality_changes:
-              decision?.quality_changes ?? lastPeriod.quality_changes ?? 0,
-          });
-
-          setPreviousData({
-            budget: lastPeriod.budget ?? 0,
-            pip: lastPeriod.pip ?? 0,
-            time_to_market: lastPeriod.time_to_market ?? 0,
-            total_development: lastPeriod.total_development ?? 0,
-            patented: lastPeriod.patented ?? 0,
-            quality_changes: lastPeriod.quality_changes ?? 0,
-          });
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to fetch data");
-        }
-      }
-    };
-
-    fetchData();
-    return () => {
-      cancelled = true;
-    };
-  }, [companyId]);
-
-  const handleInputChange = (field: keyof typeof rdData, value: number) => {
-    updateData({ [field]: value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const key = name as keyof typeof data;
+    updateData({ [key]: Number(value) });
+    setError(key, "");
+    setSuccess(false);
   };
 
-  const handleSubmit = async () => {
-    if (!companyData) return;
+  const handleValidate = () => {
+    setSuccess(false);
+    setBudgetAlert(null);
 
-    try {
-      setSubmitting(true);
-      setError(null);
+    const totalBudget = data.budget ?? 0;
+    const balance = companyData?.cash_balance ?? 0;
 
-      await submitRDDecisionForPeriod({
-        company_id: companyId,
-        period: companyData.current_period,
-        budget: rdData.budget ?? 0,
-        pip: rdData.pip ?? 0,
-        time_to_market: rdData.time_to_market ?? 0,
-        total_development: rdData.total_development ?? 0,
-        patented: rdData.patented ?? 0,
-        quality_changes: rdData.quality_changes ?? 0,
-      });
+    fieldDefs.forEach(({ id }) => setError(id, ""));
 
-      setShowComparison(false);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to submit R&D decision"
-      );
-    } finally {
-      setSubmitting(false);
+    if (totalBudget <= 0) {
+      setError("budget", "Budget must be greater than zero");
+      return;
     }
+
+    if (totalBudget > balance) {
+      setBudgetAlert(
+        ` Insufficient cash balance. Required: ${formatCurrency(
+          totalBudget
+        )}, Available: ${formatCurrency(balance)}`
+      );
+      return;
+    }
+
+    updateRDBudgetImpact(totalBudget);
+    setSuccess(true);
   };
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-
-  const calculateChange = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
-
-  const budgetChange = calculateChange(
-    rdData.budget ?? 0,
-    previousData.budget ?? 0
-  );
-  const pipChange = calculateChange(rdData.pip ?? 0, previousData.pip ?? 0);
-  const timeToMarketChange = calculateChange(
-    rdData.time_to_market ?? 0,
-    previousData.time_to_market ?? 0
-  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white">R&D Dashboard</h1>
-          <p className="text-slate-400">
-            Period {companyData?.current_period ?? "–"} •{" "}
-            {companyData?.name ?? "–"}
-          </p>
-        </div>
+    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
+      <div className="max-w-5xl mx-auto py-8">
+        <header className="mb-10 flex flex-col gap-2">
+          <h1 className="text-4xl font-extrabold text-blue-300">R&D Dashboard</h1>
+          <span className="text-lg text-slate-400 tracking-wide">
+            Period {period} • {companyData?.name}
+          </span>
+        </header>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <DashboardCard
             title="R&D Budget"
-            value={formatCurrency(rdData.budget ?? 0)}
-            subtitle="Research & Development"
+            value={formatCurrency(data.budget ?? 0)}
+            subtitle="Total R&D Allocation"
             icon={IndianRupee}
-            size="small"
-            gradient={false}
-            change={budgetChange}
+            size="large"
           />
           <DashboardCard
             title="Products in Pipeline"
-            value={(rdData.pip ?? 0).toString()}
-            subtitle="Development Pipeline"
+            value={data.pip ?? 0}
+            subtitle="Upcoming product count"
             icon={FlaskConical}
-            size="small"
-            gradient={false}
-            change={pipChange}
+            size="large"
           />
           <DashboardCard
             title="Time to Market"
-            value={`${rdData.time_to_market ?? 0} months`}
-            subtitle="Avg Dev Time"
+            value={`${data.time_to_market ?? 0} months`}
+            subtitle="Avg time per release"
             icon={Timer}
-            size="small"
-            gradient={false}
-            change={timeToMarketChange}
+            size="large"
           />
-        </div>
+        </section>
 
-        {/* Historical Snapshot */}
-        {previousData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-              <Lightbulb className="h-8 w-8 text-yellow-400 mb-2" />
-              <div className="text-3xl font-bold text-white mb-1">
-                {previousData.patented ?? 0}
-              </div>
-              <div className="text-slate-400 text-sm">Previous Patents</div>
-            </div>
-            <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-              <BarChart3 className="h-8 w-8 text-green-400 mb-2" />
-              <div className="text-3xl font-bold text-white mb-1">
-                {previousData.quality_changes ?? 0}%
-              </div>
-              <div className="text-slate-400 text-sm">Quality Improvement</div>
-            </div>
-          </div>
-        )}
-
-        {/* R&D Inputs */}
-        <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mb-6">
-          <h2 className="text-2xl font-bold text-white mb-6">
-            Set R&D Strategy
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {(
-              [
-                ["budget", "R&D Budget"],
-                ["pip", "Products in Pipeline"],
-                ["time_to_market", "Time to Market (months)"],
-                ["total_development", "Total Development Cost"],
-                ["patented", "Patents Expected"],
-                ["quality_changes", "Quality Improvements (%)"],
-              ] as const
-            ).map(([key, label]) => (
-              <div key={key}>
-                <label className="block text-white text-sm font-semibold mb-2">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleValidate();
+          }}
+          className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700"
+        >
+          <h2 className="text-2xl font-bold text-white mb-6">Set R&D Strategy</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {fieldDefs.map(({ id, label, placeholder, min, step }) => (
+              <div key={id}>
+                <label htmlFor={id} className="block text-slate-200 font-semibold mb-1">
                   {label}
                 </label>
                 <input
+                  id={id}
+                  name={id}
                   type="number"
-                  value={rdData[key] ?? 0}
-                  onChange={(e) =>
-                    handleInputChange(key, parseInt(e.target.value) || 0)
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                  placeholder={placeholder}
+                  step={step}
+                  min={min}
+                  value={data[id] ?? 0}
+                  onChange={handleChange}
+                  className={`w-full p-3 rounded-lg bg-slate-700 text-white border ${
+                    getError(id) ? "border-rose-500" : "border-slate-600"
+                  } focus:ring-2 focus:ring-emerald-400`}
                 />
+                {getError(id) && (
+                  <p className="text-rose-400 text-xs mt-1">{getError(id)}</p>
+                )}
               </div>
             ))}
           </div>
 
-          {/* Summary */}
-          <div className="mt-6">
-            <h4 className="text-lg font-semibold text-white mb-2">
-              R&D Summary
-            </h4>
-            <div className="bg-slate-700/50 p-4 rounded-xl grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-slate-300 text-sm">R&D Budget</p>
-                <p className="text-xl font-bold text-white">
-                  {formatCurrency(rdData.budget ?? 0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-300 text-sm">Quality Improvement</p>
-                <p className="text-xl font-bold text-white">
-                  {rdData.quality_changes ?? 0}%
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-300 text-sm">Development Cost</p>
-                <p className="text-xl font-bold text-white">
-                  {formatCurrency(rdData.total_development ?? 0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-300 text-sm">Cash After</p>
-                <p
-                  className={`text-xl font-bold ${
-                    projectedCashBalance < 0 ? "text-red-400" : "text-green-400"
-                  }`}
+          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <div className="text-xl text-blue-400 font-semibold">
+                Cash After R&D:{" "}
+                <span
+                  className={
+                    projectedCashBalance - (data.budget ?? 0) < 0
+                      ? "text-rose-400"
+                      : "text-emerald-400"
+                  }
                 >
-                  {formatCurrency(projectedCashBalance)}
-                </p>
+                  {formatCurrency(projectedCashBalance - (data.budget ?? 0))}
+                </span>
+              </div>
+              <div className="text-slate-300">
+                Available Cash: {formatCurrency(projectedCashBalance)}
               </div>
             </div>
+            <button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
+            >
+              Validate
+            </button>
           </div>
 
-          {/* Buttons */}
-          <div className="mt-7 flex justify-end space-x-4">
-            <button
-              className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 flex items-center space-x-2"
-              onClick={() => setShowComparison(true)}
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span>Compare Changes</span>
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={
-                submitting ||
-                (rdData.budget ?? 0) <= 0 ||
-                projectedCashBalance < 0
-              }
-              className="bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit R&D Decision"
+          {(budgetAlert || success) && (
+            <div className="mt-6 space-y-4">
+              {budgetAlert && (
+                <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
+                  <div className="flex items-start gap-3">
+                    <TriangleAlert className="text-rose-500 mt-0.5" />
+                    <p className="text-sm">{budgetAlert}</p>
+                  </div>
+                </div>
               )}
-            </button>
-          </div>
-
-          {/* Cash warning */}
-          {projectedCashBalance < 0 && (
-            <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 mt-4">
-              <p className="text-red-200 text-sm">
-                ⚠️ Insufficient cash balance. Required:{" "}
-                {formatCurrency(rdData.budget ?? 0)}, Available:{" "}
-                {formatCurrency(companyData?.cash_balance ?? 0)}
-              </p>
+              {success && !budgetAlert && (
+                <div className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce">
+                  <div className="flex items-center gap-3">
+                    <Check className="text-green-400 text-xl" />
+                    <p className="text-xl font-semibold">
+                      R&D Plan Validated Successfully
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
-
-        {/* Comparison Modal */}
-        {showComparison && (
-          <RdComparison
-            current={{
-              budget: rdData.budget ?? 0,
-              pip: rdData.pip ?? 0,
-              time_to_market: rdData.time_to_market ?? 0,
-              total_development: rdData.total_development ?? 0,
-              patented: rdData.patented ?? 0,
-              quality_changes: rdData.quality_changes ?? 0,
-            }}
-            previous={{
-              budget: previousData.budget ?? 0,
-              pip: previousData.pip ?? 0,
-              time_to_market: previousData.time_to_market ?? 0,
-              total_development: previousData.total_development ?? 0,
-              patented: previousData.patented ?? 0,
-              quality_changes: previousData.quality_changes ?? 0,
-            }}
-            onClose={() => setShowComparison(false)}
-          />
-        )}
+        </form>
       </div>
     </div>
   );
