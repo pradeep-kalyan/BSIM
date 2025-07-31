@@ -19,7 +19,7 @@ const percent = (part: number, total: number) =>
 
 const MarketingForm = ({ companyId }: { companyId: string }) => {
   const { data: marketingData, updateData, setError } = useMarketingForm();
-  const { projectedCashBalance } = useCashBalance();
+  const { projectedCashBalance, updateMarketingBudgetImpact } = useCashBalance();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
 
@@ -81,6 +81,7 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
       );
       return;
     }
+    updateMarketingBudgetImpact(marketingData.budget);
     setSuccess(true);
     setIsValidated(true);
   };
