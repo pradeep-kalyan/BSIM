@@ -1,7 +1,19 @@
 "use client";
 import React from "react";
-import { TrendingUp, TrendingDown } from "lucide-react";
-import { DashboardCardProps } from "@/app/(main)/homepage/[companyID]/types";
+import { ArrowUpRight, ArrowDownRight, LucideIcon } from "lucide-react";
+
+interface DashboardCardProps {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon?: LucideIcon;
+  change?: number;
+  loading?: boolean;
+  onClick?: () => void;
+  gradient?: boolean;
+  size?: "small" | "normal" | "large";
+  className?: string;
+}
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
   title,
@@ -68,15 +80,11 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
                 }`}
               >
                 {change > 0 ? (
-                  <TrendingUp size={16} />
+                  <ArrowUpRight size={16} />
                 ) : change < 0 ? (
-                  <TrendingDown size={16} />
+                  <ArrowDownRight size={16} />
                 ) : null}
-                <span className="ml-1">
-                  {Math.abs(change) > 500
-                    ? `${(Math.abs(change) / 100).toFixed(1)}x`
-                    : `${Math.abs(change).toFixed(1)}%`}
-                </span>
+                <span className="ml-1">{Math.abs(change)}%</span>
                 <span className="ml-1 opacity-60">vs last period</span>
               </div>
             )}

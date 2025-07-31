@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgres"
   url      = env("DATABASE_URL")
+  // relationMode = "prisma"
 }
 
 model user {
@@ -174,19 +175,25 @@ model finance {
 }
 
 model production {
-  id              String   @id @default(cuid())
-  company_id      String
-  period          Int
-  units_produced  Int
-  cost_per_unit   Int
-  inventory_value Int
-  defect_rate     Int
-  finalised       Boolean  @default(false)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  company_id          String
+  period              Int
+  units_produced      Int
+  cost_per_unit       Int
+  production_capacity Int      @default(0)
+  storage_capacity    Int?     @default(0)
+  inventory_value     Int
+  defect_rate         Int
+  finalised           Boolean  @default(false)
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, period])
+  @@index([company_id])
 }
+
 
 model hr_decision {
   id           String   @id @default(cuid())
@@ -238,6 +245,9 @@ model rd {
   updated_at        DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, period])
+  @@index([company_id])
 }
 
 model marketing {
@@ -254,6 +264,9 @@ model marketing {
   updated_at      DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, period])
+  @@index([company_id])
 }
 
 model product_performance {

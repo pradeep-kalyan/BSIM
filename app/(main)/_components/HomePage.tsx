@@ -110,14 +110,17 @@ const PieTooltip = ({ active, payload }: any) => {
 };
 
 const HomePage: React.FC<HomePageProps> = ({ company }) => {
-  const { setComId } = useSimulation();
-  const comID = company?.id;
-  useEffect(() => {
-    setComId(comID || "");
-  }, [comID]);
-  const [currentPeriod, setCurrentPeriod] = useState(
+  const [currentPeriod] = useState(
     company?.current_period || 1
   );
+  const { setComId,setCurrentPeriod } = useSimulation();
+  const comID = company?.id;
+  const current_period=company?.current_period;
+  useEffect(() => {
+    setComId(comID || "");
+    setCurrentPeriod(current_period || 1);
+  }, [comID]);
+  
   const [isPending, startTransition] = useTransition();
   const [isSimulating, setIsSimulating] = useState(false);
   const [hoveringBar, setHoveringBar] = useState(false);
@@ -190,12 +193,12 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
     ],
   };
 
-  const handleAdvance = useCallback(() => {
-    startTransition(async () => {
-      // Simulate period advancement - replace with your actual function
-      setCurrentPeriod((prev) => prev + 1);
-    });
-  }, []);
+  // const handleAdvance = useCallback(() => {
+  //   startTransition(async () => {
+  //     // Simulate period advancement - replace with your actual function
+  //     setCurrentPeriod((prev) => prev + 1);
+  //   });
+  // }, []);
   const router = useRouter();
   const handleSimulate = useCallback(() => {
     router.push(`/simulate/${comID}`);

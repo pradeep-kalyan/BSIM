@@ -8,6 +8,7 @@ import { Building2, Rocket } from "lucide-react";
 import HRDecisionForm from "@/app/(main)/_components/HRdecisionform";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 import ProductForm from "./ProductForm";
+import Image from "next/image";
 // import { createCompanyWithProducts } from "@/app/_actions/createCompanyWithProducts";
 
 interface Props {
@@ -56,6 +57,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           setForm((prev) => ({
             ...prev,
             description: firstCompany.description || "",
+            logo_url: firstCompany.logo_url || "",
             cash_balance: firstCompany.cash_balance || 0,
             total_assets: firstCompany.total_assets || 0,
             total_liabilities: firstCompany.total_liabilities || 0,
@@ -93,7 +95,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: name.match(/balance|assets|liabilities|brand_value|marketing_budget/)
+      [name]: name.match(
+        /balance|assets|liabilities|brand_value|marketing_budget/
+      )
         ? value === ""
           ? 0
           : parseFloat(value) || 0
@@ -101,7 +105,11 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     }));
   };
 
-  const handleHrChange = (index: number, field: string, value: string | number) => {
+  const handleHrChange = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
     setHrRoles((prev) => {
       const updated = [...prev];
       updated[index] = {
@@ -116,7 +124,10 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
   };
 
   const addHrRole = () => {
-    setHrRoles((prev) => [...prev, { role_name: "", salary_per_head: 0, head_count: 0 }]);
+    setHrRoles((prev) => [
+      ...prev,
+      { role_name: "", salary_per_head: 0, head_count: 0 },
+    ]);
   };
 
   const removeHrRole = (index: number) => {
@@ -156,12 +167,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       return;
     }
 
-    if (form.marketing_budget > form.cash_balance) {
-      setError("Marketing budget cannot be greater than cash balance.");
-      setLoading(false);
-      return;
-    }
-
     try {
       const user = await getCurrentUser();
       if (!user) {
@@ -170,7 +175,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
-      // Create company with products 
+      // Create company with products
       const { companyId, failedEmails } = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
@@ -212,7 +217,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       setTrainingBudget(0);
       setEmployeeSatisfaction(0);
       onCreated();
-
     } catch (err) {
       console.error("Failed to create company", err);
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -222,9 +226,13 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
   };
 
   const steps = [
-    { id: 0, title: "Company Details", description: "Basic company information" },
+    {
+      id: 0,
+      title: "Company Details",
+      description: "Basic company information",
+    },
     { id: 1, title: "HR Setup", description: "Roles and team structure" },
-    { id: 2, title: "Products", description: "Company products and services" }
+    { id: 2, title: "Products", description: "Company products and services" },
   ];
 
   const canProceedToNext = () => {
@@ -232,7 +240,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       case 0:
         return form.name.trim() !== "";
       case 1:
-        return hrRoles.some(role => role.role_name.trim() !== "");
+        return hrRoles.some((role) => role.role_name.trim() !== "");
       case 2:
         return true;
       default:
@@ -270,17 +278,23 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         <div className="flex items-center gap-2">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${currentStep === index
-                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                : currentStep > index
-                  ? "bg-green-500 text-white"
-                  : "bg-slate-700 text-slate-400"
-                }`}>
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                  currentStep === index
+                    ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                    : currentStep > index
+                    ? "bg-green-500 text-white"
+                    : "bg-slate-700 text-slate-400"
+                }`}
+              >
                 {currentStep > index ? "✓" : index + 1}
               </div>
               {index < steps.length - 1 && (
-                <div className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${currentStep > index ? "bg-green-500" : "bg-slate-700"
-                  }`} />
+                <div
+                  className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${
+                    currentStep > index ? "bg-green-500" : "bg-slate-700"
+                  }`}
+                />
               )}
             </div>
           ))}
@@ -342,7 +356,12 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 <textarea
                   name="description"
                   value={form.description}
-                  onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   rows={3}
                   className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white placeholder-slate-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 resize-none"
                   placeholder="Brief description of your company..."
@@ -350,20 +369,23 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
               </div>
 
               <div className="lg:col-span-1 flex flex-col items-center justify-center">
-                <p className="text-xs text-slate-400 mb-1">Logo Preview</p>
+                <p className="text-xs text-slate-400 mt-1 mb-1">Logo Preview</p>
                 <div className="w-24 h-24 border-2 border-dashed border-slate-600 rounded bg-slate-800/30 flex items-center justify-center overflow-hidden">
                   {form.logo_url ? (
-                    <img
+                    <Image
                       src={form.logo_url}
                       alt="Logo Preview"
                       className="w-full h-full object-contain"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const fallbackElement = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        e.currentTarget.style.display = "none";
+                        const fallbackElement = e.currentTarget
+                          .nextElementSibling as HTMLElement | null;
                         if (fallbackElement) {
-                          fallbackElement.style.display = 'flex';
+                          fallbackElement.style.display = "flex";
                         }
                       }}
+                      width={24}
+                      height={24}
                     />
                   ) : null}
                   <div className="hidden flex-col items-center text-slate-500 text-xs">
@@ -381,7 +403,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Company Budget</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Company Budget
+                  </label>
                   <input
                     type="number"
                     name="cash_balance"
@@ -394,7 +418,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Total Assets</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Total Assets
+                  </label>
                   <input
                     type="number"
                     name="total_assets"
@@ -407,7 +433,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Total Liabilities</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Total Liabilities
+                  </label>
                   <input
                     type="number"
                     name="total_liabilities"
@@ -420,7 +448,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Brand Value</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Brand Value
+                  </label>
                   <input
                     type="number"
                     name="brand_value"
@@ -433,7 +463,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Marketing Budget</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Marketing Budget
+                  </label>
                   <input
                     type="number"
                     name="marketing_budget"
@@ -444,7 +476,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                     className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
                   />
                 </div>
-
               </div>
             </div>
 
@@ -483,7 +514,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                         key={idx}
                         className="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700 rounded"
                       >
-                        <span className="text-white text-sm truncate">{email}</span>
+                        <span className="text-white text-sm truncate">
+                          {email}
+                        </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveEmail(email)}
@@ -520,15 +553,21 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-slate-400">Total Salary:</span>
-                  <p className="text-white font-medium">${totalSalary.toLocaleString()}</p>
+                  <p className="text-white font-medium">
+                    ${totalSalary.toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <span className="text-slate-400">Training Budget:</span>
-                  <p className="text-white font-medium">${trainingBudget.toLocaleString()}</p>
+                  <p className="text-white font-medium">
+                    ${trainingBudget.toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <span className="text-slate-400">Total Budget:</span>
-                  <p className="text-white font-medium">${totalBudget.toLocaleString()}</p>
+                  <p className="text-white font-medium">
+                    ${totalBudget.toLocaleString()}
+                  </p>
                 </div>
               </div>
             </div>
@@ -548,13 +587,24 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             type="button"
             onClick={handlePrevious}
             disabled={currentStep === 0}
-            className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${currentStep === 0
-              ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-              : "bg-slate-700 hover:bg-slate-600 text-white"
-              }`}
+            className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${
+              currentStep === 0
+                ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                : "bg-slate-700 hover:bg-slate-600 text-white"
+            }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Previous
           </button>
@@ -565,14 +615,25 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 type="button"
                 onClick={handleNext}
                 disabled={!canProceedToNext()}
-                className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${canProceedToNext()
-                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
-                  : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                  }`}
+                className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${
+                  canProceedToNext()
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
+                    : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                }`}
               >
                 Next
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             ) : (
@@ -584,9 +645,24 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 <Rocket size={18} />
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Creating...
                   </>
@@ -600,6 +676,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       </form>
     </div>
   );
-}
+};
 
 export default CreateCompanyForm;

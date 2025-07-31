@@ -133,24 +133,24 @@ export async function createCompany(data: CreateCompanyInput) {
       products:
         data.products && data.products.length > 0
           ? {
-            create: data.products.map((p) => ({
-              name: p.name,
-              description: p.description,
-              category: p.category,
-              quality_rating: p.quality_rating,
-              innovation_rating: p.innovation_rating,
-              sustainability_rating: p.sustainability_rating,
-              production_cost: p.production_cost,
-              selling_price: p.selling_price,
-              inventory_level: p.inventory_level,
-              production_capacity: p.production_capacity,
-              development_cost: p.development_cost,
-              marketing_budget: p.marketing_budget,
-              status: p.status,
-              launch_period: p.launch_period,
-              discontinue_period: p.discontinue_period,
-            })),
-          }
+              create: data.products.map((p) => ({
+                name: p.name,
+                description: p.description,
+                category: p.category,
+                quality_rating: p.quality_rating,
+                innovation_rating: p.innovation_rating,
+                sustainability_rating: p.sustainability_rating,
+                production_cost: p.production_cost,
+                selling_price: p.selling_price,
+                inventory_level: p.inventory_level,
+                production_capacity: p.production_capacity,
+                development_cost: p.development_cost,
+                marketing_budget: p.marketing_budget,
+                status: p.status,
+                launch_period: p.launch_period,
+                discontinue_period: p.discontinue_period,
+              })),
+            }
           : undefined,
     },
   });
