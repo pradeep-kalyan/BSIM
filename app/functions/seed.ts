@@ -1,543 +1,653 @@
-// import prisma from "./prisma";
+import prisma from "./prisma";
 
+async function main() {
+  console.log("🌱 Starting database seeding...");
 
-// async function main() {
-//   // Password hash for 'password123'
-//   const hashedPassword =
-//     "$2y$10$oV0RDjW0/9FIJ87.db7Oied03ymlfQQOLY0u.JGznOm8Dpit6fniq";
+  // Clean existing data (optional - uncomment if needed)
+  await prisma.product_performance.deleteMany();
+  await prisma.marketing.deleteMany();
+  await prisma.rd.deleteMany();
+  await prisma.production.deleteMany();
+  await prisma.hr_role_decision.deleteMany();
+  await prisma.hr_decision.deleteMany();
+  await prisma.finance.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.company_access.deleteMany();
+  await prisma.simulation_access.deleteMany();
+  await prisma.company.deleteMany();
+  await prisma.simulation.deleteMany();
+  await prisma.user.deleteMany();
 
-//   console.log("🌱 Starting database seed...");
+  // Create Users
+  console.log("👥 Creating users...");
+  const hashedPassword =
+    "$2y$10$N/ohrDUZObMGWG30oskpee40vFV8CtG7nCwkDO6vrx9IL6f8OuQZu";
 
-//   // Create Users
-//   const users = await Promise.all([
-//     prisma.user.create({
-//       data: {
-//         name: "John Smith",
-//         email: "john@example.com",
-//         password_hash: hashedPassword,
-//         role: "admin",
-//       },
-//     }),
-//     prisma.user.create({
-//       data: {
-//         name: "Sarah Johnson",
-//         email: "sarah@example.com",
-//         password_hash: hashedPassword,
-//         role: "user",
-//       },
-//     }),
-//     prisma.user.create({
-//       data: {
-//         name: "Mike Chen",
-//         email: "mike@example.com",
-//         password_hash: hashedPassword,
-//         role: "user",
-//       },
-//     }),
-//     prisma.user.create({
-//       data: {
-//         name: "Emily Davis",
-//         email: "emily@example.com",
-//         password_hash: hashedPassword,
-//         role: "user",
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created users");
+  const admin = await prisma.user.create({
+    data: {
+      name: "Admin User",
+      email: "admin@simulation.com",
+      password_hash: hashedPassword,
+      role: "admin",
+    },
+  });
 
-//   // Create Simulations
-//   const electronicsConfig = {
-//     duration: 12,
-//     starting_budget: 1000000,
-//     market_volatility: 0.3,
-//     innovation_importance: 0.4,
-//     sustainability_weight: 0.25,
-//   };
+  const instructor = await prisma.user.create({
+    data: {
+      name: "Dr. Sarah Johnson",
+      email: "sarah.johnson@university.edu",
+      password_hash: hashedPassword,
+      role: "instructor",
+    },
+  });
 
-//   const fashionConfig = {
-//     duration: 8,
-//     starting_budget: 500000,
-//     market_volatility: 0.4,
-//     innovation_importance: 0.3,
-//     sustainability_weight: 0.5,
-//   };
+  const students = await Promise.all([
+    prisma.user.create({
+      data: {
+        name: "Alice Chen",
+        email: "alice.chen@student.edu",
+        password_hash: hashedPassword,
+        role: "user",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Bob Martinez",
+        email: "bob.martinez@student.edu",
+        password_hash: hashedPassword,
+        role: "user",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Carol Williams",
+        email: "carol.williams@student.edu",
+        password_hash: hashedPassword,
+        role: "user",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "David Kim",
+        email: "david.kim@student.edu",
+        password_hash: hashedPassword,
+        role: "user",
+      },
+    }),
+  ]);
 
-//   const simulations = await Promise.all([
-//     prisma.simulation.create({
-//       data: {
-//         name: "Global Electronics Market",
-//         description:
-//           "A comprehensive simulation of the global electronics market including smartphones, laptops, and wearables",
-//         config: JSON.stringify(electronicsConfig),
-//         status: "active",
-//         created_by: users[0].id,
-//       },
-//     }),
-//     prisma.simulation.create({
-//       data: {
-//         name: "Sustainable Fashion Industry",
-//         description:
-//           "Simulation focused on sustainable fashion and apparel industry dynamics",
-//         config: JSON.stringify(fashionConfig),
-//         status: "active",
-//         created_by: users[0].id,
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created simulations");
+  // Create Simulations
+  console.log("🎮 Creating simulations...");
+  const techSimulation = await prisma.simulation.create({
+    data: {
+      name: "Tech Industry Competition 2024",
+      description:
+        "A comprehensive business simulation focusing on technology companies competing in the smartphone and laptop markets.",
+      config: JSON.stringify({
+        maxPeriods: 12,
+        startingCash: 1000000,
+        marketSize: 10000000,
+        inflationRate: 0.03,
+        interestRate: 0.05,
+      }),
+      current_period: 3,
+      status: "active",
+      created_by: instructor.id,
+    },
+  });
 
-//   // Create Companies
-//   const companies = await Promise.all([
-//     // Electronics Market Companies
-//     prisma.company.create({
-//       data: {
-//         simulation_id: simulations[0].id,
-//         user_id: users[1].id,
-//         name: "TechNova Solutions",
-//         description:
-//           "Innovative technology company specializing in consumer electronics",
-//         logo_url: "https://example.com/logos/technova.png",
-//         cash_balance: 850000,
-//         total_assets: 1200000,
-//         total_liabilities: 300000,
-//         credit_rating: "A+",
-//         brand_value: 150000,
-//       },
-//     }),
-//     prisma.company.create({
-//       data: {
-//         simulation_id: simulations[0].id,
-//         user_id: users[2].id,
-//         name: "Digital Dynamics Corp",
-//         description: "Leading manufacturer of mobile devices and accessories",
-//         logo_url: "https://example.com/logos/digitaldynamics.png",
-//         cash_balance: 750000,
-//         total_assets: 1100000,
-//         total_liabilities: 400000,
-//         credit_rating: "A",
-//         brand_value: 180000,
-//       },
-//     }),
-//     // Fashion Industry Companies
-//     prisma.company.create({
-//       data: {
-//         simulation_id: simulations[1].id,
-//         user_id: users[3].id,
-//         name: "EcoThread Fashion",
-//         description:
-//           "Sustainable fashion brand focusing on eco-friendly materials",
-//         logo_url: "https://example.com/logos/ecothread.png",
-//         cash_balance: 420000,
-//         total_assets: 600000,
-//         total_liabilities: 150000,
-//         credit_rating: "B+",
-//         brand_value: 80000,
-//       },
-//     }),
-//     prisma.company.create({
-//       data: {
-//         simulation_id: simulations[1].id,
-//         user_id: users[1].id,
-//         name: "Urban Style Co",
-//         description:
-//           "Modern urban fashion retailer with focus on trendy designs",
-//         logo_url: "https://example.com/logos/urbanstyle.png",
-//         cash_balance: 380000,
-//         total_assets: 550000,
-//         total_liabilities: 200000,
-//         credit_rating: "B",
-//         brand_value: 95000,
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created companies");
+  const retailSimulation = await prisma.simulation.create({
+    data: {
+      name: "Retail Business Challenge",
+      description:
+        "A simulation focused on retail operations, inventory management, and customer satisfaction.",
+      config: JSON.stringify({
+        maxPeriods: 8,
+        startingCash: 500000,
+        marketSize: 5000000,
+        seasonality: true,
+      }),
+      current_period: 1,
+      status: "active",
+      created_by: admin.id,
+    },
+  });
 
-//   // Create Products
-//   const products = await Promise.all([
-//     // TechNova Products
-//     prisma.product.create({
-//       data: {
-//         company_id: companies[0].id,
-//         name: "NovaPro Smartphone",
-//         description: "High-performance smartphone with AI capabilities",
-//         category: "Mobile Devices",
-//         quality_rating: 8.5,
-//         innovation_rating: 9.2,
-//         sustainability_rating: 6.8,
-//         production_cost: 250,
-//         selling_price: 699,
-//         inventory_level: 1500,
-//         production_capacity: 3000,
-//         development_cost: 150000,
-//         marketing_budget: 75000,
-//         status: "active",
-//         launch_period: 1,
-//       },
-//     }),
-//     prisma.product.create({
-//       data: {
-//         company_id: companies[0].id,
-//         name: "Nova Earbuds Pro",
-//         description: "Wireless earbuds with noise cancellation",
-//         category: "Audio Accessories",
-//         quality_rating: 7.8,
-//         innovation_rating: 8.0,
-//         sustainability_rating: 7.5,
-//         production_cost: 45,
-//         selling_price: 199,
-//         inventory_level: 2800,
-//         production_capacity: 5000,
-//         development_cost: 80000,
-//         marketing_budget: 40000,
-//         status: "active",
-//         launch_period: 2,
-//       },
-//     }),
-//     // Digital Dynamics Product
-//     prisma.product.create({
-//       data: {
-//         company_id: companies[1].id,
-//         name: "DD Tablet Ultra",
-//         description: "Premium tablet for professional use",
-//         category: "Tablets",
-//         quality_rating: 8.2,
-//         innovation_rating: 7.8,
-//         sustainability_rating: 6.2,
-//         production_cost: 180,
-//         selling_price: 549,
-//         inventory_level: 800,
-//         production_capacity: 2000,
-//         development_cost: 120000,
-//         marketing_budget: 60000,
-//         status: "active",
-//         launch_period: 1,
-//       },
-//     }),
-//     // EcoThread Product
-//     prisma.product.create({
-//       data: {
-//         company_id: companies[2].id,
-//         name: "Organic Cotton T-Shirt",
-//         description: "Sustainable t-shirt made from 100% organic cotton",
-//         category: "Apparel",
-//         quality_rating: 7.5,
-//         innovation_rating: 6.5,
-//         sustainability_rating: 9.2,
-//         production_cost: 12,
-//         selling_price: 39,
-//         inventory_level: 5000,
-//         production_capacity: 8000,
-//         development_cost: 25000,
-//         marketing_budget: 15000,
-//         status: "active",
-//         launch_period: 1,
-//       },
-//     }),
-//     // Urban Style Product
-//     prisma.product.create({
-//       data: {
-//         company_id: companies[3].id,
-//         name: "Urban Denim Jacket",
-//         description: "Trendy denim jacket with modern fit",
-//         category: "Apparel",
-//         quality_rating: 7.0,
-//         innovation_rating: 6.0,
-//         sustainability_rating: 5.8,
-//         production_cost: 25,
-//         selling_price: 89,
-//         inventory_level: 1200,
-//         production_capacity: 2500,
-//         development_cost: 18000,
-//         marketing_budget: 12000,
-//         status: "active",
-//         launch_period: 1,
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created products");
+  // Create Simulation Access
+  console.log("🔑 Setting up simulation access...");
+  const simulationAccess = await Promise.all([
+    // Tech simulation access
+    ...students.map((student) =>
+      prisma.simulation_access.create({
+        data: {
+          simulation_id: techSimulation.id,
+          user_id: student.id,
+          access_level: "participant",
+        },
+      })
+    ),
+    // Retail simulation access for first two students
+    prisma.simulation_access.create({
+      data: {
+        simulation_id: retailSimulation.id,
+        user_id: students[0].id,
+        access_level: "participant",
+      },
+    }),
+    prisma.simulation_access.create({
+      data: {
+        simulation_id: retailSimulation.id,
+        user_id: students[1].id,
+        access_level: "participant",
+      },
+    }),
+  ]);
 
-//   // Market Conditions
-//   const marketConditions = await Promise.all([
-//     // Electronics Market - Period 1
-//     prisma.market_condition.create({
-//       data: {
-//         simulation_id: simulations[0].id,
-//         period: 1,
-//         total_market_size: 50000000,
-//         segment_distribution: JSON.stringify({
-//           smartphones: 0.45,
-//           tablets: 0.25,
-//           accessories: 0.3,
-//         }),
-//         economic_indicators: JSON.stringify({
-//           gdp_growth: 0.032,
-//           inflation_rate: 0.025,
-//           unemployment: 0.045,
-//           consumer_confidence: 0.68,
-//         }),
-//         consumer_preferences: JSON.stringify({
-//           price_sensitivity: 0.7,
-//           brand_loyalty: 0.4,
-//           feature_importance: 0.8,
-//           sustainability_concern: 0.3,
-//         }),
-//         technology_trends: JSON.stringify({
-//           ai_adoption: 0.6,
-//           "5g_penetration": 0.4,
-//           iot_growth: 0.5,
-//         }),
-//         sustainability_importance: 0.35,
-//       },
-//     }),
-//     // Electronics Market - Period 2
-//     prisma.market_condition.create({
-//       data: {
-//         simulation_id: simulations[0].id,
-//         period: 2,
-//         total_market_size: 52000000,
-//         segment_distribution: JSON.stringify({
-//           smartphones: 0.44,
-//           tablets: 0.26,
-//           accessories: 0.3,
-//         }),
-//         economic_indicators: JSON.stringify({
-//           gdp_growth: 0.028,
-//           inflation_rate: 0.031,
-//           unemployment: 0.042,
-//           consumer_confidence: 0.71,
-//         }),
-//         consumer_preferences: JSON.stringify({
-//           price_sensitivity: 0.72,
-//           brand_loyalty: 0.42,
-//           feature_importance: 0.82,
-//           sustainability_concern: 0.38,
-//         }),
-//         technology_trends: JSON.stringify({
-//           ai_adoption: 0.65,
-//           "5g_penetration": 0.48,
-//           iot_growth: 0.55,
-//         }),
-//         sustainability_importance: 0.38,
-//       },
-//     }),
-//     // Fashion Market - Period 1
-//     prisma.market_condition.create({
-//       data: {
-//         simulation_id: simulations[1].id,
-//         period: 1,
-//         total_market_size: 25000000,
-//         segment_distribution: JSON.stringify({
-//           casual_wear: 0.5,
-//           formal_wear: 0.3,
-//           accessories: 0.2,
-//         }),
-//         economic_indicators: JSON.stringify({
-//           gdp_growth: 0.025,
-//           inflation_rate: 0.028,
-//           unemployment: 0.048,
-//           consumer_confidence: 0.65,
-//         }),
-//         consumer_preferences: JSON.stringify({
-//           price_sensitivity: 0.75,
-//           brand_loyalty: 0.35,
-//           style_importance: 0.85,
-//           sustainability_concern: 0.55,
-//         }),
-//         technology_trends: JSON.stringify({
-//           ecommerce_growth: 0.8,
-//           social_media_influence: 0.9,
-//           virtual_fitting: 0.2,
-//         }),
-//         sustainability_importance: 0.55,
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created market conditions");
+  // Create Companies
+  console.log("🏢 Creating companies...");
+  const companies = await Promise.all([
+    // Tech simulation companies
+    prisma.company.create({
+      data: {
+        simulation_id: techSimulation.id,
+        user_id: students[0].id,
+        name: "TechNova Inc.",
+        description: "Innovative technology solutions for the modern world",
+        logo_url: "https://example.com/technova-logo.png",
+        cash_balance: 950000,
+        current_period: 3,
+        data: JSON.stringify({
+          employees: 45,
+          locations: ["San Francisco", "Austin"],
+          founded: 2020,
+        }),
+        total_assets: 1200000,
+        total_liabilities: 250000,
+        marketing_budget: 150000,
+        credit_rating: "A-",
+        brand_value: 75000,
+      },
+    }),
+    prisma.company.create({
+      data: {
+        simulation_id: techSimulation.id,
+        user_id: students[1].id,
+        name: "Digital Dynamics",
+        description: "Cutting-edge digital products and services",
+        logo_url: "https://example.com/digital-dynamics-logo.png",
+        cash_balance: 820000,
+        current_period: 3,
+        data: JSON.stringify({
+          employees: 38,
+          locations: ["Seattle", "Denver"],
+          founded: 2019,
+        }),
+        total_assets: 1050000,
+        total_liabilities: 300000,
+        marketing_budget: 120000,
+        credit_rating: "B+",
+        brand_value: 62000,
+      },
+    }),
+    prisma.company.create({
+      data: {
+        simulation_id: techSimulation.id,
+        user_id: students[2].id,
+        name: "Quantum Systems",
+        description: "Next-generation computing solutions",
+        logo_url: "https://example.com/quantum-logo.png",
+        cash_balance: 1100000,
+        current_period: 3,
+        data: JSON.stringify({
+          employees: 52,
+          locations: ["Boston", "Raleigh"],
+          founded: 2018,
+        }),
+        total_assets: 1350000,
+        total_liabilities: 200000,
+        marketing_budget: 180000,
+        credit_rating: "A",
+        brand_value: 88000,
+      },
+    }),
+    prisma.company.create({
+      data: {
+        simulation_id: techSimulation.id,
+        user_id: students[3].id,
+        name: "InnovateTech",
+        description: "Breakthrough technology for everyday problems",
+        logo_url: "https://example.com/innovate-logo.png",
+        cash_balance: 780000,
+        current_period: 3,
+        data: JSON.stringify({
+          employees: 31,
+          locations: ["Portland", "Nashville"],
+          founded: 2021,
+        }),
+        total_assets: 920000,
+        total_liabilities: 180000,
+        marketing_budget: 100000,
+        credit_rating: "B",
+        brand_value: 45000,
+      },
+    }),
+    // Retail simulation companies
+    prisma.company.create({
+      data: {
+        simulation_id: retailSimulation.id,
+        user_id: students[0].id,
+        name: "Urban Style Co.",
+        description: "Trendy fashion for the modern consumer",
+        logo_url: "https://example.com/urban-style-logo.png",
+        cash_balance: 450000,
+        current_period: 1,
+        data: JSON.stringify({
+          employees: 25,
+          stores: 8,
+          founded: 2022,
+        }),
+        total_assets: 600000,
+        total_liabilities: 150000,
+        marketing_budget: 75000,
+        credit_rating: "B+",
+        brand_value: 30000,
+      },
+    }),
+    prisma.company.create({
+      data: {
+        simulation_id: retailSimulation.id,
+        user_id: students[1].id,
+        name: "EcoGoods Market",
+        description: "Sustainable products for conscious consumers",
+        logo_url: "https://example.com/ecogoods-logo.png",
+        cash_balance: 520000,
+        current_period: 1,
+        data: JSON.stringify({
+          employees: 18,
+          stores: 5,
+          founded: 2023,
+        }),
+        total_assets: 550000,
+        total_liabilities: 80000,
+        marketing_budget: 60000,
+        credit_rating: "A-",
+        brand_value: 25000,
+      },
+    }),
+  ]);
 
-//   // Performance Results
-//   const performanceResults = await Promise.all([
-//     prisma.performance_result.create({
-//       data: {
-//         company_id: companies[0].id,
-//         period: 1,
-//         revenue: 1050000,
-//         costs: 750000,
-//         profit: 300000,
-//         market_share: 0.18,
-//         cash_flow: 250000,
-//         roi: 0.15,
-//         customer_satisfaction: 8.2,
-//         employee_satisfaction: 7.8,
-//         sustainability_score: 6.5,
-//         innovation_score: 8.8,
-//         brand_value_change: 15000,
-//       },
-//     }),
-//     prisma.performance_result.create({
-//       data: {
-//         company_id: companies[1].id,
-//         period: 1,
-//         revenue: 980000,
-//         costs: 720000,
-//         profit: 260000,
-//         market_share: 0.16,
-//         cash_flow: 220000,
-//         roi: 0.13,
-//         customer_satisfaction: 7.9,
-//         employee_satisfaction: 7.5,
-//         sustainability_score: 5.8,
-//         innovation_score: 7.9,
-//         brand_value_change: 12000,
-//       },
-//     }),
-//     prisma.performance_result.create({
-//       data: {
-//         company_id: companies[2].id,
-//         period: 1,
-//         revenue: 585000,
-//         costs: 420000,
-//         profit: 165000,
-//         market_share: 0.12,
-//         cash_flow: 140000,
-//         roi: 0.11,
-//         customer_satisfaction: 8.5,
-//         employee_satisfaction: 8.0,
-//         sustainability_score: 9.2,
-//         innovation_score: 6.8,
-//         brand_value_change: 8000,
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created performance results");
+  // Create Products
+  console.log("📱 Creating products...");
+  const products = await Promise.all([
+    // TechNova products
+    prisma.product.create({
+      data: {
+        company_id: companies[0].id,
+        name: "TechNova Smartphone Pro",
+        description: "Premium smartphone with advanced AI features",
+        category: "smartphones",
+        quality_rating: 8.5,
+        innovation_rating: 9.2,
+        sustainability_rating: 7.1,
+        production_cost: 420,
+        selling_price: 899,
+        inventory_level: 1250,
+        production_capacity: 3000,
+        development_cost: 2500000,
+        marketing_budget: 500000,
+        status: "active",
+        launch_period: 1,
+      },
+    }),
+    prisma.product.create({
+      data: {
+        company_id: companies[0].id,
+        name: "TechNova Laptop Ultra",
+        description: "High-performance laptop for professionals",
+        category: "laptops",
+        quality_rating: 8.8,
+        innovation_rating: 8.5,
+        sustainability_rating: 6.9,
+        production_cost: 780,
+        selling_price: 1599,
+        inventory_level: 890,
+        production_capacity: 2000,
+        development_cost: 3200000,
+        marketing_budget: 400000,
+        status: "active",
+        launch_period: 2,
+      },
+    }),
+    // Digital Dynamics products
+    prisma.product.create({
+      data: {
+        company_id: companies[1].id,
+        name: "DD Smart Device",
+        description: "Versatile smart device for home and office",
+        category: "smart_devices",
+        quality_rating: 7.8,
+        innovation_rating: 8.9,
+        sustainability_rating: 8.2,
+        production_cost: 350,
+        selling_price: 749,
+        inventory_level: 1100,
+        production_capacity: 2500,
+        development_cost: 1800000,
+        marketing_budget: 350000,
+        status: "active",
+        launch_period: 1,
+      },
+    }),
+    // Quantum Systems products
+    prisma.product.create({
+      data: {
+        company_id: companies[2].id,
+        name: "Quantum Workstation",
+        description: "Professional workstation with quantum processing",
+        category: "workstations",
+        quality_rating: 9.1,
+        innovation_rating: 9.8,
+        sustainability_rating: 7.5,
+        production_cost: 1200,
+        selling_price: 2999,
+        inventory_level: 420,
+        production_capacity: 1000,
+        development_cost: 5000000,
+        marketing_budget: 600000,
+        status: "active",
+        launch_period: 2,
+      },
+    }),
+    // Urban Style products
+    prisma.product.create({
+      data: {
+        company_id: companies[4].id,
+        name: "Urban Classic Jeans",
+        description: "Premium denim with contemporary fit",
+        category: "apparel",
+        quality_rating: 7.5,
+        innovation_rating: 6.8,
+        sustainability_rating: 8.5,
+        production_cost: 45,
+        selling_price: 129,
+        inventory_level: 2500,
+        production_capacity: 5000,
+        development_cost: 150000,
+        marketing_budget: 80000,
+        status: "active",
+        launch_period: 1,
+      },
+    }),
+  ]);
 
-//   // Decisions
-//   const marketingDecision = {
-//     product_id: products[0].id,
-//     budget_allocation: 100000,
-//     channels: ["digital", "tv", "social"],
-//     target_demographics: ["18-35", "35-50"],
-//     campaign_type: "awareness",
-//   };
+  // Create Finance Records
+  console.log("💰 Creating finance records...");
+  const financeRecords = [];
 
-//   const rdDecision = {
-//     product_id: products[1].id,
-//     investment_amount: 75000,
-//     focus_areas: ["battery_life", "sound_quality"],
-//     timeline: 2,
-//   };
+  // Create finance records for periods 1-3 for tech companies
+  for (let period = 1; period <= 3; period++) {
+    for (let i = 0; i < 4; i++) {
+      // First 4 companies are tech companies
+      const baseRevenue = 500000 + Math.random() * 300000;
+      const revenue = baseRevenue * (1 + (period - 1) * 0.15); // Growth over periods
+      const costs = revenue * (0.6 + Math.random() * 0.2);
+      const profit = revenue - costs;
 
-//   const productionDecision = {
-//     product_id: products[2].id,
-//     quantity: 1500,
-//     quality_investment: 50000,
-//     sustainability_measures: ["recycled_materials", "carbon_offset"],
-//   };
+      financeRecords.push(
+        prisma.finance.create({
+          data: {
+            company_id: companies[i].id,
+            user_id: students[i].id,
+            period: period,
+            total_revenue: revenue,
+            net_profit: profit,
+            cash_balance: companies[i].cash_balance + profit * period,
+            operating_costs: costs,
+            roi: (profit / costs) * 100,
+            burn_rate: costs / 12,
+            finalised: period < 3,
+            investment_amount: period === 1 ? 200000 : 0,
+            loan_amount: period === 2 ? 100000 : 0,
+            repay_loan: 0,
+            dividend_payout: period === 3 ? profit * 0.1 : 0,
+            equity_issue: 0,
+            processed: period < 3,
+            processed_at: period < 3 ? new Date() : null,
+          },
+        })
+      );
+    }
+  }
 
+  // Create finance record for retail companies (period 1)
+  for (let i = 4; i < 6; i++) {
+    const revenue = 200000 + Math.random() * 150000;
+    const costs = revenue * (0.7 + Math.random() * 0.15);
+    const profit = revenue - costs;
 
-//   // Events
-//   const events = await Promise.all([
-//     prisma.event.create({
-//       data: {
-//         simulation_id: simulations[0].id,
-//         period: 2,
-//         type: "market_disruption",
-//         name: "New Technology Breakthrough",
-//         description:
-//           "A major technological breakthrough in battery technology affects all electronic devices",
-//         impact_area: "technology",
-//         impact_strength: 0.8,
-//         affected_companies: JSON.stringify([companies[0].id, companies[1].id]),
-//       },
-//     }),
-//     prisma.event.create({
-//       data: {
-//         simulation_id: simulations[0].id,
-//         period: 3,
-//         type: "economic",
-//         name: "Supply Chain Disruption",
-//         description:
-//           "Global supply chain disruption affects production costs and delivery times",
-//         impact_area: "operations",
-//         impact_strength: -0.6,
-//         affected_companies: JSON.stringify([companies[0].id, companies[1].id]),
-//       },
-//     }),
-//     prisma.event.create({
-//       data: {
-//         simulation_id: simulations[1].id,
-//         period: 2,
-//         type: "regulatory",
-//         name: "Sustainability Regulations",
-//         description:
-//           "New environmental regulations require improved sustainability practices",
-//         impact_area: "sustainability",
-//         impact_strength: 0.7,
-//         affected_companies: JSON.stringify([companies[2].id, companies[3].id]),
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created events");
+    financeRecords.push(
+      prisma.finance.create({
+        data: {
+          company_id: companies[i].id,
+          user_id: students[i - 4].id,
+          period: 1,
+          total_revenue: revenue,
+          net_profit: profit,
+          cash_balance: companies[i].cash_balance + profit,
+          operating_costs: costs,
+          roi: (profit / costs) * 100,
+          burn_rate: costs / 12,
+          finalised: true,
+          processed: true,
+          processed_at: new Date(),
+        },
+      })
+    );
+  }
 
-//   // Product Performances
-//   const productPerformances = await Promise.all([
-//     prisma.product_performance.create({
-//       data: {
-//         product_id: products[0].id,
-//         period: 1,
-//         sales_volume: 1200,
-//         revenue: 838800,
-//         costs: 300000,
-//         profit: 538800,
-//         market_share: 0.15,
-//         customer_satisfaction: 8.4,
-//       },
-//     }),
-//     prisma.product_performance.create({
-//       data: {
-//         product_id: products[1].id,
-//         period: 2,
-//         sales_volume: 2100,
-//         revenue: 417900,
-//         costs: 94500,
-//         profit: 323400,
-//         market_share: 0.22,
-//         customer_satisfaction: 8.1,
-//       },
-//     }),
-//     prisma.product_performance.create({
-//       data: {
-//         product_id: products[2].id,
-//         period: 1,
-//         sales_volume: 680,
-//         revenue: 373320,
-//         costs: 122400,
-//         profit: 250920,
-//         market_share: 0.08,
-//         customer_satisfaction: 7.9,
-//       },
-//     }),
-//   ]);
-//   console.log("✅ Created product performances");
+  await Promise.all(financeRecords);
 
-//   console.log("🎉 Seed completed successfully!");
+  // Create HR Decisions
+  console.log("👨‍💼 Creating HR decisions...");
+  const hrDecisions = [];
 
-//   console.log("\n📊 Database Summary:");
-//   console.log(`- Users: ${users.length}`);
-//   console.log(`- Simulations: ${simulations.length}`);
-//   console.log(`- Companies: ${companies.length}`);
-//   console.log(`- Products: ${products.length}`);
-//   console.log(`- Market Conditions: ${marketConditions.length}`);
-//   console.log(`- Performance Results: ${performanceResults.length}`);
-//   // console.log(`- Decisions: ${decisions.length}`);
-//   console.log(`- Events: ${events.length}`);
-//   console.log(`- Product Performances: ${productPerformances.length}`);
-// }
+  for (let period = 1; period <= 3; period++) {
+    for (let i = 0; i < 4; i++) {
+      // Tech companies
+      hrDecisions.push(
+        prisma.hr_decision
+          .create({
+            data: {
+              company_id: companies[i].id,
+              period: period,
+              is_submitted: period < 3,
+              salary_budget: 120000 + period * 20000,
+              training_budget: 15000 + period * 5000,
+              total_budget: 135000 + period * 25000,
+              employee_satisfaction: 7.5 + Math.random() * 1.5,
+              recruitment_cost: 25000,
+              firing_cost: period === 2 ? 10000 : 0,
+            },
+          })
+          .then((hrDecision) => {
+            // Create role decisions for each HR decision
+            return Promise.all([
+              prisma.hr_role_decision.create({
+                data: {
+                  hr_decision_id: hrDecision.id,
+                  role_name: "Software Engineer",
+                  salary_per_head: 95000,
+                  head_count: 8 + period,
+                },
+              }),
+              prisma.hr_role_decision.create({
+                data: {
+                  hr_decision_id: hrDecision.id,
+                  role_name: "Product Manager",
+                  salary_per_head: 110000,
+                  head_count: 2 + Math.floor(period / 2),
+                },
+              }),
+              prisma.hr_role_decision.create({
+                data: {
+                  hr_decision_id: hrDecision.id,
+                  role_name: "Marketing Specialist",
+                  salary_per_head: 70000,
+                  head_count: 3 + period,
+                },
+              }),
+            ]);
+          })
+      );
+    }
+  }
 
-// main()
-//   .catch((e) => {
-//     console.error("❌ Error during seed:", e);
-//     process.exit(1);
-//   })
-//   .finally(async () => {
-//     await prisma.$disconnect();
-//   });
+  await Promise.all(hrDecisions);
+
+  // Create R&D Decisions
+  console.log("🔬 Creating R&D decisions...");
+  const rdDecisions = [];
+
+  for (let period = 1; period <= 3; period++) {
+    for (let i = 0; i < 4; i++) {
+      rdDecisions.push(
+        prisma.rd.create({
+          data: {
+            company_id: companies[i].id,
+            period: period,
+            budget: 180000 + period * 30000,
+            pip: 3 + Math.floor(Math.random() * 3), // Products in pipeline
+            time_to_market: 6 + Math.floor(Math.random() * 6),
+            total_development: 2 + period,
+            patented: Math.floor(Math.random() * 2),
+            quality_changes: Math.floor(Math.random() * 3) - 1, // -1 to 1
+            finalised: period < 3,
+          },
+        })
+      );
+    }
+  }
+
+  await Promise.all(rdDecisions);
+
+  // Create Production Decisions
+  console.log("🏭 Creating production decisions...");
+  const productionDecisions = [];
+
+  for (let period = 1; period <= 3; period++) {
+    for (let i = 0; i < 4; i++) {
+      const unitsProduced = 1500 + Math.floor(Math.random() * 1000);
+      const costPerUnit = 300 + Math.floor(Math.random() * 200);
+
+      productionDecisions.push(
+        prisma.production.create({
+          data: {
+            company_id: companies[i].id,
+            period: period,
+            units_to_produce: unitsProduced,
+            cost_per_unit: costPerUnit,
+            production_capacity: 2500 + period * 200,
+            storage_capacity: 3000,
+            inventory_value: unitsProduced * costPerUnit,
+            defect_rate: Math.floor(Math.random() * 5), // 0-4% defect rate
+            finalised: period < 3,
+          },
+        })
+      );
+    }
+  }
+
+  await Promise.all(productionDecisions);
+
+  // Create Marketing Decisions
+  console.log("📢 Creating marketing decisions...");
+  const marketingDecisions = [];
+
+  for (let period = 1; period <= 3; period++) {
+    for (let i = 0; i < 4; i++) {
+      const totalBudget = 100000 + period * 20000;
+      const onlineBudget = Math.floor(
+        totalBudget * (0.6 + Math.random() * 0.3)
+      );
+      const offlineBudget = totalBudget - onlineBudget;
+
+      marketingDecisions.push(
+        prisma.marketing.create({
+          data: {
+            company_id: companies[i].id,
+            period: period,
+            budget: totalBudget,
+            offline: offlineBudget,
+            online: onlineBudget,
+            roi: Math.floor(120 + Math.random() * 80), // 120-200% ROI
+            conversion_rate: Math.floor(3 + Math.random() * 7), // 3-10% conversion
+            finalised: period < 3,
+          },
+        })
+      );
+    }
+  }
+
+  await Promise.all(marketingDecisions);
+
+  // Create Product Performance Records
+  console.log("📊 Creating product performance records...");
+  const productPerformances = [];
+
+  for (let period = 1; period <= 3; period++) {
+    for (const product of products) {
+      if (product.launch_period && product.launch_period <= period) {
+        const salesVolume = 800 + Math.floor(Math.random() * 600);
+        const revenue = salesVolume * product.selling_price;
+        const costs = salesVolume * product.production_cost;
+        const profit = revenue - costs;
+
+        productPerformances.push(
+          prisma.product_performance.create({
+            data: {
+              product_id: product.id,
+              period: period,
+              data: JSON.stringify({
+                advertising_effectiveness: Math.random() * 10,
+                competitor_activity: Math.random() * 5,
+                market_trends: Math.random() * 8,
+              }),
+              sales_volume: salesVolume,
+              revenue: revenue,
+              costs: costs,
+              profit: profit,
+              market_share: 5 + Math.random() * 15, // 5-20% market share
+              customer_satisfaction: 7 + Math.random() * 2, // 7-9 satisfaction
+            },
+          })
+        );
+      }
+    }
+  }
+
+  await Promise.all(productPerformances);
+
+  console.log("✅ Database seeding completed successfully!");
+  console.log(`
+  📈 Created:
+  - ${6} users (1 admin, 1 instructor, 4 students)
+  - ${2} simulations
+  - ${6} companies
+  - ${5} products
+  - ${14} finance records
+  - ${12} HR decisions with role breakdowns
+  - ${12} R&D decisions
+  - ${12} production decisions  
+  - ${12} marketing decisions
+  - ${13} product performance records
+  `);
+}
+
+main()
+  .catch((e) => {
+    console.error("❌ Error during seeding:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
