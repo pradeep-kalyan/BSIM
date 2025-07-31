@@ -39,6 +39,8 @@ import QuickStat from "@/ui/QuickStat";
 import ChartCard from "@/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
+import LogoutBtn from "@/app/(auth)/_components/Logout";
+
 interface HomePageProps {
   company?: CompanyData;
 }
@@ -253,7 +255,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                 </div>
               </div>
             </div>
-            <div className="text-right animate-fade-in-up">
+            <div className="flex justify-between items-center animate-fade-in-up">
               {/* <div className="mb-4">
                 <div className="text-3xl font-bold">Period {currentPeriod}</div>
               </div> */}
@@ -274,6 +276,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                   {isPending ? "Processing..." : "Advance to Next Period"}
                   <ChevronRight size={20} />
                 </button> */}
+                <LogoutBtn />
               </div>
             </div>
           </div>

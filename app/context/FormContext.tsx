@@ -34,12 +34,32 @@ export interface ProductionFormData {
   maintenance_budget: number;
 }
 
+export interface ExistingRole {
+  role_name: string;
+  salary_per_head: number;
+  current_head_count: number;
+  hires: number;
+  fires: number;
+}
+
+export interface NewRole {
+  role_name: string;
+  salary_per_head: number;
+  hires: number;
+}
+
 export interface HRFormData {
-  hiring_budget: number;
-  training_budget: number;
-  compensation_adjustment: number;
-  benefits_budget: number;
-  retention_programs: number;
+  existingRoles: ExistingRole[];
+  newRoles: NewRole[];
+  trainingBudget: number;
+  employeeSatisfaction: number;
+}
+
+export interface RoleInput {
+  role_name: string;
+  salary_per_head: number;
+  hires: number;
+  fires: number;
 }
 
 export interface RDFormData {
@@ -150,9 +170,9 @@ export type FormAction =
   | { type: "RESET_FORM"; payload?: keyof FormState }
   | { type: "RESET_ALL" }
   | {
-      type: "SET_FORM_COMPLETED";
-      payload: { section: string; completed: boolean };
-    }
+    type: "SET_FORM_COMPLETED";
+    payload: { section: string; completed: boolean };
+  }
   | { type: "BULK_UPDATE_FORMS"; payload: Partial<FormState> };
 
 // Initial state
@@ -726,26 +746,42 @@ export function FormProvider({ children }: { children: ReactNode }) {
           submissionPromises.push(
             (async () => {
               try {
-                // Import and call HR submission action
-                const { submitHRDecisionForPeriod } = await import(
-                  "../_actions/submitHRDecisionForPeriod"
-                );
+                const { submitHRDecisionForPeriod } = await import("../_actions/submitHRDecisionForPeriod");
                 const hrData = state.hr as HRFormData;
+        
+                // Your role conversion code here:
+                const existingRoles = hrData.existingRoles ?? [];
+                const newRoles = hrData.newRoles ?? [];
+        
+                const existingRolesForSubmit: RoleInput[] = existingRoles.map(role => ({
+                  role_name: role.role_name,
+                  salary_per_head: role.salary_per_head,
+                  hires: role.hires,
+                  fires: role.fires,
+                }));
+        
+                const newRolesForSubmit: RoleInput[] = newRoles.map(role => ({
+                  role_name: role.role_name,
+                  salary_per_head: role.salary_per_head,
+                  hires: role.hires,
+                  fires: 0,
+                }));
+        
+                const rolesForSubmit: RoleInput[] = [...existingRolesForSubmit, ...newRolesForSubmit];
+        
                 const id = await submitHRDecisionForPeriod({
                   company_id: companyId,
                   period,
-                  training_budget: hrData.training_budget || 0,
-                  employee_satisfaction: 50, // Default value, you might want to make this configurable
-                  roles: [], // This would need to be populated from your HR form data
+                  training_budget: hrData.trainingBudget || 0,
+                  employee_satisfaction: hrData.employeeSatisfaction || 50,
+                  roles: rolesForSubmit,
                 });
+        
                 results.hr = { success: true, id };
               } catch (error) {
                 results.hr = {
                   success: false,
-                  error:
-                    error instanceof Error
-                      ? error.message
-                      : "HR submission failed",
+                  error: error instanceof Error ? error.message : "HR submission failed",
                 };
               }
             })()
@@ -1053,21 +1089,37 @@ export function useHRForm() {
   const { state, updateHR, setError, getError, updateHRBudgetImpact } =
     useForm();
 
-  const updateDataWithCashImpact = useCallback(
-    (data: Partial<HRFormData>) => {
-      // Calculate budget impact from the new data being passed in
-      const hiring_budget = data.hiring_budget ?? state.hr.hiring_budget ?? 0;
-      const training_budget = data.training_budget ?? state.hr.training_budget ?? 0;
-      const benefits_budget = data.benefits_budget ?? state.hr.benefits_budget ?? 0;
-      const retention_programs = data.retention_programs ?? state.hr.retention_programs ?? 0;
-
-      const budgetImpact = hiring_budget + training_budget + benefits_budget + retention_programs;
-
-      updateHR(data);
-      updateHRBudgetImpact(budgetImpact);
-    },
-    [updateHR, updateHRBudgetImpact, state.hr]
-  );
+    const updateDataWithCashImpact = useCallback(
+      (data: Partial<HRFormData>) => {
+        const existingRoles = data.existingRoles ?? state.hr.existingRoles ?? [];
+        const newRoles = data.newRoles ?? state.hr.newRoles ?? [];
+        const trainingBudget = data.trainingBudget ?? state.hr.trainingBudget ?? 0;
+    
+        // Calculate cost impact from existing roles: net hires minus fires times salary
+        const existingRolesCost = existingRoles.reduce((sum, role) => {
+          const hires = role.hires ?? 0;
+          const fires = role.fires ?? 0;
+          const netChange = hires - fires;
+          // Defensive fallback on salary_per_head
+          const salary = role.salary_per_head ?? 0;
+          return sum + netChange * salary;
+        }, 0);
+    
+        // Calculate cost from new roles: hires times salary, fires assumed zero for new roles
+        const newRolesCost = newRoles.reduce((sum, role) => {
+          const hires = role.hires ?? 0;
+          const salary = role.salary_per_head ?? 0;
+          return sum + hires * salary;
+        }, 0);
+    
+        // Total budget impact includes training budget
+        const budgetImpact = existingRolesCost + newRolesCost + trainingBudget;
+    
+        updateHR(data);
+        updateHRBudgetImpact(budgetImpact);
+      },
+      [updateHR, updateHRBudgetImpact, state.hr]
+    );    
 
   return {
     data: state.hr,

@@ -6,11 +6,14 @@ import { notFound } from "next/navigation";
 
 type CompanyWithProducts = company & {
   products: product[];
-
 };
 
-const Page = async ({ params }: { params: { companyID: string } }) => {
-  const { companyID } = params;
+const Page = async ({
+  params,
+}: {
+  params: Promise<{ companyID: string }>;
+}) => {
+  const { companyID } = await params;
 
   const companyData = await prisma.company.findUnique({
     where: { id: companyID },
@@ -19,7 +22,6 @@ const Page = async ({ params }: { params: { companyID: string } }) => {
     },
   });
 
-  // If company not found, show 404 page
   if (!companyData) {
     notFound();
   }

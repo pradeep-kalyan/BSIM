@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { company } from "@prisma/client";
+
+import OpenButton from "./OpenButton"; 
 
 interface ExtendedCompany extends company {
   canAccess?: boolean;
@@ -33,58 +34,50 @@ const CompanyList: React.FC<CompanyCardProps> = ({
   };
 
   return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {companies.map((company) => {
+        const isOwner = company.user_id === currentUserId;
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {companies.map((company) => {
-          const isOwner = company.user_id === currentUserId;
-
-          return (
-            <div
-              key={company.id}
-              className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 flex flex-col justify-between relative"
-            >
-              {isOwner && (
-                <div className="absolute top-3 right-3 flex gap-2">
-                  <button
-                    onClick={() => onEdit?.(company)}
-                    className="p-2 bg-green-700 hover:bg-green-800 text-white rounded-full"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(company.id)}
-                    className="p-2 bg-red-700 hover:bg-red-800 text-white rounded-full"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              )}
-
-              <div>
-                <h3 className="text-lg font-semibold mb-2 text-white truncate">
-                  {company.name}
-                </h3>
-                <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
-                  {company.description || "No description provided."}
-                </p>
+        return (
+          <div
+            key={company.id}
+            className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 flex flex-col justify-between relative"
+          >
+            {isOwner && (
+              <div className="absolute top-3 right-3 flex gap-2">
+                <button
+                  onClick={() => onEdit?.(company)}
+                  className="p-2 bg-green-700 hover:bg-green-800 text-white rounded-full"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => handleDelete(company.id)}
+                  className="p-2 bg-red-700 hover:bg-red-800 text-white rounded-full"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
+            )}
 
-              <div className="flex justify-start mt-2">
-                {(isOwner || company.canAccess) && (
-                  <Link
-                    href={`/homepage/${company.id}`}
-                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-md"
-                  >
-                    <ExternalLink size={16} />
-                    Open
-                  </Link>
-                )}
-              </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-white truncate">
+                {company.name}
+              </h3>
+              <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
+                {company.description || "No description provided."}
+              </p>
             </div>
-          );
-        })}
-      </div>
-    
+
+            <div className="flex justify-start mt-2">
+              {(isOwner || company.canAccess) && (
+                <OpenButton companyId={company.id} />
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 

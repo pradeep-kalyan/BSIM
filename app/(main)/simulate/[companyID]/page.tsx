@@ -9,8 +9,7 @@ interface PageProps {
   };
 }
 
-const page = async ({ params }: PageProps) => {
-  // Get current user for authentication/authorization if needed
+const Page = async ({ params }: PageProps) => {
   await getCurrentUser();
 
   return (
@@ -58,4 +57,4 @@ const page = async ({ params }: PageProps) => {
   );
 };
 
-export default page;
+export default Page;

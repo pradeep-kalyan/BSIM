@@ -196,7 +196,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
         roles: allRoles,
       });
 
-      window.location.reload();
+      // window.location.reload();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to submit decision"
@@ -613,17 +613,16 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 <div>
                   <p className="text-slate-300 text-sm">Cash After</p>
                   <p
-                    className={`text-xl font-bold ${
-                      companyData.cash_balance - totalBudget < 0
-                        ? "text-red-400"
-                        : "text-green-400"
-                    }`}
+                    className={`text-xl font-bold ${companyData.cash_balance - totalBudget < 0
+                      ? "text-red-400"
+                      : "text-green-400"
+                      }`}
                   >
                     {formatCurrency(
                       companyData.cash_balance +
-                        currentDecision.training_budget +
-                        firedSalary -
-                        totalBudget
+                      currentDecision.training_budget +
+                      firedSalary -
+                      totalBudget
                     )}
                   </p>
                 </div>
@@ -643,11 +642,10 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
               <button
                 onClick={handleSubmit}
                 disabled={submitting || companyData.cash_balance < totalBudget}
-                className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                  submitting || companyData.cash_balance < totalBudget
-                    ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
-                }`}
+                className={`px-6 py-2 rounded-lg font-semibold transition-all ${submitting || companyData.cash_balance < totalBudget
+                  ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
+                  }`}
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">

@@ -6,7 +6,7 @@ import {
   deleteCompany,
 } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
-import CreateCompanyForm from "../_components/CreateCompanyForm";
+import CreateCompany from "@/app/(company)/simulations/_components/CreateCompany";
 import CompanyList from "../_components/ComCard";
 import {
   CheckCircle,
@@ -177,7 +177,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             exit={{ opacity: 0, scale: 0.9 }}
             className="flex justify-center"
           >
-            <CreateCompanyForm
+            <CreateCompany
               simulationID={simulationID}
               onCreated={handleCreated}
             />
@@ -217,7 +217,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             </p>
 
             {activeTab === "owned" && (
-              <CreateCompanyForm
+              <CreateCompany
                 simulationID={simulationID}
                 onCreated={handleCreated}
               />
