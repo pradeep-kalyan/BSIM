@@ -63,6 +63,7 @@ interface HRDashboardProps {
 }
 
 const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
+  // State variables
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,28 +77,73 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
   const [currentDecision, setCurrentDecision] = useState<any>(null);
   const [showComparison, setShowComparison] = useState(false);
 
+  // Persist form data to localStorage
+  const persistFormData = (newData: {
+    existingRoles?: ExistingRole[];
+    newRoles?: NewRole[];
+    trainingBudget?: number;
+    employeeSatisfaction?: number;
+  }) => {
+    const dataToSave = {
+      existingRoles: newData.existingRoles ?? existingRoles,
+      newRoles: newData.newRoles ?? newRoles,
+      trainingBudget: newData.trainingBudget ?? trainingBudget,
+      employeeSatisfaction: newData.employeeSatisfaction ?? employeeSatisfaction,
+    };
+    localStorage.setItem(`hrFormData-${companyId}`, JSON.stringify(dataToSave));
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
+    // Always fetch fresh company data
+    const loadCompany = async () => {
+      try {
+        const company = await getCompanyData(companyId);
+        setCompanyData(company);
+      } catch {
+        setCompanyData(null);
+      }
+    };
+
+    // Load saved form data from localStorage if it exists
+    const loadFormData = () => {
+      const saved = localStorage.getItem(`hrFormData-${companyId}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.existingRoles) setExistingRoles(parsed.existingRoles);
+          if (parsed.newRoles) setNewRoles(parsed.newRoles);
+          if (typeof parsed.trainingBudget === "number")
+            setTrainingBudget(parsed.trainingBudget);
+          if (typeof parsed.employeeSatisfaction === "number")
+            setEmployeeSatisfaction(parsed.employeeSatisfaction);
+          setLoading(false); // Data loaded, no fetch needed for roles/historical
+        } catch {
+          // Ignore parse errors, fallback to fetch data
+          fetchRemainingData();
+        }
+      } else {
+        fetchRemainingData();
+      }
+    };
+
+    // Fetch historical data & roles only if no saved form data
+    const fetchRemainingData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const [company, historical, roles] = await Promise.all([
-          getCompanyData(companyId),
+        const [historical, roles] = await Promise.all([
           getHistoricalHRData(companyId),
           getCurrentRoles(companyId),
         ]);
-
-        setCompanyData(company);
         setHistoricalData(historical);
         setExistingRoles(roles);
 
-        // Set default values based on last period
-        if (historical.length > 0) {
+        if (historical.length > 0 && companyData) {
           const lastPeriod = historical[historical.length - 1];
           const decision = await getCurrentHRDecision(
-            company.id,
-            company.current_period
+            companyData.id,
+            companyData.current_period
           );
 
           setCurrentDecision({
@@ -113,8 +159,11 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
       }
     };
 
-    fetchData();
+    loadCompany();
+    loadFormData();
   }, [companyId]);
+
+  // Handlers update state and persist data in localStorage:
 
   const handleExistingRoleChange = (
     index: number,
@@ -124,6 +173,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     const updated = [...existingRoles];
     updated[index][field] = value;
     setExistingRoles(updated);
+    persistFormData({ existingRoles: updated });
   };
 
   const handleNewRoleChange = (
@@ -134,6 +184,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     const updated = [...newRoles];
     (updated[index] as any)[field] = value;
     setNewRoles(updated);
+    persistFormData({ newRoles: updated });
   };
 
   const addNewRole = () => {
@@ -147,11 +198,21 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     const updated = [...newRoles];
     updated.splice(index, 1);
     setNewRoles(updated);
+    persistFormData({ newRoles: updated });
   };
 
+  // Format currency helper
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+
+  // Submit handler
   const handleSubmit = async () => {
     if (!companyData) return;
 
+    // Detect duplicate new role names compared to existing & new roles
     const duplicateNewRole = newRoles.find(
       (newRole, i) =>
         existingRoles.some(
@@ -159,8 +220,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
         ) ||
         newRoles.findIndex(
           (r, j) =>
-            j !== i &&
-            r.role_name.toLowerCase() === newRole.role_name.toLowerCase()
+            j !== i && r.role_name.toLowerCase() === newRole.role_name.toLowerCase()
         ) !== -1
     );
 
@@ -196,16 +256,58 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
         roles: allRoles,
       });
 
-      // window.location.reload();
+      // Clear saved form data after successful submit
+      localStorage.removeItem(`hrFormData-${companyId}`);
+
+      // Reset form state after submit
+      setExistingRoles([]);
+      setNewRoles([]);
+      setTrainingBudget(0);
+      setEmployeeSatisfaction(50);
+
+      toast.success("HR decision submitted successfully!");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to submit decision"
-      );
+      setError(err instanceof Error ? err.message : "Failed to submit decision");
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Calculations for display
+
+  const salaryFromExisting = existingRoles.reduce((acc, r) => {
+    const newHeadCount = r.current_head_count + r.hires - r.fires;
+    return newHeadCount > 0 ? acc + newHeadCount * r.salary_per_head : acc;
+  }, 0);
+
+  const salaryFromNew = newRoles.reduce(
+    (acc, r) => acc + r.hires * r.salary_per_head,
+    0
+  );
+  const salaryBudget = salaryFromExisting + salaryFromNew;
+
+  const recruitmentCost =
+    existingRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0) +
+    newRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0);
+
+  const firedSalary = existingRoles.reduce(
+    (acc, r) => acc + r.fires * r.salary_per_head,
+    0
+  );
+
+  const totalBudget = trainingBudget + recruitmentCost;
+
+  const totalHires =
+    existingRoles.reduce((acc, r) => acc + r.hires, 0) +
+    newRoles.reduce((acc, r) => acc + r.hires, 0);
+  const totalFires = existingRoles.reduce((acc, r) => acc + r.fires, 0);
+  const currentEmployees = existingRoles.reduce(
+    (acc, r) => acc + r.current_head_count,
+    0
+  );
+  const projectedEmployees = currentEmployees + totalHires - totalFires;
+
+  // Main Render
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -241,45 +343,6 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
     );
   }
 
-  // Calculations
-  const salaryFromExisting = existingRoles.reduce((acc, r) => {
-    const newHeadCount = r.current_head_count + r.hires - r.fires;
-    return newHeadCount > 0 ? acc + newHeadCount * r.salary_per_head : acc;
-  }, 0);
-
-  const salaryFromNew = newRoles.reduce(
-    (acc, r) => acc + r.hires * r.salary_per_head,
-    0
-  );
-  const salaryBudget = salaryFromExisting + salaryFromNew;
-
-  const recruitmentCost =
-    existingRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0) +
-    newRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0);
-
-  const firedSalary = existingRoles.reduce(
-    (acc, r) => acc + r.fires * r.salary_per_head,
-    0
-  );
-  // const firingCost = existingRoles.reduce((acc, r) => acc + r.fires * 5000, 0);
-  const totalBudget = trainingBudget + recruitmentCost;
-
-  const totalHires =
-    existingRoles.reduce((acc, r) => acc + r.hires, 0) +
-    newRoles.reduce((acc, r) => acc + r.hires, 0);
-  const totalFires = existingRoles.reduce((acc, r) => acc + r.fires, 0);
-  const currentEmployees = existingRoles.reduce(
-    (acc, r) => acc + r.current_head_count,
-    0
-  );
-  const projectedEmployees = currentEmployees + totalHires - totalFires;
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
       <ToastContainer position="top-right" />
@@ -310,9 +373,7 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                   {companyData.name}
                 </span>
               </div>
-              <p className="text-slate-300">
-                Period {companyData.current_period}
-              </p>
+              <p className="text-slate-300">Period {companyData.current_period}</p>
               <p className="text-sm text-slate-400">
                 Cash: {formatCurrency(companyData.cash_balance)}
               </p>
@@ -326,17 +387,13 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 </span>
               </div>
               <p className="text-slate-300">Projected Employees</p>
-              <p className="text-sm text-slate-400">
-                Current: {currentEmployees}
-              </p>
+              <p className="text-sm text-slate-400">Current: {currentEmployees}</p>
             </div>
 
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
               <div className="flex items-center justify-between mb-2">
                 <TrendingUp className="h-8 w-8 text-green-400" />
-                <span className="text-2xl font-bold text-white">
-                  {totalHires}
-                </span>
+                <span className="text-2xl font-bold text-white">{totalHires}</span>
               </div>
               <p className="text-slate-300">New Hires</p>
               <p className="text-sm text-slate-400">Fires: {totalFires}</p>
@@ -555,9 +612,11 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 <input
                   type="number"
                   value={trainingBudget}
-                  onChange={(e) =>
-                    setTrainingBudget(parseFloat(e.target.value) || 0)
-                  }
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setTrainingBudget(val);
+                    persistFormData({ trainingBudget: val });
+                  }}
                   min={0}
                   className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
                 />
@@ -570,9 +629,11 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 <input
                   type="number"
                   value={employeeSatisfaction}
-                  onChange={(e) =>
-                    setEmployeeSatisfaction(parseFloat(e.target.value) || 0)
-                  }
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setEmployeeSatisfaction(val);
+                    persistFormData({ employeeSatisfaction: val });
+                  }}
                   min={0}
                   max={100}
                   className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
@@ -613,16 +674,17 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
                 <div>
                   <p className="text-slate-300 text-sm">Cash After</p>
                   <p
-                    className={`text-xl font-bold ${companyData.cash_balance - totalBudget < 0
-                      ? "text-red-400"
-                      : "text-green-400"
-                      }`}
+                    className={`text-xl font-bold ${
+                      companyData.cash_balance - totalBudget < 0
+                        ? "text-red-400"
+                        : "text-green-400"
+                    }`}
                   >
                     {formatCurrency(
                       companyData.cash_balance +
-                      currentDecision.training_budget +
-                      firedSalary -
-                      totalBudget
+                        (currentDecision?.training_budget ?? 0) +
+                        firedSalary -
+                        totalBudget
                     )}
                   </p>
                 </div>
@@ -642,10 +704,11 @@ const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
               <button
                 onClick={handleSubmit}
                 disabled={submitting || companyData.cash_balance < totalBudget}
-                className={`px-6 py-2 rounded-lg font-semibold transition-all ${submitting || companyData.cash_balance < totalBudget
-                  ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
-                  }`}
+                className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                  submitting || companyData.cash_balance < totalBudget
+                    ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
+                }`}
               >
                 {submitting ? (
                   <span className="flex items-center gap-2">
