@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { z } from "zod";
+import { createProductSchema } from "@/app/(main)/simulate/[companyID]/_utils/validator";
 
 interface ProductInput {
   name: string;
@@ -21,34 +23,69 @@ interface ProductInput {
   discontinue_period?: number;
 }
 
-// Only allow known safe keys
 type ProductField = keyof ProductInput;
 
 interface ProductFormProps {
-  onChange: (products: ProductInput[]) => void;
+  products: ProductInput[];
+  onAddProduct: () => void;
+  onRemoveProduct: (index: number) => void;
+  onProductChange: (
+    index: number,
+    key: keyof ProductInput,
+    value: string | number
+  ) => void;
 }
 
-export default function ProductForm({ onChange }: ProductFormProps) {
-  const [products, setProducts] = useState<ProductInput[]>([
-    { name: "", category: "" },
-  ]);
+export default function ProductForm({
+  products,
+  onAddProduct,
+  onRemoveProduct,
+  onProductChange,
+}: ProductFormProps) {
+  const [errors, setErrors] = useState<
+    Array<{ [field in ProductField]?: string } | null>
+  >([]);
 
-  function updateProduct(index: number, field: ProductField, value: string | number) {
-    const updated = [...products];
-    updated[index] = { ...updated[index], [field]: value };
-    setProducts(updated);
-    onChange(updated.filter((p) => p.name && p.category));
+  useEffect(() => {
+    setErrors(products.map(() => null));
+  }, [products.length, products]);
+
+  function validateProducts(productsToValidate: ProductInput[]) {
+    const result = z.array(createProductSchema).safeParse(productsToValidate);
+
+    if (!result.success) {
+      const errorArray: Array<Partial<
+        Record<ProductField, string>
+      >> = productsToValidate.map(() => ({}));
+
+      for (const issue of result.error.issues) {
+        if (issue.path.length >= 2) {
+          const [index, field] = issue.path;
+          if (
+            typeof index === "number" &&
+            typeof field === "string" &&
+            errorArray[index]
+          ) {
+            errorArray[index][field as ProductField] = issue.message;
+          }
+        }
+      }
+
+      setErrors(errorArray.map((e) => (Object.keys(e).length > 0 ? e : null)));
+      return false;
+    }
+
+    setErrors(productsToValidate.map(() => null));
+    return true;
   }
 
-  function addProduct() {
-    setProducts([...products, { name: "", category: "" }]);
-  }
-
-  function removeProduct(index: number) {
-    const updated = [...products];
-    updated.splice(index, 1);
-    setProducts(updated);
-    onChange(updated.filter((p) => p.name && p.category));
+  function handleFieldChange(
+    index: number,
+    field: ProductField,
+    value: string | number
+  ) {
+    onProductChange(index, field, value);
+    validateProducts(products);
   }
 
   return (
@@ -57,7 +94,7 @@ export default function ProductForm({ onChange }: ProductFormProps) {
         Products
         <button
           type="button"
-          onClick={addProduct}
+          onClick={onAddProduct}
           className="text-blue-400 hover:text-blue-500 transition"
         >
           <div className="flex items-center gap-2">
@@ -77,7 +114,7 @@ export default function ProductForm({ onChange }: ProductFormProps) {
               Product {index + 1}
             </h3>
             <button
-              onClick={() => removeProduct(index)}
+              onClick={() => onRemoveProduct(index)}
               className="text-red-400 hover:text-red-500"
             >
               <Trash2 />
@@ -85,9 +122,7 @@ export default function ProductForm({ onChange }: ProductFormProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5 p-2 items-start">
-            {/* Product Name */}
             <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Product Name */}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
                   Product Name
@@ -96,14 +131,18 @@ export default function ProductForm({ onChange }: ProductFormProps) {
                   type="text"
                   value={product.name}
                   onChange={(e) =>
-                    updateProduct(index, "name", e.target.value)
+                    handleFieldChange(index, "name", e.target.value)
                   }
                   className="w-full p-2 rounded bg-slate-800 text-white"
                   placeholder="Enter product name"
                 />
+                {errors[index]?.name && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.name}
+                  </p>
+                )}
               </div>
 
-              {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
                   Category
@@ -112,15 +151,19 @@ export default function ProductForm({ onChange }: ProductFormProps) {
                   type="text"
                   value={product.category}
                   onChange={(e) =>
-                    updateProduct(index, "category", e.target.value)
+                    handleFieldChange(index, "category", e.target.value)
                   }
                   className="w-full p-2 rounded bg-slate-800 text-white"
                   placeholder="Enter category"
                 />
+                {errors[index]?.category && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.category}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Description */}
             <div className="md:col-span-3">
               <label className="block text-sm font-medium text-slate-300 mb-1">
                 Description
@@ -128,15 +171,19 @@ export default function ProductForm({ onChange }: ProductFormProps) {
               <textarea
                 value={product.description || ""}
                 onChange={(e) =>
-                  updateProduct(index, "description", e.target.value)
+                  handleFieldChange(index, "description", e.target.value)
                 }
                 rows={1}
                 className="w-full p-2 rounded bg-slate-800 text-white"
                 placeholder="Describe the product"
               />
+              {errors[index]?.description && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors[index]?.description}
+                </p>
+              )}
             </div>
 
-            {/* Ratings */}
             {([
               ["Quality Rating", "quality_rating"],
               ["Innovation Rating", "innovation_rating"],
@@ -153,14 +200,22 @@ export default function ProductForm({ onChange }: ProductFormProps) {
                   step="0.1"
                   value={product[field] || 0}
                   onChange={(e) =>
-                    updateProduct(index, field, parseFloat(e.target.value) || 0)
+                    handleFieldChange(
+                      index,
+                      field,
+                      parseFloat(e.target.value) || 0
+                    )
                   }
                   className="w-full p-2 rounded bg-slate-800 text-white"
                 />
+                {errors[index]?.[field] && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.[field]}
+                  </p>
+                )}
               </div>
             ))}
 
-            {/* Financial Inputs */}
             {([
               ["Production Cost", "production_cost"],
               ["Selling Price", "selling_price"],
@@ -179,7 +234,7 @@ export default function ProductForm({ onChange }: ProductFormProps) {
                   min="0"
                   value={product[field] || 0}
                   onChange={(e) =>
-                    updateProduct(
+                    handleFieldChange(
                       index,
                       field,
                       type === "int"
@@ -189,21 +244,14 @@ export default function ProductForm({ onChange }: ProductFormProps) {
                   }
                   className="w-full p-2 rounded bg-slate-800 text-white"
                 />
+                {errors[index]?.[field] && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.[field]}
+                  </p>
+                )}
               </div>
             ))}
           </div>
-
-          {/* Investment Summary */}
-          {/* <div className="mt-4 bg-slate-700/40 rounded-lg p-4">
-            <p className="text-slate-300 text-sm">Estimated Investment</p>
-            <p className="text-xl font-bold text-white">
-              ₹
-              {(
-                (product.development_cost || 0) +
-                (product.marketing_budget || 0)
-              ).toLocaleString()}
-            </p>
-          </div> */}
         </div>
       ))}
     </div>

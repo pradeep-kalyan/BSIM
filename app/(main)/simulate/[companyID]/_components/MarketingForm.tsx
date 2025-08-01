@@ -19,11 +19,8 @@ const percent = (part: number, total: number) =>
 
 const MarketingForm = () => {
   const { data: marketingData, updateData } = useMarketingForm();
-  const {
-    cashBalance,
-    projectedCashBalance,
-    updateMarketingBudgetImpact,
-  } = useCashBalance();
+  const { cashBalance, projectedCashBalance, updateMarketingBudgetImpact } =
+    useCashBalance();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
 
@@ -179,8 +176,7 @@ const MarketingForm = () => {
                     : "text-emerald-400"
                 }`}
               >
-                Projected Balance : 
-                {formatCurrency(projectedCashBalance)}
+                Projected Balance :{formatCurrency(projectedCashBalance)}
               </div>
               <div>
                 <div

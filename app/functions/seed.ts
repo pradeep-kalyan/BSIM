@@ -579,8 +579,6 @@ async function main() {
             budget: totalBudget,
             offline: offlineBudget,
             online: onlineBudget,
-            roi: Math.floor(120 + Math.random() * 80), // 120-200% ROI
-            conversion_rate: Math.floor(3 + Math.random() * 7), // 3-10% conversion
             finalised: period < 3,
           },
         })

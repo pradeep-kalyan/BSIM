@@ -52,26 +52,31 @@ const Sales = () => {
     }
   }, [selectedProduct, products]);
 
-  // Real-time calculation of costs and profit
-  React.useEffect(() => {
-    if (selectedProductData && salesData) {
-      const salesVolume = salesData.sales_volume || 0;
-      const revenue = salesData.revenue || 0;
-      const productionCost = selectedProductData.production_cost || 0;
-      const costs = salesVolume * productionCost;
-      const profit = revenue - costs;
-
-      // Only update if the calculated values are different to avoid infinite loops
-      if (salesData.costs !== costs || salesData.profit !== profit) {
-        updateSalesData({ costs: costs, profit: profit });
-      }
+  // Calculate real-time values without causing infinite loops
+  const calculatedValues = React.useMemo(() => {
+    if (!selectedProductData) {
+      return { 
+        revenue: salesData?.revenue || 0, 
+        costs: salesData?.costs || 0, 
+        profit: salesData?.profit || 0 
+      };
     }
-    // Disable exhaustive deps to prevent infinite loops
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const salesVolume = salesData?.sales_volume || 0;
+    const sellingPrice = selectedProductData.selling_price || 0;
+    const productionCost = selectedProductData.production_cost || 0;
+    
+    const revenue = salesVolume * sellingPrice;
+    const costs = salesVolume * productionCost;
+    const profit = revenue - costs;
+
+    return { revenue, costs, profit };
   }, [
-    selectedProductData?.production_cost,
+    selectedProductData,
     salesData?.sales_volume,
     salesData?.revenue,
+    salesData?.costs,
+    salesData?.profit,
   ]);
 
   const handleProductChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -82,7 +87,26 @@ const Sales = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    updateSalesData({ [name]: Number(value) || 0 });
+    const numericValue = Number(value) || 0;
+    
+    updateSalesData({ [name]: numericValue });
+    
+    // If sales volume changed and we have product data, auto-calculate revenue, costs, and profit
+    if (name === 'sales_volume' && selectedProductData) {
+      const sellingPrice = selectedProductData.selling_price || 0;
+      const productionCost = selectedProductData.production_cost || 0;
+      const revenue = numericValue * sellingPrice;
+      const costs = numericValue * productionCost;
+      const profit = revenue - costs;
+      
+      updateSalesData({ 
+        sales_volume: numericValue,
+        revenue,
+        costs,
+        profit
+      });
+    }
+    
     setError(name, "");
     setSuccess(false);
     setValidationAlert(null);
@@ -132,8 +156,8 @@ const Sales = () => {
       return;
     }
 
-    // Calculate costs and profit
-    const costs = salesVolume * (selectedProductData.production_cost || 0);
+    // Calculate costs and profit using current values
+    const costs = selectedProductData ? salesVolume * (selectedProductData.production_cost || 0) : 0;
     const profit = revenue - costs;
 
     // Update sales data with calculated values
@@ -152,18 +176,40 @@ const Sales = () => {
     setSuccess(true);
   };
 
-  // Calculate metrics for dashboard cards (with proper dependency array)
-  const frozenSalesData = React.useMemo(
-    () => ({
+  // Calculate metrics for dashboard cards using calculated values
+  const frozenSalesData = React.useMemo(() => {
+    const baseData = {
       sales_volume: salesData?.sales_volume ?? 0,
+      market_share: salesData?.market_share ?? 0,
+      customer_satisfaction: salesData?.customer_satisfaction ?? 0,
+    };
+
+    // Use calculated values if we have product data, otherwise use stored values
+    if (selectedProductData && salesData?.sales_volume) {
+      return {
+        ...baseData,
+        revenue: calculatedValues.revenue,
+        costs: calculatedValues.costs,
+        profit: calculatedValues.profit,
+      };
+    }
+
+    return {
+      ...baseData,
       revenue: salesData?.revenue ?? 0,
       costs: salesData?.costs ?? 0,
       profit: salesData?.profit ?? 0,
-      market_share: salesData?.market_share ?? 0,
-      customer_satisfaction: salesData?.customer_satisfaction ?? 0,
-    }),
-    [salesData?.revenue, salesData?.sales_volume, salesData?.costs, salesData?.profit, salesData?.market_share, salesData?.customer_satisfaction]
-  );
+    };
+  }, [
+    salesData?.sales_volume,
+    salesData?.revenue,
+    salesData?.costs,
+    salesData?.profit,
+    salesData?.market_share,
+    salesData?.customer_satisfaction,
+    selectedProductData,
+    calculatedValues,
+  ]);
 
   return (
     <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
@@ -311,17 +357,15 @@ const Sales = () => {
               },
               {
                 id: "revenue",
-                label: "Total Revenue (₹)",
-                value: salesData?.revenue ?? 0,
-                type: "number",
-                step: 0.01,
-                min: 0,
+                label: "Total Revenue (₹) - Auto-calculated",
+                value: selectedProductData && salesData?.sales_volume
+                  ? calculatedValues.revenue
+                  : salesData?.revenue ?? 0,
+                type: "text",
+                readOnly: true,
                 placeholder: selectedProductData
-                  ? `Suggested: ₹${(
-                      (selectedProductData.selling_price || 0) *
-                      (salesData?.sales_volume || 0)
-                    ).toLocaleString()}`
-                  : "Enter expected revenue",
+                  ? `Auto-calculated: ₹${calculatedValues.revenue.toLocaleString()}`
+                  : "Revenue will be calculated automatically",
                 disabled: !selectedProduct,
               },
               {
@@ -361,11 +405,20 @@ const Sales = () => {
                   step={field.step}
                   min={field.min}
                   max={field.max}
-                  value={field.value}
-                  onChange={handleInputChange}
+                  value={
+                    field.readOnly
+                      ? formatNumber(Math.round(field.value))
+                      : field.value
+                  }
+                  onChange={field.readOnly ? undefined : handleInputChange}
                   placeholder={field.placeholder}
                   disabled={field.disabled}
-                  className={`w-full p-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed transition-all`}
+                  readOnly={field.readOnly}
+                  className={`w-full p-3 rounded-lg ${
+                    field.readOnly
+                      ? "bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed"
+                      : "bg-slate-700 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  } disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed transition-all`}
                 />
               </div>
             ))}
@@ -382,7 +435,9 @@ const Sales = () => {
                 id="costs"
                 name="costs"
                 type="text"
-                value={formatNumber(Math.round(salesData?.costs || 0))}
+                value={formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
+                  ? calculatedValues.costs 
+                  : salesData?.costs || 0))}
                 readOnly
                 placeholder="Calculated total costs"
                 className="w-full p-3 rounded-lg bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed"
@@ -400,7 +455,9 @@ const Sales = () => {
                 id="profit"
                 name="profit"
                 type="text"
-                value={formatNumber(Math.round(salesData?.profit || 0))}
+                value={formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
+                  ? calculatedValues.profit 
+                  : salesData?.profit || 0))}
                 readOnly
                 placeholder="Calculated profit"
                 className="w-full p-3 rounded-lg bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed"
@@ -413,14 +470,20 @@ const Sales = () => {
             <div className="space-y-2">
               <div className="text-xl text-blue-400 font-semibold">
                 Expected Profit: ₹
-                {formatNumber(Math.round(salesData?.profit || 0))}
+                {formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
+                  ? calculatedValues.profit 
+                  : salesData?.profit || 0))}
               </div>
               <div className="text-sm space-y-1">
                 <div className="text-slate-300">
-                  Revenue: ₹{formatNumber(salesData?.revenue || 0)}
+                  Revenue: ₹{formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
+                    ? calculatedValues.revenue 
+                    : salesData?.revenue || 0))}
                 </div>
                 <div className="text-slate-300">
-                  Costs: ₹{formatNumber(Math.round(salesData?.costs || 0))}
+                  Costs: ₹{formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
+                    ? calculatedValues.costs 
+                    : salesData?.costs || 0))}
                 </div>
                 <div className="text-slate-300">
                   Projected Cash Balance : ₹
@@ -429,13 +492,15 @@ const Sales = () => {
                 {selectedProductData && (
                   <div className="text-slate-300">
                     Profit Margin:{" "}
-                    {salesData?.revenue && salesData?.revenue > 0
-                      ? (
-                          ((salesData?.profit || 0) / salesData.revenue) *
-                          100
-                        ).toFixed(1)
-                      : 0}
-                    %
+                    {(() => {
+                      const revenue = selectedProductData && salesData?.sales_volume 
+                        ? calculatedValues.revenue 
+                        : salesData?.revenue || 0;
+                      const profit = selectedProductData && salesData?.sales_volume 
+                        ? calculatedValues.profit 
+                        : salesData?.profit || 0;
+                      return revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0;
+                    })()}%
                   </div>
                 )}
               </div>

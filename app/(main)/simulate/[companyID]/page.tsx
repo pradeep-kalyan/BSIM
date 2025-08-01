@@ -9,9 +9,9 @@ interface PageProps {
   };
 }
 
-const page = async ({ params }: PageProps) => {
-  // Get current user for authentication/authorization if needed
+const Page = async ({ params }: PageProps) => {
   await getCurrentUser();
+  const data = await params
 
   return (
     <>
@@ -51,11 +51,11 @@ const page = async ({ params }: PageProps) => {
             flexDirection: "column",
           }}
         >
-          <Form companyId={params.companyID} />
+          <Form companyId={data?.companyID} />
         </Box>
       </Box>
     </>
   );
 };
 
-export default page;
+export default Page;

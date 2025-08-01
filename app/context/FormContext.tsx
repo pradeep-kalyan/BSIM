@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useCallback,
   useMemo,
+  useState,
 } from "react";
 
 // Types matching the Zod schema and database structure
@@ -158,6 +159,7 @@ export interface FormState {
   company: CompanyFormData;
   simulation: SimulationFormData;
   cashBalance: CashBalanceState;
+  projected_balance: number;
   isSubmitting: boolean;
   errors: Record<string, string>;
   isDirty: boolean;
@@ -282,7 +284,7 @@ const getDefaultSalesData = (): SalesFormData => ({
   customer_satisfaction: 0,
 });
 
-const getDefaultProductData = (): ProductFormData => ({
+export const getDefaultProductData = (): ProductFormData => ({
   name: "",
   description: "",
   category: "",
@@ -298,7 +300,7 @@ const getDefaultProductData = (): ProductFormData => ({
   status: "development", // matches Zod default
 });
 
-const getDefaultCompanyData = (): CompanyFormData => ({
+export const getDefaultCompanyData = (): CompanyFormData => ({
   name: "",
   description: "",
   logo_url: "",
@@ -347,6 +349,7 @@ const initialState: FormState = {
   company: getDefaultCompanyData(),
   simulation: getDefaultSimulationData(),
   cashBalance: getDefaultCashBalance(),
+  projected_balance: 0,
   isSubmitting: false,
   errors: {},
   isDirty: false,
@@ -1048,36 +1051,35 @@ export function FormProvider({
     [state.errors]
   );
 
-  const validateField = useCallback(
-    (field: string, value: unknown): string | undefined => {
-      // Basic validation logic matching Zod schema constraints
-      if (value === null || value === undefined || value === "") {
-        // Only validate required fields as required
-        const requiredFields = ["name", "category"]; // Add other required fields as needed
-        if (requiredFields.includes(field)) {
-          return `${field} is required`;
-        }
+  const validateField = useCallback((field: string, value: unknown):
+    | string
+    | undefined => {
+    // Basic validation logic matching Zod schema constraints
+    if (value === null || value === undefined || value === "") {
+      // Only validate required fields as required
+      const requiredFields = ["name", "category"]; // Add other required fields as needed
+      if (requiredFields.includes(field)) {
+        return `${field} is required`;
+      }
+    }
+
+    if (typeof value === "number") {
+      if (value < 0) {
+        return `${field} must be non-negative`;
       }
 
-      if (typeof value === "number") {
-        if (value < 0) {
-          return `${field} must be non-negative`;
-        }
-
-        // Special validation for defect_rate and automation_level based on Zod schema
-        if (field === "defect_rate" && value > 1) {
-          return `${field} cannot exceed 100%`;
-        }
-
-        if (field === "automation_level" && value > 10) {
-          return `${field} cannot exceed 10`;
-        }
+      // Special validation for defect_rate and automation_level based on Zod schema
+      if (field === "defect_rate" && value > 1) {
+        return `${field} cannot exceed 100%`;
       }
 
-      return undefined;
-    },
-    []
-  );
+      if (field === "automation_level" && value > 10) {
+        return `${field} cannot exceed 10`;
+      }
+    }
+
+    return undefined;
+  }, []);
 
   // Comprehensive submission methods
   const setFormCompleted = useCallback(
@@ -1719,7 +1721,7 @@ export function useHRInitialization() {
         role_name: role.role_name,
         salary_per_head: role.salary_per_head,
         current_head_count: role.head_count,
-        hires: 0,
+        hires: role.head_count,
         fires: 0,
       }));
 
@@ -1745,8 +1747,13 @@ export function useHRInitialization() {
 }
 
 export function useRDForm() {
-  const { state, updateRD, setError, getError, updateRDBudgetImpact } =
-    useForm();
+  const {
+    state,
+    updateRD,
+    setError,
+    getError,
+    updateRDBudgetImpact,
+  } = useForm();
 
   const updateDataWithCashImpact = useCallback(
     (data: Partial<RDFormData>) => {
@@ -1772,8 +1779,13 @@ export function useRDForm() {
 }
 
 export function useSalesForm() {
-  const { state, updateSales, setError, getError, updateSalesBudgetImpact } =
-    useForm();
+  const {
+    state,
+    updateSales,
+    setError,
+    getError,
+    updateSalesBudgetImpact,
+  } = useForm();
 
   const updateDataWithCashImpact = useCallback(
     (data: Partial<SalesFormData>) => {
@@ -1847,6 +1859,118 @@ export function useProductForm() {
   };
 }
 
+export function useProductActions(companyId: string) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Placeholder API calls — replace with your actual API call logic
+  async function apiCreateProduct(data: Partial<ProductFormData>) {
+    // Example: POST to your API endpoint
+    const res = await fetch(`/api/companies/${companyId}/products`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create product");
+    return res.json();
+  }
+
+  async function apiUpdateProduct(id: string, data: Partial<ProductFormData>) {
+    const res = await fetch(`/api/products/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update product");
+    return res.json();
+  }
+
+  async function apiLaunchProduct(productId: string, period: number) {
+    const res = await fetch(`/api/products/${productId}/launch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ period }),
+    });
+    if (!res.ok) throw new Error("Failed to launch product");
+    return res.json();
+  }
+
+  async function apiDiscontinueProduct(productId: string, period: number) {
+    const res = await fetch(`/api/products/${productId}/discontinue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ period }),
+    });
+    if (!res.ok) throw new Error("Failed to discontinue product");
+    return res.json();
+  }
+
+  // Wrappers with loading/errors
+  const createProduct = async (data: Partial<ProductFormData>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiCreateProduct(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProductAction = async (
+    id: string,
+    data: Partial<ProductFormData>
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiUpdateProduct(id, data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const launchProduct = async (productId: string, period: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiLaunchProduct(productId, period);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const discontinueProduct = async (productId: string, period: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiDiscontinueProduct(productId, period);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    error,
+    createProduct,
+    updateProduct: updateProductAction,
+    launchProduct,
+    discontinueProduct,
+  };
+}
+
 export function useCompanyForm() {
   const { state, updateCompany, setError, getError } = useForm();
   return {
@@ -1899,6 +2023,15 @@ export function useCashBalance() {
     getProjectedCashBalance,
     originalCashBalance: state.cashBalance.originalCashBalance,
     projectedCashBalance,
+    budgetImpacts: {
+      hr: state.cashBalance.hrBudgetImpact,
+      finance: state.cashBalance.financeBudgetImpact,
+      marketing: state.cashBalance.marketingBudgetImpact,
+      production: state.cashBalance.productionBudgetImpact,
+      rd: state.cashBalance.rdBudgetImpact,
+      sales: state.cashBalance.salesBudgetImpact,
+      product: state.cashBalance.productBudgetImpact,
+    },
   };
 }
 
@@ -2165,9 +2298,8 @@ export function useHRRoleManagement() {
       }
       if (role.fires > role.current_head_count) {
         errors.push(
-          `Existing role ${
-            index + 1
-          }: Cannot fire more employees than current count`
+          `Existing role ${index +
+            1}: Cannot fire more employees than current count`
         );
       }
       if (role.current_head_count + role.hires - role.fires < 0) {

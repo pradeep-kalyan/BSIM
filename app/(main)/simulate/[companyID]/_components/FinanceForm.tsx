@@ -41,7 +41,6 @@ const FinanceForm = () => {
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
 
   // Initialize frozen balance when component mounts
- 
 
   // Handle input changes without updating projected balance
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -334,8 +333,7 @@ const FinanceForm = () => {
                       : "text-emerald-400"
                   }`}
                 >
-                  Projected Cash Balance:{" "}
-                  {formatCurrency(projectedCashBalance)}
+                  Projected Cash Balance: {formatCurrency(projectedCashBalance)}
                 </div>
               </div>
             </div>

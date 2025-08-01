@@ -35,6 +35,7 @@ import QuickStat from "@/ui/QuickStat";
 import ChartCard from "@/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
+import LogoutBtn from "@/app/(auth)/_components/Logout";
 
 // Tooltip types
 interface TooltipProps {
@@ -97,7 +98,7 @@ const FinancialTooltip = ({ active, payload, label }: TooltipProps) => {
             <span className="font-medium" style={{ color: entry.color }}>
               {entry.name}:
             </span>{" "}
-            ${((entry.value as number) / 1000).toFixed(0)}K
+            ₹${((entry.value as number) / 1000).toFixed(0)}K
           </p>
         ))}
       </div>
@@ -113,7 +114,7 @@ const PieTooltip = ({ active, payload }: PieTooltipProps) => {
       <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
         <p className="font-medium text-gray-200">{payload[0].name}</p>
         <p className="text-gray-100">
-          Value: ${((payload[0].value as number) / 1000).toFixed(0)}K
+          Value: ₹${((payload[0].value as number) / 1000).toFixed(0)}K
         </p>
         <p className="text-gray-100">
           Percentage: {payload[0].payload.percentage}%
@@ -236,7 +237,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 </div>
               </div>
             </div>
-            <div className="text-right animate-fade-in-up">
+            <div className="flex justify-between items-center animate-fade-in-up">
               {/* <div className="mb-4">
                 <div className="text-3xl font-bold">Period {currentPeriod}</div>
               </div> */}
@@ -257,6 +258,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   {isPending ? "Processing..." : "Advance to Next Period"}
                   <ChevronRight size={20} />
                 </button> */}
+                <LogoutBtn />
               </div>
             </div>
           </div>
@@ -347,7 +349,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 <XAxis dataKey="period" stroke="#9CA3AF" />
                 <YAxis
                   stroke="#9CA3AF"
-                  tickFormatter={(value) => `$${value / 1000}K`}
+                  tickFormatter={(value) => `₹${value / 1000}K`}
                 />
                 <Tooltip
                   content={<FinancialTooltip />}

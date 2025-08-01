@@ -96,11 +96,11 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   // Helper function to format currency
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
+      return `₹${(value / 1000000).toFixed(1)}M`;
     } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
+      return `₹${(value / 1000).toFixed(0)}K`;
     } else {
-      return `$${value.toFixed(0)}`;
+      return `₹${value.toFixed(0)}`;
     }
   };
 
@@ -280,9 +280,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             },
             {
               label: "Innovation Index",
-              value: `${
-                (rdData.patented || 0) + (rdData.quality_changes || 0)
-              }`,
+              value: `${(rdData.patented || 0) +
+                (rdData.quality_changes || 0)}`,
             },
             {
               label: "Development ROI",
@@ -298,9 +297,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
           icon: Factory,
           status: getSectionStatus("production"),
           summary: [
-            `Production Capacity: ${
-              productionData.production_capacity || 0
-            } units`,
+            `Production Capacity: ${productionData.production_capacity ||
+              0} units`,
             `Units to Produce: ${productionData.units_to_produce || 0}`,
             `Cost per Unit: ${formatCurrency(
               productionData.cost_per_unit || 0
@@ -375,15 +373,12 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                     productData[0].marketing_budget || 0
                   )}`,
                   `Quality Rating: ${productData[0].quality_rating || 0}/10`,
-                  `Innovation Rating: ${
-                    productData[0].innovation_rating || 0
-                  }/10`,
-                  `Sustainability Rating: ${
-                    productData[0].sustainability_rating || 0
-                  }/10`,
-                  `Inventory Level: ${
-                    productData[0].inventory_level || 0
-                  } units`,
+                  `Innovation Rating: ${productData[0].innovation_rating ||
+                    0}/10`,
+                  `Sustainability Rating: ${productData[0]
+                    .sustainability_rating || 0}/10`,
+                  `Inventory Level: ${productData[0].inventory_level ||
+                    0} units`,
                   `Status: ${productData[0].status || "development"}`,
                 ]
               : ["No products configured"]),

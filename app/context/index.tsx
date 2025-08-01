@@ -61,22 +61,9 @@ function FormDataInitializer() {
             employee_satisfaction: initialData.hr?.employee_satisfaction ?? 0,
             recruitment_cost: initialData.hr?.recruitment_cost ?? 0,
             firing_cost: initialData.hr?.firing_cost ?? 0,
-            newRoles: [],
-            existingRoles:
-              initialData.hrRole?.roles?.map(
-                (role: {
-                  role_name: string;
-                  salary_per_head: number;
-                  head_count: number;
-                }) => ({
-                  role_name: role.role_name,
-                  salary_per_head: role.salary_per_head,
-                  current_head_count: role.head_count,
-                  hires: 0,
-                  fires: 0,
-                })
-              ) ?? [],
-          },
+            newRoles:  [],
+            existingRoles: initialData?.hrRole?.roles ?? [],
+          }, 
 
           rd: {
             budget: initialData.rd?.budget ?? 0,

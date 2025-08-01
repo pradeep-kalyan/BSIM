@@ -40,7 +40,13 @@ const ProductionForm = () => {
       production_capacity: data?.production_capacity ?? 0,
       storage_capacity: data?.storage_capacity ?? 0,
     }),
-    [data?.units_to_produce, data?.cost_per_unit, data?.defect_rate, data?.production_capacity, data?.storage_capacity]
+    [
+      data?.units_to_produce,
+      data?.cost_per_unit,
+      data?.defect_rate,
+      data?.production_capacity,
+      data?.storage_capacity,
+    ]
   );
 
   const totalCost =

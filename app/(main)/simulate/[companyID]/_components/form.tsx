@@ -9,6 +9,8 @@ import {
   useTheme,
   useMediaQuery,
   LinearProgress,
+  Link,
+  CircularProgress,
 } from "@mui/material";
 import {
   DollarSign,
@@ -26,9 +28,10 @@ import MarketingForm from "./MarketingForm";
 import RDForm from "./RDForm";
 import ProductionForm from "./ProductionForm";
 import ProductsForm from "./ProductsForm";
+import LogoutBtn from "@/app/(auth)/_components/Logout";
 import HRDashboard from "./HR";
 import PreviewDashboard from "./PreviewDashboard";
-import { useForm } from "@/app/context/FormContext";
+import { useForm, useCashBalance } from "@/app/context/FormContext";
 import { comprehensiveFormSubmission } from "@/app/_actions/comprehensiveFormSubmission";
 import { redirect } from "next/navigation";
 import Sales from "./SalesForm";
@@ -82,10 +85,12 @@ interface FormProps {
 
 const Form: React.FC<FormProps> = ({ companyId }) => {
   const [activeStep, setActiveStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
   const { state } = useForm();
+  const { projectedCashBalance, budgetImpacts } = useCashBalance();
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
@@ -103,46 +108,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
   const handleSaveAndSubmit = async () => {
     try {
       console.log("Starting form submission...");
-
-      // Show loading state to user
-      const loadingAlert = () => {
-        const alertDiv = document.createElement("div");
-        alertDiv.id = "loading-alert";
-        alertDiv.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: rgba(33, 150, 243, 0.9);
-          color: white;
-          padding: 16px 24px;
-          border-radius: 8px;
-          z-index: 10000;
-          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        `;
-        alertDiv.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 20px; height: 20px; border: 2px solid transparent; border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <span>Submitting simulation data...</span>
-          </div>
-          <style>
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          </style>
-        `;
-        document.body.appendChild(alertDiv);
-        return alertDiv;
-      };
-
-      const removeLoadingAlert = (alertDiv: HTMLElement) => {
-        if (alertDiv && alertDiv.parentNode) {
-          alertDiv.parentNode.removeChild(alertDiv);
-        }
-      };
-
-      const alert = loadingAlert();
+      setIsSubmitting(true);
 
       // Prepare comprehensive form data
       const formData = {
@@ -220,13 +186,15 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 discontinue_period: state.product[0].discontinue_period,
               }
             : undefined,
+        projected_balance: projectedCashBalance,
+        budget_impacts: budgetImpacts,
       };
 
       console.log("Form data prepared, calling submission API...");
       const result = await comprehensiveFormSubmission(companyId, formData);
       console.log("Submission result:", result);
 
-      removeLoadingAlert(alert);
+      setIsSubmitting(false);
 
       if (result.success) {
         // Show success message
@@ -267,15 +235,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         // Show detailed error message
         let errorMessage = "Error submitting simulation";
 
-        if ("errors" in result && result.errors && result.errors.length > 0) {
-          const errorMessages = result.errors
-            .map(
-              (error: { field: string; message: string }) =>
-                `${error.field}: ${error.message}`
-            )
-            .join("\\n");
-          errorMessage = `Validation errors:\\n${errorMessages}`;
-        } else if (result.message) {
+        if (result.message) {
           errorMessage = `Error: ${result.message}`;
 
           // Provide specific guidance for common errors
@@ -337,12 +297,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       }
     } catch (error) {
       console.error("Unexpected error in form submission:", error);
-
-      // Remove any existing loading alerts
-      const existingAlert = document.getElementById("loading-alert");
-      if (existingAlert) {
-        existingAlert.remove();
-      }
+      setIsSubmitting(false);
 
       // Show generic error message
       const errorDiv = document.createElement("div");
@@ -386,7 +341,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       case 0:
         return <HRDashboard />;
       case 1:
-        return <MarketingForm companyId={companyId} />;
+        return <MarketingForm />;
       case 2:
         return <RDForm />;
       case 3:
@@ -419,8 +374,89 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         display: "flex",
         flexDirection: isMobile ? "column" : "row",
         overflow: "hidden",
+        position: "relative",
       }}
     >
+      {/* Submission Overlay */}
+      {isSubmitting && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "not-allowed",
+          }}
+        >
+          <Paper
+            elevation={24}
+            sx={{
+              padding: 4,
+              backgroundColor: "rgba(18, 20, 24, 0.95)",
+              borderRadius: 3,
+              border: "1px solid rgba(33, 150, 243, 0.3)",
+              backdropFilter: "blur(20px)",
+              textAlign: "center",
+              maxWidth: "400px",
+              margin: 2,
+            }}
+          >
+            <CircularProgress
+              size={60}
+              thickness={4}
+              sx={{
+                color: "#2196f3",
+                mb: 3,
+                "& .MuiCircularProgress-circle": {
+                  strokeLinecap: "round",
+                },
+              }}
+            />
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#fff",
+                fontWeight: 600,
+                mb: 2,
+                background: "linear-gradient(135deg, #fff 0%, #64b5f6 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Submitting Simulation
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#aaa",
+                mb: 1,
+                lineHeight: 1.5,
+              }}
+            >
+              Processing your business decisions and advancing to the next
+              period...
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "#666",
+                fontStyle: "italic",
+              }}
+            >
+              Please do not close this window or navigate away
+            </Typography>
+          </Paper>
+        </Box>
+      )}
+
       {/* Sidebar with Steps */}
       <Paper
         elevation={12}
@@ -511,10 +547,10 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             return (
               <Box
                 key={step.label}
-                onClick={() => handleStepClick(index)}
+                onClick={() => !isSubmitting && handleStepClick(index)}
                 sx={{
                   p: 2,
-                  cursor: "pointer",
+                  cursor: isSubmitting ? "not-allowed" : "pointer",
                   borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
                   bgcolor: isActive
                     ? "rgba(33, 150, 243, 0.15)"
@@ -528,14 +564,17 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                     : "4px solid transparent",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   transform: isActive ? "translateX(4px)" : "translateX(0)",
-                  "&:hover": {
-                    bgcolor: isActive
-                      ? "rgba(33, 150, 243, 0.2)"
-                      : isCompleted
-                      ? "rgba(76, 175, 80, 0.1)"
-                      : "rgba(255, 255, 255, 0.05)",
-                    transform: "translateX(4px)",
-                  },
+                  opacity: isSubmitting ? 0.6 : 1,
+                  "&:hover": !isSubmitting
+                    ? {
+                        bgcolor: isActive
+                          ? "rgba(33, 150, 243, 0.2)"
+                          : isCompleted
+                          ? "rgba(76, 175, 80, 0.1)"
+                          : "rgba(255, 255, 255, 0.05)",
+                        transform: "translateX(4px)",
+                      }
+                    : {},
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -693,14 +732,18 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           {/* Content Header */}
           <Box
             sx={{
-              p: 3,
+              px: 3,
+              py: 1,
               borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
               bgcolor: "rgba(8, 10, 15, 0.8)",
               position: "relative",
               zIndex: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
               {React.createElement(steps[activeStep].icon, {
                 size: 24,
                 style: { color: "#64b5f6", marginRight: "12px" },
@@ -730,8 +773,16 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 </Typography>
               </Box>
             </Box>
-
-            {/* Progress Breadcrumb */}
+            <Box sx={{ flexGrow: 1 }} />
+            <Link
+              href={`/homepage/${companyId}`}
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 !text-white text-sm px-3 py-2 rounded-md !no-underline"
+            >
+              Dashboard
+            </Link>
+            <div className="flex items-center gap-1">
+              <LogoutBtn />
+            </div>
           </Box>
 
           {/* Content Body */}
@@ -753,7 +804,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           {/* Navigation Controls */}
           <Box
             sx={{
-              p: 3,
+              px: 3,
+              py: 1,
               borderTop: "1px solid rgba(255, 255, 255, 0.1)",
               bgcolor: "rgba(8, 10, 15, 0.8)",
               display: "flex",
@@ -766,7 +818,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           >
             <Button
               onClick={handleBack}
-              disabled={activeStep === 0}
+              disabled={activeStep === 0 || isSubmitting}
               variant="outlined"
               size="medium"
               sx={{
@@ -817,23 +869,30 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
 
             <Button
               onClick={handleNext}
-              disabled={activeStep > steps.length - 1}
+              disabled={activeStep > steps.length - 1 || isSubmitting}
               variant="contained"
               size="medium"
               sx={{
-                background: "linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)",
+                background: isSubmitting
+                  ? "#666"
+                  : "linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)",
                 color: "#fff",
                 fontWeight: 700,
                 minWidth: "100px",
                 height: "40px",
                 borderRadius: "10px",
                 textTransform: "none",
-                boxShadow: "0 6px 20px rgba(33, 150, 243, 0.4)",
+                boxShadow: isSubmitting
+                  ? "none"
+                  : "0 6px 20px rgba(33, 150, 243, 0.4)",
                 "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #1976d2 0%, #1cb5e0 100%)",
-                  boxShadow: "0 8px 24px rgba(33, 150, 243, 0.5)",
-                  transform: "translateY(-1px)",
+                  background: isSubmitting
+                    ? "#666"
+                    : "linear-gradient(135deg, #1976d2 0%, #1cb5e0 100%)",
+                  boxShadow: isSubmitting
+                    ? "none"
+                    : "0 8px 24px rgba(33, 150, 243, 0.5)",
+                  transform: isSubmitting ? "none" : "translateY(-1px)",
                 },
                 "&:disabled": {
                   background: "#333",
@@ -843,7 +902,11 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 transition: "all 0.3s ease",
               }}
             >
-              {activeStep === steps.length - 1 ? "save & submit" : "Next Step"}
+              {isSubmitting
+                ? "Submitting..."
+                : activeStep === steps.length - 1
+                ? "save & submit"
+                : "Next Step"}
             </Button>
           </Box>
         </Paper>
