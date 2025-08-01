@@ -217,12 +217,6 @@ const getDefaultFinanceData = (): FinanceFormData => ({
   equity_issue: 0,
 });
 
-const getDefaultMarketingData = (): MarketingFormData => ({
-  budget: 0,
-  offline: 0,
-  online: 0,
-});
-
 const getDefaultProductionData = (): ProductionFormData => ({
   production_capacity: 2000, // matches Zod default
   inventory_value: 0,
@@ -302,6 +296,12 @@ const getDefaultCashBalance = (): CashBalanceState => ({
   productionBudgetImpact: 0,
   rdBudgetImpact: 0,
   productBudgetImpact: 0,
+});
+
+const getDefaultMarketingData = () => ({
+  budget: 0,
+  offline: 0,
+  online: 0,
 });
 
 // Initial state with proper defaults
@@ -1138,13 +1138,16 @@ export function useMarketingForm() {
   } = useForm();
 
   const updateDataWithCashImpact = useCallback(
-    (data: Partial<MarketingFormData>) => {
-      // Calculate budget impact from the new data being passed in
+    (
+      data: Partial<{
+        budget: number;
+        online: number;
+        offline: number;
+      }>
+    ) => {
       const budget = data.budget ?? state.marketing.budget ?? 0;
-      const offline = data.offline ?? state.marketing.offline ?? 0;
-      const online = data.online ?? state.marketing.online ?? 0;
 
-      const budgetImpact = budget + offline + online;
+      const budgetImpact = budget;
 
       updateMarketing(data);
       updateMarketingBudgetImpact(budgetImpact);
@@ -1153,7 +1156,7 @@ export function useMarketingForm() {
   );
 
   return {
-    data: state.marketing,
+    data: state.marketing, // includes budget, online, offline, roi, conversion_rate
     updateData: updateDataWithCashImpact,
     setError,
     getError,

@@ -192,12 +192,12 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
     ],
   };
 
-  const handleAdvance = useCallback(() => {
-    startTransition(async () => {
-      // Simulate period advancement - replace with your actual function
-      setCurrentPeriod((prev) => prev + 1);
-    });
-  }, []);
+  // const handleAdvance = useCallback(() => {
+  //   startTransition(async () => {
+  //     // Simulate period advancement - replace with your actual function
+  //     setCurrentPeriod((prev) => prev + 1);
+  //   });
+  // }, []);
   const router = useRouter();
   const handleSimulate = useCallback(() => {
     router.push(`/simulate/${comID}`);

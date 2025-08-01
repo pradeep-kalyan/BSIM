@@ -4,12 +4,21 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { DashboardCardProps } from "@/app/(main)/homepage/[companyID]/types";
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
-  title, value, subtitle, icon: Icon, change, loading = false,
-  onClick, gradient = false, size = "normal", className = ""
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  change,
+  loading = false,
+  onClick,
+  gradient = false,
+  size = "normal",
+  className = "",
 }) => {
   const isPositive = typeof change === "number" && change > 0;
   const isNegative = typeof change === "number" && change < 0;
-  const cardHeight = size === "large" ? "h-48" : size === "small" ? "h-32" : "h-40";
+  const cardHeight =
+    size === "large" ? "h-48" : size === "small" ? "h-32" : "h-40";
 
   return (
     <div
@@ -20,8 +29,6 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           : "bg-gradient-to-br from-gray-800 to-gray-900"
       } text-white ${className}`}
     >
-
-
       {loading ? (
         <div className="animate-pulse space-y-4 relative z-10">
           <div className="h-4 bg-gray-400/30 rounded w-1/3"></div>
@@ -43,13 +50,33 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
-            <div className={`font-bold ${size === "large" ? "text-4xl" : "text-3xl"} mb-2`}>
+            <div
+              className={`font-bold ${
+                size === "large" ? "text-4xl" : "text-3xl"
+              } mb-2`}
+            >
               {typeof value === "number" ? value.toLocaleString() : value}
             </div>
             {typeof change === "number" && (
-              <div className={`text-sm font-medium flex items-center ${isPositive ? "text-green-300" : isNegative ? "text-red-300" : "text-white"}`}>
-                {change > 0 ? <TrendingUp size={16} /> : change < 0 ? <TrendingDown size={16} /> : null}
-                <span className="ml-1">{Math.abs(change)}%</span>
+              <div
+                className={`text-sm font-medium flex items-center ${
+                  isPositive
+                    ? "text-green-300"
+                    : isNegative
+                    ? "text-red-300"
+                    : "text-white"
+                }`}
+              >
+                {change > 0 ? (
+                  <TrendingUp size={16} />
+                ) : change < 0 ? (
+                  <TrendingDown size={16} />
+                ) : null}
+                <span className="ml-1">
+                  {Math.abs(change) > 500
+                    ? `${(Math.abs(change) / 100).toFixed(1)}x`
+                    : `${Math.abs(change).toFixed(1)}%`}
+                </span>
                 <span className="ml-1 opacity-60">vs last period</span>
               </div>
             )}
