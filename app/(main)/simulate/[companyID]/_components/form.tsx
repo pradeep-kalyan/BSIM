@@ -82,7 +82,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       case 1:
         return <MarketingForm companyId={companyId} />;
       case 2:
-        return <RDForm companyId={companyId} />;
+        return <RDForm />;
       case 3:
         return <ProductionForm />;
       case 4:
