@@ -4,11 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
-interface OpenButtonProps {
+interface ViewDashboardProps {
   companyId: string;
 }
 
-const OpenButton: React.FC<OpenButtonProps> = ({ companyId }) => {
+const ViewDashboard: React.FC<ViewDashboardProps> = ({ companyId }) => {
   return (
     <Link
       href={`/homepage/${companyId}`}
@@ -20,4 +20,4 @@ const OpenButton: React.FC<OpenButtonProps> = ({ companyId }) => {
   );
 };
 
-export default OpenButton;
+export default ViewDashboard;

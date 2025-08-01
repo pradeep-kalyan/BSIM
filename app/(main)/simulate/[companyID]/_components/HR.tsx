@@ -74,12 +74,12 @@ const HRDashboard = () => {
     0
   );
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
       <ToastContainer position="top-right" />
 
       <div className="max-w-7xl mx-auto">
         {/* Metrics UI */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
           {/* Company Info */}
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
             <div className="flex items-center justify-between mb-2">
@@ -222,7 +222,7 @@ const HRDashboard = () => {
           </div>
 
           {/* Add New Roles Section */}
-          <div className="mb-8">
+          <div>
             <div className="flex items-center gap-4 mb-4">
               <h3 className="text-2xl font-semibold text-slate-200">
                 Add New Roles
@@ -244,13 +244,13 @@ const HRDashboard = () => {
             </div>
 
             {data?.newRoles?.length === 0 && (
-              <p className="text-slate-400 italic">No new roles added yet.</p>
+              <p className="text-slate-400 italic mb-1">No new roles added yet.</p>
             )}
 
             {data?.newRoles?.map((role, index) => (
               <div
                 key={index}
-                className="grid grid-cols-4 gap-4 items-end ml-6 mb-4"
+                className="grid grid-cols-4 gap-4 items-end ml-6 mb-2"
               >
                 {/* Role Name */}
                 <div className="flex flex-col">
@@ -323,7 +323,7 @@ const HRDashboard = () => {
           </div>
 
           {/* Budget and Satisfaction Inputs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mx-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2 mx-6">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Training Budget
@@ -361,7 +361,7 @@ const HRDashboard = () => {
           </div>
 
           {/* Summary Section */}
-          <h4 className="text-xl font-semibold text-white mb-5 ml-6">
+          <h4 className="text-xl font-semibold text-white mb-2 ml-6">
             Decision Summary
           </h4>
           <div className="bg-slate-700/70 rounded-xl px-6 py-4 mx-6 grid grid-cols-2 md:grid-cols-3 gap-6 text-center text-white font-semibold">

@@ -4,7 +4,7 @@ import React from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { company } from "@prisma/client";
 
-import OpenButton from "./OpenButton"; 
+import ViewDashboard from "./ViewDashboard"; 
 
 interface ExtendedCompany extends company {
   canAccess?: boolean;
@@ -71,7 +71,7 @@ const CompanyList: React.FC<CompanyCardProps> = ({
 
             <div className="flex justify-start mt-2">
               {(isOwner || company.canAccess) && (
-                <OpenButton companyId={company.id} />
+                <ViewDashboard companyId={company.id} />
               )}
             </div>
           </div>
