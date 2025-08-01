@@ -2,7 +2,7 @@
 
 import { IndianRupee, Factory, Package, AlertTriangle } from "lucide-react";
 import React, { useEffect } from "react";
-import DashboardCard from "./Card";
+import DashboardCard from "@/ui/Card";
 import { Check, TriangleAlert } from "lucide-react";
 import {
   useCashBalance,

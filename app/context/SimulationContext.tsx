@@ -50,6 +50,15 @@ export const SimulationProvider = ({
     if (com) setComIdState(com);
     if (period) setPeriodState(parseInt(period));
   }, []);
+  const setCurrentPeriodWrapper = (period: number) => {
+      setPeriod(period);
+    Cookies.set("currentPeriod", period.toString(), {
+      expires: 0.25,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+  };
 
   const setSimId = (id: string) => {
     setSimIdState(id);
@@ -110,14 +119,15 @@ export const SimulationProvider = ({
       value={{
         simId,
         comId,
+        period,
         isHydrated,
         setSimId,
         setComId,
+        setPeriod: setCurrentPeriodWrapper,
         clearSimId,
         clearComId,
         clearAll,
-        period,
-        setPeriod,
+
       }}
     >
       {children}
