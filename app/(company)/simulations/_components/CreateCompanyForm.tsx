@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createCompany, getFirstCompany } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
 import { Building2, Rocket } from "lucide-react";
@@ -35,7 +34,6 @@ interface ProductInput {
 }
 
 const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
-  const router = useRouter();
   const [products, setProducts] = useState<ProductInput[]>([]);
   const [form, setForm] = useState({
     name: "",
@@ -77,7 +75,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
   const [hrRoles, setHrRoles] = useState([
     { role_name: "", salary_per_head: 0, head_count: 0 },
   ]);
-  const [salaryBudget, setSalaryBudget] = useState(0);
   const [trainingBudget, setTrainingBudget] = useState(0);
   const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
   const [accessEmail, setAccessEmail] = useState("");
@@ -176,7 +173,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       }
 
       // Create company with products
-      const { companyId, failedEmails } = await createCompany({
+      const { companyId } = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
         name: form.name,

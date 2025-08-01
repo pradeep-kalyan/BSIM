@@ -17,28 +17,33 @@ const formatCurrency = (val: number) =>
 const percent = (part: number, total: number) =>
   total > 0 ? ((part / total) * 100).toFixed(1) + "%" : "0%";
 
-const MarketingForm = ({ companyId }: { companyId: string }) => {
-  const { data: marketingData, updateData, setError } = useMarketingForm();
-  const { projectedCashBalance } = useCashBalance();
+const MarketingForm = () => {
+  const { data: marketingData, updateData } = useMarketingForm();
+  const {
+    cashBalance,
+    projectedCashBalance,
+    updateMarketingBudgetImpact,
+  } = useCashBalance();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
 
   const [success, setSuccess] = useState(false);
   const [budgetError, setBudgetError] = useState<string | null>(null);
-  const [isValidated, setIsValidated] = useState(false);
 
-  const frozenData = {
-    budget: marketingData.budget,
-    online: marketingData.online,
-    offline: marketingData.offline,
-  };
+  const frozenData = React.useMemo(
+    () => ({
+      budget: marketingData.budget,
+      online: marketingData.online,
+      offline: marketingData.offline,
+    }),
+    [marketingData.budget, marketingData.online, marketingData.offline]
+  );
 
   const handleBudgetChange = (
     field: "budget" | "online" | "offline",
     value: number
   ) => {
     setSuccess(false);
-    setIsValidated(false);
 
     // Ensure value is not negative
     if (value < 0) value = 0;
@@ -65,24 +70,16 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
 
   const handleValidate = () => {
     setBudgetError(null);
-    setIsValidated(false);
     setSuccess(false);
 
     if (marketingData.online + marketingData.offline !== marketingData.budget) {
       setBudgetError(" Online + Offline must equal total budget.");
       return;
     }
-
-    if (marketingData.budget > projectedCashBalance) {
-      setBudgetError(
-        ` Insufficient cash balance. Required: ₹${formatCurrency(
-          marketingData.budget
-        )}, Available: ${formatCurrency(projectedCashBalance)}`
-      );
-      return;
-    }
     setSuccess(true);
-    setIsValidated(true);
+    updateMarketingBudgetImpact(
+      cashBalance.originalCashBalance - projectedCashBalance
+    );
   };
 
   return (
@@ -172,7 +169,8 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
           <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
               <div className="text-slate-300 text-sm">
-                Available Cash Balance: {formatCurrency(projectedCashBalance)}
+                Available Cash Balance:{" "}
+                {formatCurrency(cashBalance.originalCashBalance)}
               </div>
               <div
                 className={`font-semibold ${
@@ -181,8 +179,20 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
                     : "text-emerald-400"
                 }`}
               >
-                Remaining After Marketing:
-                {formatCurrency(projectedCashBalance - marketingData.budget)}
+                Projected Balance : 
+                {formatCurrency(projectedCashBalance)}
+              </div>
+              <div>
+                <div
+                  className={`font-semibold ${
+                    marketingData.budget > projectedCashBalance
+                      ? "text-rose-400"
+                      : "text-emerald-400"
+                  }`}
+                >
+                  Marketing Budget:
+                  {formatCurrency(marketingData.budget)}
+                </div>
               </div>
             </div>
 

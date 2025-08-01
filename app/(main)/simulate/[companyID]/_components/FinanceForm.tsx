@@ -21,7 +21,7 @@ import {
   useFinanceForm,
 } from "@/app/context/FormContext";
 import DashboardCard from "./Card";
-import {  } from "@/app/(main)/simulate/[companyID]/_utils/validator";
+import { createFinanceSchema } from "@/app/(main)/simulate/[companyID]/_utils/validator";
 
 const FinanceForm = () => {
   const formatCurrency = (value: number) =>
@@ -34,18 +34,14 @@ const FinanceForm = () => {
   const { data: companyData } = useCompanyForm();
   const { data, updateData, setError, updateFinanceBudgetImpact } =
     useFinanceForm();
-  const { cashBalance, getProjectedCashBalance } = useCashBalance();
+  const { cashBalance, projectedCashBalance } = useCashBalance();
 
   // State for validation and frozen projected balance
   const [success, setSuccess] = React.useState(false);
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
-  const [frozenProjectedBalance, setFrozenProjectedBalance] = React.useState(0);
 
   // Initialize frozen balance when component mounts
-  React.useEffect(() => {
-    const initialProjected = getProjectedCashBalance();
-    setFrozenProjectedBalance(initialProjected);
-  }, []);
+ 
 
   // Handle input changes without updating projected balance
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,7 +117,6 @@ const FinanceForm = () => {
 
     // If validation passes, update the budget impact and frozen balance
     updateFinanceBudgetImpact(netFinanceImpact);
-    setFrozenProjectedBalance(newProjectedBalance);
     setSuccess(true);
     setBudgetAlert(null);
   };
@@ -165,7 +160,7 @@ const FinanceForm = () => {
             />
             <DashboardCard
               title="Projected Cash Balance"
-              value={frozenProjectedBalance}
+              value={projectedCashBalance}
               subtitle="Projected balance after finance decisions"
               icon={PiggyBank}
               size="large"
@@ -334,13 +329,13 @@ const FinanceForm = () => {
                 </div>
                 <div
                   className={`font-semibold ${
-                    frozenProjectedBalance < 0
+                    projectedCashBalance < 0
                       ? "text-rose-400"
                       : "text-emerald-400"
                   }`}
                 >
                   Projected Cash Balance:{" "}
-                  {formatCurrency(frozenProjectedBalance)}
+                  {formatCurrency(projectedCashBalance)}
                 </div>
               </div>
             </div>

@@ -153,6 +153,7 @@ function FormDataInitializer() {
             marketingBudgetImpact: 0,
             productionBudgetImpact: 0,
             rdBudgetImpact: 0,
+            salesBudgetImpact: 0,
             productBudgetImpact: 0,
           },
         };
@@ -169,6 +170,7 @@ function FormDataInitializer() {
             marketingBudgetImpact: 0,
             productionBudgetImpact: 0,
             rdBudgetImpact: 0,
+            salesBudgetImpact: 0,
             productBudgetImpact: 0,
           },
         };

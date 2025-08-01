@@ -33,7 +33,7 @@ export default function ProductForm({ onChange }: ProductFormProps) {
     { name: "", category: "" },
   ]);
 
-  function updateProduct(index: number, field: ProductField, value: any) {
+  function updateProduct(index: number, field: ProductField, value: string | number) {
     const updated = [...products];
     updated[index] = { ...updated[index], [field]: value };
     setProducts(updated);

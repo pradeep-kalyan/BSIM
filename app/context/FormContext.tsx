@@ -981,13 +981,13 @@ export function FormProvider({
   const getProjectedCashBalance = useCallback(() => {
     return (
       state.cashBalance.originalCashBalance +
-      state.cashBalance.financeBudgetImpact -
+      state.cashBalance.financeBudgetImpact +
+      state.cashBalance.salesBudgetImpact -
       state.cashBalance.hrBudgetImpact -
       state.cashBalance.marketingBudgetImpact -
       state.cashBalance.productionBudgetImpact -
       state.cashBalance.rdBudgetImpact -
-      state.cashBalance.salesBudgetImpact -
-      state.cashBalance.productBudgetImpact
+      -state.cashBalance.productBudgetImpact
     );
   }, [
     state.cashBalance.originalCashBalance,

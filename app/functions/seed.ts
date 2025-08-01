@@ -115,7 +115,7 @@ async function main() {
 
   // Create Simulation Access
   console.log("🔑 Setting up simulation access...");
-  const simulationAccess = await Promise.all([
+  await Promise.all([
     // Tech simulation access
     ...students.map((student) =>
       prisma.simulation_access.create({

@@ -14,6 +14,7 @@ import {
   useProductForm,
   useSalesForm,
   useCompanyForm,
+  useCashBalance,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 import DashboardCard from "./Card";
@@ -31,7 +32,7 @@ const Sales = () => {
   } = useSalesForm();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
-
+  const { projectedCashBalance, updateSalesBudgetImpact } = useCashBalance();
   const [selectedProduct, setSelectedProduct] = React.useState<string>("");
   const [selectedProductData, setSelectedProductData] =
     React.useState<ProductFormData | null>(null);
@@ -145,10 +146,13 @@ const Sales = () => {
       customer_satisfaction: customerSatisfaction,
     });
 
+    updateSalesBudgetImpact(salesData?.revenue);
+
+    // Note: updateSalesData (which is updateDataWithCashImpact) automatically handles the budget impact
     setSuccess(true);
   };
 
-  // Calculate metrics for dashboard cards (with dependency array properly set)
+  // Calculate metrics for dashboard cards (with proper dependency array)
   const frozenSalesData = React.useMemo(
     () => ({
       sales_volume: salesData?.sales_volume ?? 0,
@@ -158,14 +162,7 @@ const Sales = () => {
       market_share: salesData?.market_share ?? 0,
       customer_satisfaction: salesData?.customer_satisfaction ?? 0,
     }),
-    [
-      salesData?.sales_volume,
-      salesData?.revenue,
-      salesData?.costs,
-      salesData?.profit,
-      salesData?.market_share,
-      salesData?.customer_satisfaction,
-    ]
+    [salesData?.revenue, salesData?.sales_volume, salesData?.costs, salesData?.profit, salesData?.market_share, salesData?.customer_satisfaction]
   );
 
   return (
@@ -424,6 +421,10 @@ const Sales = () => {
                 </div>
                 <div className="text-slate-300">
                   Costs: ₹{formatNumber(Math.round(salesData?.costs || 0))}
+                </div>
+                <div className="text-slate-300">
+                  Projected Cash Balance : ₹
+                  {formatNumber(Math.round(projectedCashBalance))}
                 </div>
                 {selectedProductData && (
                   <div className="text-slate-300">

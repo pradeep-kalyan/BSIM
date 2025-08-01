@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React from "react";
-import { X, TrendingUp, TrendingDown, Users, DollarSign, Award, Building2 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
+import { TrendingUp, TrendingDown, Users, DollarSign, Award, Building2 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 interface ExistingRole {
     role_name: string;
@@ -56,6 +58,17 @@ interface ComparisonData {
     };
 }
 
+interface PreviousDecision {
+    existing_roles: ExistingRole[];
+    new_roles: NewRole[];
+    training_budget: number;
+    employee_satisfaction: number;
+    salary_budget?: number;
+    total_budget?: number;
+    total_employees?: number;
+    roles?: any[];
+}
+
 interface HRComparisonModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -64,7 +77,7 @@ interface HRComparisonModalProps {
     newRoles: NewRole[];
     trainingBudget: number;
     employeeSatisfaction: number;
-    previousDecision: any; // The last submitted decision
+    previousDecision: PreviousDecision | null;
 }
 
 const HRComparisonModal: React.FC<HRComparisonModalProps> = ({

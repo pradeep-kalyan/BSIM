@@ -31,7 +31,7 @@ import PreviewDashboard from "./PreviewDashboard";
 import { useForm } from "@/app/context/FormContext";
 import { comprehensiveFormSubmission } from "@/app/_actions/comprehensiveFormSubmission";
 import { redirect } from "next/navigation";
-import Sales from "./Sales";
+import Sales from "./SalesForm";
 
 const steps = [
   {
@@ -60,14 +60,14 @@ const steps = [
     description: "Manage product portfolio and pricing",
   },
   {
-    label: "Finance Info",
-    icon: DollarSign,
-    description: "Manage financial decisions and budgets",
-  },
-  {
     label: "sales",
     icon: ShoppingCart,
     description: "Manage Sales and customer relationships",
+  },
+  {
+    label: "Finance Info",
+    icon: DollarSign,
+    description: "Manage financial decisions and budgets",
   },
   {
     label: "Preview & Submit",
@@ -200,23 +200,26 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           market_share: state.sales.market_share,
           customer_satisfaction: state.sales.customer_satisfaction,
         },
-        product: {
-          name: state.product.name,
-          description: state.product.description,
-          category: state.product.category,
-          quality_rating: state.product.quality_rating,
-          innovation_rating: state.product.innovation_rating,
-          sustainability_rating: state.product.sustainability_rating,
-          production_cost: state.product.production_cost,
-          selling_price: state.product.selling_price,
-          inventory_level: state.product.inventory_level,
-          production_capacity: state.product.production_capacity,
-          development_cost: state.product.development_cost,
-          marketing_budget: state.product.marketing_budget,
-          status: state.product.status,
-          launch_period: state.product.launch_period,
-          discontinue_period: state.product.discontinue_period,
-        },
+        product:
+          state.product[0] && state.product[0].name
+            ? {
+                name: state.product[0].name,
+                description: state.product[0].description,
+                category: state.product[0].category,
+                quality_rating: state.product[0].quality_rating,
+                innovation_rating: state.product[0].innovation_rating,
+                sustainability_rating: state.product[0].sustainability_rating,
+                production_cost: state.product[0].production_cost,
+                selling_price: state.product[0].selling_price,
+                inventory_level: state.product[0].inventory_level,
+                production_capacity: state.product[0].production_capacity,
+                development_cost: state.product[0].development_cost,
+                marketing_budget: state.product[0].marketing_budget,
+                status: state.product[0].status,
+                launch_period: state.product[0].launch_period,
+                discontinue_period: state.product[0].discontinue_period,
+              }
+            : undefined,
       };
 
       console.log("Form data prepared, calling submission API...");
@@ -385,15 +388,15 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       case 1:
         return <MarketingForm companyId={companyId} />;
       case 2:
-        return <RDForm companyId={companyId} />;
+        return <RDForm />;
       case 3:
         return <ProductionForm />;
       case 4:
         return <ProductsForm companyId={companyId} />;
       case 5:
-        return <FinanceForm />;
-      case 6:
         return <Sales />;
+      case 6:
+        return <FinanceForm />;
       case 7:
         return (
           <PreviewDashboard

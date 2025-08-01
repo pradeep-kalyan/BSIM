@@ -4,24 +4,15 @@ import React from "react";
 import {
   PlusCircle,
   Trash2,
-  Users,
-  TrendingUp,
-  DollarSign,
-  Award,
-  Building2,
-  Loader2,
 } from "lucide-react";
 import { ToastContainer } from "react-toastify";
 import {
-  useCashBalance,
   useHRForm,
-  useHRInitialization,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 
 const HRDashboard = () => {
-  const { data, updateData, updateExistingRole, updateNewRole } = useHRForm();
-  const { cashBalance } = useCashBalance();
+  const { data, updateData } = useHRForm();
   const { period } = useSimulation();
 
   return (

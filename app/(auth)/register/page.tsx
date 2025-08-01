@@ -13,7 +13,6 @@ const Page = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [disabled, setDisabled] = React.useState(false);
-  const [isExiting, setIsExiting] = React.useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
@@ -48,8 +47,6 @@ const Page = () => {
 
     if (response.status === 200) {
       toast.success("User Created Successfully");
-      setTimeout(() => {}, 200);
-      setIsExiting(true);
       setTimeout(() => {
         router.push("/login");
       }, 600); // Matches the animation duration

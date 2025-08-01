@@ -8,7 +8,6 @@ import {
   CardContent,
   Chip,
   Divider,
-  Button,
   CircularProgress,
   Alert,
 } from "@mui/material";
@@ -20,8 +19,6 @@ import {
   Factory,
   Package,
   DollarSign,
-  PlayCircle,
-  FileText,
   BarChart3,
   ShoppingCart,
 } from "lucide-react";
@@ -34,11 +31,12 @@ import {
   useProductForm,
   useCompanyForm,
   useSalesForm,
+  useCashBalance,
 } from "@/app/context/FormContext";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 interface PreviewDashboardProps {
   companyId: string;
-  onStartSimulation?: () => void;
   onEditSection?: (section: number) => void;
 }
 
@@ -51,13 +49,14 @@ interface SectionSummary {
 }
 
 const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
-  onStartSimulation,
   onEditSection,
 }) => {
   const [loading, setLoading] = useState(true);
+  const { projectedCashBalance } = useCashBalance();
   const [sections, setSections] = useState<SectionSummary[]>([]);
 
   // Get form data from context
+  const { period } = useSimulation();
   const { data: hrData } = useHRForm();
   const { data: marketingData } = useMarketingForm();
   const { data: rdData } = useRDForm();
@@ -742,7 +741,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                 gridTemplateColumns: {
                   xs: "1fr",
                   sm: "repeat(2, 1fr)",
-                  lg: "repeat(4, 1fr)",
+                  lg: "repeat(5, 1fr)",
                 },
                 gap: 3,
               }}
@@ -765,7 +764,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                     fontWeight: 600,
                   }}
                 >
-                  CURRENT CASH BALANCE
+                  CURRENT CASH BALANCE (period : {period})
                 </Typography>
                 <Typography
                   variant="h4"
@@ -777,6 +776,38 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                   }}
                 >
                   {formatCurrency(companyData.cash_balance || 0)}
+                </Typography>
+              </Box>
+
+              <Box
+                sx={{
+                  bgcolor: "rgba(76, 175, 80, 0.1)",
+                  border: "1px solid rgba(76, 175, 80, 0.3)",
+                  borderRadius: 2,
+                  p: 3,
+                  textAlign: "center",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "#81c784",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  PROJECTED CASH BALANCE (period : {(period ?? 0) + 1})
+                </Typography>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    color: "#4caf50",
+                    fontWeight: 700,
+                    mt: 1,
+                    fontSize: { xs: "1.5rem", md: "2rem" },
+                  }}
+                >
+                  {formatCurrency(projectedCashBalance || 0)}
                 </Typography>
               </Box>
 
@@ -1081,13 +1112,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                           fontWeight: 600,
                         }}
                       >
-                        {formatCurrency(
-                          (companyData.cash_balance || 0) +
-                            (salesData.profit || 0) -
-                            (hrData.total_budget || 0) -
-                            (marketingData.budget || 0) -
-                            (rdData.budget || 0)
-                        )}
+                        {formatCurrency(projectedCashBalance)}
                       </Typography>
                     </Box>
                   </Box>
