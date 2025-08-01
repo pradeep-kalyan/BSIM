@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-
 /* ---------------------- Product ---------------------- */
 export const productSchema = z.object({
   id: z.string(),
@@ -65,40 +64,91 @@ export const createFinanceSchema = financeSchema.omit({
 });
 
 /* ---------------------- Production ---------------------- */
-export const productionSchema = z.object({
-  id: z.string(),
-  company_id: z.string(),
-  period: z.number(),
-  production_capacity: z.number(),
-  inventory_value: z.number(),
-  storage_capacity: z.number(),
-  defect_rate: z.number(),
-  finalised: z.boolean().default(false),
-  created_at: z.date().default(new Date()),
-  updated_at: z.date().default(new Date()),
-});
+export const productionSchema = z
+  .object({
+    id: z.string(),
+    company_id: z.string(),
+    period: z.number(),
+    production_capacity: z.number(),
+    inventory_value: z.number(),
+    storage_capacity: z.number(),
+    cash_balance: z.number(),
+    defect_rate: z.number(),
+    units_to_produce: z.number(),
+    cost_per_unit: z.number(),
+    production_cost: z.number(),
+    finalised: z.boolean().default(false),
+    created_at: z.date().default(new Date()),
+    updated_at: z.date().default(new Date()),
+  })
+  .superRefine((data, ctx) => {
+    console.log("Validator superRefine called with:", {
+      units_to_produce: data.units_to_produce,
+      production_capacity: data.production_capacity,
+      comparison: data.units_to_produce > data.production_capacity,
+      types: {
+        units: typeof data.units_to_produce,
+        capacity: typeof data.production_capacity,
+      },
+    });
 
-export const createProductionSchema = productionSchema.omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-});
+    // Ensure units to produce doesn't exceed production capacity
+    if (data.units_to_produce > data.production_capacity) {
+      console.log("Adding validation error for units exceeding capacity");
+      ctx.addIssue({
+        code: "custom",
+        message: `Units to produce (${data.units_to_produce}) cannot exceed production capacity (${data.production_capacity})`,
+        path: ["units_to_produce"],
+      });
+    }
+
+    // Warning for low capacity utilization (optional business rule)
+    if (data.production_capacity > 0 && data.units_to_produce > 0) {
+      const utilizationRate =
+        (data.units_to_produce / data.production_capacity) * 100;
+      if (utilizationRate < 50) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Low capacity utilization (${utilizationRate.toFixed(
+            1
+          )}%). Consider reducing production capacity or increasing production units.`,
+          path: ["production_capacity"],
+        });
+      }
+    }
+
+    // Ensure sufficient cash balance for production cost
+    if (data.production_cost > data.cash_balance) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Production cost cannot exceed cash balance",
+        path: ["production_cost"],
+      });
+      ctx.addIssue({
+        code: "custom",
+        message: "Insufficient cash balance for production cost",
+        path: ["cash_balance"],
+      });
+    }
+  });
+
+export const createProductionSchema = productionSchema
+  .omit({
+    id: true,
+    created_at: true,
+    updated_at: true,
+    finalised: true,
+  })
+  .refine((data) => data.units_to_produce <= data.production_capacity, {
+    message: "Units to produce cannot exceed production capacity",
+    path: ["units_to_produce"],
+  })
+  .refine((data) => data.production_cost <= data.cash_balance, {
+    message: "Production cost cannot exceed cash balance",
+    path: ["production_cost"],
+  });
 
 /* ---------------------- Production Form ---------------------- */
-export const productionFormSchema = z.object({
-  company_id: z.string(),
-  period: z.number(),
-  production_capacity: z.number().min(0, "Production capacity must be non-negative"),
-  inventory_value: z.number().min(0, "Inventory value must be non-negative"),
-  storage_capacity: z.number().min(0, "Storage capacity must be non-negative"),
-  defect_rate: z.number().min(0, "Defect rate must be non-negative").max(1, "Defect rate cannot exceed 100%"),
-  quality_improvement_investment: z.number().min(0, "Quality improvement investment must be non-negative").default(0),
-  efficiency_upgrade_cost: z.number().min(0, "Efficiency upgrade cost must be non-negative").default(0),
-  maintenance_budget: z.number().min(0, "Maintenance budget must be non-negative").default(0),
-  automation_level: z.number().min(0, "Automation level must be non-negative").max(10, "Automation level cannot exceed 10").default(0),
-  safety_investment: z.number().min(0, "Safety investment must be non-negative").default(0),
-  environmental_compliance_cost: z.number().min(0, "Environmental compliance cost must be non-negative").default(0),
-});
 
 /* ---------------------- HR Decision ---------------------- */
 export const hrDecisionSchema = z.object({

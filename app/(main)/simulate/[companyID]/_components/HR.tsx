@@ -1,736 +1,392 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   PlusCircle,
   Trash2,
+} from "lucide-react";
+import { ToastContainer } from "react-toastify";
+import {
+  useCashBalance,
+  useCompanyForm,
+  useHRForm,
+  useHRInitialization,
+} from "@/app/context/FormContext";
+import { useSimulation } from "@/app/context/SimulationContext";
+import {
   Users,
   TrendingUp,
-  DollarSign,
   Award,
-  Building2,
-  Loader2,
+  Building2, IndianRupee,
 } from "lucide-react";
-import {
-  getCompanyData,
-  getHistoricalHRData,
-  getCurrentRoles,
-} from "@/app/_actions/hr-actions";
-import { submitHRDecisionForPeriod } from "@/app/_actions/submitHRDecisionForPeriod";
-import { getCurrentHRDecision } from "@/app/_actions/getCurrentHRDecision";
-import HRComparisonModal from "./HRComparison";
-import { toast, ToastContainer } from "react-toastify";
 
-interface ExistingRole {
-  role_name: string;
-  salary_per_head: number;
-  current_head_count: number;
-  hires: number;
-  fires: number;
-}
+const HRDashboard = () => {
+  const {
+    currentHRData,
+    initializeHRWithRoles,
+    initializeWithCompanyRoles,
+    isInitialized,
+    resetHRToDefaults,
+  } = useHRInitialization();
 
-interface NewRole {
-  role_name: string;
-  salary_per_head: number;
-  hires: number;
-}
+  const {
+    data,
+    updateData,
+    setError,
+    getError,
+    addExistingRole,
+    updateExistingRole,
+    removeExistingRole,
+    addNewRole,
+    updateNewRole,
+    removeNewRole,
+    clearAllRoles,
+    calculateBudgetFromRoles,
+    getRoleInputs,
+  } = useHRForm();
 
-interface CompanyData {
-  id: string;
-  name: string;
-  current_period: number;
-  cash_balance: number;
-}
+  const { cashBalance } = useCashBalance();
+  const { period } = useSimulation();
+  const { data: companyData } = useCompanyForm();
 
-interface HistoricalData {
-  period: number;
-  total_budget: number;
-  salary_budget: number;
-  training_budget: number;
-  employee_satisfaction: number;
-  recruitment_cost: number;
-  firing_cost: number;
-  total_employees: number;
-  roles: Array<{
-    role_name: string;
-    salary_per_head: number;
-    head_count: number;
-  }>;
-}
+  // Calculate net hiring from newRoles and existing roles combined
+  const netHiring =
+    (data?.newRoles?.reduce((acc, r) => acc + (r.hires || 0), 0) || 0) +
+    (data?.existingRoles?.reduce((acc, r) => acc + (r.hires || 0), 0) || 0);
 
-interface HRDashboardProps {
-  companyId: string;
-}
-
-const HRDashboard: React.FC<HRDashboardProps> = ({ companyId }) => {
-  // State variables
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const [, setHistoricalData] = useState<HistoricalData[]>([]);
-  const [existingRoles, setExistingRoles] = useState<ExistingRole[]>([]);
-  const [newRoles, setNewRoles] = useState<NewRole[]>([]);
-  const [trainingBudget, setTrainingBudget] = useState<number>(0);
-  const [employeeSatisfaction, setEmployeeSatisfaction] = useState<number>(50);
-  const [currentDecision, setCurrentDecision] = useState<any>(null);
-  const [showComparison, setShowComparison] = useState(false);
-
-  // Persist form data to localStorage
-  const persistFormData = (newData: {
-    existingRoles?: ExistingRole[];
-    newRoles?: NewRole[];
-    trainingBudget?: number;
-    employeeSatisfaction?: number;
-  }) => {
-    const dataToSave = {
-      existingRoles: newData.existingRoles ?? existingRoles,
-      newRoles: newData.newRoles ?? newRoles,
-      trainingBudget: newData.trainingBudget ?? trainingBudget,
-      employeeSatisfaction: newData.employeeSatisfaction ?? employeeSatisfaction,
-    };
-    localStorage.setItem(`hrFormData-${companyId}`, JSON.stringify(dataToSave));
+  const formatCurrency = (value: number) => {
+    return "₹" + value.toLocaleString(undefined, { minimumFractionDigits: 0 });
   };
-
-  useEffect(() => {
-    // Always fetch fresh company data
-    const loadCompany = async () => {
-      try {
-        const company = await getCompanyData(companyId);
-        setCompanyData(company);
-      } catch {
-        setCompanyData(null);
-      }
-    };
-
-    // Load saved form data from localStorage if it exists
-    const loadFormData = () => {
-      const saved = localStorage.getItem(`hrFormData-${companyId}`);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.existingRoles) setExistingRoles(parsed.existingRoles);
-          if (parsed.newRoles) setNewRoles(parsed.newRoles);
-          if (typeof parsed.trainingBudget === "number")
-            setTrainingBudget(parsed.trainingBudget);
-          if (typeof parsed.employeeSatisfaction === "number")
-            setEmployeeSatisfaction(parsed.employeeSatisfaction);
-          setLoading(false); // Data loaded, no fetch needed for roles/historical
-        } catch {
-          // Ignore parse errors, fallback to fetch data
-          fetchRemainingData();
-        }
-      } else {
-        fetchRemainingData();
-      }
-    };
-
-    // Fetch historical data & roles only if no saved form data
-    const fetchRemainingData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [historical, roles] = await Promise.all([
-          getHistoricalHRData(companyId),
-          getCurrentRoles(companyId),
-        ]);
-        setHistoricalData(historical);
-        setExistingRoles(roles);
-
-        if (historical.length > 0 && companyData) {
-          const lastPeriod = historical[historical.length - 1];
-          const decision = await getCurrentHRDecision(
-            companyData.id,
-            companyData.current_period
-          );
-
-          setCurrentDecision({
-            ...lastPeriod,
-            ...decision,
-            roles,
-          });
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCompany();
-    loadFormData();
-  }, [companyId]);
-
-  // Handlers update state and persist data in localStorage:
-
-  const handleExistingRoleChange = (
-    index: number,
-    field: "hires" | "fires" | "salary_per_head",
-    value: number
-  ) => {
-    const updated = [...existingRoles];
-    updated[index][field] = value;
-    setExistingRoles(updated);
-    persistFormData({ existingRoles: updated });
-  };
-
-  const handleNewRoleChange = (
-    index: number,
-    field: "role_name" | "salary_per_head" | "hires",
-    value: string | number
-  ) => {
-    const updated = [...newRoles];
-    (updated[index] as any)[field] = value;
-    setNewRoles(updated);
-    persistFormData({ newRoles: updated });
-  };
-
-  const addNewRole = () => {
-    setNewRoles((prev) => [
-      ...prev,
-      { role_name: "", salary_per_head: 0, hires: 0 },
-    ]);
-  };
-
-  const removeNewRole = (index: number) => {
-    const updated = [...newRoles];
-    updated.splice(index, 1);
-    setNewRoles(updated);
-    persistFormData({ newRoles: updated });
-  };
-
-  // Format currency helper
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-
-  // Submit handler
-  const handleSubmit = async () => {
-    if (!companyData) return;
-
-    // Detect duplicate new role names compared to existing & new roles
-    const duplicateNewRole = newRoles.find(
-      (newRole, i) =>
-        existingRoles.some(
-          (er) => er.role_name.toLowerCase() === newRole.role_name.toLowerCase()
-        ) ||
-        newRoles.findIndex(
-          (r, j) =>
-            j !== i && r.role_name.toLowerCase() === newRole.role_name.toLowerCase()
-        ) !== -1
-    );
-
-    if (duplicateNewRole) {
-      toast.error(`Role "${duplicateNewRole.role_name}" already exists.`);
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      setError(null);
-
-      const allRoles = [
-        ...existingRoles.map((role) => ({
-          role_name: role.role_name,
-          salary_per_head: role.salary_per_head,
-          hires: role.hires,
-          fires: role.fires,
-        })),
-        ...newRoles.map((role) => ({
-          role_name: role.role_name,
-          salary_per_head: role.salary_per_head,
-          hires: role.hires,
-          fires: 0,
-        })),
-      ];
-
-      await submitHRDecisionForPeriod({
-        company_id: companyId,
-        period: companyData.current_period,
-        training_budget: trainingBudget,
-        employee_satisfaction: employeeSatisfaction,
-        roles: allRoles,
-      });
-
-      // Clear saved form data after successful submit
-      localStorage.removeItem(`hrFormData-${companyId}`);
-
-      // Reset form state after submit
-      setExistingRoles([]);
-      setNewRoles([]);
-      setTrainingBudget(0);
-      setEmployeeSatisfaction(50);
-
-      toast.success("HR decision submitted successfully!");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit decision");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Calculations for display
-
-  const salaryFromExisting = existingRoles.reduce((acc, r) => {
-    const newHeadCount = r.current_head_count + r.hires - r.fires;
-    return newHeadCount > 0 ? acc + newHeadCount * r.salary_per_head : acc;
-  }, 0);
-
-  const salaryFromNew = newRoles.reduce(
-    (acc, r) => acc + r.hires * r.salary_per_head,
-    0
-  );
-  const salaryBudget = salaryFromExisting + salaryFromNew;
-
-  const recruitmentCost =
-    existingRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0) +
-    newRoles.reduce((acc, r) => acc + r.hires * r.salary_per_head, 0);
-
-  const firedSalary = existingRoles.reduce(
-    (acc, r) => acc + r.fires * r.salary_per_head,
+  const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => sum + (role.head_count || 0), 0);
+  const totalHires = data.existingRoles.reduce(
+    (sum, role) => sum + (role.hires || 0),
     0
   );
 
-  const totalBudget = trainingBudget + recruitmentCost;
+  const projectedSalaryBudget = data.existingRoles.reduce((sum, role) => {
+    const adjustedHeadCount = (role.head_count || 0) + (role.hires || 0) - (role.fires || 0);
+    return sum + (role.salary_per_head * Math.max(0, adjustedHeadCount));
+  }, 0) + (data.newRoles?.reduce((sum, role) => sum + (role.salary_per_head * (role.hires || 0)), 0) || 0);
 
-  const totalHires =
-    existingRoles.reduce((acc, r) => acc + r.hires, 0) +
-    newRoles.reduce((acc, r) => acc + r.hires, 0);
-  const totalFires = existingRoles.reduce((acc, r) => acc + r.fires, 0);
-  const currentEmployees = existingRoles.reduce(
-    (acc, r) => acc + r.current_head_count,
+  const cashAfter = (cashBalance.originalCashBalance ?? 0) - ((projectedSalaryBudget + data?.training_budget) || 0);
+  const totalFires = data.existingRoles.reduce(
+    (sum, role) => sum + (role.fires || 0),
     0
   );
-  const projectedEmployees = currentEmployees + totalHires - totalFires;
-
-  // Main Render
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-4" />
-          <p className="text-slate-300">Loading HR dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">Error: {error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!companyData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <p className="text-slate-300">No company data found</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
       <ToastContainer position="top-right" />
 
-      {showComparison && (
-        <div className="max-w-7xl mx-auto mt-2">
-          <HRComparisonModal
-            isOpen={showComparison}
-            onClose={() => setShowComparison(false)}
-            companyData={companyData}
-            existingRoles={existingRoles}
-            newRoles={newRoles}
-            trainingBudget={trainingBudget}
-            employeeSatisfaction={employeeSatisfaction}
-            previousDecision={currentDecision}
-          />
-        </div>
-      )}
-
-      {/* Key Metrics */}
-      {!showComparison && (
-        <div className="max-w-7xl mx-auto mt-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-              <div className="flex items-center justify-between mb-2">
-                <Building2 className="h-8 w-8 text-blue-400" />
-                <span className="text-2xl font-bold text-white text-right">
-                  {companyData.name}
-                </span>
-              </div>
-              <p className="text-slate-300">Period {companyData.current_period}</p>
-              <p className="text-sm text-slate-400">
-                Cash: {formatCurrency(companyData.cash_balance)}
-              </p>
+      <div className="max-w-7xl mx-auto">
+        {/* Metrics UI */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-6">
+          {/* Company Info */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <Building2 className="h-8 w-8 text-blue-400" />
+              <span className="text-xl font-bold text-white text-right">{companyData.name}</span>
             </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-              <div className="flex items-center justify-between mb-2">
-                <Users className="h-8 w-8 text-blue-400" />
-                <span className="text-2xl font-bold text-white">
-                  {projectedEmployees}
-                </span>
-              </div>
-              <p className="text-slate-300">Projected Employees</p>
-              <p className="text-sm text-slate-400">Current: {currentEmployees}</p>
-            </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-              <div className="flex items-center justify-between mb-2">
-                <TrendingUp className="h-8 w-8 text-green-400" />
-                <span className="text-2xl font-bold text-white">{totalHires}</span>
-              </div>
-              <p className="text-slate-300">New Hires</p>
-              <p className="text-sm text-slate-400">Fires: {totalFires}</p>
-            </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-              <div className="flex items-center justify-between mb-2">
-                <DollarSign className="h-8 w-8 text-yellow-400" />
-                <span className="text-2xl font-bold text-white">
-                  {formatCurrency(totalBudget)}
-                </span>
-              </div>
-              <p className="text-slate-300">HR Budget</p>
-              <p className="text-sm text-slate-400">
-                {" "}
-                Total: {formatCurrency(salaryBudget + totalBudget)}
-              </p>
-            </div>
-
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-2 border border-slate-700">
-              <div className="flex items-center justify-between mb-2">
-                <Award className="h-8 w-8 text-purple-400" />
-                <span className="text-2xl font-bold text-white">
-                  {employeeSatisfaction}%
-                </span>
-              </div>
-              <p className="text-slate-300">Employee Satisfaction</p>
-              <p className="text-sm text-slate-400">
-                Salary :{formatCurrency(salaryBudget)}
-              </p>
-            </div>
+            <p className="text-slate-300">Period {period}</p>
+            <p className="text-sm text-slate-400"> Cash: {formatCurrency(cashBalance.originalCashBalance)} </p>
           </div>
 
-          {/* HR Decision Form */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl py-4 px-10 border border-slate-700">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              HR Decision - Period {companyData.current_period}
-            </h2>
+          {/* Projected Employees */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <Users className="h-8 w-8 text-blue-400" />
+              <span className="text-2xl font-bold text-white">{totalExistingHeadCount + totalHires - totalFires}</span>
+            </div>
+            <p className="text-slate-300">Projected Employees</p>
+            <p className="text-sm text-slate-400">Current: {totalExistingHeadCount}</p>
+          </div>
 
-            {/* Existing Roles */}
-            <div className="mb-3">
-              <h3 className="text-xl font-semibold text-slate-200 mb-4">
-                Existing Roles
-              </h3>
-              <div className="overflow-x-auto border border-slate-600 px-8 pt-2 mx-4 rounded-lg">
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-left text-slate-300 border-b border-slate-600">
-                      <th>Role</th>
-                      <th>Current Count</th>
-                      <th>Salary</th>
-                      <th>Hires</th>
-                      <th>Fires</th>
+          {/* New Hires / Fires */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <TrendingUp className="h-8 w-8 text-green-400" />
+              <span className="text-2xl font-bold text-white">{netHiring}</span>
+            </div>
+            <p className="text-slate-300">New Hires</p>
+            <p className="text-sm text-slate-400">Fires: {totalFires}</p>
+          </div>
+
+          {/* HR Budget */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <IndianRupee className="h-8 w-8 text-yellow-400" />
+              <span className="text-2xl font-bold text-white">{data.training_budget}</span>
+            </div>
+            <p className="text-slate-300">HR Budget</p>
+            <p className="text-sm text-slate-400">
+              Total: {data?.training_budget + data?.salary_budget}
+            </p>
+          </div>
+
+          {/* Employee Satisfaction */}
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
+            <div className="flex items-center justify-between mb-2">
+              <Award className="h-8 w-8 text-purple-400" />
+              <span className="text-2xl font-bold text-white">{data.employee_satisfaction}%</span>
+            </div>
+            <p className="text-slate-300">Employee Satisfaction</p>
+            <p className="text-sm text-slate-400">Salary: {projectedSalaryBudget}</p>
+          </div>
+        </div>
+
+        {/* HR Decision UI */}
+        <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl py-4 px-10 border border-slate-700 shadow-lg">
+          <h2 className="text-3xl font-bold text-white mb-2">
+            HR Decision - Period {period}
+          </h2>
+
+          {/* Existing Roles */}
+          <div className="mb-3">
+            <h3 className="text-xl font-semibold text-slate-200 mb-4">
+              Existing Roles
+            </h3>
+            <div className="overflow-x-auto border border-slate-600 px-8 pt-2 mx-4 rounded-lg">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-slate-300 border-b border-slate-600">
+                    <th>Role</th>
+                    <th>Current Count</th>
+                    <th>Salary</th>
+                    <th>Hires</th>
+                    <th>Fires</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.existingRoles.map((role, index) => (
+                    <tr key={index} className="border-b border-slate-700">
+                      <td className="py-1 text-white">{role.role_name}</td>
+                      <td className="py-1 text-slate-300">
+                        {role.head_count}
+                      </td>
+                      <td className="py-1">
+                        <input
+                          type="number"
+                          min={0}
+                          value={role.salary_per_head}
+                          onChange={(e) =>
+                            updateExistingRole(
+                              index,
+                              {
+                                salary_per_head: parseFloat(e.target.value) || 0
+                              }
+                            )
+                          }
+                          className="w-24 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                        />
+                      </td>
+                      <td className="py-1">
+                        <input
+                          type="number"
+                          placeholder="0"
+                          min={0}
+                          value={role.hires ?? 0}
+                          onChange={(e) =>
+                            updateExistingRole(
+                              index,
+                              {
+                                hires:
+                                  parseInt(e.target.value) || 0
+                              }
+                            )
+                          }
+                          className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                        />
+                      </td>
+                      <td className="py-1">
+                        <input
+                          type="number"
+                          placeholder="0"
+                          min={0}
+                          value={role.fires ?? 0}
+                          onChange={(e) =>
+                            updateExistingRole(
+                              index,
+                              {
+                                fires:
+                                  parseInt(e.target.value) || 0
+                              }
+                            )
+                          }
+                          className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
+                        />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {existingRoles.map((role, index) => (
-                      <tr key={index} className="border-b border-slate-700">
-                        <td className="py-1 text-white">{role.role_name}</td>
-                        <td className="py-1 text-slate-300">
-                          {role.current_head_count}
-                        </td>
-                        <td className="py-1">
-                          <input
-                            type="number"
-                            min={0}
-                            value={role.salary_per_head}
-                            onChange={(e) =>
-                              handleExistingRoleChange(
-                                index,
-                                "salary_per_head",
-                                parseFloat(e.target.value) || 0
-                              )
-                            }
-                            className="w-24 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                          />
-                        </td>
-                        <td className="py-1">
-                          <input
-                            type="number"
-                            placeholder="0"
-                            min={0}
-                            value={role.hires}
-                            onChange={(e) =>
-                              handleExistingRoleChange(
-                                index,
-                                "hires",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                          />
-                        </td>
-                        <td className="py-1">
-                          <input
-                            type="number"
-                            placeholder="0"
-                            min={0}
-                            value={role.fires}
-                            onChange={(e) =>
-                              handleExistingRoleChange(
-                                index,
-                                "fires",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
 
-            {/* New Roles */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-slate-200">
-                  Add New Roles
-                </h3>
-                <button
-                  type="button"
-                  onClick={addNewRole}
-                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  <PlusCircle size={20} />
-                  Add Role
-                </button>
-              </div>
-
-              {newRoles.map((role, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-4 gap-4 items-end ml-4 pt-2"
-                >
-                  {/* Role Name */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-slate-300 mb-1">
-                      Role Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Role Name"
-                      value={role.role_name}
-                      onChange={(e) =>
-                        handleNewRoleChange(index, "role_name", e.target.value)
-                      }
-                      className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                    />
-                  </div>
-
-                  {/* Salary */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-slate-300 mb-1">
-                      Salary per Head
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="Salary"
-                      min={0}
-                      value={role.salary_per_head}
-                      onChange={(e) =>
-                        handleNewRoleChange(
-                          index,
-                          "salary_per_head",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                    />
-                  </div>
-
-                  {/* Hires */}
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-slate-300 mb-1">
-                      Hires Count
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="Hires"
-                      min={0}
-                      value={role.hires}
-                      onChange={(e) =>
-                        handleNewRoleChange(
-                          index,
-                          "hires",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                    />
-                  </div>
-
-                  {/* Remove Button */}
-                  <div className="flex items-end">
-                    <button
-                      type="button"
-                      onClick={() => removeNewRole(index)}
-                      className="text-red-400 hover:text-red-300 p-2"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Budget and Satisfaction */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 mx-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Training Budget
-                </label>
-                <input
-                  type="number"
-                  value={trainingBudget}
-                  onChange={(e) => {
-                    const val = parseFloat(e.target.value) || 0;
-                    setTrainingBudget(val);
-                    persistFormData({ trainingBudget: val });
-                  }}
-                  min={0}
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Employee Satisfaction (%)
-                </label>
-                <input
-                  type="number"
-                  value={employeeSatisfaction}
-                  onChange={(e) => {
-                    const val = parseFloat(e.target.value) || 0;
-                    setEmployeeSatisfaction(val);
-                    persistFormData({ employeeSatisfaction: val });
-                  }}
-                  min={0}
-                  max={100}
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-            </div>
-
-            {/* Summary */}
-            <h4 className="text-lg font-semibold text-white mb-4 pt-2">
-              Decision Summary
-            </h4>
-            <div className="bg-slate-700/50 rounded-xl p-4 mb-3 mx-4">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div>
-                  <p className="text-slate-300 text-sm">Salary Budget</p>
-                  <p className="text-xl font-bold text-white">
-                    {formatCurrency(salaryBudget)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-300 text-sm">HR Budget</p>
-                  <p className="text-xl font-bold text-white">
-                    {formatCurrency(totalBudget)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-300 text-sm">Total Budget</p>
-                  <p className="text-xl font-bold text-white">
-                    {formatCurrency(totalBudget + salaryBudget)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-300 text-sm">Net Hiring</p>
-                  <p className="text-xl font-bold text-white">
-                    {totalHires - totalFires}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-300 text-sm">Cash After</p>
-                  <p
-                    className={`text-xl font-bold ${
-                      companyData.cash_balance - totalBudget < 0
-                        ? "text-red-400"
-                        : "text-green-400"
-                    }`}
-                  >
-                    {formatCurrency(
-                      companyData.cash_balance +
-                        (currentDecision?.training_budget ?? 0) +
-                        firedSalary -
-                        totalBudget
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end gap-4">
+          {/* Add New Roles Section */}
+          <div className="mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <h3 className="text-2xl font-semibold text-slate-200">
+                Add New Roles
+              </h3>
               <button
-                onClick={() => setShowComparison(true)}
-                disabled={!currentDecision}
-                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all"
+                type="button"
+                onClick={() =>
+                  addNewRole({
+                    role_name: "",
+                    salary_per_head: 0,
+                    hires: 0,
+                  })
+                }
+                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-semibold"
               >
-                Preview Changes
-              </button>
-
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || companyData.cash_balance < totalBudget}
-                className={`px-6 py-2 rounded-lg font-semibold transition-all ${
-                  submitting || companyData.cash_balance < totalBudget
-                    ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
-                }`}
-              >
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Submitting...
-                  </span>
-                ) : (
-                  "Submit HR Decision"
-                )}
+                <PlusCircle size={22} />
+                Add Role
               </button>
             </div>
 
-            {companyData.cash_balance < totalBudget && (
-              <p className="text-red-400 text-sm mt-2">
-                Insufficient cash balance. Required:{" "}
-                {formatCurrency(totalBudget)}, Available:{" "}
-                {formatCurrency(companyData.cash_balance)}
-              </p>
+            {data?.newRoles?.length === 0 && (
+              <p className="text-slate-400 italic">No new roles added yet.</p>
             )}
+
+            {data?.newRoles?.map((role, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-4 gap-4 items-end ml-6 mb-4"
+              >
+                {/* Role Name */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-slate-300 mb-1">
+                    Role Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Role Name"
+                    value={role.role_name}
+                    onChange={(e) =>
+                      updateNewRole(index, { role_name: e.target.value })
+                    }
+                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
+                  />
+                </div>
+
+                {/* Salary Per Head */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-slate-300 mb-1">
+                    Salary per Head
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Salary"
+                    min={0}
+                    value={role.salary_per_head}
+                    onChange={(e) =>
+                      updateNewRole(index, {
+                        salary_per_head: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
+                  />
+                </div>
+
+                {/* Hires Count */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-slate-300 mb-1">
+                    Hires Count
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="Hires"
+                    min={0}
+                    value={role.hires}
+                    onChange={(e) =>
+                      updateNewRole(index, {
+                        hires: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
+                  />
+                </div>
+
+                {/* Remove Button */}
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={() => removeNewRole(index)}
+                    className="text-red-400 hover:text-red-300 p-2 transition-colors rounded"
+                    aria-label={`Remove role ${role.role_name}`}
+                    title="Remove Role"
+                  >
+                    <Trash2 size={22} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Budget and Satisfaction Inputs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 mx-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Training Budget
+              </label>
+              <input
+                type="number"
+                value={data?.training_budget}
+                onChange={(e) =>
+                  updateData({
+                    training_budget: Number(e.target.value),
+                  })
+                }
+                min={0}
+                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Employee Satisfaction (%)
+              </label>
+              <input
+                type="number"
+                value={data?.employee_satisfaction}
+                onChange={(e) =>
+                  updateData({
+                    employee_satisfaction: Math.min(100, Math.max(0, Number(e.target.value))),
+                  })
+                }
+                min={0}
+                max={100}
+                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Summary Section */}
+          <h4 className="text-xl font-semibold text-white mb-5 ml-6">
+            Decision Summary
+          </h4>
+          <div className="bg-slate-700/70 rounded-xl px-6 py-4 mx-6 grid grid-cols-2 md:grid-cols-3 gap-6 text-center text-white font-semibold">
+            <div>
+              <p className="text-slate-300 text-sm mb-1">Salary Budget</p>
+              <p className="text-2xl">₹{projectedSalaryBudget?.toLocaleString()}</p>
+            </div>
+
+            <div>
+              <p className="text-slate-300 text-sm mb-1">Total Budget</p>
+              <p className="text-2xl">₹{(projectedSalaryBudget + data.training_budget)?.toLocaleString()}</p>
+            </div>
+
+            <div>
+              <p className="text-slate-300 text-sm mb-1">Cash After</p>
+              <p
+                className={`text-2xl ${cashAfter < 0 ? "text-red-500" : "text-green-400"
+                  }`}
+              >
+                ₹{cashAfter.toLocaleString()}
+              </p>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

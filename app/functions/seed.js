@@ -607,7 +607,7 @@ function main() {
                                 data: {
                                     company_id: companies[i].id,
                                     period: period,
-                                    units_produced: unitsProduced,
+                                    units_to_produce: unitsProduced,
                                     cost_per_unit: costPerUnit,
                                     production_capacity: 2500 + period * 200,
                                     storage_capacity: 3000,

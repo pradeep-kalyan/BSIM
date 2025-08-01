@@ -6,16 +6,20 @@ import Cookies from "js-cookie";
 const SimulationContext = createContext<{
   simId: string | null;
   comId: string | null;
+  period: number | null;
   setSimId: (id: string) => void;
   setComId: (id: string) => void;
+  setPeriod: (id: number) => void;
   clearSimId: () => void;
   clearComId: () => void;
   clearAll: () => void;
 }>({
   simId: null,
   comId: null,
+  period: null,
   setSimId: () => {},
   setComId: () => {},
+  setPeriod: () => {},
   clearSimId: () => {},
   clearComId: () => {},
   clearAll: () => {},
@@ -28,16 +32,19 @@ export const SimulationProvider = ({
 }) => {
   const [simId, setSimIdState] = useState<string | null>(null);
   const [comId, setComIdState] = useState<string | null>(null);
+  const [period, setPeriodState] = useState<number | null>(null);
 
   // Load from cookies on first load
   useEffect(() => {
     const sim = Cookies.get("simId");
-    const com = Cookies.get("comId")
+    const com = Cookies.get("comId");
+    const period = Cookies.get("period");
 
     console.log("Loaded simId:", sim, "comId:", com);
 
     if (sim) setSimIdState(sim);
     if (com) setComIdState(com);
+    if (period) setPeriodState(parseInt(period));
   }, []);
 
   const setSimId = (id: string) => {
@@ -62,6 +69,17 @@ export const SimulationProvider = ({
     });
   };
 
+  const setPeriod = (id: number) => {
+    setPeriodState(id);
+    // Set cookie to expire in 6 hours (0.25 days)
+    Cookies.set("period", id.toString(), {
+      expires: 0.25,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+  };
+
   const clearSimId = () => {
     setSimIdState(null);
     Cookies.remove("simId");
@@ -72,9 +90,15 @@ export const SimulationProvider = ({
     Cookies.remove("comId");
   };
 
+  const clearPeriod = () => {
+    setPeriodState(null);
+    Cookies.remove("period");
+  };
+
   const clearAll = () => {
     clearSimId();
     clearComId();
+    clearPeriod();
   };
 
   return (
@@ -87,6 +111,8 @@ export const SimulationProvider = ({
         clearSimId,
         clearComId,
         clearAll,
+        period,
+        setPeriod,
       }}
     >
       {children}

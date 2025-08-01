@@ -11,6 +11,7 @@ interface PageProps {
 
 const Page = async ({ params }: PageProps) => {
   await getCurrentUser();
+  const data = await params
 
   return (
     <>
@@ -50,7 +51,7 @@ const Page = async ({ params }: PageProps) => {
             flexDirection: "column",
           }}
         >
-          <Form companyId={params.companyID} />
+          <Form companyId={data?.companyID} />
         </Box>
       </Box>
     </>

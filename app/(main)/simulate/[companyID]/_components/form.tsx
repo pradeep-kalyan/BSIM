@@ -20,12 +20,13 @@ import {
   Package,
 } from "lucide-react";
 import FinanceForm from "./FinanceForm";
-import HRDashboard from "./HR";
+// import HRDashboard from "./HR";
 import MarketingForm from "./MarketingForm";
 import RDForm from "./RDForm";
 import ProductionForm from "./ProductionForm";
 import ProductsForm from "./ProductsForm";
 import LogoutBtn from "@/app/(auth)/_components/Logout";
+import HRDashboard from "./HR";
 
 const steps = [
   {
@@ -77,17 +78,17 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
-        return <HRDashboard companyId={companyId} />;
+        return <HRDashboard />;
       case 1:
         return <MarketingForm companyId={companyId} />;
       case 2:
         return <RDForm companyId={companyId} />;
       case 3:
-        return <ProductionForm companyId={companyId} />;
+        return <ProductionForm />;
       case 4:
         return <ProductsForm companyId={companyId} />;
       case 5:
-        return <FinanceForm companyId={companyId} />;
+        return <FinanceForm />;
       default:
         return <div>Unknown Step</div>;
     }

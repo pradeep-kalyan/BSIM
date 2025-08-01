@@ -178,15 +178,15 @@ model production {
   id                  String   @id @default(cuid())
   company_id          String
   period              Int
-  units_produced      Int
+  units_to_produce   Int
   cost_per_unit       Int
+  production_capacity Int      @default(0)
+  storage_capacity    Int?     @default(0)
   inventory_value     Int
   defect_rate         Int
   finalised           Boolean  @default(false)
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
-  production_capacity Int      @default(0)
-  storage_capacity    Int      @default(0)
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 

@@ -34,7 +34,7 @@ export async function getHistoricalProductionData(companyId: string) {
 
     return historicalData.map((decision) => ({
       period: decision.period,
-      units_produced: decision.units_produced,
+      units_to_produced: decision.units_to_produced,
       cost_per_unit: decision.cost_per_unit,
       inventory_value: decision.inventory_value,
       defect_rate: decision.defect_rate,
@@ -59,7 +59,7 @@ export async function getCurrentProductionDecision(
         id: true,
         company_id: true,
         period: true,
-        units_produced: true,
+        units_to_produced: true,
         cost_per_unit: true,
         inventory_value: true,
         defect_rate: true,
@@ -79,14 +79,14 @@ export async function getCurrentProductionDecision(
 export async function submitProductionDecisionForPeriod({
   company_id,
   period,
-  units_produced,
+  units_to_produced,
   cost_per_unit,
   inventory_value,
   defect_rate,
 }: {
   company_id: string;
   period: number;
-  units_produced: number;
+  units_to_produced: number;
   cost_per_unit: number;
   inventory_value: number;
   defect_rate: number;
@@ -102,7 +102,7 @@ export async function submitProductionDecisionForPeriod({
         throw new Error("Company not found");
       }
 
-      const total_cost = units_produced * cost_per_unit;
+      const total_cost = units_to_produced * cost_per_unit;
 
       if (company.cash_balance < total_cost) {
         throw new Error("Insufficient cash balance");
@@ -117,7 +117,7 @@ export async function submitProductionDecisionForPeriod({
 
       if (existingDecision) {
         const previous_cost =
-          existingDecision.units_produced * existingDecision.cost_per_unit;
+          existingDecision.units_to_produced * existingDecision.cost_per_unit;
         const delta = total_cost - previous_cost;
 
         if (delta > 0 && company.cash_balance < delta) {
@@ -136,7 +136,7 @@ export async function submitProductionDecisionForPeriod({
         await tx.production.update({
           where: { id: existingDecision.id },
           data: {
-            units_produced,
+            units_to_produced,
             cost_per_unit,
             inventory_value,
             defect_rate,
@@ -156,7 +156,7 @@ export async function submitProductionDecisionForPeriod({
           data: {
             company_id,
             period,
-            units_produced,
+            units_to_produced,
             cost_per_unit,
             inventory_value,
             defect_rate,

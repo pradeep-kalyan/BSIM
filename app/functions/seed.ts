@@ -1,10 +1,8 @@
 import prisma from "./prisma";
- 
- 
- 
+
 async function main() {
   console.log("🌱 Starting database seeding...");
- 
+
   // Clean existing data (optional - uncomment if needed)
   await prisma.product_performance.deleteMany();
   await prisma.marketing.deleteMany();
@@ -19,12 +17,12 @@ async function main() {
   await prisma.company.deleteMany();
   await prisma.simulation.deleteMany();
   await prisma.user.deleteMany();
- 
+
   // Create Users
   console.log("👥 Creating users...");
   const hashedPassword =
     "$2y$10$N/ohrDUZObMGWG30oskpee40vFV8CtG7nCwkDO6vrx9IL6f8OuQZu";
- 
+
   const admin = await prisma.user.create({
     data: {
       name: "Admin User",
@@ -33,7 +31,7 @@ async function main() {
       role: "admin",
     },
   });
- 
+
   const instructor = await prisma.user.create({
     data: {
       name: "Dr. Sarah Johnson",
@@ -42,7 +40,7 @@ async function main() {
       role: "instructor",
     },
   });
- 
+
   const students = await Promise.all([
     prisma.user.create({
       data: {
@@ -77,7 +75,7 @@ async function main() {
       },
     }),
   ]);
- 
+
   // Create Simulations
   console.log("🎮 Creating simulations...");
   const techSimulation = await prisma.simulation.create({
@@ -97,7 +95,7 @@ async function main() {
       created_by: instructor.id,
     },
   });
- 
+
   const retailSimulation = await prisma.simulation.create({
     data: {
       name: "Retail Business Challenge",
@@ -114,7 +112,7 @@ async function main() {
       created_by: admin.id,
     },
   });
- 
+
   // Create Simulation Access
   console.log("🔑 Setting up simulation access...");
   const simulationAccess = await Promise.all([
@@ -144,7 +142,7 @@ async function main() {
       },
     }),
   ]);
- 
+
   // Create Companies
   console.log("🏢 Creating companies...");
   const companies = await Promise.all([
@@ -277,7 +275,7 @@ async function main() {
       },
     }),
   ]);
- 
+
   // Create Products
   console.log("📱 Creating products...");
   const products = await Promise.all([
@@ -381,11 +379,11 @@ async function main() {
       },
     }),
   ]);
- 
+
   // Create Finance Records
   console.log("💰 Creating finance records...");
   const financeRecords = [];
- 
+
   // Create finance records for periods 1-3 for tech companies
   for (let period = 1; period <= 3; period++) {
     for (let i = 0; i < 4; i++) {
@@ -394,7 +392,7 @@ async function main() {
       const revenue = baseRevenue * (1 + (period - 1) * 0.15); // Growth over periods
       const costs = revenue * (0.6 + Math.random() * 0.2);
       const profit = revenue - costs;
- 
+
       financeRecords.push(
         prisma.finance.create({
           data: {
@@ -420,13 +418,13 @@ async function main() {
       );
     }
   }
- 
+
   // Create finance record for retail companies (period 1)
   for (let i = 4; i < 6; i++) {
     const revenue = 200000 + Math.random() * 150000;
     const costs = revenue * (0.7 + Math.random() * 0.15);
     const profit = revenue - costs;
- 
+
     financeRecords.push(
       prisma.finance.create({
         data: {
@@ -446,13 +444,13 @@ async function main() {
       })
     );
   }
- 
+
   await Promise.all(financeRecords);
- 
+
   // Create HR Decisions
   console.log("👨‍💼 Creating HR decisions...");
   const hrDecisions = [];
- 
+
   for (let period = 1; period <= 3; period++) {
     for (let i = 0; i < 4; i++) {
       // Tech companies
@@ -503,13 +501,13 @@ async function main() {
       );
     }
   }
- 
+
   await Promise.all(hrDecisions);
- 
+
   // Create R&D Decisions
   console.log("🔬 Creating R&D decisions...");
   const rdDecisions = [];
- 
+
   for (let period = 1; period <= 3; period++) {
     for (let i = 0; i < 4; i++) {
       rdDecisions.push(
@@ -529,24 +527,24 @@ async function main() {
       );
     }
   }
- 
+
   await Promise.all(rdDecisions);
- 
+
   // Create Production Decisions
   console.log("🏭 Creating production decisions...");
   const productionDecisions = [];
- 
+
   for (let period = 1; period <= 3; period++) {
     for (let i = 0; i < 4; i++) {
       const unitsProduced = 1500 + Math.floor(Math.random() * 1000);
       const costPerUnit = 300 + Math.floor(Math.random() * 200);
- 
+
       productionDecisions.push(
         prisma.production.create({
           data: {
             company_id: companies[i].id,
             period: period,
-            units_produced: unitsProduced,
+            units_to_produce: unitsProduced,
             cost_per_unit: costPerUnit,
             production_capacity: 2500 + period * 200,
             storage_capacity: 3000,
@@ -558,13 +556,13 @@ async function main() {
       );
     }
   }
- 
+
   await Promise.all(productionDecisions);
- 
+
   // Create Marketing Decisions
   console.log("📢 Creating marketing decisions...");
   const marketingDecisions = [];
- 
+
   for (let period = 1; period <= 3; period++) {
     for (let i = 0; i < 4; i++) {
       const totalBudget = 100000 + period * 20000;
@@ -572,7 +570,7 @@ async function main() {
         totalBudget * (0.6 + Math.random() * 0.3)
       );
       const offlineBudget = totalBudget - onlineBudget;
- 
+
       marketingDecisions.push(
         prisma.marketing.create({
           data: {
@@ -589,13 +587,13 @@ async function main() {
       );
     }
   }
- 
+
   await Promise.all(marketingDecisions);
- 
+
   // Create Product Performance Records
   console.log("📊 Creating product performance records...");
   const productPerformances = [];
- 
+
   for (let period = 1; period <= 3; period++) {
     for (const product of products) {
       if (product.launch_period && product.launch_period <= period) {
@@ -603,7 +601,7 @@ async function main() {
         const revenue = salesVolume * product.selling_price;
         const costs = salesVolume * product.production_cost;
         const profit = revenue - costs;
- 
+
         productPerformances.push(
           prisma.product_performance.create({
             data: {
@@ -626,9 +624,9 @@ async function main() {
       }
     }
   }
- 
+
   await Promise.all(productPerformances);
- 
+
   console.log("✅ Database seeding completed successfully!");
   console.log(`
   📈 Created:
@@ -644,7 +642,7 @@ async function main() {
   - ${13} product performance records
   `);
 }
- 
+
 main()
   .catch((e) => {
     console.error("❌ Error during seeding:", e);
@@ -653,4 +651,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
- 
