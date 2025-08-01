@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useTransition, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   DollarSign,
   TrendingUp,
@@ -8,18 +8,14 @@ import {
   Target,
   BarChart3,
   Briefcase,
-  ChevronRight,
   Plus,
   Factory,
   Lightbulb,
   Calendar,
   Award,
-  Building2,
   Play,
 } from "lucide-react";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -33,23 +29,42 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { CompanyData } from "../homepage/[companyID]/types";
+import { DashboardData } from "../homepage/[companyID]/types";
 import DashboardCard from "@/ui/Card";
 import QuickStat from "@/ui/QuickStat";
 import ChartCard from "@/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
-interface HomePageProps {
-  company?: CompanyData;
+
+// Tooltip types
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  label?: string;
+}
+
+interface PieTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: {
+      percentage: number;
+    };
+  }>;
 }
 
 // Move CustomTooltip outside component to prevent recreation on every render
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (
     !active ||
     !payload ||
     !payload.length ||
-    payload.every((entry: any) => entry.value === 0 || entry.value == null)
+    payload.every((entry) => entry.value === 0 || entry.value == null)
   ) {
     return null;
   }
@@ -57,7 +72,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return (
     <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
       {label && <p className="font-medium mb-1 text-gray-200">{label}</p>}
-      {payload.map((entry: any, index: number) => (
+      {payload.map((entry, index: number) => (
         <p key={index} className="text-gray-100">
           <span className="font-medium" style={{ color: entry.color }}>
             {entry.name}:
@@ -72,12 +87,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 // Specialized tooltip for financial data
-const FinancialTooltip = ({ active, payload, label }: any) => {
+const FinancialTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
         {label && <p className="font-medium mb-1 text-gray-200">{label}</p>}
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <p key={index} className="text-gray-100">
             <span className="font-medium" style={{ color: entry.color }}>
               {entry.name}:
@@ -92,7 +107,7 @@ const FinancialTooltip = ({ active, payload, label }: any) => {
 };
 
 // Specialized tooltip for pie charts
-const PieTooltip = ({ active, payload }: any) => {
+const PieTooltip = ({ active, payload }: PieTooltipProps) => {
   if (active && payload && payload.length && payload[0].value != null) {
     return (
       <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
@@ -109,99 +124,67 @@ const PieTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-const HomePage: React.FC<HomePageProps> = ({ company }) => {
+const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const { setComId, setPeriod } = useSimulation();
-  const comID = company?.id;
-  const period = company?.current_period;
   useEffect(() => {
     setComId(comID || "");
-    setPeriod(period || 1);
-  }, [comID, period, setComId, setPeriod]);
-  const [currentPeriod, setCurrentPeriod] = useState(
-    company?.current_period || 1
-  );
-  const [, startTransition] = useTransition();
+    setPeriod(data?.company?.current_period || 1);
+  }, [comID, data?.company?.current_period, setComId, setPeriod]);
+  const [currentPeriod] = useState(data?.company?.current_period || 1);
   const [isSimulating] = useState(false);
   const [, setHoveringBar] = useState(false);
 
-  // Mock data based on your schema
-  const mockData = {
-    revenue: [
-      { period: "P1", revenue: 850000, profit: 120000, costs: 730000 },
-      { period: "P2", revenue: 920000, profit: 140000, costs: 780000 },
-      { period: "P3", revenue: 1100000, profit: 180000, costs: 920000 },
-      { period: "P4", revenue: 1350000, profit: 240000, costs: 1110000 },
-      { period: "P5", revenue: 1650000, profit: 320000, costs: 1330000 },
-    ],
-    departmentBudgets: [
-      { name: "R&D", value: 850000, color: "#3B82F6", percentage: 28 },
-      { name: "Production", value: 1200000, color: "#10B981", percentage: 40 },
-      { name: "Marketing", value: 650000, color: "#F59E0B", percentage: 22 },
-      { name: "HR", value: 300000, color: "#EF4444", percentage: 10 },
-    ],
-    productPerformance: [
-      {
-        name: "Smart Widget Pro",
-        sales: 1220,
-        revenue: 374000,
-        marketShare: 32,
-        satisfaction: 4.2,
-      },
-      {
-        name: "Digital Assistant",
-        sales: 850,
-        revenue: 169000,
-        marketShare: 18,
-        satisfaction: 3.8,
-      },
-      {
-        name: "IoT Sensor Hub",
-        sales: 650,
-        revenue: 195000,
-        marketShare: 15,
-        satisfaction: 4.5,
-      },
-    ],
-    hrMetrics: [
-      {
-        department: "Engineering",
-        employees: 45,
-        satisfaction: 4.2,
-        newHires: 5,
-      },
-      { department: "Sales", employees: 28, satisfaction: 3.8, newHires: 3 },
-      {
-        department: "Marketing",
-        employees: 22,
-        satisfaction: 4.5,
-        newHires: 2,
-      },
-      {
-        department: "Operations",
-        employees: 18,
-        satisfaction: 4.0,
-        newHires: 1,
-      },
-    ],
-    productionData: [
-      { month: "Jan", produced: 1200, defects: 24, efficiency: 98 },
-      { month: "Feb", produced: 1350, defects: 18, efficiency: 99 },
-      { month: "Mar", produced: 1180, defects: 32, efficiency: 97 },
-      { month: "Apr", produced: 1420, defects: 15, efficiency: 99.5 },
-      { month: "May", produced: 1650, defects: 12, efficiency: 99.8 },
-    ],
+  const hr_budget = data?.hr_decision?.total_budget || 0;
+  const rd_budget = data?.rd_decision?.budget || 0;
+  const production_budget = data?.production_decision?.budget || 0;
+  const marketing_budget = data?.marketing_decision?.budget || 0;
+
+  const departmentBudgets = [
+    { name: "R&D", value: rd_budget, color: "#3B82F6", percentage: 28 },
+    {
+      name: "Production",
+      value: production_budget,
+      color: "#10B981",
+      percentage: 40,
+    },
+    {
+      name: "Marketing",
+      value: marketing_budget,
+      color: "#F59E0B",
+      percentage: 22,
+    },
+    { name: "HR", value: hr_budget, color: "#EF4444", percentage: 10 },
+  ];
+
+  // Use real data instead of mock data
+  const chartData = {
+    revenue:
+      data.financialHistory.length > 0
+        ? data.financialHistory
+        : [{ period: `P${currentPeriod}`, revenue: 0, profit: 0, costs: 0 }],
+    departmentBudgets,
+    productPerformance: data.productPerformance,
+    hrMetrics:
+      data.hrMetrics.length > 0
+        ? data.hrMetrics
+        : [
+            {
+              department: "No Data",
+              employees: 0,
+              satisfaction: 0,
+              newHires: 0,
+            },
+          ],
+    productionData:
+      data.productionData.length > 0
+        ? data.productionData
+        : [{ month: "Current", produced: 0, defects: 0, efficiency: 0 }],
   };
 
-  const handleAdvance = useCallback(() => {
-    startTransition(async () => {
-      // Simulate period advancement - replace with your actual function
-      setCurrentPeriod((prev) => prev + 1);
-    });
-  }, []);
   const router = useRouter();
   const handleSimulate = useCallback(() => {
     router.push(`/simulate/${comID}`);
-  }, [router]);
+  }, [router, comID]);
 
   const handleBarMouseOver = useCallback(() => {
     setHoveringBar(true);
@@ -240,9 +223,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="animate-slide-in-left">
-              <h1 className="text-4xl font-bold mb-2">
-                {company?.name || "TechCorp Industries"}
-              </h1>
+              <h1 className="text-4xl font-bold mb-2">{data?.company?.name}</h1>
               <p className="text-blue-100 text-lg">
                 Business Simulation Dashboard
               </p>
@@ -250,7 +231,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                 <div className="flex items-center space-x-2">
                   <Calendar size={16} />
                   <span className="text-sm">
-                    Current Period: {currentPeriod}
+                    Current Period: {data?.company?.current_period}
                   </span>
                 </div>
               </div>
@@ -287,9 +268,9 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
           <DashboardCard
             title="Cash Balance"
-            value={`$${((company?.cash_balance || 2450000) / 1000000).toFixed(
+            value={`₹${((data?.company?.cash_balance ?? 0) / 100000).toFixed(
               1
-            )}M`}
+            )}L`}
             subtitle="Available Funds"
             icon={DollarSign}
             change={currentPeriod > 1 ? 12.5 : undefined}
@@ -298,11 +279,11 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
 
           <DashboardCard
             title="Net Worth"
-            value={`$${(
-              ((company?.total_assets || 8750000) -
-                (company?.total_liabilities || 3200000)) /
-              1000000
-            ).toFixed(1)}M`}
+            value={`₹${(
+              ((data?.company?.total_assets || 8750000) -
+                (data?.company?.total_liabilities || 3200000)) /
+              100000
+            ).toFixed(1)}L`}
             subtitle="Assets - Liabilities"
             icon={TrendingUp}
             change={currentPeriod > 1 ? 8.3 : undefined}
@@ -310,7 +291,12 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
           />
           <DashboardCard
             title="Total Revenue"
-            value="$1.65M"
+            value={`₹${(
+              (data.financialHistory.length > 0
+                ? data.financialHistory[data.financialHistory.length - 1]
+                    ?.revenue || 0
+                : 0) / 100000
+            ).toFixed(1)}L`}
             subtitle="Current Period"
             icon={BarChart3}
             change={currentPeriod > 1 ? 15.2 : undefined}
@@ -318,10 +304,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
           />
           <DashboardCard
             title="Active Products"
-            value={
-              company?.products?.filter((p) => p.status === "active").length ||
-              3
-            }
+            value={data?.activeProductsCount}
             subtitle="In Market"
             icon={Package}
             change={currentPeriod > 1 ? 0 : undefined}
@@ -337,7 +320,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
             className="lg:col-span-2"
           >
             <ResponsiveContainer width="100%" height={450}>
-              <AreaChart data={mockData.revenue}>
+              <AreaChart data={chartData.revenue}>
                 <defs>
                   <linearGradient
                     id="revenueGradient"
@@ -396,7 +379,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
             <ResponsiveContainer width="100%" height={300}>
               <RechartsPieChart>
                 <Pie
-                  data={mockData.departmentBudgets}
+                  data={chartData.departmentBudgets}
                   cx="50%"
                   cy="50%"
                   innerRadius={50}
@@ -404,7 +387,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {mockData.departmentBudgets.map((entry, index) => (
+                  {chartData.departmentBudgets.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -412,7 +395,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
               </RechartsPieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-1 gap-2 mt-4">
-              {mockData.departmentBudgets.map((dept) => (
+              {chartData.departmentBudgets.map((dept) => (
                 <div
                   key={dept.name}
                   className="flex items-center justify-between p-2 rounded bg-white/5"
@@ -439,28 +422,41 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
             <div className="space-y-4">
               <QuickStat
                 label="Total Employees"
-                value="113"
+                value={chartData.hrMetrics
+                  .reduce((sum, dept) => sum + dept.employees, 0)
+                  .toString()}
                 icon={Users}
                 color="blue"
                 trend={currentPeriod > 1 ? 8.3 : undefined}
               />
               <QuickStat
                 label="New Hires"
-                value="11"
+                value={chartData.hrMetrics
+                  .reduce((sum, dept) => sum + dept.newHires, 0)
+                  .toString()}
                 icon={Plus}
                 color="green"
                 trend={currentPeriod > 1 ? 15 : undefined}
               />
               <QuickStat
                 label="Avg Satisfaction"
-                value="4.1"
+                value={
+                  chartData.hrMetrics.length > 0
+                    ? (
+                        chartData.hrMetrics.reduce(
+                          (sum, dept) => sum + dept.satisfaction,
+                          0
+                        ) / chartData.hrMetrics.length
+                      ).toFixed(1)
+                    : "0"
+                }
                 icon={Award}
                 color="yellow"
                 trend={currentPeriod > 1 ? 5 : undefined}
               />
               <QuickStat
-                label="Training Budget"
-                value="$85K"
+                label="HR Budget"
+                value={`₹${(hr_budget / 1000).toFixed(0)}K`}
                 icon={Briefcase}
                 color="purple"
                 trend={currentPeriod > 1 ? -2 : undefined}
@@ -470,7 +466,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
 
           <ChartCard title="Production Metrics" className="lg:col-span-2">
             <ResponsiveContainer width="100%" height={450}>
-              <BarChart data={mockData.productionData}>
+              <BarChart data={chartData.productionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="month" stroke="#9CA3AF" />
                 <YAxis stroke="#9CA3AF" />
@@ -499,28 +495,28 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
             <div className="space-y-4">
               <QuickStat
                 label="Active Projects"
-                value="7"
+                value={data?.rd_decision?.pip?.toString() || "0"}
                 icon={Lightbulb}
                 color="yellow"
                 trend={currentPeriod > 1 ? 12 : undefined}
               />
               <QuickStat
                 label="Patents Filed"
-                value="3"
+                value={data?.rd_decision?.patented?.toString() || "0"}
                 icon={Award}
                 color="purple"
                 trend={currentPeriod > 1 ? 50 : undefined}
               />
               <QuickStat
                 label="R&D Budget"
-                value="$850K"
+                value={`₹${(rd_budget / 1000).toFixed(0)}K`}
                 icon={Factory}
                 color="blue"
                 trend={currentPeriod > 1 ? -5 : undefined}
               />
               <QuickStat
                 label="Time to Market"
-                value="8 mo"
+                value={`${data?.rd_decision?.time_to_market || 0} mo`}
                 icon={Target}
                 color="green"
                 trend={currentPeriod > 1 ? -15 : undefined}
@@ -541,7 +537,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
               </h4>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
-                  data={mockData.productPerformance}
+                  data={chartData.productPerformance}
                   layout="vertical"
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
@@ -582,30 +578,43 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                 Market Share
               </h4>
               <div className="space-y-4">
-                {mockData.productPerformance.map((product, index) => (
-                  <div key={product.name} className="p-4 rounded-lg bg-white/5">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium text-white">
-                        {product.name}
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        {product.marketShare}% market share
-                      </span>
+                {chartData.productPerformance.length > 0 ? (
+                  chartData.productPerformance.map((product) => (
+                    <div
+                      key={product.name}
+                      className="p-4 rounded-lg bg-white/5"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-white">
+                          {product.name}
+                        </span>
+                        <span className="text-sm text-gray-400">
+                          {product.marketShare}% market share
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                          style={{
+                            width: `${Math.min(product.marketShare * 2, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-400">
+                        <span>
+                          Revenue: ₹{(product.revenue / 1000).toFixed(0)}K
+                        </span>
+                        <span>Rating: {product.satisfaction}/5.0</span>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
-                        style={{ width: `${product.marketShare * 2}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between text-sm text-gray-400">
-                      <span>
-                        Revenue: ${(product.revenue / 1000).toFixed(0)}K
-                      </span>
-                      <span>Rating: {product.satisfaction}/5.0</span>
-                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 rounded-lg bg-white/5 text-center">
+                    <span className="text-gray-400">
+                      No product performance data available
+                    </span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>

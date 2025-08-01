@@ -17,6 +17,8 @@ import {
   Beaker,
   Factory,
   Package,
+  Eye,
+  ShoppingCart,
 } from "lucide-react";
 import FinanceForm from "./FinanceForm";
 // import HRDashboard from "./HR";
@@ -25,6 +27,11 @@ import RDForm from "./RDForm";
 import ProductionForm from "./ProductionForm";
 import ProductsForm from "./ProductsForm";
 import HRDashboard from "./HR";
+import PreviewDashboard from "./PreviewDashboard";
+import { useForm } from "@/app/context/FormContext";
+import { comprehensiveFormSubmission } from "@/app/_actions/comprehensiveFormSubmission";
+import { redirect } from "next/navigation";
+import Sales from "./Sales";
 
 const steps = [
   {
@@ -57,6 +64,16 @@ const steps = [
     icon: DollarSign,
     description: "Manage financial decisions and budgets",
   },
+  {
+    label: "sales",
+    icon: ShoppingCart,
+    description: "Manage Sales and customer relationships",
+  },
+  {
+    label: "Preview & Submit",
+    icon: Eye,
+    description: "Review all decisions and start simulation",
+  },
 ];
 
 interface FormProps {
@@ -68,10 +85,298 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
+  const { state } = useForm();
 
-  const handleNext = () => setActiveStep((prev) => prev + 1);
+  const handleNext = () => {
+    if (activeStep === steps.length - 1) {
+      // Handle save and submit logic here (only on the final Preview & Submit step)
+      handleSaveAndSubmit();
+    } else {
+      // Move to next step for all other cases
+      setActiveStep((prev) => prev + 1);
+    }
+  };
+
   const handleBack = () => setActiveStep((prev) => prev - 1);
   const handleStepClick = (step: number) => setActiveStep(step);
+
+  const handleSaveAndSubmit = async () => {
+    try {
+      console.log("Starting form submission...");
+
+      // Show loading state to user
+      const loadingAlert = () => {
+        const alertDiv = document.createElement("div");
+        alertDiv.id = "loading-alert";
+        alertDiv.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: rgba(33, 150, 243, 0.9);
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          z-index: 10000;
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        `;
+        alertDiv.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 20px; height: 20px; border: 2px solid transparent; border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <span>Submitting simulation data...</span>
+          </div>
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        `;
+        document.body.appendChild(alertDiv);
+        return alertDiv;
+      };
+
+      const removeLoadingAlert = (alertDiv: HTMLElement) => {
+        if (alertDiv && alertDiv.parentNode) {
+          alertDiv.parentNode.removeChild(alertDiv);
+        }
+      };
+
+      const alert = loadingAlert();
+
+      // Prepare comprehensive form data
+      const formData = {
+        hr: {
+          existingRoles: state.hr.existingRoles,
+          newRoles: state.hr.newRoles,
+          salary_budget: state.hr.salary_budget,
+          training_budget: state.hr.training_budget,
+          total_budget: state.hr.total_budget,
+          employee_satisfaction: state.hr.employee_satisfaction,
+          recruitment_cost: state.hr.recruitment_cost,
+          firing_cost: state.hr.firing_cost,
+        },
+        marketing: {
+          budget: state.marketing.budget,
+          offline: state.marketing.offline,
+          online: state.marketing.online,
+        },
+        rd: {
+          budget: state.rd.budget,
+          pip: state.rd.pip,
+          time_to_market: state.rd.time_to_market,
+          total_development: state.rd.total_development,
+          patented: state.rd.patented,
+          quality_changes: state.rd.quality_changes,
+        },
+        production: {
+          production_capacity: state.production.production_capacity,
+          inventory_value: state.production.inventory_value,
+          storage_capacity: state.production.storage_capacity,
+          defect_rate: state.production.defect_rate,
+          quality_improvement_investment:
+            state.production.quality_improvement_investment,
+          efficiency_upgrade_cost: state.production.efficiency_upgrade_cost,
+          maintenance_budget: state.production.maintenance_budget,
+          automation_level: state.production.automation_level,
+          safety_investment: state.production.safety_investment,
+          environmental_compliance_cost:
+            state.production.environmental_compliance_cost,
+          units_to_produce: state.production.units_to_produce,
+          cost_per_unit: state.production.cost_per_unit,
+        },
+        finance: {
+          investment_amount: state.finance.investment_amount,
+          loan_amount: state.finance.loan_amount,
+          repay_loan: state.finance.repay_loan,
+          dividend_payout: state.finance.dividend_payout,
+          equity_issue: state.finance.equity_issue,
+        },
+        sales: {
+          sales_volume: state.sales.sales_volume,
+          revenue: state.sales.revenue,
+          costs: state.sales.costs,
+          profit: state.sales.profit,
+          market_share: state.sales.market_share,
+          customer_satisfaction: state.sales.customer_satisfaction,
+        },
+        product: {
+          name: state.product.name,
+          description: state.product.description,
+          category: state.product.category,
+          quality_rating: state.product.quality_rating,
+          innovation_rating: state.product.innovation_rating,
+          sustainability_rating: state.product.sustainability_rating,
+          production_cost: state.product.production_cost,
+          selling_price: state.product.selling_price,
+          inventory_level: state.product.inventory_level,
+          production_capacity: state.product.production_capacity,
+          development_cost: state.product.development_cost,
+          marketing_budget: state.product.marketing_budget,
+          status: state.product.status,
+          launch_period: state.product.launch_period,
+          discontinue_period: state.product.discontinue_period,
+        },
+      };
+
+      console.log("Form data prepared, calling submission API...");
+      const result = await comprehensiveFormSubmission(companyId, formData);
+      console.log("Submission result:", result);
+
+      removeLoadingAlert(alert);
+
+      if (result.success) {
+        // Show success message
+        const successDiv = document.createElement("div");
+        successDiv.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: rgba(76, 175, 80, 0.9);
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          z-index: 10000;
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        `;
+        successDiv.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 20px; height: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #4caf50; font-weight: bold;">✓</div>
+            <span>Simulation submitted successfully! Advanced to period ${result.newPeriod}</span>
+          </div>
+        `;
+        document.body.appendChild(successDiv);
+
+        setTimeout(() => {
+          if (successDiv.parentNode) {
+            successDiv.parentNode.removeChild(successDiv);
+          }
+        }, 3000);
+
+        // Redirect to dashboard
+        setTimeout(() => {
+          redirect("/homepage/" + companyId);
+        }, 1500);
+      } else {
+        console.error("Submission failed:", result);
+
+        // Show detailed error message
+        let errorMessage = "Error submitting simulation";
+
+        if ("errors" in result && result.errors && result.errors.length > 0) {
+          const errorMessages = result.errors
+            .map(
+              (error: { field: string; message: string }) =>
+                `${error.field}: ${error.message}`
+            )
+            .join("\\n");
+          errorMessage = `Validation errors:\\n${errorMessages}`;
+        } else if (result.message) {
+          errorMessage = `Error: ${result.message}`;
+
+          // Provide specific guidance for common errors
+          if (
+            result.message.includes("Transaction API error") ||
+            result.message.includes("Unable to start a transaction")
+          ) {
+            errorMessage +=
+              "\\n\\nThis appears to be a database timeout issue. Please try again in a moment. If the problem persists, some of your data may have been saved successfully.";
+          } else if (result.message.includes("Insufficient funds")) {
+            errorMessage +=
+              "\\n\\nPlease review your budget allocations and ensure they don't exceed your available cash balance.";
+          } else if (result.message.includes("Company not found")) {
+            errorMessage += "\\n\\nPlease refresh the page and try again.";
+          }
+        }
+
+        // Show error alert
+        const errorDiv = document.createElement("div");
+        errorDiv.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: rgba(244, 67, 54, 0.9);
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          z-index: 10000;
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          max-width: 400px;
+          cursor: pointer;
+        `;
+        errorDiv.innerHTML = `
+          <div style="display: flex; align-items: flex-start; gap: 12px;">
+            <div style="width: 20px; height: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f44336; font-weight: bold; flex-shrink: 0;">!</div>
+            <div>
+              <div style="font-weight: bold; margin-bottom: 8px;">Submission Failed</div>
+              <div style="font-size: 14px; line-height: 1.4; white-space: pre-line;">${errorMessage}</div>
+              <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">Click to dismiss</div>
+            </div>
+          </div>
+        `;
+
+        errorDiv.onclick = () => {
+          if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+          }
+        };
+
+        document.body.appendChild(errorDiv);
+
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+          if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+          }
+        }, 10000);
+      }
+    } catch (error) {
+      console.error("Unexpected error in form submission:", error);
+
+      // Remove any existing loading alerts
+      const existingAlert = document.getElementById("loading-alert");
+      if (existingAlert) {
+        existingAlert.remove();
+      }
+
+      // Show generic error message
+      const errorDiv = document.createElement("div");
+      errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(244, 67, 54, 0.9);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        z-index: 10000;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        max-width: 400px;
+        cursor: pointer;
+      `;
+      errorDiv.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 12px;">
+          <div style="width: 20px; height: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f44336; font-weight: bold;">!</div>
+          <div>
+            <div style="font-weight: bold; margin-bottom: 8px;">Unexpected Error</div>
+            <div style="font-size: 14px; line-height: 1.4;">An unexpected error occurred while submitting the simulation. Please try again.</div>
+            <div style="font-size: 12px; margin-top: 8px; opacity: 0.8;">Click to dismiss</div>
+          </div>
+        </div>
+      `;
+
+      errorDiv.onclick = () => {
+        if (errorDiv.parentNode) {
+          errorDiv.parentNode.removeChild(errorDiv);
+        }
+      };
+
+      document.body.appendChild(errorDiv);
+    }
+  };
 
   const renderStepContent = (step: number) => {
     switch (step) {
@@ -87,6 +392,15 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         return <ProductsForm companyId={companyId} />;
       case 5:
         return <FinanceForm />;
+      case 6:
+        return <Sales />;
+      case 7:
+        return (
+          <PreviewDashboard
+            companyId={companyId}
+            onEditSection={(sectionIndex) => setActiveStep(sectionIndex)}
+          />
+        );
       default:
         return <div>Unknown Step</div>;
     }
@@ -500,7 +814,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
 
             <Button
               onClick={handleNext}
-              disabled={activeStep === steps.length - 1}
+              disabled={activeStep > steps.length - 1}
               variant="contained"
               size="medium"
               sx={{
@@ -526,7 +840,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 transition: "all 0.3s ease",
               }}
             >
-              {activeStep === steps.length - 1 ? "Complete" : "Next Step"}
+              {activeStep === steps.length - 1 ? "save & submit" : "Next Step"}
             </Button>
           </Box>
         </Paper>

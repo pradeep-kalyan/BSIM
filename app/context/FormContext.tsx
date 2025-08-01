@@ -86,7 +86,17 @@ export interface RDFormData {
   quality_changes: number;
 }
 
+export interface SalesFormData {
+  sales_volume: number;
+  revenue: number;
+  costs: number;
+  profit: number;
+  market_share: number;
+  customer_satisfaction: number;
+}
+
 export interface ProductFormData {
+  id?: string; // Optional ID for tracking existing products
   name: string;
   description?: string;
   category: string;
@@ -132,6 +142,7 @@ export interface CashBalanceState {
   marketingBudgetImpact: number;
   productionBudgetImpact: number;
   rdBudgetImpact: number;
+  salesBudgetImpact: number;
   productBudgetImpact: number;
 }
 
@@ -142,7 +153,8 @@ export interface FormState {
   production: ProductionFormData;
   hr: HRFormData;
   rd: RDFormData;
-  product: ProductFormData;
+  sales: SalesFormData;
+  product: ProductFormData[];
   company: CompanyFormData;
   simulation: SimulationFormData;
   cashBalance: CashBalanceState;
@@ -167,7 +179,15 @@ export type FormAction =
   | { type: "UPDATE_PRODUCTION"; payload: Partial<ProductionFormData> }
   | { type: "UPDATE_HR"; payload: Partial<HRFormData> }
   | { type: "UPDATE_RD"; payload: Partial<RDFormData> }
-  | { type: "UPDATE_PRODUCT"; payload: Partial<ProductFormData> }
+  | { type: "UPDATE_SALES"; payload: Partial<SalesFormData> }
+  | { type: "UPDATE_PRODUCT"; payload: Partial<ProductFormData> } // For backward compatibility
+  | { type: "ADD_PRODUCT"; payload: ProductFormData }
+  | {
+      type: "UPDATE_PRODUCT_BY_INDEX";
+      payload: { index: number; product: Partial<ProductFormData> };
+    }
+  | { type: "REMOVE_PRODUCT"; payload: number } // Remove by index
+  | { type: "SET_PRODUCTS"; payload: ProductFormData[] } // Set entire products array
   | { type: "UPDATE_COMPANY"; payload: Partial<CompanyFormData> }
   | { type: "UPDATE_SIMULATION"; payload: Partial<SimulationFormData> }
   | { type: "ADD_EXISTING_ROLE"; payload: ExistingRole }
@@ -189,6 +209,7 @@ export type FormAction =
   | { type: "UPDATE_MARKETING_BUDGET_IMPACT"; payload: number }
   | { type: "UPDATE_PRODUCTION_BUDGET_IMPACT"; payload: number }
   | { type: "UPDATE_RD_BUDGET_IMPACT"; payload: number }
+  | { type: "UPDATE_SALES_BUDGET_IMPACT"; payload: number }
   | { type: "UPDATE_PRODUCT_BUDGET_IMPACT"; payload: number }
   | { type: "SET_SUBMITTING"; payload: boolean }
   | { type: "SET_ERRORS"; payload: Record<string, string> }
@@ -258,6 +279,15 @@ const getDefaultRDData = (): RDFormData => ({
   quality_changes: 0,
 });
 
+const getDefaultSalesData = (): SalesFormData => ({
+  sales_volume: 0,
+  revenue: 0,
+  costs: 0,
+  profit: 0,
+  market_share: 0,
+  customer_satisfaction: 0,
+});
+
 const getDefaultProductData = (): ProductFormData => ({
   name: "",
   description: "",
@@ -301,6 +331,7 @@ const getDefaultCashBalance = (): CashBalanceState => ({
   marketingBudgetImpact: 0,
   productionBudgetImpact: 0,
   rdBudgetImpact: 0,
+  salesBudgetImpact: 0,
   productBudgetImpact: 0,
 });
 
@@ -311,7 +342,8 @@ const initialState: FormState = {
   production: getDefaultProductionData(),
   hr: getDefaultHRData(),
   rd: getDefaultRDData(),
-  product: getDefaultProductData(),
+  sales: getDefaultSalesData(),
+  product: [], // Initialize as empty array
   company: getDefaultCompanyData(),
   simulation: getDefaultSimulationData(),
   cashBalance: getDefaultCashBalance(),
@@ -344,7 +376,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
         },
         hr: { ...getDefaultHRData(), ...action.payload.hr },
         rd: { ...getDefaultRDData(), ...action.payload.rd },
-        product: { ...getDefaultProductData(), ...action.payload.product },
+        sales: { ...getDefaultSalesData(), ...action.payload.sales },
+        product: action.payload.product || [], // Use the provided array or empty array
         company: { ...getDefaultCompanyData(), ...action.payload.company },
         simulation: {
           ...getDefaultSimulationData(),
@@ -475,10 +508,55 @@ function formReducer(state: FormState, action: FormAction): FormState {
         isDirty: true,
       };
 
-    case "UPDATE_PRODUCT":
+    case "UPDATE_SALES":
       return {
         ...state,
-        product: { ...state.product, ...action.payload },
+        sales: { ...state.sales, ...action.payload },
+        isDirty: true,
+      };
+
+    case "UPDATE_PRODUCT":
+      // For backward compatibility - add to end of array if no products exist, otherwise update first product
+      return {
+        ...state,
+        product:
+          state.product.length === 0
+            ? [{ ...getDefaultProductData(), ...action.payload }]
+            : state.product.map((product, index) =>
+                index === 0 ? { ...product, ...action.payload } : product
+              ),
+        isDirty: true,
+      };
+
+    case "ADD_PRODUCT":
+      return {
+        ...state,
+        product: [...state.product, action.payload],
+        isDirty: true,
+      };
+
+    case "UPDATE_PRODUCT_BY_INDEX":
+      return {
+        ...state,
+        product: state.product.map((product, index) =>
+          index === action.payload.index
+            ? { ...product, ...action.payload.product }
+            : product
+        ),
+        isDirty: true,
+      };
+
+    case "REMOVE_PRODUCT":
+      return {
+        ...state,
+        product: state.product.filter((_, index) => index !== action.payload),
+        isDirty: true,
+      };
+
+    case "SET_PRODUCTS":
+      return {
+        ...state,
+        product: action.payload,
         isDirty: true,
       };
 
@@ -547,6 +625,15 @@ function formReducer(state: FormState, action: FormAction): FormState {
         cashBalance: {
           ...state.cashBalance,
           rdBudgetImpact: action.payload,
+        },
+      };
+
+    case "UPDATE_SALES_BUDGET_IMPACT":
+      return {
+        ...state,
+        cashBalance: {
+          ...state.cashBalance,
+          salesBudgetImpact: action.payload,
         },
       };
 
@@ -624,6 +711,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
           production: getDefaultProductionData(),
           hr: getDefaultHRData(),
           rd: getDefaultRDData(),
+          sales: getDefaultSalesData(),
           product: getDefaultProductData(),
           company: getDefaultCompanyData(),
           simulation: getDefaultSimulationData(),
@@ -675,7 +763,17 @@ interface FormContextType {
   updateProduction: (data: Partial<ProductionFormData>) => void;
   updateHR: (data: Partial<HRFormData>) => void;
   updateRD: (data: Partial<RDFormData>) => void;
+  updateSales: (data: Partial<SalesFormData>) => void;
   updateProduct: (data: Partial<ProductFormData>) => void;
+  // New product array management functions
+  addProduct: (product: ProductFormData) => void;
+  updateProductByIndex: (
+    index: number,
+    product: Partial<ProductFormData>
+  ) => void;
+  removeProduct: (index: number) => void;
+  setProducts: (products: ProductFormData[]) => void;
+
   updateCompany: (data: Partial<CompanyFormData>) => void;
   updateSimulation: (data: Partial<SimulationFormData>) => void;
 
@@ -695,6 +793,7 @@ interface FormContextType {
   updateMarketingBudgetImpact: (impact: number) => void;
   updateProductionBudgetImpact: (impact: number) => void;
   updateRDBudgetImpact: (impact: number) => void;
+  updateSalesBudgetImpact: (impact: number) => void;
   updateProductBudgetImpact: (impact: number) => void;
   getProjectedCashBalance: () => number;
 
@@ -771,8 +870,35 @@ export function FormProvider({
     dispatch({ type: "UPDATE_RD", payload: data });
   }, []);
 
+  const updateSales = useCallback((data: Partial<SalesFormData>) => {
+    dispatch({ type: "UPDATE_SALES", payload: data });
+  }, []);
+
   const updateProduct = useCallback((data: Partial<ProductFormData>) => {
     dispatch({ type: "UPDATE_PRODUCT", payload: data });
+  }, []);
+
+  // New product array management functions
+  const addProduct = useCallback((product: ProductFormData) => {
+    dispatch({ type: "ADD_PRODUCT", payload: product });
+  }, []);
+
+  const updateProductByIndex = useCallback(
+    (index: number, product: Partial<ProductFormData>) => {
+      dispatch({
+        type: "UPDATE_PRODUCT_BY_INDEX",
+        payload: { index, product },
+      });
+    },
+    []
+  );
+
+  const removeProduct = useCallback((index: number) => {
+    dispatch({ type: "REMOVE_PRODUCT", payload: index });
+  }, []);
+
+  const setProducts = useCallback((products: ProductFormData[]) => {
+    dispatch({ type: "SET_PRODUCTS", payload: products });
   }, []);
 
   const updateCompany = useCallback((data: Partial<CompanyFormData>) => {
@@ -844,6 +970,10 @@ export function FormProvider({
     dispatch({ type: "UPDATE_RD_BUDGET_IMPACT", payload: impact });
   }, []);
 
+  const updateSalesBudgetImpact = useCallback((impact: number) => {
+    dispatch({ type: "UPDATE_SALES_BUDGET_IMPACT", payload: impact });
+  }, []);
+
   const updateProductBudgetImpact = useCallback((impact: number) => {
     dispatch({ type: "UPDATE_PRODUCT_BUDGET_IMPACT", payload: impact });
   }, []);
@@ -856,6 +986,7 @@ export function FormProvider({
       state.cashBalance.marketingBudgetImpact -
       state.cashBalance.productionBudgetImpact -
       state.cashBalance.rdBudgetImpact -
+      state.cashBalance.salesBudgetImpact -
       state.cashBalance.productBudgetImpact
     );
   }, [
@@ -865,6 +996,7 @@ export function FormProvider({
     state.cashBalance.marketingBudgetImpact,
     state.cashBalance.productionBudgetImpact,
     state.cashBalance.rdBudgetImpact,
+    state.cashBalance.salesBudgetImpact,
     state.cashBalance.productBudgetImpact,
   ]);
 
@@ -974,6 +1106,7 @@ export function FormProvider({
       "production",
       "hr",
       "rd",
+      "sales",
       "product",
     ] as const;
 
@@ -992,7 +1125,8 @@ export function FormProvider({
   }, [state, validateField]);
 
   const submitAllForms = useCallback(
-    async (companyId: string, period: number): Promise<boolean> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async (_companyId: string, _period: number): Promise<boolean> => {
       try {
         setSubmitting(true);
 
@@ -1002,15 +1136,9 @@ export function FormProvider({
           return false;
         }
 
-        console.log(
-          "Submitting forms for company:",
-          companyId,
-          "period:",
-          period
-        );
         return true;
-      } catch (error) {
-        console.error("Form submission error:", error);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_error) {
         return false;
       } finally {
         setSubmitting(false);
@@ -1026,6 +1154,7 @@ export function FormProvider({
       "production",
       "hr",
       "rd",
+      "sales",
       "product",
     ];
     const completed = sections.filter(
@@ -1048,7 +1177,12 @@ export function FormProvider({
     updateProduction,
     updateHR,
     updateRD,
+    updateSales,
     updateProduct,
+    addProduct,
+    updateProductByIndex,
+    removeProduct,
+    setProducts,
     updateCompany,
     updateSimulation,
     addExistingRole,
@@ -1064,6 +1198,7 @@ export function FormProvider({
     updateMarketingBudgetImpact,
     updateProductionBudgetImpact,
     updateRDBudgetImpact,
+    updateSalesBudgetImpact,
     updateProductBudgetImpact,
     getProjectedCashBalance,
     setSubmitting,
@@ -1633,10 +1768,40 @@ export function useRDForm() {
   };
 }
 
+export function useSalesForm() {
+  const { state, updateSales, setError, getError, updateSalesBudgetImpact } =
+    useForm();
+
+  const updateDataWithCashImpact = useCallback(
+    (data: Partial<SalesFormData>) => {
+      // Calculate budget impact from the new data being passed in
+      // For sales, costs typically impact cash balance negatively
+      const costs = data.costs ?? state.sales.costs ?? 0;
+
+      const budgetImpact = costs; // costs reduce cash balance
+
+      updateSales(data);
+      updateSalesBudgetImpact(budgetImpact);
+    },
+    [updateSales, updateSalesBudgetImpact, state.sales]
+  );
+
+  return {
+    data: state.sales,
+    updateData: updateDataWithCashImpact,
+    setError,
+    getError,
+  };
+}
+
 export function useProductForm() {
   const {
     state,
     updateProduct,
+    addProduct,
+    updateProductByIndex,
+    removeProduct,
+    setProducts,
     setError,
     getError,
     updateProductBudgetImpact,
@@ -1645,22 +1810,35 @@ export function useProductForm() {
   const updateDataWithCashImpact = useCallback(
     (data: Partial<ProductFormData>) => {
       // Calculate budget impact from the new data being passed in
-      const development_cost =
-        data.development_cost ?? state.product.development_cost ?? 0;
-      const marketing_budget =
-        data.marketing_budget ?? state.product.marketing_budget ?? 0;
+      const development_cost = data.development_cost ?? 0;
+      const marketing_budget = data.marketing_budget ?? 0;
 
       const budgetImpact = development_cost + marketing_budget;
 
       updateProduct(data);
       updateProductBudgetImpact(budgetImpact);
     },
-    [updateProduct, updateProductBudgetImpact, state.product]
+    [updateProduct, updateProductBudgetImpact]
+  );
+
+  const addProductWithCashImpact = useCallback(
+    (product: ProductFormData) => {
+      const budgetImpact =
+        (product.development_cost || 0) + (product.marketing_budget || 0);
+      addProduct(product);
+      updateProductBudgetImpact(budgetImpact);
+    },
+    [addProduct, updateProductBudgetImpact]
   );
 
   return {
-    data: state.product,
+    data: state.product, // This is now an array of products
+    products: state.product, // Alias for clarity
     updateData: updateDataWithCashImpact,
+    addProduct: addProductWithCashImpact,
+    updateProductByIndex,
+    removeProduct,
+    setProducts,
     setError,
     getError,
   };
@@ -1696,6 +1874,7 @@ export function useCashBalance() {
     updateMarketingBudgetImpact,
     updateProductionBudgetImpact,
     updateRDBudgetImpact,
+    updateSalesBudgetImpact,
     updateProductBudgetImpact,
     getProjectedCashBalance,
   } = useForm();
@@ -1712,6 +1891,7 @@ export function useCashBalance() {
     updateMarketingBudgetImpact,
     updateProductionBudgetImpact,
     updateRDBudgetImpact,
+    updateSalesBudgetImpact,
     updateProductBudgetImpact,
     getProjectedCashBalance,
     originalCashBalance: state.cashBalance.originalCashBalance,

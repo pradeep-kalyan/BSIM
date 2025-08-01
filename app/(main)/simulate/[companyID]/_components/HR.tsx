@@ -48,7 +48,7 @@ const HRDashboard = () => {
           {/* Existing Roles Skeleton */}
           <div className="mb-3">
             <h3 className="text-xl font-semibold text-slate-200 mb-4">
-              Existing Roles
+              Existing Roles {data?.existingRoles[0]?.current_head_count}
             </h3>
             <div className="overflow-x-auto border border-slate-600 px-8 pt-2 mx-4 rounded-lg h-40 bg-slate-700/40"></div>
           </div>

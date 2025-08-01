@@ -9,6 +9,7 @@ import {
   Eye,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Inputbox from "@/ui/Input-Box";
 import DashboardCard from "./Card";
 import MarketingComparisonModal from "./MarketingComparison";
@@ -44,6 +45,7 @@ const MarketingForm: React.FC<MarketingFormProps> = ({ companyId }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
@@ -166,8 +168,8 @@ const MarketingForm: React.FC<MarketingFormProps> = ({ companyId }) => {
         offline: marketingData.market_research_budget || 0,
       });
 
-      // Refresh the page after submission
-      window.location.reload();
+      // Refresh the data after successful submission
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error
@@ -196,7 +198,7 @@ const MarketingForm: React.FC<MarketingFormProps> = ({ companyId }) => {
         <div className="text-center">
           <p className="text-red-400 mb-4">Error: {error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => router.refresh()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Retry

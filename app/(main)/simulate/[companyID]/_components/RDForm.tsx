@@ -8,6 +8,7 @@ import {
   Loader2,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import DashboardCard from "./Card";
 import {
   getCompanyData,
@@ -41,6 +42,7 @@ const RDForm: React.FC<RDFormProps> = ({ companyId }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
@@ -151,8 +153,8 @@ const RDForm: React.FC<RDFormProps> = ({ companyId }) => {
         quality_changes: rdData.current.quality_changes,
       });
 
-      // Refresh the page after submission
-      window.location.reload();
+      // Refresh the data after successful submission
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to submit R&D decision"
@@ -179,7 +181,7 @@ const RDForm: React.FC<RDFormProps> = ({ companyId }) => {
         <div className="text-center">
           <p className="text-red-400 mb-4">Error: {error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => router.refresh()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Retry

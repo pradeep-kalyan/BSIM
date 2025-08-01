@@ -141,11 +141,10 @@ model product {
 }
 
 model finance {
-  id         String  @id @default(cuid())
-  company_id String
-  user_id    String?
-  period     Int
-
+  id                String    @id @default(cuid())
+  company_id        String
+  user_id           String?
+  period            Int
   total_revenue     Float     @default(0)
   net_profit        Float     @default(0)
   cash_balance      Float     @default(0)
@@ -178,8 +177,9 @@ model production {
   id                  String   @id @default(cuid())
   company_id          String
   period              Int
-  units_to_produce   Int
+  units_to_produce    Int
   cost_per_unit       Int
+  budget              Int      @default(0)
   production_capacity Int      @default(0)
   storage_capacity    Int?     @default(0)
   inventory_value     Int

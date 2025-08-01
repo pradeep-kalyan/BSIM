@@ -12,6 +12,7 @@ import {
   Edit,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import DashboardCard from "./Card";
 import {
   getCompanyData,
@@ -63,6 +64,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -132,7 +134,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
         marketing_budget: 0,
       });
       setShowCreateForm(false);
-      window.location.reload();
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");
     } finally {
@@ -146,7 +148,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
     try {
       setSubmitting(true);
       await launchProduct(productId, companyData.current_period);
-      window.location.reload();
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to launch product");
     } finally {
@@ -160,7 +162,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
     try {
       setSubmitting(true);
       await discontinueProduct(productId, companyData.current_period);
-      window.location.reload();
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to discontinue product"
@@ -187,7 +189,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
         <div className="text-center">
           <p className="text-red-400 mb-4">Error: {error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => router.refresh()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Retry

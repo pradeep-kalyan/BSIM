@@ -63,8 +63,6 @@ const ProductionForm = () => {
       data.units_to_produce * data.cost_per_unit * (1 + data.defect_rate / 100);
     const inventory_value = data.units_to_produce * data.cost_per_unit;
 
-    console.log("Raw form data:", data);
-
     const formData: CreateProduction = {
       company_id: comId ?? "",
       period: period ?? 0,
@@ -78,24 +76,7 @@ const ProductionForm = () => {
       production_cost,
     };
 
-    console.log("Processed formData for validation:", {
-      units_to_produce: formData.units_to_produce,
-      production_capacity: formData.production_capacity,
-      shouldError: formData.units_to_produce > formData.production_capacity,
-      types: {
-        units: typeof formData.units_to_produce,
-        capacity: typeof formData.production_capacity,
-      },
-    });
-
-    console.log("Validation data:", {
-      production_cost,
-      cash_balance: companyData?.cash_balance ?? 0,
-      willExceedBudget: production_cost > (companyData?.cash_balance ?? 0),
-    });
-
     const result = createProductionSchema.safeParse(formData);
-    console.log("Validation result:", result);
 
     const fieldKeys = [
       "units_to_produce",
@@ -140,7 +121,6 @@ const ProductionForm = () => {
     }
 
     updateProductionBudgetImpact(production_cost);
-    console.log("✅ Validated successfully", result.data);
   };
 
   return (

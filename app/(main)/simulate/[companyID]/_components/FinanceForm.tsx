@@ -21,13 +21,13 @@ import {
   useFinanceForm,
 } from "@/app/context/FormContext";
 import DashboardCard from "./Card";
-import { createFinanceSchema } from "../_utils/validator";
+import {  } from "@/app/(main)/simulate/[companyID]/_utils/validator";
 
 const FinanceForm = () => {
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
     }).format(value);
 
   const { period, comId } = useSimulation();
@@ -62,7 +62,7 @@ const FinanceForm = () => {
     setSuccess(false);
     setBudgetAlert(null);
 
-    // Calculate the finance budget impact
+    // Calculate the finance budget impact with null checks
     const investment_amount = data?.investment_amount ?? 0;
     const loan_amount = data?.loan_amount ?? 0;
     const repay_loan = data?.repay_loan ?? 0;
@@ -95,13 +95,10 @@ const FinanceForm = () => {
       processed: false,
     };
 
-    console.log("Validating finance data:", formData);
-
     // Validate using Zod schema
     const result = createFinanceSchema.safeParse(formData);
 
     if (!result.success) {
-      console.log("Validation errors:", result.error.issues);
       // Handle validation errors
       const firstError = result.error.issues[0];
       setBudgetAlert(`⚠️ Validation error: ${firstError.message}`);
@@ -127,18 +124,15 @@ const FinanceForm = () => {
     setFrozenProjectedBalance(newProjectedBalance);
     setSuccess(true);
     setBudgetAlert(null);
-
-    console.log("✅ Finance validation successful", {
-      netFinanceImpact,
-      newProjectedBalance,
-      data,
-    });
   };
 
-  const total_cost = Math.round(
-    data?.loan_amount +
-      data?.equity_issue -
-      (data?.investment_amount + data?.repay_loan + data?.dividend_payout)
+  // Calculate net finance impact (positive = cash inflow, negative = cash outflow)
+  const netFinanceImpact = Math.round(
+    (data?.loan_amount ?? 0) +
+      (data?.equity_issue ?? 0) -
+      ((data?.investment_amount ?? 0) +
+        (data?.repay_loan ?? 0) +
+        (data?.dividend_payout ?? 0))
   );
 
   return (
@@ -331,37 +325,25 @@ const FinanceForm = () => {
           <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
               <div className="text-xl text-blue-400 font-semibold">
-                Total Finance Cost (incl.reduction) : ₹
-                {Math.round(
-                  data?.loan_amount +
-                    data?.equity_issue -
-                    (data?.investment_amount +
-                      data?.repay_loan +
-                      data?.dividend_payout)
-                )}
+                Net Finance Impact: {formatCurrency(netFinanceImpact)}
               </div>
               <div className="text-sm space-y-1">
                 <div className="text-slate-300">
-                  Available Cash Balance: ₹{cashBalance.originalCashBalance}
+                  Original Cash Balance:{" "}
+                  {formatCurrency(cashBalance.originalCashBalance)}
                 </div>
                 <div
                   className={`font-semibold ${
-                    total_cost > (frozenProjectedBalance ?? 0)
+                    frozenProjectedBalance < 0
                       ? "text-rose-400"
                       : "text-emerald-400"
                   }`}
                 >
-                  Remaining after Finance operations: ₹
-                  {formatCurrency(Math.round(frozenProjectedBalance - total_cost))}
+                  Projected Cash Balance:{" "}
+                  {formatCurrency(frozenProjectedBalance)}
                 </div>
               </div>
             </div>
-            <button
-              type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
-            >
-              Validate
-            </button>
           </div>
 
           {/* Validation Feedback */}

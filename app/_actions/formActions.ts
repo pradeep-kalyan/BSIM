@@ -4,40 +4,6 @@ import prisma from "../functions/prisma";
 
 export async function getInitialFormData(companyId: string, period: number) {
   try {
-    console.log("getInitialFormData called with:", { companyId, period });
-
-    // First, let's check if the company exists
-    const companyExists = await prisma.company.findUnique({
-      where: { id: companyId },
-      select: { id: true, name: true },
-    });
-    console.log("Company exists:", companyExists);
-
-    // Let's also check what data exists for this company
-    const dataCheck = await Promise.allSettled([
-      prisma.production.findMany({
-        where: { company_id: companyId },
-        select: { id: true, period: true, company_id: true },
-      }),
-      prisma.rd.findMany({
-        where: { company_id: companyId },
-        select: { id: true, period: true, company_id: true },
-      }),
-    ]);
-
-    console.log(
-      "Production data available:",
-      dataCheck[0].status === "fulfilled"
-        ? dataCheck[0].value
-        : dataCheck[0].reason
-    );
-    console.log(
-      "RD data available:",
-      dataCheck[1].status === "fulfilled"
-        ? dataCheck[1].value
-        : dataCheck[1].reason
-    );
-
     // Use Promise.allSettled to handle cases where some data might not exist
     const results = await Promise.allSettled([
       prisma.finance.findFirst({
@@ -106,9 +72,24 @@ export async function getInitialFormData(companyId: string, period: number) {
           quality_changes: true,
         },
       }),
-      prisma.product.findFirst({
+      prisma.product_performance.findFirst({
+        where: {
+          product: { company_id: companyId },
+          period: period,
+        },
+        select: {
+          sales_volume: true,
+          revenue: true,
+          costs: true,
+          profit: true,
+          market_share: true,
+          customer_satisfaction: true,
+        },
+      }),
+      prisma.product.findMany({
         where: { company_id: companyId },
         select: {
+          id: true,
           name: true,
           description: true,
           category: true,
@@ -160,6 +141,7 @@ export async function getInitialFormData(companyId: string, period: number) {
       hrResult,
       hrRoleResult,
       rdResult,
+      salesResult,
       productResult,
       companyResult,
       simulationResult,
@@ -175,30 +157,18 @@ export async function getInitialFormData(companyId: string, period: number) {
     const hrRole =
       hrRoleResult.status === "fulfilled" ? hrRoleResult.value : null;
     const rd = rdResult.status === "fulfilled" ? rdResult.value : null;
-    const product =
-      productResult.status === "fulfilled" ? productResult.value : null;
+    const sales = salesResult.status === "fulfilled" ? salesResult.value : null;
+    const products =
+      productResult.status === "fulfilled" ? productResult.value : [];
     const company =
       companyResult.status === "fulfilled" ? companyResult.value : null;
     const simulation =
       simulationResult.status === "fulfilled" ? simulationResult.value : null;
 
     // Log any failed queries for debugging
-    results.forEach((result, index) => {
+    results.forEach((result) => {
       if (result.status === "rejected") {
-        const queryNames = [
-          "finance",
-          "marketing",
-          "production",
-          "hr",
-          "rd",
-          "product",
-          "company",
-          "simulation",
-        ];
-        console.warn(
-          `Failed to fetch ${queryNames[index]} data:`,
-          result.reason
-        );
+        // Silently handle failed fetch
       }
     });
 
@@ -209,16 +179,16 @@ export async function getInitialFormData(companyId: string, period: number) {
       hr,
       hrRole,
       rd,
-      product,
+      sales,
+      products,
       company,
       simulation,
       cashBalance: {
         originalCashBalance: company?.cash_balance || 100000,
       },
     };
-  } catch (error) {
-    console.error("Error in getInitialFormData:", error);
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     // Return a safe default structure
     return {
       finance: null,
@@ -226,7 +196,8 @@ export async function getInitialFormData(companyId: string, period: number) {
       production: null,
       hr: null,
       rd: null,
-      product: null,
+      sales: null,
+      products: [],
       company: null,
       simulation: null,
       cashBalance: {
@@ -273,7 +244,6 @@ export async function submitFinanceForm(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error("Failed to submit finance form:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -313,7 +283,6 @@ export async function submitMarketingForm(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error("Failed to submit marketing form:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -355,7 +324,6 @@ export async function submitProductionForm(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error("Failed to submit production form:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -399,7 +367,6 @@ export async function submitHRForm(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error("Failed to submit HR form:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -445,7 +412,6 @@ export async function submitRDForm(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error("Failed to submit RD form:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
@@ -501,7 +467,6 @@ export async function submitProductForm(data: any, companyId: string) {
 
     return { success: true, data: result };
   } catch (error) {
-    console.error("Failed to submit product form:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
