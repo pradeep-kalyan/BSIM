@@ -78,7 +78,7 @@ export async function createProduct({
 }: {
   company_id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   category: string;
   quality_rating: number;
   innovation_rating: number;
@@ -93,23 +93,26 @@ export async function createProduct({
     return await prisma.$transaction(async (tx) => {
       const company = await tx.company.findUnique({
         where: { id: company_id },
-        select: { cash_balance: true },
+        select: { cash_balance: true, marketing_budget: true },
       });
 
       if (!company) {
         throw new Error("Company not found");
       }
 
-      const total_cost = development_cost + marketing_budget;
-
-      if (company.cash_balance < total_cost) {
+      if (company.cash_balance < development_cost) {
         throw new Error("Insufficient cash balance");
+      }
+
+      if ((company.marketing_budget ?? 0) < marketing_budget) {
+        throw new Error("Insufficient marketing budget");
       }
 
       await tx.company.update({
         where: { id: company_id },
         data: {
-          cash_balance: { decrement: total_cost },
+          cash_balance: { decrement: development_cost },
+          marketing_budget: { decrement: marketing_budget }
         },
       });
 
@@ -169,12 +172,90 @@ export async function updateProduct({
   status?: string;
 }) {
   try {
-    const product = await prisma.product.update({
-      where: { id: product_id },
-      data: {
-        ...(name && { name }),
-        ...(description && { description }),
-        ...(category && { category }),
+    return await prisma.$transaction(async (tx) => {
+      // Fetch existing product with its costs and company_id
+      const existingProduct = await tx.product.findUnique({
+        where: { id: product_id },
+        select: {
+          production_cost: true,
+          development_cost: true,
+          marketing_budget: true,
+          company_id: true,
+        },
+      });
+
+      if (!existingProduct) {
+        throw new Error("Product not found");
+      }
+
+      // Fetch company budget info
+      const company = await tx.company.findUnique({
+        where: { id: existingProduct.company_id },
+        select: { cash_balance: true, marketing_budget: true },
+      });
+
+      if (!company) {
+        throw new Error("Company not found");
+      }
+
+      // Calculate differences in costs (treat undefined as no change)
+      const prodCostDiff =
+        production_cost !== undefined
+          ? production_cost - existingProduct.production_cost
+          : 0;
+
+      const devCostDiff =
+        development_cost !== undefined
+          ? development_cost - existingProduct.development_cost
+          : 0;
+
+      const marketingBudgetDiff =
+        marketing_budget !== undefined
+          ? marketing_budget - existingProduct.marketing_budget
+          : 0;
+
+      // Sum of cash deductions needed (for production_cost and development_cost)
+      // Assuming only development_cost affects cash_balance like in creation
+      const totalCashDiff = devCostDiff;
+
+      // Check if company has enough cash_balance for any increased cost
+      if (totalCashDiff > 0 && company.cash_balance < totalCashDiff) {
+        throw new Error("Insufficient cash balance for updated development cost");
+      }
+
+      // Check marketing budget sufficiency if marketing_budget increased
+      if (marketingBudgetDiff > 0 && (company.marketing_budget ?? 0) < marketingBudgetDiff) {
+        throw new Error("Insufficient marketing budget for updated marketing spend");
+      }
+
+      // Prepare company update data
+      const companyUpdateData: any = {};
+      if (totalCashDiff !== 0) {
+        companyUpdateData.cash_balance =
+          totalCashDiff > 0
+            ? { decrement: totalCashDiff }
+            : { increment: -totalCashDiff };
+      }
+      if (marketingBudgetDiff !== 0) {
+        companyUpdateData.marketing_budget =
+          marketingBudgetDiff > 0
+            ? { decrement: marketingBudgetDiff }
+            : { increment: -marketingBudgetDiff };
+      }
+
+      // Update company budgets if any changes
+      if (Object.keys(companyUpdateData).length > 0) {
+        await tx.company.update({
+          where: { id: existingProduct.company_id },
+          data: companyUpdateData,
+        });
+      }
+
+      // Prepare product update data
+      const productUpdateData = {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(category !== undefined && { category }),
         ...(quality_rating !== undefined && { quality_rating }),
         ...(innovation_rating !== undefined && { innovation_rating }),
         ...(sustainability_rating !== undefined && { sustainability_rating }),
@@ -183,13 +264,19 @@ export async function updateProduct({
         ...(production_capacity !== undefined && { production_capacity }),
         ...(development_cost !== undefined && { development_cost }),
         ...(marketing_budget !== undefined && { marketing_budget }),
-        ...(status && { status }),
-      },
-    });
+        ...(status !== undefined && { status }),
+      };
 
-    return product;
+      // Update the product
+      const updatedProduct = await tx.product.update({
+        where: { id: product_id },
+        data: productUpdateData,
+      });
+
+      return updatedProduct;
+    });
   } catch (error) {
-    console.error("Error updating product:", error);
+    console.error("Error updating product with budget adjustment:", error);
     throw new Error("Failed to update product");
   }
 }

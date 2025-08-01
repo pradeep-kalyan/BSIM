@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useCallback,
   useMemo,
+  useState,
 } from "react";
 
 // Types matching the Zod schema and database structure
@@ -48,7 +49,7 @@ export interface HRRole {
 export interface ExistingRole {
   role_name: string;
   salary_per_head: number;
-  current_head_count: number;
+  head_count: number;
   hires: number;
   fires: number;
 }
@@ -172,15 +173,15 @@ export type FormAction =
   | { type: "UPDATE_SIMULATION"; payload: Partial<SimulationFormData> }
   | { type: "ADD_EXISTING_ROLE"; payload: ExistingRole }
   | {
-      type: "UPDATE_EXISTING_ROLE";
-      payload: { index: number; role: Partial<ExistingRole> };
-    }
+    type: "UPDATE_EXISTING_ROLE";
+    payload: { index: number; role: Partial<ExistingRole> };
+  }
   | { type: "REMOVE_EXISTING_ROLE"; payload: number }
   | { type: "ADD_NEW_ROLE"; payload: NewRole }
   | {
-      type: "UPDATE_NEW_ROLE";
-      payload: { index: number; role: Partial<NewRole> };
-    }
+    type: "UPDATE_NEW_ROLE";
+    payload: { index: number; role: Partial<NewRole> };
+  }
   | { type: "REMOVE_NEW_ROLE"; payload: number }
   | { type: "CLEAR_ALL_ROLES" }
   | { type: "SET_ORIGINAL_CASH_BALANCE"; payload: number }
@@ -202,9 +203,9 @@ export type FormAction =
   | { type: "RESET_FORM"; payload?: keyof FormState }
   | { type: "RESET_ALL" }
   | {
-      type: "SET_FORM_COMPLETED";
-      payload: { section: string; completed: boolean };
-    }
+    type: "SET_FORM_COMPLETED";
+    payload: { section: string; completed: boolean };
+  }
   | { type: "INITIALIZE_FORMS"; payload: Partial<FormState> }
   | { type: "BULK_UPDATE_FORMS"; payload: Partial<FormState> };
 
@@ -252,7 +253,7 @@ const getDefaultRDData = (): RDFormData => ({
   quality_changes: 0,
 });
 
-const getDefaultProductData = (): ProductFormData => ({
+export const getDefaultProductData = (): ProductFormData => ({
   name: "",
   description: "",
   category: "",
@@ -268,7 +269,7 @@ const getDefaultProductData = (): ProductFormData => ({
   status: "development", // matches Zod default
 });
 
-const getDefaultCompanyData = (): CompanyFormData => ({
+export const getDefaultCompanyData = (): CompanyFormData => ({
   name: "",
   description: "",
   logo_url: "",
@@ -1260,7 +1261,7 @@ export function useHRForm() {
 
     // Calculate from existing roles
     state.hr.existingRoles.forEach((role) => {
-      const newHeadCount = role.current_head_count + role.hires - role.fires;
+      const newHeadCount = role.head_count + role.hires - role.fires;
       if (newHeadCount > 0) {
         salary_budget += newHeadCount * role.salary_per_head;
       }
@@ -1490,7 +1491,7 @@ export function useHRRoleContext() {
 
     // Calculate from existing roles
     state.hr.existingRoles.forEach((role) => {
-      const newHeadCount = role.current_head_count + role.hires - role.fires;
+      const newHeadCount = role.head_count + role.hires - role.fires;
       if (newHeadCount > 0) {
         salary_budget += newHeadCount * role.salary_per_head;
       }
@@ -1583,8 +1584,8 @@ export function useHRInitialization() {
       const existingRoles: ExistingRole[] = companyRoles.map((role) => ({
         role_name: role.role_name,
         salary_per_head: role.salary_per_head,
-        current_head_count: role.head_count,
-        hires: 0,
+        head_count: role.head_count,
+        hires: role.head_count,
         fires: 0,
       }));
 
@@ -1666,6 +1667,115 @@ export function useProductForm() {
     updateData: updateDataWithCashImpact,
     setError,
     getError,
+  };
+}
+
+export function useProductActions(companyId: string) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Placeholder API calls — replace with your actual API call logic
+  async function apiCreateProduct(data: Partial<ProductFormData>) {
+    // Example: POST to your API endpoint
+    const res = await fetch(`/api/companies/${companyId}/products`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create product");
+    return res.json();
+  }
+
+  async function apiUpdateProduct(id: string, data: Partial<ProductFormData>) {
+    const res = await fetch(`/api/products/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update product");
+    return res.json();
+  }
+
+  async function apiLaunchProduct(productId: string, period: number) {
+    const res = await fetch(`/api/products/${productId}/launch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ period }),
+    });
+    if (!res.ok) throw new Error("Failed to launch product");
+    return res.json();
+  }
+
+  async function apiDiscontinueProduct(productId: string, period: number) {
+    const res = await fetch(`/api/products/${productId}/discontinue`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ period }),
+    });
+    if (!res.ok) throw new Error("Failed to discontinue product");
+    return res.json();
+  }
+
+  // Wrappers with loading/errors
+  const createProduct = async (data: Partial<ProductFormData>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiCreateProduct(data);
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProductAction = async (id: string, data: Partial<ProductFormData>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiUpdateProduct(id, data);
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const launchProduct = async (productId: string, period: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiLaunchProduct(productId, period);
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const discontinueProduct = async (productId: string, period: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await apiDiscontinueProduct(productId, period);
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    error,
+    createProduct,
+    updateProduct: updateProductAction,
+    launchProduct,
+    discontinueProduct,
   };
 }
 
@@ -1822,7 +1932,7 @@ export function useHRRoleManagement() {
   const fireEmployeesForRole = useCallback(
     (roleIndex: number, fireCount: number) => {
       const role = hrData.existingRoles[roleIndex];
-      if (role && role.current_head_count >= fireCount) {
+      if (role && role.head_count >= fireCount) {
         updateExistingRole(roleIndex, {
           ...role,
           fires: role.fires + fireCount,
@@ -1853,7 +1963,7 @@ export function useHRRoleManagement() {
       if (role) {
         updateExistingRole(roleIndex, {
           ...role,
-          fires: Math.max(0, Math.min(fireCount, role.current_head_count)),
+          fires: Math.max(0, Math.min(fireCount, role.head_count)),
         });
       }
     },
@@ -1878,11 +1988,11 @@ export function useHRRoleManagement() {
   const getNetEmployeeChanges = useCallback(() => {
     return hrData.existingRoles.map((role) => ({
       role_name: role.role_name,
-      current_count: role.current_head_count,
+      current_count: role.head_count,
       hires: role.hires,
       fires: role.fires,
       net_change: role.hires - role.fires,
-      final_count: role.current_head_count + role.hires - role.fires,
+      final_count: role.head_count + role.hires - role.fires,
     }));
   }, [hrData.existingRoles]);
 
@@ -1890,7 +2000,7 @@ export function useHRRoleManagement() {
   const getTotalEmployees = useCallback(() => {
     const existingEmployees = hrData.existingRoles.reduce((total, role) => {
       return (
-        total + Math.max(0, role.current_head_count + role.hires - role.fires)
+        total + Math.max(0, role.head_count + role.hires - role.fires)
       );
     }, 0);
 
@@ -1972,7 +2082,7 @@ export function useHRRoleManagement() {
           `Existing role ${index + 1}: Salary per head must be positive`
         );
       }
-      if (role.current_head_count < 0) {
+      if (role.head_count < 0) {
         errors.push(
           `Existing role ${index + 1}: Current head count cannot be negative`
         );
@@ -1983,14 +2093,13 @@ export function useHRRoleManagement() {
       if (role.fires < 0) {
         errors.push(`Existing role ${index + 1}: Fires cannot be negative`);
       }
-      if (role.fires > role.current_head_count) {
+      if (role.fires > role.head_count) {
         errors.push(
-          `Existing role ${
-            index + 1
+          `Existing role ${index + 1
           }: Cannot fire more employees than current count`
         );
       }
-      if (role.current_head_count + role.hires - role.fires < 0) {
+      if (role.head_count + role.hires - role.fires < 0) {
         errors.push(
           `Existing role ${index + 1}: Final employee count cannot be negative`
         );
@@ -2138,14 +2247,14 @@ export function useHireFireOperations() {
 
   // Get roles that can be fired from (have current employees)
   const getFireableRoles = useCallback(() => {
-    return existingRoles.filter((role) => role.current_head_count > 0);
+    return existingRoles.filter((role) => role.head_count > 0);
   }, [existingRoles]);
 
   // Get maximum fire count for each role
   const getMaxFireCounts = useCallback(() => {
     return existingRoles.map((role) => ({
       role_name: role.role_name,
-      max_fires: role.current_head_count,
+      max_fires: role.head_count,
       current_fires: role.fires,
     }));
   }, [existingRoles]);
@@ -2155,13 +2264,13 @@ export function useHireFireOperations() {
     const errors: string[] = [];
 
     existingRoles.forEach((role) => {
-      if (role.fires > role.current_head_count) {
+      if (role.fires > role.head_count) {
         errors.push(
-          `${role.role_name}: Cannot fire ${role.fires} employees when only ${role.current_head_count} are currently employed`
+          `${role.role_name}: Cannot fire ${role.fires} employees when only ${role.head_count} are currently employed`
         );
       }
 
-      const finalCount = role.current_head_count + role.hires - role.fires;
+      const finalCount = role.head_count + role.hires - role.fires;
       if (finalCount < 0) {
         errors.push(
           `${role.role_name}: Final employee count would be negative (${finalCount})`

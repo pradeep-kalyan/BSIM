@@ -9,6 +9,7 @@ import {
   useTheme,
   useMediaQuery,
   LinearProgress,
+  Link,
 } from "@mui/material";
 import {
   DollarSign,
@@ -24,6 +25,7 @@ import MarketingForm from "./MarketingForm";
 import RDForm from "./RDForm";
 import ProductionForm from "./ProductionForm";
 import ProductsForm from "./ProductsForm";
+import LogoutBtn from "@/app/(auth)/_components/Logout";
 import HRDashboard from "./HR";
 
 const steps = [
@@ -80,7 +82,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       case 1:
         return <MarketingForm companyId={companyId} />;
       case 2:
-        return <RDForm companyId={companyId} />;
+        return <RDForm />;
       case 3:
         return <ProductionForm />;
       case 4:
@@ -202,21 +204,21 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                   bgcolor: isActive
                     ? "rgba(33, 150, 243, 0.15)"
                     : isCompleted
-                    ? "rgba(76, 175, 80, 0.05)"
-                    : "transparent",
+                      ? "rgba(76, 175, 80, 0.05)"
+                      : "transparent",
                   borderLeft: isActive
                     ? "4px solid #2196f3"
                     : isCompleted
-                    ? "4px solid #4caf50"
-                    : "4px solid transparent",
+                      ? "4px solid #4caf50"
+                      : "4px solid transparent",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   transform: isActive ? "translateX(4px)" : "translateX(0)",
                   "&:hover": {
                     bgcolor: isActive
                       ? "rgba(33, 150, 243, 0.2)"
                       : isCompleted
-                      ? "rgba(76, 175, 80, 0.1)"
-                      : "rgba(255, 255, 255, 0.05)",
+                        ? "rgba(76, 175, 80, 0.1)"
+                        : "rgba(255, 255, 255, 0.05)",
                     transform: "translateX(4px)",
                   },
                 }}
@@ -230,8 +232,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                       bgcolor: isCompleted
                         ? "#4caf50"
                         : isActive
-                        ? "#2196f3"
-                        : "rgba(255, 255, 255, 0.1)",
+                          ? "#2196f3"
+                          : "rgba(255, 255, 255, 0.1)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -255,8 +257,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                         color: isActive
                           ? "#fff"
                           : isCompleted
-                          ? "#81c784"
-                          : "#bbb",
+                            ? "#81c784"
+                            : "#bbb",
                         fontWeight: isActive ? 700 : isCompleted ? 600 : 500,
                         fontSize: "0.9rem",
                         mb: 0.3,
@@ -271,8 +273,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                           color: isActive
                             ? "#b3d9ff"
                             : isCompleted
-                            ? "#a5d6a7"
-                            : "#666",
+                              ? "#a5d6a7"
+                              : "#666",
                           fontSize: "0.75rem",
                           lineHeight: 1.4,
                         }}
@@ -293,8 +295,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                       bgcolor: isCompleted
                         ? "#4caf50"
                         : isActive
-                        ? "#2196f3"
-                        : "rgba(255, 255, 255, 0.2)",
+                          ? "#2196f3"
+                          : "rgba(255, 255, 255, 0.2)",
                       mr: 1,
                     }}
                   />
@@ -304,16 +306,16 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                       color: isActive
                         ? "#64b5f6"
                         : isCompleted
-                        ? "#4caf50"
-                        : "#555",
+                          ? "#4caf50"
+                          : "#555",
                       fontSize: "0.65rem",
                     }}
                   >
                     {isCompleted
                       ? "Completed"
                       : isActive
-                      ? "In Progress"
-                      : "Pending"}
+                        ? "In Progress"
+                        : "Pending"}
                   </Typography>
                 </Box>
               </Box>
@@ -376,14 +378,18 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           {/* Content Header */}
           <Box
             sx={{
-              p: 3,
+              px: 3,
+              py:1,
               borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
               bgcolor: "rgba(8, 10, 15, 0.8)",
               position: "relative",
               zIndex: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
               {React.createElement(steps[activeStep].icon, {
                 size: 24,
                 style: { color: "#64b5f6", marginRight: "12px" },
@@ -395,8 +401,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                     color: "#fff",
                     fontWeight: 700,
                     mb: 0.1,
-                    background:
-                      "linear-gradient(135deg, #fff 0%, #64b5f6 100%)",
+                    background: "linear-gradient(135deg, #fff 0%, #64b5f6 100%)",
                     backgroundClip: "text",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
@@ -413,8 +418,16 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 </Typography>
               </Box>
             </Box>
-
-            {/* Progress Breadcrumb */}
+            <Box sx={{ flexGrow: 1 }} />
+            <Link
+              href={`/homepage/${companyId}`}
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 !text-white text-sm px-3 py-2 rounded-md !no-underline"
+            >
+              Dashboard
+            </Link>
+            <div className="flex items-center gap-1">
+              <LogoutBtn />
+            </div>
           </Box>
 
           {/* Content Body */}
@@ -436,7 +449,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           {/* Navigation Controls */}
           <Box
             sx={{
-              p: 3,
+              px: 3,
+              py:1,
               borderTop: "1px solid rgba(255, 255, 255, 0.1)",
               bgcolor: "rgba(8, 10, 15, 0.8)",
               display: "flex",

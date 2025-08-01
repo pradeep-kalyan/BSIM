@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 
 type CompanyWithProducts = company & {
   products: product[];
-
 };
 
 const Page = async ({ params }: { params: { companyID: string } }) => {
@@ -19,7 +18,6 @@ const Page = async ({ params }: { params: { companyID: string } }) => {
     },
   });
 
-  // If company not found, show 404 page
   if (!companyData) {
     notFound();
   }

@@ -19,15 +19,17 @@ import {
   createProduct,
   launchProduct,
   discontinueProduct,
+  updateProduct, 
 } from "@/app/_actions/product-actions";
+import ProductFormPage from "./NewProduct"; 
 
+// Data types
 interface CompanyData {
   id: string;
   name: string;
   current_period: number;
   cash_balance: number;
 }
-
 interface Product {
   id: string;
   name: string;
@@ -66,21 +68,11 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
 
   const [companyData, setCompanyData] = useState<CompanyData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    description: "",
-    category: "",
-    quality_rating: 0,
-    innovation_rating: 0,
-    sustainability_rating: 0,
-    production_cost: 0,
-    selling_price: 0,
-    production_capacity: 1000,
-    development_cost: 0,
-    marketing_budget: 0,
-  });
+  // Modal state for add/edit
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [formMode, setFormMode] = useState<"add" | "edit">("add");
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +84,6 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
           getCompanyData(companyId),
           getCompanyProducts(companyId),
         ]);
-
         setCompanyData(company);
         setProducts(companyProducts);
       } catch (err) {
@@ -101,38 +92,25 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [companyId]);
 
-  const handleCreateProduct = async () => {
+  // HANDLERS
+
+  // Creating new product
+  const handleAddProduct = async (data: Omit<Product, "id" | "status" | "launch_period" | "discontinue_period" | "latest_performance">) => {
     if (!companyData) return;
-
+    setSubmitting(true);
+    setError(null);
     try {
-      setSubmitting(true);
-      setError(null);
-
       await createProduct({
         company_id: companyId,
-        ...newProduct,
+        description: data.description ?? undefined,
+        ...data,
       });
-
-      // Reset form and refresh data
-      setNewProduct({
-        name: "",
-        description: "",
-        category: "",
-        quality_rating: 0,
-        innovation_rating: 0,
-        sustainability_rating: 0,
-        production_cost: 0,
-        selling_price: 0,
-        production_capacity: 1000,
-        development_cost: 0,
-        marketing_budget: 0,
-      });
-      setShowCreateForm(false);
-      window.location.reload();
+      setShowProductForm(false);
+      setEditProduct(null);
+      setFormMode("add");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create product");
     } finally {
@@ -140,13 +118,42 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
     }
   };
 
+  // Editing existing product
+  const handleUpdateProduct = async (data: Product) => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await updateProduct({
+        product_id: data.id,  
+        name: data.name,
+        description: data.description ?? undefined,
+        category: data.category,
+        quality_rating: data.quality_rating,
+        innovation_rating: data.innovation_rating,
+        sustainability_rating: data.sustainability_rating,
+        production_cost: data.production_cost,
+        selling_price: data.selling_price,
+        production_capacity: data.production_capacity,
+        development_cost: data.development_cost,
+        marketing_budget: data.marketing_budget,
+        status: data.status,
+      });
+      setShowProductForm(false);
+      setEditProduct(null);
+      setFormMode("add");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update product");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleLaunchProduct = async (productId: string) => {
     if (!companyData) return;
-
+    setSubmitting(true);
+    setError(null);
     try {
-      setSubmitting(true);
       await launchProduct(productId, companyData.current_period);
-      window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to launch product");
     } finally {
@@ -156,11 +163,10 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
 
   const handleDiscontinueProduct = async (productId: string) => {
     if (!companyData) return;
-
+    setSubmitting(true);
+    setError(null);
     try {
-      setSubmitting(true);
       await discontinueProduct(productId, companyData.current_period);
-      window.location.reload();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to discontinue product"
@@ -170,40 +176,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-4" />
-          <p className="text-slate-300">Loading products dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">Error: {error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!companyData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <p className="text-slate-300">No company data found</p>
-      </div>
-    );
-  }
+  // UI ONLY HELPERS
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-US", {
@@ -237,6 +210,41 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
       ? products.reduce((acc, p) => acc + p.quality_rating, 0) / products.length
       : 0;
 
+  // ---- RENDER ----
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-4" />
+          <p className="text-slate-300">Loading products dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">Error: {error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (!companyData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <p className="text-slate-300">No company data found</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
       <div className="max-w-7xl mx-auto mt-2">
@@ -252,7 +260,11 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
               </p>
             </div>
             <button
-              onClick={() => setShowCreateForm(true)}
+              onClick={() => {
+                setFormMode("add");
+                setEditProduct(null);
+                setShowProductForm(true);
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
@@ -302,7 +314,6 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
           <h2 className="text-2xl font-bold text-white mb-6">
             Product Portfolio
           </h2>
-
           {products.length === 0 ? (
             <div className="text-center py-8">
               <Package className="h-16 w-16 text-slate-600 mx-auto mb-4" />
@@ -329,11 +340,9 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                       {product.status}
                     </span>
                   </div>
-
                   <p className="text-slate-400 text-sm mb-3">
                     {product.description}
                   </p>
-
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-400">Category:</span>
@@ -358,7 +367,6 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                       </span>
                     </div>
                   </div>
-
                   {/* Rating bars */}
                   <div className="mt-3 space-y-2">
                     <div className="flex items-center gap-2">
@@ -389,15 +397,13 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${
-                              (product.sustainability_rating / 10) * 100
-                            }%`,
+                            width: `${(product.sustainability_rating / 10) * 100
+                              }%`,
                           }}
                         />
                       </div>
                     </div>
                   </div>
-
                   {/* Action buttons */}
                   <div className="mt-4 flex gap-2">
                     {product.status === "development" && (
@@ -410,7 +416,6 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                         Launch
                       </button>
                     )}
-
                     {product.status === "active" && (
                       <button
                         onClick={() => handleDiscontinueProduct(product.id)}
@@ -421,10 +426,11 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                         Discontinue
                       </button>
                     )}
-
                     <button
                       onClick={() => {
-                        /* TODO: Implement edit functionality */
+                        setEditProduct(product);
+                        setFormMode("edit");
+                        setShowProductForm(true);
                       }}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
                     >
@@ -437,280 +443,29 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
             </div>
           )}
         </div>
-
-        {/* Create Product Form */}
-        {showCreateForm && (
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                Create New Product
-              </h2>
-              <button
-                onClick={() => setShowCreateForm(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  value={newProduct.name}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="Enter product name"
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
+        {/* ADD/EDIT FORM MODAL */}
+        {showProductForm && (
+          <div className="fixed z-50 top-0 left-0 w-full h-full flex items-center justify-center bg-slate-900/60">
+            <div className="relative w-full max-w-xl">
+              <div className="absolute top-1 right-2">
+                <button
+                  onClick={() => setShowProductForm(false)}
+                  className="text-slate-400 bg-slate-800 rounded-full p-1 hover:text-white"
+                  title="Close"
+                >
+                  ×
+                </button>
               </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  value={newProduct.category}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      category: e.target.value,
-                    }))
-                  }
-                  placeholder="Product category"
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={newProduct.description}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Product description"
-                  rows={3}
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Quality Rating (1-10)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="0.1"
-                  value={newProduct.quality_rating}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      quality_rating: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Innovation Rating (1-10)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="0.1"
-                  value={newProduct.innovation_rating}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      innovation_rating: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Sustainability Rating (1-10)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  step="0.1"
-                  value={newProduct.sustainability_rating}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      sustainability_rating: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Production Cost
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newProduct.production_cost}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      production_cost: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Selling Price
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newProduct.selling_price}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      selling_price: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Production Capacity
-                </label>
-                <input
-                  type="number"
-                  value={newProduct.production_capacity}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      production_capacity: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Development Cost
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newProduct.development_cost}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      development_cost: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white text-sm font-semibold mb-2">
-                  Marketing Budget
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newProduct.marketing_budget}
-                  onChange={(e) =>
-                    setNewProduct((prev) => ({
-                      ...prev,
-                      marketing_budget: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                />
-              </div>
-            </div>
-
-            {/* Total Cost Display */}
-            <div className="mt-6 bg-slate-700/50 rounded-lg p-4">
-              <div className="text-center">
-                <p className="text-slate-300 text-sm">
-                  Total Investment Required
-                </p>
-                <p className="text-2xl font-bold text-white">
-                  {formatCurrency(
-                    newProduct.development_cost + newProduct.marketing_budget
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={() => setShowCreateForm(false)}
-                className="flex-1 bg-slate-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-slate-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateProduct}
-                disabled={
-                  submitting ||
-                  !newProduct.name ||
-                  !newProduct.category ||
-                  companyData.cash_balance <
-                    newProduct.development_cost + newProduct.marketing_budget
+              <ProductFormPage
+                mode={formMode}
+                initialProduct={editProduct || undefined}
+                onSubmit={
+                  formMode === "edit" ? handleUpdateProduct : handleAddProduct
                 }
-                className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Product"
-                )}
-              </button>
+                onCancel={() => setShowProductForm(false)}
+                submitting={submitting}
+              />
             </div>
-
-            {/* Budget Validation */}
-            {companyData.cash_balance <
-              newProduct.development_cost + newProduct.marketing_budget && (
-              <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 mt-4">
-                <p className="text-red-200 text-sm">
-                  ⚠️ Insufficient cash balance. Required:{" "}
-                  {formatCurrency(
-                    newProduct.development_cost + newProduct.marketing_budget
-                  )}
-                  , Available: {formatCurrency(companyData.cash_balance)}
-                </p>
-              </div>
-            )}
           </div>
         )}
       </div>
