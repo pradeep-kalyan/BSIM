@@ -194,6 +194,7 @@ model production {
   @@index([company_id])
 }
 
+
 model hr_decision {
   id           String   @id @default(cuid())
   company_id   String
@@ -256,8 +257,6 @@ model marketing {
   budget          Int
   offline         Int
   online          Int
-  roi             Int
-  conversion_rate Int
   finalised       Boolean  @default(false)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
