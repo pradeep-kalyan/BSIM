@@ -27,29 +27,7 @@ const Page = () => {
   const fetchSimulations = async () => {
     const data = await getSimulations();
     const user = await getCurrentUser();
-    setSimulations(
-      data.map((sim: any) => ({
-        ...sim,
-        created_at:
-          typeof sim.created_at === "string"
-            ? sim.created_at
-            : sim.created_at.toISOString(),
-        simulation_access: sim.simulation_access?.map((access: any) => ({
-          ...access,
-          user: {
-            ...access.user,
-            created_at:
-              typeof access.user.created_at === "string"
-                ? access.user.created_at
-                : access.user.created_at.toISOString(),
-            updated_at:
-              typeof access.user.updated_at === "string"
-                ? access.user.updated_at
-                : access.user.updated_at.toISOString(),
-          },
-        })),
-      }))
-    );
+    setSimulations(data as ExtendedSimulation[]);
     setCurrentUserId(user?.id);
     setInitialLoad(false);
   };
@@ -114,7 +92,7 @@ const Page = () => {
           {["owned", "shared", "all"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
               className={`px-4 py-2 rounded-md ${
                 activeTab === tab
                   ? "bg-blue-600"

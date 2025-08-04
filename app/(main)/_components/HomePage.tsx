@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useTransition, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   DollarSign,
   TrendingUp,
@@ -8,18 +8,14 @@ import {
   Target,
   BarChart3,
   Briefcase,
-  ChevronRight,
   Plus,
   Factory,
   Lightbulb,
   Calendar,
   Award,
-  Building2,
   Play,
 } from "lucide-react";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   BarChart,
@@ -33,7 +29,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { CompanyData } from "../homepage/[companyID]/types";
 import DashboardCard from "@/ui/Card";
 import QuickStat from "@/ui/QuickStat";
 import ChartCard from "@/ui/ChartCard";
@@ -41,25 +36,41 @@ import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import LogoutBtn from "@/app/(auth)/_components/Logout";
 
-interface HomePageProps {
-  company?: CompanyData;
+// Tooltip and chart tooltip components (same as before)
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  label?: string;
 }
 
-// Move CustomTooltip outside component to prevent recreation on every render
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface PieTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: {
+      percentage: number;
+    };
+  }>;
+}
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (
     !active ||
     !payload ||
     !payload.length ||
-    payload.every((entry: any) => entry.value === 0 || entry.value == null)
+    payload.every((entry) => entry.value === 0 || entry.value == null)
   ) {
     return null;
   }
-
   return (
     <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
       {label && <p className="font-medium mb-1 text-gray-200">{label}</p>}
-      {payload.map((entry: any, index: number) => (
+      {payload.map((entry, index: number) => (
         <p key={index} className="text-gray-100">
           <span className="font-medium" style={{ color: entry.color }}>
             {entry.name}:
@@ -73,18 +84,17 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// Specialized tooltip for financial data
-const FinancialTooltip = ({ active, payload, label }: any) => {
+const FinancialTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
         {label && <p className="font-medium mb-1 text-gray-200">{label}</p>}
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <p key={index} className="text-gray-100">
             <span className="font-medium" style={{ color: entry.color }}>
               {entry.name}:
             </span>{" "}
-            ${((entry.value as number) / 1000).toFixed(0)}K
+            ₹${((entry.value as number) / 1000).toFixed(0)}K
           </p>
         ))}
       </div>
@@ -93,14 +103,13 @@ const FinancialTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// Specialized tooltip for pie charts
-const PieTooltip = ({ active, payload }: any) => {
+const PieTooltip = ({ active, payload }: PieTooltipProps) => {
   if (active && payload && payload.length && payload[0].value != null) {
     return (
       <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
         <p className="font-medium text-gray-200">{payload[0].name}</p>
         <p className="text-gray-100">
-          Value: ${((payload[0].value as number) / 1000).toFixed(0)}K
+          Value: ₹${((payload[0].value as number) / 1000).toFixed(0)}K
         </p>
         <p className="text-gray-100">
           Percentage: {payload[0].payload.percentage}%
@@ -111,111 +120,392 @@ const PieTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-const HomePage: React.FC<HomePageProps> = ({ company }) => {
+interface CompanyHistoryType {
+  id: string;
+  company_id: string;
+  period: number;
+  cash_balance: number;
+  data?: string;
+  total_assets: number;
+  total_liabilities: number;
+  marketing_budget: number;
+  credit_rating?: string | null;
+  brand_value: number;
+}
+
+interface DashboardData {
+  company: any;
+  history: CompanyHistoryType[];
+  financialHistory: any[];
+  productPerformance: any[];
+  hrMetrics: any[];
+  productionData: any[];
+  rdData: any[]; // Array of all R&D decisions
+  marketingData: any[]; // Array of all marketing decisions
+  hr_decision: any;
+  rd_decision: any;
+  production_decision: any;
+  marketing_decision: any;
+  finance_decision: any;
+  activeProductsCount: number;
+}
+
+const getPercentChange = (current: number, prev: number) => {
+  if (prev === 0 || prev === undefined || prev === null) return undefined;
+  return +(((current - prev) / prev) * 100).toFixed(1);
+};
+
+const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const { setComId, setPeriod } = useSimulation();
-  const comID = company?.id;
-  const period = company?.current_period;
-  useEffect(() => {
-    setComId(comID || "");
-    setPeriod(period || 1);
-  }, [comID, period, setComId, setPeriod]);
-  const [currentPeriod, setCurrentPeriod] = useState(
-    company?.current_period || 1
-  );
-  const [, startTransition] = useTransition();
+  const router = useRouter();
+
+  // Helper function to create current period data from company object
+  const createCurrentPeriodData = () => {
+    const currentPeriod = data?.company?.current_period || 1;
+
+    // Create current period company history entry
+    const currentCompanyData = {
+      id: `current-${currentPeriod}`,
+      company_id: data?.company?.id || "",
+      period: currentPeriod,
+      cash_balance: data?.company?.cash_balance || 0,
+      data: data?.company?.data || "{}",
+      total_assets: data?.company?.total_assets || 0,
+      total_liabilities: data?.company?.total_liabilities || 0,
+      marketing_budget: data?.company?.marketing_budget || 0,
+      credit_rating: data?.company?.credit_rating || null,
+      brand_value: data?.company?.brand_value || 0,
+    };
+
+    return { currentCompanyData };
+  };
+
+  // 1. Find unique periods from company history + current period
+  const periods = useMemo(() => {
+    const currentPeriod = data?.company?.current_period || 1;
+    const historicalPeriods = data?.history?.map((h) => h.period) || [];
+    const allPeriods = [...new Set([...historicalPeriods, currentPeriod])].sort(
+      (a, b) => a - b
+    );
+
+    // Show last 5 periods including current
+    return allPeriods.slice(-5);
+  }, [data]);
+
+  // 2. State: selected period (default: current period)
+  const initialPeriod =
+    data?.company?.current_period ||
+    (periods.length > 0 ? periods[periods.length - 1] : 1);
+  const [selectedPeriod, setSelectedPeriod] = useState(initialPeriod);
   const [isSimulating] = useState(false);
   const [, setHoveringBar] = useState(false);
 
-  // Mock data based on your schema
-  const mockData = {
-    revenue: [
-      { period: "P1", revenue: 850000, profit: 120000, costs: 730000 },
-      { period: "P2", revenue: 920000, profit: 140000, costs: 780000 },
-      { period: "P3", revenue: 1100000, profit: 180000, costs: 920000 },
-      { period: "P4", revenue: 1350000, profit: 240000, costs: 1110000 },
-      { period: "P5", revenue: 1650000, profit: 320000, costs: 1330000 },
-    ],
-    departmentBudgets: [
-      { name: "R&D", value: 850000, color: "#3B82F6", percentage: 28 },
-      { name: "Production", value: 1200000, color: "#10B981", percentage: 40 },
-      { name: "Marketing", value: 650000, color: "#F59E0B", percentage: 22 },
-      { name: "HR", value: 300000, color: "#EF4444", percentage: 10 },
-    ],
-    productPerformance: [
-      {
-        name: "Smart Widget Pro",
-        sales: 1220,
-        revenue: 374000,
-        marketShare: 32,
-        satisfaction: 4.2,
-      },
-      {
-        name: "Digital Assistant",
-        sales: 850,
-        revenue: 169000,
-        marketShare: 18,
-        satisfaction: 3.8,
-      },
-      {
-        name: "IoT Sensor Hub",
-        sales: 650,
-        revenue: 195000,
-        marketShare: 15,
-        satisfaction: 4.5,
-      },
-    ],
-    hrMetrics: [
-      {
-        department: "Engineering",
-        employees: 45,
-        satisfaction: 4.2,
-        newHires: 5,
-      },
-      { department: "Sales", employees: 28, satisfaction: 3.8, newHires: 3 },
-      {
-        department: "Marketing",
-        employees: 22,
-        satisfaction: 4.5,
-        newHires: 2,
-      },
-      {
-        department: "Operations",
-        employees: 18,
-        satisfaction: 4.0,
-        newHires: 1,
-      },
-    ],
-    productionData: [
-      { month: "Jan", produced: 1200, defects: 24, efficiency: 98 },
-      { month: "Feb", produced: 1350, defects: 18, efficiency: 99 },
-      { month: "Mar", produced: 1180, defects: 32, efficiency: 97 },
-      { month: "Apr", produced: 1420, defects: 15, efficiency: 99.5 },
-      { month: "May", produced: 1650, defects: 12, efficiency: 99.8 },
-    ],
+  useEffect(() => {
+    setComId(comID || "");
+    setPeriod(selectedPeriod);
+  }, [comID, selectedPeriod, setComId, setPeriod]);
+
+  // Get current period data
+  const { currentCompanyData } = createCurrentPeriodData();
+  const isCurrentPeriod = selectedPeriod === data?.company?.current_period;
+
+  // All period-specific data loaded by period
+  const companyHistory: CompanyHistoryType | undefined = isCurrentPeriod
+    ? currentCompanyData
+    : data.history?.find((h) => +h.period === +selectedPeriod);
+
+  const companyHistoryPrev: CompanyHistoryType | undefined = data.history?.find(
+    (h) => +h.period === +(selectedPeriod - 1)
+  );
+
+  // For financial data, if it's current period, use the latest finance_decision or create from company data
+  const finForPeriod =
+    isCurrentPeriod && data.finance_decision
+      ? {
+        period: selectedPeriod,
+        total_revenue: data.finance_decision.total_revenue || 0,
+        net_profit: data.finance_decision.net_profit || 0,
+        cash_balance:
+          data.finance_decision.cash_balance ||
+          data?.company?.cash_balance ||
+          0,
+        operating_costs: data.finance_decision.operating_costs || 0,
+        roi: data.finance_decision.roi || 0,
+        burn_rate: data.finance_decision.burn_rate || 0,
+      }
+      : data.financialHistory?.find((f) => +f.period === +selectedPeriod) || {};
+
+  const finForPeriodPrev =
+    data.financialHistory?.find((f) => +f.period === +(selectedPeriod - 1)) ||
+    {};
+
+  // Product performance - include current period products
+  const productPerformance = isCurrentPeriod
+    ? data.productPerformance?.filter((p) => +p.period === +selectedPeriod) ||
+    []
+    : data.productPerformance?.filter((p) => +p.period === +selectedPeriod) ||
+    [];
+
+  const productPerformancePrev =
+    data.productPerformance?.filter(
+      (p) => +p.period === +(selectedPeriod - 1)
+    ) || [];
+
+  // HR Metrics - use current decision for current period
+  const hrMetrics =
+    isCurrentPeriod && data.hr_decision
+      ? [
+        {
+          period: selectedPeriod,
+          totalBudget: data.hr_decision.total_budget || 0,
+          employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
+          totalEmployees:
+            data.hr_decision.roles?.reduce(
+              (sum: Number, role: any) => sum + (role.head_count || 0),
+              0
+            ) || 0,
+          newHires: 0, 
+          roles: data.hr_decision.roles || [],
+        },
+      ]
+      : data.hrMetrics?.filter((h) => +h.period === +selectedPeriod) || [
+        { department: "No Data", employees: 0, satisfaction: 0, newHires: 0 },
+      ];
+
+  // Production data - use current decision for current period
+  const productionData =
+    isCurrentPeriod && data.production_decision
+      ? [
+        {
+          period: selectedPeriod,
+          month: "Current",
+          produced: data.production_decision.units_to_produce || 0,
+          defects: Math.round(
+            ((data.production_decision.units_to_produce || 0) *
+              (data.production_decision.defect_rate || 0)) /
+            100
+          ),
+          efficiency:
+            data.production_decision.production_capacity > 0
+              ? Math.round(
+                ((data.production_decision.units_to_produce || 0) /
+                  data.production_decision.production_capacity) *
+                100
+              )
+              : 0,
+          budget: data.production_decision.budget || 0,
+        },
+      ]
+      : data.productionData?.filter((d) => +d.period === +selectedPeriod) || [
+        { month: "Current", produced: 0, defects: 0, efficiency: 0 },
+      ];
+
+  // Get period-specific decisions from arrays when available
+  const hr_decision = isCurrentPeriod
+    ? data.hr_decision
+    : data.hrMetrics?.find((h) => +h.period === +selectedPeriod);
+
+  const rd_decision_for_period = isCurrentPeriod
+    ? data.rd_decision
+    : data.rdData?.find((r) => +r.period === +selectedPeriod);
+
+  const production_decision_for_period = isCurrentPeriod
+    ? data.production_decision
+    : data.productionData?.find((p) => +p.period === +selectedPeriod);
+
+  const marketing_decision_for_period = isCurrentPeriod
+    ? data.marketing_decision
+    : data.marketingData?.find((m) => +m.period === +selectedPeriod);
+
+  // Fallback to latest decisions if period-specific not found
+  const rd_decision = rd_decision_for_period || data.rd_decision;
+  const production_decision =
+    production_decision_for_period || data.production_decision;
+  const marketing_decision =
+    marketing_decision_for_period || data.marketing_decision;
+
+  // Budgets, prevent undefined
+  const hr_budget = hr_decision?.total_budget || hr_decision?.totalBudget || 0;
+  const rd_budget = rd_decision?.budget || 0;
+  const production_budget = production_decision?.budget || 0;
+  const marketing_budget = marketing_decision?.budget || 0;
+
+  // Pie chart: adjust percentages dynamically
+  const totalDeptBudget =
+    hr_budget + rd_budget + production_budget + marketing_budget;
+  const departmentBudgets = [
+    {
+      name: "R&D",
+      value: rd_budget,
+      color: "#3B82F6",
+      percentage: totalDeptBudget
+        ? Math.round((rd_budget / totalDeptBudget) * 100)
+        : 0,
+    },
+    {
+      name: "Production",
+      value: production_budget,
+      color: "#10B981",
+      percentage: totalDeptBudget
+        ? Math.round((production_budget / totalDeptBudget) * 100)
+        : 0,
+    },
+    {
+      name: "Marketing",
+      value: marketing_budget,
+      color: "#F59E0B",
+      percentage: totalDeptBudget
+        ? Math.round((marketing_budget / totalDeptBudget) * 100)
+        : 0,
+    },
+    {
+      name: "HR",
+      value: hr_budget,
+      color: "#EF4444",
+      percentage: totalDeptBudget
+        ? 100 -
+        (Math.round((rd_budget / totalDeptBudget) * 100) +
+          Math.round((production_budget / totalDeptBudget) * 100) +
+          Math.round((marketing_budget / totalDeptBudget) * 100))
+        : 0,
+    },
+  ];
+
+  // For trend chart, get last 5 periods up to current (including current period data)
+  const revenueSeries = useMemo(() => {
+    const periodsToInclude = periods;
+    const currentPeriod = data?.company?.current_period || 1;
+
+    const series = periodsToInclude.map((period) => {
+      // If it's the current period, use current finance decision data
+      if (period === currentPeriod && data.finance_decision) {
+        return {
+          period,
+          revenue: data.finance_decision.total_revenue || 0,
+          profit: data.finance_decision.net_profit || 0,
+          total_revenue: data.finance_decision.total_revenue || 0,
+        };
+      }
+
+      // Otherwise use historical financial data
+      const periodData = data.financialHistory?.find(
+        (f) => +f.period === period
+      );
+      return periodData
+        ? {
+          ...periodData,
+          revenue: periodData.total_revenue || periodData.revenue || 0,
+          profit: periodData.net_profit || periodData.profit || 0,
+        }
+        : {
+          period,
+          revenue: 0,
+          profit: 0,
+          total_revenue: 0,
+        };
+    });
+
+    return series;
+  }, [
+    data.financialHistory,
+    data.finance_decision,
+    periods,
+    data?.company?.current_period,
+  ]);
+
+  const chartData = {
+    revenue: revenueSeries,
+    departmentBudgets,
+    productPerformance: productPerformance.length ? productPerformance : [],
+    hrMetrics: hrMetrics.length
+      ? hrMetrics
+      : [
+        {
+          department: "No Data",
+          employees: 0,
+          satisfaction: 0,
+          newHires: 0,
+        },
+      ],
+    productionData: productionData.length
+      ? productionData
+      : [{ month: "Current", produced: 0, defects: 0, efficiency: 0 }],
   };
 
-  // const handleAdvance = useCallback(() => {
-  //   startTransition(async () => {
-  //     // Simulate period advancement - replace with your actual function
-  //     setCurrentPeriod((prev) => prev + 1);
-  //   });
-  // }, []);
-  const router = useRouter();
+  // --- CHANGE calculations ---
+  // Cash Balance change
+  const cash_balance = companyHistory?.cash_balance ?? 0;
+  const cash_balance_prev = companyHistoryPrev?.cash_balance ?? 0;
+  const cashChange = getPercentChange(cash_balance, cash_balance_prev);
+
+  // Net Worth change
+  const total_assets = companyHistory?.total_assets ?? 0;
+  const total_liabilities = companyHistory?.total_liabilities ?? 0;
+  const netWorthNow = total_assets - total_liabilities;
+
+  const total_assets_prev = companyHistoryPrev?.total_assets ?? 0;
+  const total_liabilities_prev = companyHistoryPrev?.total_liabilities ?? 0;
+  const netWorthPrev = total_assets_prev - total_liabilities_prev;
+  const netWorthChange = getPercentChange(netWorthNow, netWorthPrev);
+
+  // Total Revenue change
+  const currentRevenue = finForPeriod?.total_revenue ?? 0;
+  const prevRevenue = finForPeriodPrev?.total_revenue ?? 0;
+  const revenueChange = getPercentChange(currentRevenue, prevRevenue);
+
+  // Active Products change
+  const activeProducts = productPerformance.length
+    ? productPerformance.length
+    : data?.activeProductsCount || 0;
+  const activeProductsPrev = productPerformancePrev.length
+    ? productPerformancePrev.length
+    : data?.activeProductsCount || 0;
+  const prodChange = getPercentChange(activeProducts, activeProductsPrev);
+
+  // Change event: update selected period
+  const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPeriod(Number(e.target.value));
+  };
+
+  // Simulate button
   const handleSimulate = useCallback(() => {
     router.push(`/simulate/${comID}`);
-  }, [router]);
+  }, [router, comID]);
 
   const handleBarMouseOver = useCallback(() => {
     setHoveringBar(true);
   }, []);
-
   const handleBarMouseOut = useCallback(() => {
     setHoveringBar(false);
   }, []);
 
+  const thisHr = hrMetrics[0] || {};
+  const prevHr =
+    data.hrMetrics?.find((h) => +h.period === +(selectedPeriod - 1)) ?? {};
+
+  const totalEmployees = thisHr.totalEmployees ?? 0;
+  const prevTotalEmployees = prevHr.totalEmployees ?? 0;
+  const newHires = thisHr.newHires ?? 0;
+  const prevNewHires = prevHr.newHires ?? 0;
+  const avgSatisfaction = thisHr.employeeSatisfaction ?? 0;
+  const prevSatisfaction = prevHr.employeeSatisfaction ?? 0;
+  const hrBudget = thisHr.totalBudget ?? hr_budget;
+  const hrBudgetPrev = prevHr.totalBudget ?? hr_budget;
+
+  // Calculate dynamic trends
+  const totalEmployeesChange = getPercentChange(
+    totalEmployees,
+    prevTotalEmployees
+  );
+  const newHiresChange = getPercentChange(newHires, prevNewHires);
+  const avgSatisfactionChange = getPercentChange(
+    avgSatisfaction,
+    prevSatisfaction
+  );
+  const hrBudgetChange = getPercentChange(hrBudget, hrBudgetPrev);
+
   return (
     <div className="min-h-screen bg-slate-900 text-white">
-      {/* CSS for animations */}
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -225,42 +515,54 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
           from { opacity: 0; transform: translateX(-20px); }
           to { opacity: 1; transform: translateX(0); }
         }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.6s ease-out forwards;
-        }
-        .animate-slide-in-left {
-          animation: slideInLeft 0.5s ease-out forwards;
-        }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-slide-in-left { animation: slideInLeft 0.5s ease-out forwards; }
         .stagger-1 { animation-delay: 0.1s; }
         .stagger-2 { animation-delay: 0.2s; }
         .stagger-3 { animation-delay: 0.3s; }
         .stagger-4 { animation-delay: 0.4s; }
+        .current-period-badge {
+          background: linear-gradient(90deg, #10B981, #059669);
+          color: white;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 10px;
+          font-weight: 600;
+          margin-left: 8px;
+        }
       `}</style>
-
       {/* Enhanced Header */}
       <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="animate-slide-in-left">
-              <h1 className="text-4xl font-bold mb-2">
-                {company?.name || "TechCorp Industries"}
-              </h1>
+              <h1 className="text-4xl font-bold mb-2">{data?.company?.name}</h1>
               <p className="text-blue-100 text-lg">
                 Business Simulation Dashboard
               </p>
               <div className="flex items-center mt-3 space-x-4">
                 <div className="flex items-center space-x-2">
                   <Calendar size={16} />
-                  <span className="text-sm">
-                    Current Period: {currentPeriod}
-                  </span>
+                  <span className="text-sm">Period:</span>
+                  <select
+                    className="ml-2 px-2 py-1 rounded bg-slate-800 text-white border border-slate-600 focus:outline-none"
+                    value={selectedPeriod}
+                    onChange={handlePeriodChange}
+                  >
+                    {periods.map((p, index) => (
+                      <option key={`period-${p}-${index}`} value={p}>
+                        Period {p}{" "}
+                        {p === data?.company?.current_period ? "(Current)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {isCurrentPeriod && (
+                    <span className="current-period-badge">LIVE</span>
+                  )}
                 </div>
               </div>
             </div>
             <div className="flex justify-between items-center animate-fade-in-up">
-              {/* <div className="mb-4">
-                <div className="text-3xl font-bold">Period {currentPeriod}</div>
-              </div> */}
               <div className="flex gap-3">
                 <button
                   onClick={handleSimulate}
@@ -270,14 +572,6 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                   {isSimulating ? "Simulating..." : "Simulate"}
                   <Play size={20} />
                 </button>
-                {/* <button
-                  onClick={handleAdvance}
-                  disabled={isPending}
-                  className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  {isPending ? "Processing..." : "Advance to Next Period"}
-                  <ChevronRight size={20} />
-                </button> */}
                 <LogoutBtn />
               </div>
             </div>
@@ -290,44 +584,35 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
           <DashboardCard
             title="Cash Balance"
-            value={`$${((company?.cash_balance || 2450000) / 1000000).toFixed(
-              1
-            )}M`}
+            value={`₹${(cash_balance / 100000).toFixed(1)}L`}
             subtitle="Available Funds"
             icon={DollarSign}
-            change={currentPeriod > 1 ? 12.5 : undefined}
+            change={cashChange}
             className="stagger-2"
           />
-
           <DashboardCard
             title="Net Worth"
-            value={`$${(
-              ((company?.total_assets || 8750000) -
-                (company?.total_liabilities || 3200000)) /
-              1000000
-            ).toFixed(1)}M`}
+            value={`₹${(netWorthNow / 100000).toFixed(1)}L`}
             subtitle="Assets - Liabilities"
             icon={TrendingUp}
-            change={currentPeriod > 1 ? 8.3 : undefined}
+            change={netWorthChange}
             className="stagger-2"
           />
           <DashboardCard
             title="Total Revenue"
-            value="$1.65M"
-            subtitle="Current Period"
+            value={`₹${((currentRevenue ?? 0) / 100000).toFixed(1)}L`}
+            subtitle={`Period ${selectedPeriod}${isCurrentPeriod ? " (Current)" : ""
+              }`}
             icon={BarChart3}
-            change={currentPeriod > 1 ? 15.2 : undefined}
+            change={revenueChange}
             className="stagger-3"
           />
           <DashboardCard
             title="Active Products"
-            value={
-              company?.products?.filter((p) => p.status === "active").length ||
-              3
-            }
+            value={activeProducts}
             subtitle="In Market"
             icon={Package}
-            change={currentPeriod > 1 ? 0 : undefined}
+            change={prodChange}
             className="stagger-4"
           />
         </div>
@@ -336,11 +621,13 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <ChartCard
             title="Revenue & Profit Trend"
-            subtitle="Last 5 periods"
+            subtitle={`Last ${periods.length} periods (up to Period ${Math.max(
+              ...periods
+            )})`}
             className="lg:col-span-2"
           >
             <ResponsiveContainer width="100%" height={450}>
-              <AreaChart data={mockData.revenue}>
+              <AreaChart data={chartData.revenue}>
                 <defs>
                   <linearGradient
                     id="revenueGradient"
@@ -367,7 +654,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                 <XAxis dataKey="period" stroke="#9CA3AF" />
                 <YAxis
                   stroke="#9CA3AF"
-                  tickFormatter={(value) => `$${value / 1000}K`}
+                  tickFormatter={(value) => `₹${value / 1000}K`}
                 />
                 <Tooltip
                   content={<FinancialTooltip />}
@@ -395,19 +682,22 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Department Budgets" subtitle="Current allocation">
+          <ChartCard
+            title="Department Budgets"
+            subtitle={`${isCurrentPeriod ? "Current" : `Period ${selectedPeriod}`
+              } allocation`}
+          >
             <ResponsiveContainer width="100%" height={300}>
               <RechartsPieChart>
                 <Pie
-                  data={mockData.departmentBudgets}
+                  data={chartData.departmentBudgets}
                   cx="50%"
                   cy="50%"
                   innerRadius={50}
                   outerRadius={120}
-                  paddingAngle={5}
                   dataKey="value"
                 >
-                  {mockData.departmentBudgets.map((entry, index) => (
+                  {chartData.departmentBudgets.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -415,7 +705,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
               </RechartsPieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-1 gap-2 mt-4">
-              {mockData.departmentBudgets.map((dept) => (
+              {chartData.departmentBudgets.map((dept) => (
                 <div
                   key={dept.name}
                   className="flex items-center justify-between p-2 rounded bg-white/5"
@@ -424,7 +714,7 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                     <div
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: dept.color }}
-                    ></div>
+                    />
                     <span className="text-sm text-gray-300">{dept.name}</span>
                   </div>
                   <span className="text-sm font-medium text-white">
@@ -442,38 +732,38 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
             <div className="space-y-4">
               <QuickStat
                 label="Total Employees"
-                value="113"
+                value={totalEmployees.toString()}
                 icon={Users}
                 color="blue"
-                trend={currentPeriod > 1 ? 8.3 : undefined}
+                trend={totalEmployeesChange}
               />
               <QuickStat
                 label="New Hires"
-                value="11"
+                value={newHires.toString()}
                 icon={Plus}
                 color="green"
-                trend={currentPeriod > 1 ? 15 : undefined}
+                trend={newHiresChange}
               />
               <QuickStat
                 label="Avg Satisfaction"
-                value="4.1"
+                value={avgSatisfaction.toFixed(1)}
                 icon={Award}
                 color="yellow"
-                trend={currentPeriod > 1 ? 5 : undefined}
+                trend={avgSatisfactionChange}
               />
               <QuickStat
-                label="Training Budget"
-                value="$85K"
+                label="HR Budget"
+                value={`₹${(hrBudget / 1000).toFixed(0)}K`}
                 icon={Briefcase}
                 color="purple"
-                trend={currentPeriod > 1 ? -2 : undefined}
+                trend={hrBudgetChange}
               />
             </div>
           </ChartCard>
 
           <ChartCard title="Production Metrics" className="lg:col-span-2">
             <ResponsiveContainer width="100%" height={450}>
-              <BarChart data={mockData.productionData}>
+              <BarChart data={chartData.productionData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="month" stroke="#9CA3AF" />
                 <YAxis stroke="#9CA3AF" />
@@ -502,31 +792,31 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
             <div className="space-y-4">
               <QuickStat
                 label="Active Projects"
-                value="7"
+                value={rd_decision?.pip?.toString() || "0"}
                 icon={Lightbulb}
                 color="yellow"
-                trend={currentPeriod > 1 ? 12 : undefined}
+                trend={selectedPeriod > 1 ? 12 : undefined}
               />
               <QuickStat
                 label="Patents Filed"
-                value="3"
+                value={rd_decision?.patented?.toString() || "0"}
                 icon={Award}
                 color="purple"
-                trend={currentPeriod > 1 ? 50 : undefined}
+                trend={selectedPeriod > 1 ? 50 : undefined}
               />
               <QuickStat
                 label="R&D Budget"
-                value="$850K"
+                value={`₹${(rd_budget / 1000).toFixed(0)}K`}
                 icon={Factory}
                 color="blue"
-                trend={currentPeriod > 1 ? -5 : undefined}
+                trend={selectedPeriod > 1 ? -5 : undefined}
               />
               <QuickStat
                 label="Time to Market"
-                value="8 mo"
+                value={`${rd_decision?.time_to_market || 0} mo`}
                 icon={Target}
                 color="green"
-                trend={currentPeriod > 1 ? -15 : undefined}
+                trend={selectedPeriod > 1 ? -15 : undefined}
               />
             </div>
           </ChartCard>
@@ -535,16 +825,18 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
         {/* Product Performance */}
         <ChartCard
           title="Product Portfolio Performance"
-          subtitle="Current period metrics"
+          subtitle={`${isCurrentPeriod ? "Current period" : `Period ${selectedPeriod}`
+            } metrics`}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
               <h4 className="text-lg font-semibold text-white mb-2">
-                Sales Performance – Period {currentPeriod}
+                Sales Performance – Period {selectedPeriod}{" "}
+                {isCurrentPeriod ? "(Current)" : ""}
               </h4>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
-                  data={mockData.productPerformance}
+                  data={chartData.productPerformance}
                   layout="vertical"
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
@@ -568,51 +860,153 @@ const HomePage: React.FC<HomePageProps> = ({ company }) => {
                     isAnimationActive={false}
                   />
                   <Bar
-                    dataKey="sales"
+                    dataKey="sales_volume"
                     fill="#3B82F6"
                     radius={[0, 6, 6, 0]}
                     barSize={20}
                     onMouseOver={handleBarMouseOver}
                     onMouseOut={handleBarMouseOut}
-                    name="Sales"
+                    name="Sales Volume"
                   />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-
             <div>
               <h4 className="text-lg font-semibold text-white mb-2">
-                Market Share
+                Market Share & Performance
               </h4>
               <div className="space-y-4">
-                {mockData.productPerformance.map((product, index) => (
-                  <div key={product.name} className="p-4 rounded-lg bg-white/5">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium text-white">
-                        {product.name}
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        {product.marketShare}% market share
-                      </span>
+                {chartData.productPerformance.length > 0 ? (
+                  chartData.productPerformance.map((product, index) => (
+                    <div
+                      key={`${product.product?.name || product.name}-${index}`}
+                      className="p-4 rounded-lg bg-white/5"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-white">
+                          {product.product?.name ||
+                            product.name ||
+                            `Product ${index + 1}`}
+                        </span>
+                        <span className="text-sm text-gray-400">
+                          {product.market_share || 0}% market share
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                          style={{
+                            width: `${Math.min(
+                              (product.market_share || 0) * 2,
+                              100
+                            )}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-400">
+                        <span>
+                          Revenue: ₹{((product.revenue || 0) / 1000).toFixed(0)}
+                          K
+                        </span>
+                        <span>
+                          Satisfaction:{" "}
+                          {(product.customer_satisfaction || 0).toFixed(1)}/10
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-400 mt-1">
+                        <span>Sales: {product.sales_volume || 0} units</span>
+                        <span>
+                          Profit: ₹{((product.profit || 0) / 1000).toFixed(0)}K
+                        </span>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
-                        style={{ width: `${product.marketShare * 2}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between text-sm text-gray-400">
-                      <span>
-                        Revenue: ${(product.revenue / 1000).toFixed(0)}K
-                      </span>
-                      <span>Rating: {product.satisfaction}/5.0</span>
-                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 rounded-lg bg-white/5 text-center">
+                    <span className="text-gray-400">
+                      No product performance data available for Period{" "}
+                      {selectedPeriod}
+                    </span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
         </ChartCard>
+
+        {/* Current Period Summary (only show for current period) */}
+        {isCurrentPeriod && (
+          <ChartCard
+            title="Current Period Summary"
+            subtitle={`Live data for Period ${selectedPeriod}`}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-blue-300 text-sm font-medium">
+                    Cash Position
+                  </span>
+                  <DollarSign className="text-blue-400" size={20} />
+                </div>
+                <div className="text-2xl font-bold text-white mb-1">
+                  ₹{(data?.company?.cash_balance / 100000 || 0).toFixed(1)}L
+                </div>
+                <div className="text-xs text-blue-200">
+                  Assets: ₹
+                  {(data?.company?.total_assets / 100000 || 0).toFixed(1)}L |
+                  Liabilities: ₹
+                  {(data?.company?.total_liabilities / 100000 || 0).toFixed(1)}L
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-green-300 text-sm font-medium">
+                    Brand Value
+                  </span>
+                  <Award className="text-green-400" size={20} />
+                </div>
+                <div className="text-2xl font-bold text-white mb-1">
+                  ₹{(data?.company?.brand_value / 1000 || 0).toFixed(0)}K
+                </div>
+                <div className="text-xs text-green-200">
+                  Credit Rating: {data?.company?.credit_rating || "N/A"}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-purple-300 text-sm font-medium">
+                    Total Employees
+                  </span>
+                  <Users className="text-purple-400" size={20} />
+                </div>
+                <div className="text-2xl font-bold text-white mb-1">
+                  {totalEmployees}
+                </div>
+                <div className="text-xs text-purple-200">
+                  Satisfaction: {avgSatisfaction.toFixed(1)}/10
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/20 border border-orange-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-orange-300 text-sm font-medium">
+                    Production
+                  </span>
+                  <Factory className="text-orange-400" size={20} />
+                </div>
+                <div className="text-2xl font-bold text-white mb-1">
+                  {production_decision?.units_to_produce || 0}
+                </div>
+                <div className="text-xs text-orange-200">
+                  Capacity: {production_decision?.production_capacity || 0}{" "}
+                  units
+                </div>
+              </div>
+            </div>
+          </ChartCard>
+        )}
       </div>
     </div>
   );

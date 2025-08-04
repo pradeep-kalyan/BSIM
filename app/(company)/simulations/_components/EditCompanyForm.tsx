@@ -65,9 +65,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
       ...prev,
       [name]:
         name === "cash_balance" ||
-          name === "total_assets" ||
-          name === "total_liabilities" ||
-          name === "brand_value"
+        name === "total_assets" ||
+        name === "total_liabilities" ||
+        name === "brand_value"
           ? Number(value)
           : value,
     }));
@@ -157,6 +157,7 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image className="w-4 h-4" />
                 Logo URL
               </label>
@@ -296,7 +297,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 />
                 <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <p className="text-xs text-slate-500">{formatCurrency(formData.marketing_budget)}</p>
+              <p className="text-xs text-slate-500">
+                {formatCurrency(formData.marketing_budget)}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -314,7 +317,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 />
                 <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <p className="text-xs text-slate-500">{formatCurrency(formData.marketing_budget)}</p>
+              <p className="text-xs text-slate-500">
+                {formatCurrency(formData.marketing_budget)}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -332,7 +337,9 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
                 />
                 <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               </div>
-              <p className="text-xs text-slate-500">{formatCurrency(formData.marketing_budget)}</p>
+              <p className="text-xs text-slate-500">
+                {formatCurrency(formData.marketing_budget)}
+              </p>
             </div>
           </div>
         </div>

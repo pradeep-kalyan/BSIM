@@ -24,7 +24,7 @@ interface Props {
     id: string;
     name: string;
     description: string | null;
-    config: any;
+    config: Record<string, unknown>;
     simulation_access?: { user: { email: string } }[];
   };
   onClose: () => void;
@@ -40,7 +40,7 @@ const EditSimulationForm: React.FC<Props> = ({
 }) => {
   const [name, setName] = useState(simulation.name);
   const [description, setDescription] = useState(simulation.description || "");
-  const [config, setConfig] = useState<Record<string, any>>(
+  const [config, setConfig] = useState<Record<string, unknown>>(
     typeof simulation.config === "string"
       ? JSON.parse(simulation.config)
       : simulation.config || {}
@@ -61,10 +61,10 @@ const EditSimulationForm: React.FC<Props> = ({
 
     newConfigFields.forEach(({ key, value }) => {
       if (key.trim()) {
-        let parsedValue: any = value.trim();
+        let parsedValue: unknown = value.trim();
         if (parsedValue === "true") parsedValue = true;
         else if (parsedValue === "false") parsedValue = false;
-        else if (!isNaN(Number(parsedValue)) && /^\d+(\.\d+)?$/.test(parsedValue)) {
+        else if (typeof parsedValue === "string" && !isNaN(Number(parsedValue)) && /^\d+(\.\d+)?$/.test(parsedValue)) {
           parsedValue = Number(parsedValue);
         }
         combinedConfig[key.trim()] = parsedValue;
@@ -178,7 +178,7 @@ const EditSimulationForm: React.FC<Props> = ({
                         className="w-full sm:w-2/4 px-3 py-2 rounded-md bg-slate-700 text-white text-sm border border-slate-600 focus:border-blue-500 focus:outline-none"
                       />
                       <input
-                        value={value}
+                        value={String(value)}
                         onChange={(e) =>
                           setConfig((prev) => ({
                             ...prev,

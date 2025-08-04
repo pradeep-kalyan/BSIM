@@ -17,46 +17,53 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import EditCompanyForm from "../_components/EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { company } from "@prisma/client";
 
 interface Props {
   simulationID: string;
   simulationName: string;
 }
 
+interface ExtendedCompany extends company {
+  canAccess?: boolean;
+  canEdit?: boolean;
+  user_id: string;
+}
+
 const CompanyPage = ({ simulationID, simulationName }: Props) => {
-  const [ownedCompanies, setOwnedCompanies] = useState<any[]>([]);
-  const [accessibleCompanies, setAccessibleCompanies] = useState<any[]>([]);
+  const [ownedCompanies, setOwnedCompanies] = useState<ExtendedCompany[]>([]);
+  const [accessibleCompanies, setAccessibleCompanies] = useState<ExtendedCompany[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [success, setSuccess] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
-  const [editCompany, setEditCompany] = useState<any | null>(null);
+  const [editCompany, setEditCompany] = useState<ExtendedCompany | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "created_at">("name");
+  const [searchQuery] = useState("");
+  const [sortBy] = useState<"name" | "created_at">("name");
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
   );
   // Removed unused setSimId state
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = React.useCallback(async () => {
     const user = await getCurrentUser();
     if (!user) return;
 
     const companies = await getCompaniesBySimulation(simulationID);
     setCurrentUserId(user.id);
 
-    setOwnedCompanies(companies.filter((c:any) => c.user_id === user.id));
-    setAccessibleCompanies(companies.filter((c:any) => c.user_id !== user.id));
+    setOwnedCompanies(companies.filter((c: ExtendedCompany) => c.user_id === user.id));
+    setAccessibleCompanies(companies.filter((c: ExtendedCompany) => c.user_id !== user.id));
     setInitialLoad(false);
-  };
+  }, [simulationID]);
 
   const { setSimId } = useSimulation();
 
   useEffect(() => {
     setSimId(simulationID);
     fetchCompanies();
-  }, [simulationID]);
+  }, [simulationID, setSimId, fetchCompanies]);
 
   const handleCreated = async () => {
     setInitialLoad(true);
@@ -75,9 +82,9 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     }
   };
 
-  const handleEdit = (company: any) => setEditCompany(company);
+  const handleEdit = (company: ExtendedCompany) => setEditCompany(company);
 
-  const filterAndSort = (list: any[]) =>
+  const filterAndSort = (list: ExtendedCompany[]) =>
     list
       .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
       .sort((a, b) =>
@@ -113,7 +120,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           {["owned", "shared", "all"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
               className={`px-4 py-2 rounded-md ${
                 activeTab === tab
                   ? "bg-blue-600"

@@ -1,66 +1,132 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  PlusCircle,
-  Trash2,
-} from "lucide-react";
+import React from "react";
+import { PlusCircle, Trash2, Check, TriangleAlert } from "lucide-react";
 import { ToastContainer } from "react-toastify";
 import {
   useCashBalance,
   useCompanyForm,
   useHRForm,
-  useHRInitialization,
 } from "@/app/context/FormContext";
+
 import { useSimulation } from "@/app/context/SimulationContext";
-import {
-  Users,
-  TrendingUp,
-  Award,
-  Building2, IndianRupee,
-} from "lucide-react";
+import { Users, TrendingUp, Award, Building2, IndianRupee } from "lucide-react";
 
 const HRDashboard = () => {
-
   const {
     data,
     updateData,
+
     updateExistingRole,
-    removeExistingRole,
+
     addNewRole,
     updateNewRole,
     removeNewRole,
   } = useHRForm();
 
-  const { cashBalance } = useCashBalance();
+  const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
+    useCashBalance();
   const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
 
-  // Calculate net hiring from newRoles and existing roles combined
+  // State for validation and success feedback
+  const [success, setSuccess] = React.useState(false);
+  const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
+
+  // Calculate net hiring from newRoles and existing roles combined with NaN protection
   const netHiring =
-    (data?.newRoles?.reduce((acc, r) => acc + (r.hires || 0), 0) || 0) +
-    (data?.existingRoles?.reduce((acc, r) => acc + (r.hires || 0), 0) || 0);
+    (data?.newRoles?.reduce((acc, r) => {
+      const hires = isNaN(r.hires) ? 0 : r.hires || 0;
+      return acc + hires;
+    }, 0) || 0) +
+    (data?.existingRoles?.reduce((acc, r) => {
+      const hires = isNaN(r.hires) ? 0 : r.hires || 0;
+      return acc + hires;
+    }, 0) || 0);
 
   const formatCurrency = (value: number) => {
     return "₹" + value.toLocaleString(undefined, { minimumFractionDigits: 0 });
   };
-  const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => sum + (role.head_count || 0), 0);
-  const totalHires = data.existingRoles.reduce(
-    (sum, role) => sum + (role.hires || 0),
-    0
-  );
+  const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => {
+    const headCount = isNaN(role.current_head_count) ? 0 : role.current_head_count || 0;
+    return sum + headCount;
+  }, 0);
+  const totalHires = data.existingRoles.reduce((sum, role) => {
+    const hires = isNaN(role.hires) ? 0 : role.hires || 0;
+    return sum + hires;
+  }, 0);
 
-  const projectedSalaryBudget = data.existingRoles.reduce((sum, role) => {
-    const adjustedHeadCount = (role.head_count || 0) + (role.hires || 0) - (role.fires || 0);
-    return sum + (role.salary_per_head * Math.max(0, adjustedHeadCount));
-  }, 0) + (data.newRoles?.reduce((sum, role) => sum + (role.salary_per_head * (role.hires || 0)), 0) || 0);
+  const projectedSalaryBudget =
+    data.existingRoles.reduce((sum, role) => {
+      const headCount = isNaN(role.current_head_count) ? 0 : role.current_head_count || 0;
+      const hires = isNaN(role.hires) ? 0 : role.hires || 0;
+      const fires = isNaN(role.fires) ? 0 : role.fires || 0;
+      const salaryPerHead = isNaN(role.salary_per_head)
+        ? 0
+        : role.salary_per_head || 0;
 
-  const cashAfter = (cashBalance.originalCashBalance ?? 0) - ((projectedSalaryBudget + data?.training_budget) || 0);
+      const adjustedHeadCount = headCount + hires - fires;
+      return sum + salaryPerHead * Math.max(0, adjustedHeadCount);
+    }, 0) +
+    (data.newRoles?.reduce((sum, role) => {
+      const salaryPerHead = isNaN(role.salary_per_head)
+        ? 0
+        : role.salary_per_head || 0;
+      const hires = isNaN(role.hires) ? 0 : role.hires || 0;
+      return sum + salaryPerHead * hires;
+    }, 0) || 0);
+
+  // Use projectedCashBalance for cash after calculation with NaN protection
+  const trainingBudget = isNaN(data?.training_budget)
+    ? 0
+    : data?.training_budget || 0;
+  const totalHRBudget =
+    (isNaN(projectedSalaryBudget) ? 0 : projectedSalaryBudget) + trainingBudget;
+  const cashAfter =
+    (isNaN(projectedCashBalance) ? 0 : projectedCashBalance) - totalHRBudget;
+
+  const totalFires = data.existingRoles.reduce((sum, role) => {
+    const fires = isNaN(role.fires) ? 0 : role.fires || 0;
+    return sum + fires;
+  }, 0);
+
+  // Validation function similar to other forms
+  const handleValidate = () => {
+    setSuccess(false);
+    setBudgetAlert(null);
+
+    // Basic validation checks with NaN protection
+    if (isNaN(totalHRBudget) || totalHRBudget <= 0) {
+      setBudgetAlert("⚠️ Total HR budget must be greater than zero");
+      return;
+    }
+
+    if (isNaN(projectedSalaryBudget) || projectedSalaryBudget < 0) {
+      setBudgetAlert("⚠️ Salary budget cannot be negative");
+      return;
+    }
+
+    const trainingBudgetValue = isNaN(data.training_budget)
+      ? 0
+      : data.training_budget;
+    if (trainingBudgetValue < 0) {
+      setBudgetAlert("⚠️ Training budget cannot be negative");
+      return;
+    }
+
+    const employeeSatisfaction = isNaN(data.employee_satisfaction)
+      ? 0
+      : data.employee_satisfaction;
+    if (employeeSatisfaction < 0 || employeeSatisfaction > 100) {
+      setBudgetAlert("⚠️ Employee satisfaction must be between 0 and 100");
+      return;
+    }
+
+    // Update the HR budget impact in the cash balance system
+    updateHRBudgetImpact(totalHRBudget);
+    setSuccess(true);
+  };
   
-  const totalFires = data.existingRoles.reduce(
-    (sum, role) => sum + (role.fires || 0),
-    0
-  );
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
       <ToastContainer position="top-right" />
@@ -72,20 +138,29 @@ const HRDashboard = () => {
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
             <div className="flex items-center justify-between mb-2">
               <Building2 className="h-8 w-8 text-blue-400" />
-              <span className="text-xl font-bold text-white text-right">{companyData.name}</span>
+              <span className="text-xl font-bold text-white text-right">
+                {companyData.name}
+              </span>
             </div>
             <p className="text-slate-300">Period {period}</p>
-            <p className="text-sm text-slate-400"> Cash: {formatCurrency(cashBalance.originalCashBalance)} </p>
+            <p className="text-sm text-slate-400">
+              {" "}
+              Cash: {formatCurrency(cashBalance.originalCashBalance || 0)}{" "}
+            </p>
           </div>
 
           {/* Projected Employees */}
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
             <div className="flex items-center justify-between mb-2">
               <Users className="h-8 w-8 text-blue-400" />
-              <span className="text-2xl font-bold text-white">{totalExistingHeadCount + totalHires - totalFires}</span>
+              <span className="text-2xl font-bold text-white">
+                {totalExistingHeadCount + totalHires - totalFires}
+              </span>
             </div>
             <p className="text-slate-300">Projected Employees</p>
-            <p className="text-sm text-slate-400">Current: {totalExistingHeadCount}</p>
+            <p className="text-sm text-slate-400">
+              Current: {totalExistingHeadCount}
+            </p>
           </div>
 
           {/* New Hires / Fires */}
@@ -102,11 +177,13 @@ const HRDashboard = () => {
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
             <div className="flex items-center justify-between mb-2">
               <IndianRupee className="h-8 w-8 text-yellow-400" />
-              <span className="text-2xl font-bold text-white">{data.training_budget}</span>
+              <span className="text-2xl font-bold text-white">
+                {formatCurrency(trainingBudget)}
+              </span>
             </div>
-            <p className="text-slate-300">HR Budget</p>
+            <p className="text-slate-300">Training Budget</p>
             <p className="text-sm text-slate-400">
-              Total: {data?.training_budget + data?.salary_budget}
+              Total HR: {formatCurrency(totalHRBudget || 0)}
             </p>
           </div>
 
@@ -114,10 +191,17 @@ const HRDashboard = () => {
           <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
             <div className="flex items-center justify-between mb-2">
               <Award className="h-8 w-8 text-purple-400" />
-              <span className="text-2xl font-bold text-white">{data.employee_satisfaction}%</span>
+              <span className="text-2xl font-bold text-white">
+                {isNaN(data.employee_satisfaction)
+                  ? "0"
+                  : data.employee_satisfaction.toFixed(0)}
+                %
+              </span>
             </div>
             <p className="text-slate-300">Employee Satisfaction</p>
-            <p className="text-sm text-slate-400">Salary: {projectedSalaryBudget}</p>
+            <p className="text-sm text-slate-400">
+              Salary: {formatCurrency(projectedSalaryBudget || 0)}
+            </p>
           </div>
         </div>
 
@@ -147,22 +231,24 @@ const HRDashboard = () => {
                   {data.existingRoles.map((role, index) => (
                     <tr key={index} className="border-b border-slate-700">
                       <td className="py-1 text-white">{role.role_name}</td>
-                      <td className="py-1 text-slate-300">
-                        {role.head_count}
-                      </td>
+                      <td className="py-1 text-slate-300">{role.current_head_count}</td>
                       <td className="py-1">
                         <input
                           type="number"
                           min={0}
-                          value={role.salary_per_head}
-                          onChange={(e) =>
-                            updateExistingRole(
-                              index,
-                              {
-                                salary_per_head: parseFloat(e.target.value) || 0
-                              }
-                            )
+                          value={
+                            isNaN(role.salary_per_head)
+                              ? 0
+                              : role.salary_per_head
                           }
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value);
+                            updateExistingRole(index, {
+                              salary_per_head: isNaN(value) ? 0 : value,
+                            });
+                            setSuccess(false);
+                            setBudgetAlert(null);
+                          }}
                           className="w-24 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
                         />
                       </td>
@@ -171,16 +257,15 @@ const HRDashboard = () => {
                           type="number"
                           placeholder="0"
                           min={0}
-                          value={role.hires ?? 0}
-                          onChange={(e) =>
-                            updateExistingRole(
-                              index,
-                              {
-                                hires:
-                                  parseInt(e.target.value) || 0
-                              }
-                            )
-                          }
+                          value={isNaN(role.hires) ? 0 : role.hires ?? 0}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            updateExistingRole(index, {
+                              hires: isNaN(value) ? 0 : value,
+                            });
+                            setSuccess(false);
+                            setBudgetAlert(null);
+                          }}
                           className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
                         />
                       </td>
@@ -189,16 +274,15 @@ const HRDashboard = () => {
                           type="number"
                           placeholder="0"
                           min={0}
-                          value={role.fires ?? 0}
-                          onChange={(e) =>
-                            updateExistingRole(
-                              index,
-                              {
-                                fires:
-                                  parseInt(e.target.value) || 0
-                              }
-                            )
-                          }
+                          value={isNaN(role.fires) ? 0 : role.fires ?? 0}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value);
+                            updateExistingRole(index, {
+                              fires: isNaN(value) ? 0 : value,
+                            });
+                            setSuccess(false);
+                            setBudgetAlert(null);
+                          }}
                           className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
                         />
                       </td>
@@ -232,7 +316,9 @@ const HRDashboard = () => {
             </div>
 
             {data?.newRoles?.length === 0 && (
-              <p className="text-slate-400 italic mb-1">No new roles added yet.</p>
+              <p className="text-slate-400 italic mb-1">
+                No new roles added yet.
+              </p>
             )}
 
             {data?.newRoles?.map((role, index) => (
@@ -248,10 +334,12 @@ const HRDashboard = () => {
                   <input
                     type="text"
                     placeholder="Role Name"
-                    value={role.role_name}
-                    onChange={(e) =>
-                      updateNewRole(index, { role_name: e.target.value })
-                    }
+                    value={role.role_name || ""}
+                    onChange={(e) => {
+                      updateNewRole(index, { role_name: e.target.value });
+                      setSuccess(false);
+                      setBudgetAlert(null);
+                    }}
                     className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
                   />
                 </div>
@@ -265,12 +353,17 @@ const HRDashboard = () => {
                     type="number"
                     placeholder="Salary"
                     min={0}
-                    value={role.salary_per_head}
-                    onChange={(e) =>
-                      updateNewRole(index, {
-                        salary_per_head: parseFloat(e.target.value) || 0,
-                      })
+                    value={
+                      isNaN(role.salary_per_head) ? 0 : role.salary_per_head
                     }
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      updateNewRole(index, {
+                        salary_per_head: isNaN(value) ? 0 : value,
+                      });
+                      setSuccess(false);
+                      setBudgetAlert(null);
+                    }}
                     className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
                   />
                 </div>
@@ -284,12 +377,15 @@ const HRDashboard = () => {
                     type="number"
                     placeholder="Hires"
                     min={0}
-                    value={role.hires}
-                    onChange={(e) =>
+                    value={isNaN(role.hires) ? 0 : role.hires}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
                       updateNewRole(index, {
-                        hires: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        hires: isNaN(value) ? 0 : value,
+                      });
+                      setSuccess(false);
+                      setBudgetAlert(null);
+                    }}
                     className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
                   />
                 </div>
@@ -318,12 +414,17 @@ const HRDashboard = () => {
               </label>
               <input
                 type="number"
-                value={data?.training_budget}
-                onChange={(e) =>
-                  updateData({
-                    training_budget: Number(e.target.value),
-                  })
+                value={
+                  isNaN(data?.training_budget) ? 0 : data?.training_budget || 0
                 }
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  updateData({
+                    training_budget: isNaN(value) ? 0 : value,
+                  });
+                  setSuccess(false);
+                  setBudgetAlert(null);
+                }}
                 min={0}
                 className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
               />
@@ -335,12 +436,23 @@ const HRDashboard = () => {
               </label>
               <input
                 type="number"
-                value={data?.employee_satisfaction}
-                onChange={(e) =>
-                  updateData({
-                    employee_satisfaction: Math.min(100, Math.max(0, Number(e.target.value))),
-                  })
+                value={
+                  isNaN(data?.employee_satisfaction)
+                    ? 0
+                    : data?.employee_satisfaction || 0
                 }
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  const clampedValue = Math.min(
+                    100,
+                    Math.max(0, isNaN(value) ? 0 : value)
+                  );
+                  updateData({
+                    employee_satisfaction: clampedValue,
+                  });
+                  setSuccess(false);
+                  setBudgetAlert(null);
+                }}
                 min={0}
                 max={100}
                 className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
@@ -348,28 +460,64 @@ const HRDashboard = () => {
             </div>
           </div>
 
+          {/* Validate Button */}
+          <div className="flex justify-center mb-4 mx-6">
+            <button
+              type="button"
+              onClick={handleValidate}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
+            >
+              Validate HR Decisions
+            </button>
+          </div>
+
+          {/* Validation Messages */}
+          {(budgetAlert || success) && (
+            <div className="mt-6 space-y-4 mx-6">
+              {budgetAlert && (
+                <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
+                  <div className="flex items-start gap-3">
+                    <TriangleAlert className="text-rose-500 mt-0.5" />
+                    <p className="text-sm">{budgetAlert}</p>
+                  </div>
+                </div>
+              )}
+              {success && !budgetAlert && (
+                <div className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce">
+                  <div className="flex items-center gap-3">
+                    <Check className="text-green-400 text-xl" />
+                    <p className="text-xl font-semibold">
+                      HR Decisions Validated Successfully!
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Summary Section */}
           <h4 className="text-xl font-semibold text-white mb-2 ml-6">
             Decision Summary
           </h4>
           <div className="bg-slate-700/70 rounded-xl px-6 py-4 mx-6 grid grid-cols-2 md:grid-cols-3 gap-6 text-center text-white font-semibold">
             <div>
-              <p className="text-slate-300 text-sm mb-1">Salary Budget</p>
-              <p className="text-2xl">₹{projectedSalaryBudget?.toLocaleString()}</p>
+              <p className="text-slate-300 text-sm mb-1">Total HR Budget</p>
+              <p className="text-2xl">{formatCurrency(totalHRBudget || 0)}</p>
             </div>
-
             <div>
-              <p className="text-slate-300 text-sm mb-1">Total Budget</p>
-              <p className="text-2xl">₹{(projectedSalaryBudget + data.training_budget)?.toLocaleString()}</p>
+              <p className="text-slate-300 text-sm mb-1">Available Cash</p>
+              <p className="text-2xl">
+                {formatCurrency(cashBalance.originalCashBalance || 0)}
+              </p>
             </div>
-
             <div>
-              <p className="text-slate-300 text-sm mb-1">Cash After</p>
+              <p className="text-slate-300 text-sm mb-1">Cash After HR</p>
               <p
-                className={`text-2xl ${cashAfter < 0 ? "text-red-500" : "text-green-400"
-                  }`}
+                className={`text-2xl ${
+                  (cashAfter || 0) < 0 ? "text-red-500" : "text-green-400"
+                }`}
               >
-                ₹{cashAfter.toLocaleString()}
+                {formatCurrency(projectedCashBalance || 0)}
               </p>
             </div>
           </div>

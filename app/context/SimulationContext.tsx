@@ -7,6 +7,7 @@ const SimulationContext = createContext<{
   simId: string | null;
   comId: string | null;
   period: number | null;
+  isHydrated: boolean;
   setSimId: (id: string) => void;
   setComId: (id: string) => void;
   setPeriod: (id: number) => void;
@@ -17,6 +18,7 @@ const SimulationContext = createContext<{
   simId: null,
   comId: null,
   period: null,
+  isHydrated: false,
   setSimId: () => {},
   setComId: () => {},
   setPeriod: () => {},
@@ -33,9 +35,11 @@ export const SimulationProvider = ({
   const [simId, setSimIdState] = useState<string | null>(null);
   const [comId, setComIdState] = useState<string | null>(null);
   const [period, setPeriodState] = useState<number | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load from cookies on first load
+  // Load from cookies on first load - only on client side
   useEffect(() => {
+    setIsHydrated(true);
     const sim = Cookies.get("simId");
     const com = Cookies.get("comId");
     const period = Cookies.get("period");
@@ -116,6 +120,7 @@ export const SimulationProvider = ({
         simId,
         comId,
         period,
+        isHydrated,
         setSimId,
         setComId,
         setPeriod: setCurrentPeriodWrapper,

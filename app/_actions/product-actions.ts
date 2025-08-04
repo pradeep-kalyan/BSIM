@@ -112,7 +112,7 @@ export async function createProduct({
         where: { id: company_id },
         data: {
           cash_balance: { decrement: development_cost },
-          marketing_budget: { decrement: marketing_budget }
+          marketing_budget: { decrement: marketing_budget },
         },
       });
 
@@ -199,11 +199,6 @@ export async function updateProduct({
       }
 
       // Calculate differences in costs (treat undefined as no change)
-      const prodCostDiff =
-        production_cost !== undefined
-          ? production_cost - existingProduct.production_cost
-          : 0;
-
       const devCostDiff =
         development_cost !== undefined
           ? development_cost - existingProduct.development_cost
@@ -220,16 +215,28 @@ export async function updateProduct({
 
       // Check if company has enough cash_balance for any increased cost
       if (totalCashDiff > 0 && company.cash_balance < totalCashDiff) {
-        throw new Error("Insufficient cash balance for updated development cost");
+        throw new Error(
+          "Insufficient cash balance for updated development cost"
+        );
       }
 
       // Check marketing budget sufficiency if marketing_budget increased
-      if (marketingBudgetDiff > 0 && (company.marketing_budget ?? 0) < marketingBudgetDiff) {
-        throw new Error("Insufficient marketing budget for updated marketing spend");
+      if (
+        marketingBudgetDiff > 0 &&
+        (company.marketing_budget ?? 0) < marketingBudgetDiff
+      ) {
+        throw new Error(
+          "Insufficient marketing budget for updated marketing spend"
+        );
       }
 
       // Prepare company update data
-      const companyUpdateData: any = {};
+      interface CompanyUpdateData {
+        cash_balance?: { decrement: number } | { increment: number };
+        marketing_budget?: { decrement: number } | { increment: number };
+      }
+
+      const companyUpdateData: CompanyUpdateData = {};
       if (totalCashDiff !== 0) {
         companyUpdateData.cash_balance =
           totalCashDiff > 0

@@ -21,10 +21,7 @@ function FormDataInitializer() {
 
       setIsLoading(true);
       try {
-        console.log("Fetching initial form data for:", { comId, period });
-
         const initialData = await getInitialFormData(comId, period);
-        console.log("Initial form data:", initialData);
 
         // Transform the data to match the form context and Zod schema
         const formInitialData = {
@@ -77,26 +74,44 @@ function FormDataInitializer() {
             quality_changes: initialData.rd?.quality_changes ?? 0,
           },
 
-          product: {
-            name: initialData.product?.name ?? "",
-            description: initialData.product?.description ?? "",
-            category: initialData.product?.category ?? "",
-            quality_rating: initialData.product?.quality_rating ?? 0,
-            innovation_rating: initialData.product?.innovation_rating ?? 0,
-            sustainability_rating:
-              initialData.product?.sustainability_rating ?? 0,
-            production_cost: initialData.product?.production_cost ?? 0,
-            selling_price: initialData.product?.selling_price ?? 0,
-            inventory_level: initialData.product?.inventory_level ?? 0,
-            production_capacity:
-              initialData.product?.production_capacity ?? 2000,
-            development_cost: initialData.product?.development_cost ?? 0,
-            marketing_budget: initialData.product?.marketing_budget ?? 0,
-            status: initialData.product?.status ?? "development",
-            launch_period: initialData.product?.launch_period ?? undefined,
-            discontinue_period:
-              initialData.product?.discontinue_period ?? undefined,
-          },
+          product:
+            initialData.products?.map(
+              (product: {
+                id: string;
+                name: string;
+                description: string | null;
+                category: string;
+                quality_rating: number;
+                innovation_rating: number;
+                sustainability_rating: number;
+                production_cost: number;
+                selling_price: number;
+                inventory_level: number;
+                production_capacity: number;
+                development_cost: number;
+                marketing_budget: number;
+                status: string;
+                launch_period: number | null;
+                discontinue_period: number | null;
+              }) => ({
+                id: product.id, // Include the ID
+                name: product.name ?? "",
+                description: product.description ?? "",
+                category: product.category ?? "",
+                quality_rating: product.quality_rating ?? 0,
+                innovation_rating: product.innovation_rating ?? 0,
+                sustainability_rating: product.sustainability_rating ?? 0,
+                production_cost: product.production_cost ?? 0,
+                selling_price: product.selling_price ?? 0,
+                inventory_level: product.inventory_level ?? 0,
+                production_capacity: product.production_capacity ?? 2000,
+                development_cost: product.development_cost ?? 0,
+                marketing_budget: product.marketing_budget ?? 0,
+                status: product.status ?? "development",
+                launch_period: product.launch_period ?? undefined,
+                discontinue_period: product.discontinue_period ?? undefined,
+              })
+            ) ?? [],
 
           company: {
             name: initialData.company?.name ?? "",
@@ -125,15 +140,14 @@ function FormDataInitializer() {
             marketingBudgetImpact: 0,
             productionBudgetImpact: 0,
             rdBudgetImpact: 0,
+            salesBudgetImpact: 0,
             productBudgetImpact: 0,
           },
         };
 
-        console.log("Initializing forms with data:", formInitialData);
         initializeForms(formInitialData);
-      } catch (error) {
-        console.error("Failed to fetch initial form data:", error);
-
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_error) {
         // Initialize with default values in case of error
         const defaultData = {
           cashBalance: {
@@ -143,6 +157,7 @@ function FormDataInitializer() {
             marketingBudgetImpact: 0,
             productionBudgetImpact: 0,
             rdBudgetImpact: 0,
+            salesBudgetImpact: 0,
             productBudgetImpact: 0,
           },
         };

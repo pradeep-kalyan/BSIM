@@ -1,28 +1,19 @@
-import prisma from "@/app/functions/prisma";
 import React from "react";
 import HomePage from "../../_components/HomePage";
-import { company, product } from "@prisma/client";
 import { notFound } from "next/navigation";
-
-type CompanyWithProducts = company & {
-  products: product[];
-};
-
+import { getCompanyDashboardData } from "@/app/_actions/getDashboardData";
+ 
 const Page = async ({ params }: { params: { companyID: string } }) => {
-  const { companyID } = await params;
-
-  const companyData = await prisma.company.findUnique({
-    where: { id: companyID },
-    include: {
-      products: true,
-    },
-  });
-
-  if (!companyData) {
+  const res = await params;
+  const data = await getCompanyDashboardData(res.companyID);
+  console.log(data);
+ 
+  if (!data) {
     notFound();
   }
-
-  return <HomePage company={companyData as CompanyWithProducts} />;
+ 
+  return <HomePage data={data} comID={res.companyID} />;
 };
-
+ 
 export default Page;
+ 

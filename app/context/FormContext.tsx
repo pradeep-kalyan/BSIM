@@ -49,7 +49,7 @@ export interface HRRole {
 export interface ExistingRole {
   role_name: string;
   salary_per_head: number;
-  head_count: number;
+  current_head_count: number;
   hires: number;
   fires: number;
 }
@@ -87,7 +87,17 @@ export interface RDFormData {
   quality_changes: number;
 }
 
+export interface SalesFormData {
+  sales_volume: number;
+  revenue: number;
+  costs: number;
+  profit: number;
+  market_share: number;
+  customer_satisfaction: number;
+}
+
 export interface ProductFormData {
+  id?: string; // Optional ID for tracking existing products
   name: string;
   description?: string;
   category: string;
@@ -133,6 +143,7 @@ export interface CashBalanceState {
   marketingBudgetImpact: number;
   productionBudgetImpact: number;
   rdBudgetImpact: number;
+  salesBudgetImpact: number;
   productBudgetImpact: number;
 }
 
@@ -143,10 +154,12 @@ export interface FormState {
   production: ProductionFormData;
   hr: HRFormData;
   rd: RDFormData;
-  product: ProductFormData;
+  sales: SalesFormData;
+  product: ProductFormData[];
   company: CompanyFormData;
   simulation: SimulationFormData;
   cashBalance: CashBalanceState;
+  projected_balance: number;
   isSubmitting: boolean;
   errors: Record<string, string>;
   isDirty: boolean;
@@ -168,20 +181,28 @@ export type FormAction =
   | { type: "UPDATE_PRODUCTION"; payload: Partial<ProductionFormData> }
   | { type: "UPDATE_HR"; payload: Partial<HRFormData> }
   | { type: "UPDATE_RD"; payload: Partial<RDFormData> }
-  | { type: "UPDATE_PRODUCT"; payload: Partial<ProductFormData> }
+  | { type: "UPDATE_SALES"; payload: Partial<SalesFormData> }
+  | { type: "UPDATE_PRODUCT"; payload: Partial<ProductFormData> } // For backward compatibility
+  | { type: "ADD_PRODUCT"; payload: ProductFormData }
+  | {
+      type: "UPDATE_PRODUCT_BY_INDEX";
+      payload: { index: number; product: Partial<ProductFormData> };
+    }
+  | { type: "REMOVE_PRODUCT"; payload: number } // Remove by index
+  | { type: "SET_PRODUCTS"; payload: ProductFormData[] } // Set entire products array
   | { type: "UPDATE_COMPANY"; payload: Partial<CompanyFormData> }
   | { type: "UPDATE_SIMULATION"; payload: Partial<SimulationFormData> }
   | { type: "ADD_EXISTING_ROLE"; payload: ExistingRole }
   | {
-    type: "UPDATE_EXISTING_ROLE";
-    payload: { index: number; role: Partial<ExistingRole> };
-  }
+      type: "UPDATE_EXISTING_ROLE";
+      payload: { index: number; role: Partial<ExistingRole> };
+    }
   | { type: "REMOVE_EXISTING_ROLE"; payload: number }
   | { type: "ADD_NEW_ROLE"; payload: NewRole }
   | {
-    type: "UPDATE_NEW_ROLE";
-    payload: { index: number; role: Partial<NewRole> };
-  }
+      type: "UPDATE_NEW_ROLE";
+      payload: { index: number; role: Partial<NewRole> };
+    }
   | { type: "REMOVE_NEW_ROLE"; payload: number }
   | { type: "CLEAR_ALL_ROLES" }
   | { type: "SET_ORIGINAL_CASH_BALANCE"; payload: number }
@@ -190,6 +211,7 @@ export type FormAction =
   | { type: "UPDATE_MARKETING_BUDGET_IMPACT"; payload: number }
   | { type: "UPDATE_PRODUCTION_BUDGET_IMPACT"; payload: number }
   | { type: "UPDATE_RD_BUDGET_IMPACT"; payload: number }
+  | { type: "UPDATE_SALES_BUDGET_IMPACT"; payload: number }
   | { type: "UPDATE_PRODUCT_BUDGET_IMPACT"; payload: number }
   | { type: "SET_SUBMITTING"; payload: boolean }
   | { type: "SET_ERRORS"; payload: Record<string, string> }
@@ -203,9 +225,9 @@ export type FormAction =
   | { type: "RESET_FORM"; payload?: keyof FormState }
   | { type: "RESET_ALL" }
   | {
-    type: "SET_FORM_COMPLETED";
-    payload: { section: string; completed: boolean };
-  }
+      type: "SET_FORM_COMPLETED";
+      payload: { section: string; completed: boolean };
+    }
   | { type: "INITIALIZE_FORMS"; payload: Partial<FormState> }
   | { type: "BULK_UPDATE_FORMS"; payload: Partial<FormState> };
 
@@ -253,6 +275,15 @@ const getDefaultRDData = (): RDFormData => ({
   quality_changes: 0,
 });
 
+const getDefaultSalesData = (): SalesFormData => ({
+  sales_volume: 0,
+  revenue: 0,
+  costs: 0,
+  profit: 0,
+  market_share: 0,
+  customer_satisfaction: 0,
+});
+
 export const getDefaultProductData = (): ProductFormData => ({
   name: "",
   description: "",
@@ -296,6 +327,7 @@ const getDefaultCashBalance = (): CashBalanceState => ({
   marketingBudgetImpact: 0,
   productionBudgetImpact: 0,
   rdBudgetImpact: 0,
+  salesBudgetImpact: 0,
   productBudgetImpact: 0,
 });
 
@@ -312,10 +344,12 @@ const initialState: FormState = {
   production: getDefaultProductionData(),
   hr: getDefaultHRData(),
   rd: getDefaultRDData(),
-  product: getDefaultProductData(),
+  sales: getDefaultSalesData(),
+  product: [], // Initialize as empty array
   company: getDefaultCompanyData(),
   simulation: getDefaultSimulationData(),
   cashBalance: getDefaultCashBalance(),
+  projected_balance: 0,
   isSubmitting: false,
   errors: {},
   isDirty: false,
@@ -345,7 +379,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
         },
         hr: { ...getDefaultHRData(), ...action.payload.hr },
         rd: { ...getDefaultRDData(), ...action.payload.rd },
-        product: { ...getDefaultProductData(), ...action.payload.product },
+        sales: { ...getDefaultSalesData(), ...action.payload.sales },
+        product: action.payload.product || [], // Use the provided array or empty array
         company: { ...getDefaultCompanyData(), ...action.payload.company },
         simulation: {
           ...getDefaultSimulationData(),
@@ -476,10 +511,55 @@ function formReducer(state: FormState, action: FormAction): FormState {
         isDirty: true,
       };
 
-    case "UPDATE_PRODUCT":
+    case "UPDATE_SALES":
       return {
         ...state,
-        product: { ...state.product, ...action.payload },
+        sales: { ...state.sales, ...action.payload },
+        isDirty: true,
+      };
+
+    case "UPDATE_PRODUCT":
+      // For backward compatibility - add to end of array if no products exist, otherwise update first product
+      return {
+        ...state,
+        product:
+          state.product.length === 0
+            ? [{ ...getDefaultProductData(), ...action.payload }]
+            : state.product.map((product, index) =>
+                index === 0 ? { ...product, ...action.payload } : product
+              ),
+        isDirty: true,
+      };
+
+    case "ADD_PRODUCT":
+      return {
+        ...state,
+        product: [...state.product, action.payload],
+        isDirty: true,
+      };
+
+    case "UPDATE_PRODUCT_BY_INDEX":
+      return {
+        ...state,
+        product: state.product.map((product, index) =>
+          index === action.payload.index
+            ? { ...product, ...action.payload.product }
+            : product
+        ),
+        isDirty: true,
+      };
+
+    case "REMOVE_PRODUCT":
+      return {
+        ...state,
+        product: state.product.filter((_, index) => index !== action.payload),
+        isDirty: true,
+      };
+
+    case "SET_PRODUCTS":
+      return {
+        ...state,
+        product: action.payload,
         isDirty: true,
       };
 
@@ -548,6 +628,15 @@ function formReducer(state: FormState, action: FormAction): FormState {
         cashBalance: {
           ...state.cashBalance,
           rdBudgetImpact: action.payload,
+        },
+      };
+
+    case "UPDATE_SALES_BUDGET_IMPACT":
+      return {
+        ...state,
+        cashBalance: {
+          ...state.cashBalance,
+          salesBudgetImpact: action.payload,
         },
       };
 
@@ -625,6 +714,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
           production: getDefaultProductionData(),
           hr: getDefaultHRData(),
           rd: getDefaultRDData(),
+          sales: getDefaultSalesData(),
           product: getDefaultProductData(),
           company: getDefaultCompanyData(),
           simulation: getDefaultSimulationData(),
@@ -676,7 +766,17 @@ interface FormContextType {
   updateProduction: (data: Partial<ProductionFormData>) => void;
   updateHR: (data: Partial<HRFormData>) => void;
   updateRD: (data: Partial<RDFormData>) => void;
+  updateSales: (data: Partial<SalesFormData>) => void;
   updateProduct: (data: Partial<ProductFormData>) => void;
+  // New product array management functions
+  addProduct: (product: ProductFormData) => void;
+  updateProductByIndex: (
+    index: number,
+    product: Partial<ProductFormData>
+  ) => void;
+  removeProduct: (index: number) => void;
+  setProducts: (products: ProductFormData[]) => void;
+
   updateCompany: (data: Partial<CompanyFormData>) => void;
   updateSimulation: (data: Partial<SimulationFormData>) => void;
 
@@ -696,6 +796,7 @@ interface FormContextType {
   updateMarketingBudgetImpact: (impact: number) => void;
   updateProductionBudgetImpact: (impact: number) => void;
   updateRDBudgetImpact: (impact: number) => void;
+  updateSalesBudgetImpact: (impact: number) => void;
   updateProductBudgetImpact: (impact: number) => void;
   getProjectedCashBalance: () => number;
 
@@ -772,8 +873,35 @@ export function FormProvider({
     dispatch({ type: "UPDATE_RD", payload: data });
   }, []);
 
+  const updateSales = useCallback((data: Partial<SalesFormData>) => {
+    dispatch({ type: "UPDATE_SALES", payload: data });
+  }, []);
+
   const updateProduct = useCallback((data: Partial<ProductFormData>) => {
     dispatch({ type: "UPDATE_PRODUCT", payload: data });
+  }, []);
+
+  // New product array management functions
+  const addProduct = useCallback((product: ProductFormData) => {
+    dispatch({ type: "ADD_PRODUCT", payload: product });
+  }, []);
+
+  const updateProductByIndex = useCallback(
+    (index: number, product: Partial<ProductFormData>) => {
+      dispatch({
+        type: "UPDATE_PRODUCT_BY_INDEX",
+        payload: { index, product },
+      });
+    },
+    []
+  );
+
+  const removeProduct = useCallback((index: number) => {
+    dispatch({ type: "REMOVE_PRODUCT", payload: index });
+  }, []);
+
+  const setProducts = useCallback((products: ProductFormData[]) => {
+    dispatch({ type: "SET_PRODUCTS", payload: products });
   }, []);
 
   const updateCompany = useCallback((data: Partial<CompanyFormData>) => {
@@ -845,6 +973,10 @@ export function FormProvider({
     dispatch({ type: "UPDATE_RD_BUDGET_IMPACT", payload: impact });
   }, []);
 
+  const updateSalesBudgetImpact = useCallback((impact: number) => {
+    dispatch({ type: "UPDATE_SALES_BUDGET_IMPACT", payload: impact });
+  }, []);
+
   const updateProductBudgetImpact = useCallback((impact: number) => {
     dispatch({ type: "UPDATE_PRODUCT_BUDGET_IMPACT", payload: impact });
   }, []);
@@ -852,12 +984,13 @@ export function FormProvider({
   const getProjectedCashBalance = useCallback(() => {
     return (
       state.cashBalance.originalCashBalance +
-      state.cashBalance.financeBudgetImpact -
+      state.cashBalance.financeBudgetImpact +
+      state.cashBalance.salesBudgetImpact -
       state.cashBalance.hrBudgetImpact -
       state.cashBalance.marketingBudgetImpact -
       state.cashBalance.productionBudgetImpact -
       state.cashBalance.rdBudgetImpact -
-      state.cashBalance.productBudgetImpact
+      -state.cashBalance.productBudgetImpact
     );
   }, [
     state.cashBalance.originalCashBalance,
@@ -866,6 +999,7 @@ export function FormProvider({
     state.cashBalance.marketingBudgetImpact,
     state.cashBalance.productionBudgetImpact,
     state.cashBalance.rdBudgetImpact,
+    state.cashBalance.salesBudgetImpact,
     state.cashBalance.productBudgetImpact,
   ]);
 
@@ -917,36 +1051,35 @@ export function FormProvider({
     [state.errors]
   );
 
-  const validateField = useCallback(
-    (field: string, value: unknown): string | undefined => {
-      // Basic validation logic matching Zod schema constraints
-      if (value === null || value === undefined || value === "") {
-        // Only validate required fields as required
-        const requiredFields = ["name", "category"]; // Add other required fields as needed
-        if (requiredFields.includes(field)) {
-          return `${field} is required`;
-        }
+  const validateField = useCallback((field: string, value: unknown):
+    | string
+    | undefined => {
+    // Basic validation logic matching Zod schema constraints
+    if (value === null || value === undefined || value === "") {
+      // Only validate required fields as required
+      const requiredFields = ["name", "category"]; // Add other required fields as needed
+      if (requiredFields.includes(field)) {
+        return `${field} is required`;
+      }
+    }
+
+    if (typeof value === "number") {
+      if (value < 0) {
+        return `${field} must be non-negative`;
       }
 
-      if (typeof value === "number") {
-        if (value < 0) {
-          return `${field} must be non-negative`;
-        }
-
-        // Special validation for defect_rate and automation_level based on Zod schema
-        if (field === "defect_rate" && value > 1) {
-          return `${field} cannot exceed 100%`;
-        }
-
-        if (field === "automation_level" && value > 10) {
-          return `${field} cannot exceed 10`;
-        }
+      // Special validation for defect_rate and automation_level based on Zod schema
+      if (field === "defect_rate" && value > 1) {
+        return `${field} cannot exceed 100%`;
       }
 
-      return undefined;
-    },
-    []
-  );
+      if (field === "automation_level" && value > 10) {
+        return `${field} cannot exceed 10`;
+      }
+    }
+
+    return undefined;
+  }, []);
 
   // Comprehensive submission methods
   const setFormCompleted = useCallback(
@@ -975,6 +1108,7 @@ export function FormProvider({
       "production",
       "hr",
       "rd",
+      "sales",
       "product",
     ] as const;
 
@@ -993,7 +1127,8 @@ export function FormProvider({
   }, [state, validateField]);
 
   const submitAllForms = useCallback(
-    async (companyId: string, period: number): Promise<boolean> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async (_companyId: string, _period: number): Promise<boolean> => {
       try {
         setSubmitting(true);
 
@@ -1003,15 +1138,9 @@ export function FormProvider({
           return false;
         }
 
-        console.log(
-          "Submitting forms for company:",
-          companyId,
-          "period:",
-          period
-        );
         return true;
-      } catch (error) {
-        console.error("Form submission error:", error);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_error) {
         return false;
       } finally {
         setSubmitting(false);
@@ -1027,6 +1156,7 @@ export function FormProvider({
       "production",
       "hr",
       "rd",
+      "sales",
       "product",
     ];
     const completed = sections.filter(
@@ -1049,7 +1179,12 @@ export function FormProvider({
     updateProduction,
     updateHR,
     updateRD,
+    updateSales,
     updateProduct,
+    addProduct,
+    updateProductByIndex,
+    removeProduct,
+    setProducts,
     updateCompany,
     updateSimulation,
     addExistingRole,
@@ -1065,6 +1200,7 @@ export function FormProvider({
     updateMarketingBudgetImpact,
     updateProductionBudgetImpact,
     updateRDBudgetImpact,
+    updateSalesBudgetImpact,
     updateProductBudgetImpact,
     getProjectedCashBalance,
     setSubmitting,
@@ -1261,7 +1397,7 @@ export function useHRForm() {
 
     // Calculate from existing roles
     state.hr.existingRoles.forEach((role) => {
-      const newHeadCount = role.head_count + role.hires - role.fires;
+      const newHeadCount = role.current_head_count + role.hires - role.fires;
       if (newHeadCount > 0) {
         salary_budget += newHeadCount * role.salary_per_head;
       }
@@ -1491,7 +1627,7 @@ export function useHRRoleContext() {
 
     // Calculate from existing roles
     state.hr.existingRoles.forEach((role) => {
-      const newHeadCount = role.head_count + role.hires - role.fires;
+      const newHeadCount = role.current_head_count + role.hires - role.fires;
       if (newHeadCount > 0) {
         salary_budget += newHeadCount * role.salary_per_head;
       }
@@ -1584,7 +1720,7 @@ export function useHRInitialization() {
       const existingRoles: ExistingRole[] = companyRoles.map((role) => ({
         role_name: role.role_name,
         salary_per_head: role.salary_per_head,
-        head_count: role.head_count,
+        current_head_count: role.head_count,
         hires: role.head_count,
         fires: 0,
       }));
@@ -1611,8 +1747,13 @@ export function useHRInitialization() {
 }
 
 export function useRDForm() {
-  const { state, updateRD, setError, getError, updateRDBudgetImpact } =
-    useForm();
+  const {
+    state,
+    updateRD,
+    setError,
+    getError,
+    updateRDBudgetImpact,
+  } = useForm();
 
   const updateDataWithCashImpact = useCallback(
     (data: Partial<RDFormData>) => {
@@ -1637,10 +1778,45 @@ export function useRDForm() {
   };
 }
 
+export function useSalesForm() {
+  const {
+    state,
+    updateSales,
+    setError,
+    getError,
+    updateSalesBudgetImpact,
+  } = useForm();
+
+  const updateDataWithCashImpact = useCallback(
+    (data: Partial<SalesFormData>) => {
+      // Calculate budget impact from the new data being passed in
+      // For sales, costs typically impact cash balance negatively
+      const costs = data.costs ?? state.sales.costs ?? 0;
+
+      const budgetImpact = costs; // costs reduce cash balance
+
+      updateSales(data);
+      updateSalesBudgetImpact(budgetImpact);
+    },
+    [updateSales, updateSalesBudgetImpact, state.sales]
+  );
+
+  return {
+    data: state.sales,
+    updateData: updateDataWithCashImpact,
+    setError,
+    getError,
+  };
+}
+
 export function useProductForm() {
   const {
     state,
     updateProduct,
+    addProduct,
+    updateProductByIndex,
+    removeProduct,
+    setProducts,
     setError,
     getError,
     updateProductBudgetImpact,
@@ -1649,22 +1825,35 @@ export function useProductForm() {
   const updateDataWithCashImpact = useCallback(
     (data: Partial<ProductFormData>) => {
       // Calculate budget impact from the new data being passed in
-      const development_cost =
-        data.development_cost ?? state.product.development_cost ?? 0;
-      const marketing_budget =
-        data.marketing_budget ?? state.product.marketing_budget ?? 0;
+      const development_cost = data.development_cost ?? 0;
+      const marketing_budget = data.marketing_budget ?? 0;
 
       const budgetImpact = development_cost + marketing_budget;
 
       updateProduct(data);
       updateProductBudgetImpact(budgetImpact);
     },
-    [updateProduct, updateProductBudgetImpact, state.product]
+    [updateProduct, updateProductBudgetImpact]
+  );
+
+  const addProductWithCashImpact = useCallback(
+    (product: ProductFormData) => {
+      const budgetImpact =
+        (product.development_cost || 0) + (product.marketing_budget || 0);
+      addProduct(product);
+      updateProductBudgetImpact(budgetImpact);
+    },
+    [addProduct, updateProductBudgetImpact]
   );
 
   return {
-    data: state.product,
+    data: state.product, // This is now an array of products
+    products: state.product, // Alias for clarity
     updateData: updateDataWithCashImpact,
+    addProduct: addProductWithCashImpact,
+    updateProductByIndex,
+    removeProduct,
+    setProducts,
     setError,
     getError,
   };
@@ -1722,21 +1911,24 @@ export function useProductActions(companyId: string) {
     setError(null);
     try {
       return await apiCreateProduct(data);
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateProductAction = async (id: string, data: Partial<ProductFormData>) => {
+  const updateProductAction = async (
+    id: string,
+    data: Partial<ProductFormData>
+  ) => {
     setLoading(true);
     setError(null);
     try {
       return await apiUpdateProduct(id, data);
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
@@ -1748,8 +1940,8 @@ export function useProductActions(companyId: string) {
     setError(null);
     try {
       return await apiLaunchProduct(productId, period);
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
@@ -1761,8 +1953,8 @@ export function useProductActions(companyId: string) {
     setError(null);
     try {
       return await apiDiscontinueProduct(productId, period);
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
@@ -1809,6 +2001,7 @@ export function useCashBalance() {
     updateMarketingBudgetImpact,
     updateProductionBudgetImpact,
     updateRDBudgetImpact,
+    updateSalesBudgetImpact,
     updateProductBudgetImpact,
     getProjectedCashBalance,
   } = useForm();
@@ -1825,10 +2018,20 @@ export function useCashBalance() {
     updateMarketingBudgetImpact,
     updateProductionBudgetImpact,
     updateRDBudgetImpact,
+    updateSalesBudgetImpact,
     updateProductBudgetImpact,
     getProjectedCashBalance,
     originalCashBalance: state.cashBalance.originalCashBalance,
     projectedCashBalance,
+    budgetImpacts: {
+      hr: state.cashBalance.hrBudgetImpact,
+      finance: state.cashBalance.financeBudgetImpact,
+      marketing: state.cashBalance.marketingBudgetImpact,
+      production: state.cashBalance.productionBudgetImpact,
+      rd: state.cashBalance.rdBudgetImpact,
+      sales: state.cashBalance.salesBudgetImpact,
+      product: state.cashBalance.productBudgetImpact,
+    },
   };
 }
 
@@ -1932,7 +2135,7 @@ export function useHRRoleManagement() {
   const fireEmployeesForRole = useCallback(
     (roleIndex: number, fireCount: number) => {
       const role = hrData.existingRoles[roleIndex];
-      if (role && role.head_count >= fireCount) {
+      if (role && role.current_head_count >= fireCount) {
         updateExistingRole(roleIndex, {
           ...role,
           fires: role.fires + fireCount,
@@ -1963,7 +2166,7 @@ export function useHRRoleManagement() {
       if (role) {
         updateExistingRole(roleIndex, {
           ...role,
-          fires: Math.max(0, Math.min(fireCount, role.head_count)),
+          fires: Math.max(0, Math.min(fireCount, role.current_head_count)),
         });
       }
     },
@@ -1988,11 +2191,11 @@ export function useHRRoleManagement() {
   const getNetEmployeeChanges = useCallback(() => {
     return hrData.existingRoles.map((role) => ({
       role_name: role.role_name,
-      current_count: role.head_count,
+      current_count: role.current_head_count,
       hires: role.hires,
       fires: role.fires,
       net_change: role.hires - role.fires,
-      final_count: role.head_count + role.hires - role.fires,
+      final_count: role.current_head_count + role.hires - role.fires,
     }));
   }, [hrData.existingRoles]);
 
@@ -2000,7 +2203,7 @@ export function useHRRoleManagement() {
   const getTotalEmployees = useCallback(() => {
     const existingEmployees = hrData.existingRoles.reduce((total, role) => {
       return (
-        total + Math.max(0, role.head_count + role.hires - role.fires)
+        total + Math.max(0, role.current_head_count + role.hires - role.fires)
       );
     }, 0);
 
@@ -2082,7 +2285,7 @@ export function useHRRoleManagement() {
           `Existing role ${index + 1}: Salary per head must be positive`
         );
       }
-      if (role.head_count < 0) {
+      if (role.current_head_count < 0) {
         errors.push(
           `Existing role ${index + 1}: Current head count cannot be negative`
         );
@@ -2093,13 +2296,13 @@ export function useHRRoleManagement() {
       if (role.fires < 0) {
         errors.push(`Existing role ${index + 1}: Fires cannot be negative`);
       }
-      if (role.fires > role.head_count) {
+      if (role.fires > role.current_head_count) {
         errors.push(
-          `Existing role ${index + 1
-          }: Cannot fire more employees than current count`
+          `Existing role ${index +
+            1}: Cannot fire more employees than current count`
         );
       }
-      if (role.head_count + role.hires - role.fires < 0) {
+      if (role.current_head_count + role.hires - role.fires < 0) {
         errors.push(
           `Existing role ${index + 1}: Final employee count cannot be negative`
         );
@@ -2247,14 +2450,14 @@ export function useHireFireOperations() {
 
   // Get roles that can be fired from (have current employees)
   const getFireableRoles = useCallback(() => {
-    return existingRoles.filter((role) => role.head_count > 0);
+    return existingRoles.filter((role) => role.current_head_count > 0);
   }, [existingRoles]);
 
   // Get maximum fire count for each role
   const getMaxFireCounts = useCallback(() => {
     return existingRoles.map((role) => ({
       role_name: role.role_name,
-      max_fires: role.head_count,
+      max_fires: role.current_head_count,
       current_fires: role.fires,
     }));
   }, [existingRoles]);
@@ -2264,13 +2467,13 @@ export function useHireFireOperations() {
     const errors: string[] = [];
 
     existingRoles.forEach((role) => {
-      if (role.fires > role.head_count) {
+      if (role.fires > role.current_head_count) {
         errors.push(
-          `${role.role_name}: Cannot fire ${role.fires} employees when only ${role.head_count} are currently employed`
+          `${role.role_name}: Cannot fire ${role.fires} employees when only ${role.current_head_count} are currently employed`
         );
       }
 
-      const finalCount = role.head_count + role.hires - role.fires;
+      const finalCount = role.current_head_count + role.hires - role.fires;
       if (finalCount < 0) {
         errors.push(
           `${role.role_name}: Final employee count would be negative (${finalCount})`
