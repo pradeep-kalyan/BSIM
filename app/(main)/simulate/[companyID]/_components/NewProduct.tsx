@@ -50,9 +50,9 @@ export default function ProductFormPage({
   const [product, setProduct] = useState<Product>(
     mode === "edit" && initialProduct
       ? {
-          ...emptyProduct,
-          ...initialProduct,
-        }
+        ...emptyProduct,
+        ...initialProduct,
+      }
       : emptyProduct
   );
   const [errors, setErrors] = useState<Partial<Record<keyof Product, string>>>({});
@@ -115,28 +115,30 @@ export default function ProductFormPage({
       </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Name */}
-        <div>
-          <label className="block text-sm text-slate-300 mb-1">Product Name</label>
-          <input
-            type="text"
-            value={product.name}
-            onChange={(e) => handleFieldChange("name", e.target.value)}
-            className="w-full p-2 rounded bg-slate-900 text-white"
-            required
-          />
-          {errors.name && <div className="text-red-400 text-xs">{errors.name}</div>}
-        </div>
-        {/* Category */}
-        <div>
-          <label className="block text-sm text-slate-300 mb-1">Category</label>
-          <input
-            type="text"
-            value={product.category}
-            onChange={(e) => handleFieldChange("category", e.target.value)}
-            className="w-full p-2 rounded bg-slate-900 text-white"
-            required
-          />
-          {errors.category && <div className="text-red-400 text-xs">{errors.category}</div>}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-slate-300 mb-1">Product Name</label>
+            <input
+              type="text"
+              value={product.name}
+              onChange={(e) => handleFieldChange("name", e.target.value)}
+              className="w-full p-2 rounded bg-slate-900 text-white"
+              required
+            />
+            {errors.name && <div className="text-red-400 text-xs">{errors.name}</div>}
+          </div>
+
+          <div>
+            <label className="block text-sm text-slate-300 mb-1">Category</label>
+            <input
+              type="text"
+              value={product.category}
+              onChange={(e) => handleFieldChange("category", e.target.value)}
+              className="w-full p-2 rounded bg-slate-900 text-white"
+              required
+            />
+            {errors.category && <div className="text-red-400 text-xs">{errors.category}</div>}
+          </div>
         </div>
         {/* Description */}
         <div>
@@ -192,9 +194,9 @@ export default function ProductFormPage({
                 onChange={(e) =>
                   handleFieldChange(
                     key,
-                    key==="inventory_level" || key==="production_capacity"
-                    ? parseInt(e.target.value) || 0
-                    : parseFloat(e.target.value) || 0
+                    key === "inventory_level" || key === "production_capacity"
+                      ? parseInt(e.target.value) || 0
+                      : parseFloat(e.target.value) || 0
                   )
                 }
                 className="w-full p-2 rounded bg-slate-900 text-white"

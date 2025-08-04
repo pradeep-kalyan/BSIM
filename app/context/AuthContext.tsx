@@ -1,4 +1,3 @@
-// app/context/AuthContext.tsx
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -39,19 +38,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await getCurrentUser();
 
       if (userData) {
-        console.log("✅ User authenticated:", userData);
+        console.log("User authenticated:", userData);
         setUser(userData);
       } else {
         // If userData is null, user is not authenticated
-        console.log("❌ User not authenticated");
+        console.log("User not authenticated");
         setUser(null);
       }
     } catch (error) {
-      console.error("🚨 Auth check failed:", error);
+      console.error("Auth check failed:", error);
       setUser(null);
     } finally {
       setLoading(false);
-      console.log("🏁 Auth check completed");
+      console.log("Auth check completed");
     }
   };
 
@@ -65,12 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await logoutUser();
       if (result.success) {
         setUser(null);
-        // Use router.push instead of window.location.href for better UX
         window.location.href = "/login";
       }
     } catch (error) {
       console.error("Logout failed:", error);
-      // Force logout on client side
       setUser(null);
       window.location.href = "/login";
     }

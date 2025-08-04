@@ -21,28 +21,15 @@ import {
 } from "lucide-react";
 
 const HRDashboard = () => {
-  const {
-    currentHRData,
-    initializeHRWithRoles,
-    initializeWithCompanyRoles,
-    isInitialized,
-    resetHRToDefaults,
-  } = useHRInitialization();
 
   const {
     data,
     updateData,
-    setError,
-    getError,
-    addExistingRole,
     updateExistingRole,
     removeExistingRole,
     addNewRole,
     updateNewRole,
     removeNewRole,
-    clearAllRoles,
-    calculateBudgetFromRoles,
-    getRoleInputs,
   } = useHRForm();
 
   const { cashBalance } = useCashBalance();
@@ -69,6 +56,7 @@ const HRDashboard = () => {
   }, 0) + (data.newRoles?.reduce((sum, role) => sum + (role.salary_per_head * (role.hires || 0)), 0) || 0);
 
   const cashAfter = (cashBalance.originalCashBalance ?? 0) - ((projectedSalaryBudget + data?.training_budget) || 0);
+  
   const totalFires = data.existingRoles.reduce(
     (sum, role) => sum + (role.fires || 0),
     0
