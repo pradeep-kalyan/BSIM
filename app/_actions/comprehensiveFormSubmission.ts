@@ -114,30 +114,27 @@ export async function comprehensiveFormSubmission(
   }
 
   try {
-    const companyVerification = await prisma.$transaction(
-      async (tx) => {
-        const company = await tx.company.findUnique({
-          where: { id: companyId },
-          select: {
-            id: true,
-            current_period: true,
-            cash_balance: true,
-            user_id: true,
-          },
-        });
-
-        if (!company) {
-          throw new Error("Company not found");
-        }
-
-        return { company };
+    // Get company information first (simple query, no transaction needed)
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+      select: {
+        id: true,
+        current_period: true,
+        cash_balance: true,
+        user_id: true,
+        data: true,
+        total_assets: true,
+        total_liabilities: true,
+        marketing_budget: true,
+        credit_rating: true,
+        brand_value: true,
       },
-      {
-        timeout: 10000, // 10 second timeout for simple operations
-      }
-    );
+    });
 
-    const { company } = companyVerification;
+    if (!company) {
+      throw new Error("Company not found");
+    }
+
     const currentPeriod = company.current_period;
 
     const submissionResults: Record<
@@ -145,7 +142,7 @@ export async function comprehensiveFormSubmission(
       { success: boolean; id?: string; error?: string; newPeriod?: number }
     > = {};
 
-    // Step 2: Process all business areas in parallel using Promise.all
+    // Step 2: Process all business areas in parallel using direct operations (no nested transactions)
     console.log("Step 2: Processing all business decisions in parallel...");
 
     // Create array of promises for parallel execution
@@ -153,112 +150,107 @@ export async function comprehensiveFormSubmission(
       // 2.1. Submit HR Decision
       (async () => {
         try {
-          await prisma.$transaction(
-            async (tx) => {
-              const existingHRDecision = await tx.hr_decision.findFirst({
-                where: {
-                  company_id: companyId,
-                  period: currentPeriod,
-                },
-              });
-
-              if (existingHRDecision) {
-                // Update existing HR decision
-                const updatedHRDecision = await tx.hr_decision.update({
-                  where: { id: existingHRDecision.id },
-                  data: {
-                    salary_budget: formData.hr.salary_budget,
-                    training_budget: formData.hr.training_budget,
-                    total_budget: formData.hr.total_budget,
-                    employee_satisfaction: formData.hr.employee_satisfaction,
-                    recruitment_cost: formData.hr.recruitment_cost,
-                    firing_cost: formData.hr.firing_cost,
-                    is_submitted: true,
-                  },
-                });
-
-                // Clear existing roles and create new ones
-                await tx.hr_role_decision.deleteMany({
-                  where: { hr_decision_id: existingHRDecision.id },
-                });
-
-                // Create role decisions for existing roles
-                for (const role of formData.hr.existingRoles) {
-                  await tx.hr_role_decision.create({
-                    data: {
-                      hr_decision_id: existingHRDecision.id,
-                      role_name: role.role_name,
-                      salary_per_head: role.salary_per_head,
-                      head_count:
-                        role.current_head_count + role.hires - role.fires,
-                    },
-                  });
-                }
-
-                // Create role decisions for new roles
-                for (const role of formData.hr.newRoles) {
-                  await tx.hr_role_decision.create({
-                    data: {
-                      hr_decision_id: existingHRDecision.id,
-                      role_name: role.role_name,
-                      salary_per_head: role.salary_per_head,
-                      head_count: role.hires,
-                    },
-                  });
-                }
-
-                submissionResults.hr = {
-                  success: true,
-                  id: updatedHRDecision.id,
-                };
-              } else {
-                // Create new HR decision
-                const hrDecision = await tx.hr_decision.create({
-                  data: {
-                    company_id: companyId,
-                    period: currentPeriod,
-                    salary_budget: formData.hr.salary_budget,
-                    training_budget: formData.hr.training_budget,
-                    total_budget: formData.hr.total_budget,
-                    employee_satisfaction: formData.hr.employee_satisfaction,
-                    recruitment_cost: formData.hr.recruitment_cost,
-                    firing_cost: formData.hr.firing_cost,
-                    is_submitted: true,
-                  },
-                });
-
-                // Create role decisions for existing roles
-                for (const role of formData.hr.existingRoles) {
-                  await tx.hr_role_decision.create({
-                    data: {
-                      hr_decision_id: hrDecision.id,
-                      role_name: role.role_name,
-                      salary_per_head: role.salary_per_head,
-                      head_count:
-                        role.current_head_count + role.hires - role.fires,
-                    },
-                  });
-                }
-
-                // Create role decisions for new roles
-                for (const role of formData.hr.newRoles) {
-                  await tx.hr_role_decision.create({
-                    data: {
-                      hr_decision_id: hrDecision.id,
-                      role_name: role.role_name,
-                      salary_per_head: role.salary_per_head,
-                      head_count: role.hires,
-                    },
-                  });
-                }
-
-                submissionResults.hr = { success: true, id: hrDecision.id };
-              }
+          const existingHRDecision = await prisma.hr_decision.findFirst({
+            where: {
+              company_id: companyId,
+              period: currentPeriod,
             },
-            {
-              timeout: 15000, // 15 second timeout for HR operations
-            }
-          );
+          });
+
+          if (existingHRDecision) {
+            // Update existing HR decision
+            const updatedHRDecision = await prisma.hr_decision.update({
+              where: { id: existingHRDecision.id },
+              data: {
+                salary_budget: formData.hr.salary_budget,
+                training_budget: formData.hr.training_budget,
+                total_budget: formData.hr.total_budget,
+                employee_satisfaction: formData.hr.employee_satisfaction,
+                recruitment_cost: formData.hr.recruitment_cost,
+                firing_cost: formData.hr.firing_cost,
+                is_submitted: true,
+              },
+            });
+
+            // Clear existing roles and create new ones
+            await prisma.hr_role_decision.deleteMany({
+              where: { hr_decision_id: existingHRDecision.id },
+            });
+
+            // Create role decisions for existing roles
+            const existingRolePromises = formData.hr.existingRoles.map((role) =>
+              prisma.hr_role_decision.create({
+                data: {
+                  hr_decision_id: existingHRDecision.id,
+                  role_name: role.role_name,
+                  salary_per_head: role.salary_per_head,
+                  head_count: role.current_head_count + role.hires - role.fires,
+                },
+              })
+            );
+
+            // Create role decisions for new roles
+            const newRolePromises = formData.hr.newRoles.map((role) =>
+              prisma.hr_role_decision.create({
+                data: {
+                  hr_decision_id: existingHRDecision.id,
+                  role_name: role.role_name,
+                  salary_per_head: role.salary_per_head,
+                  head_count: role.hires,
+                },
+              })
+            );
+
+            await Promise.all([...existingRolePromises, ...newRolePromises]);
+
+            submissionResults.hr = {
+              success: true,
+              id: updatedHRDecision.id,
+            };
+          } else {
+            // Create new HR decision
+            const hrDecision = await prisma.hr_decision.create({
+              data: {
+                company_id: companyId,
+                period: currentPeriod,
+                salary_budget: formData.hr.salary_budget,
+                training_budget: formData.hr.training_budget,
+                total_budget: formData.hr.total_budget,
+                employee_satisfaction: formData.hr.employee_satisfaction,
+                recruitment_cost: formData.hr.recruitment_cost,
+                firing_cost: formData.hr.firing_cost,
+                is_submitted: true,
+              },
+            });
+
+            // Create role decisions for existing and new roles
+            const allRolePromises = [
+              ...formData.hr.existingRoles.map((role) =>
+                prisma.hr_role_decision.create({
+                  data: {
+                    hr_decision_id: hrDecision.id,
+                    role_name: role.role_name,
+                    salary_per_head: role.salary_per_head,
+                    head_count:
+                      role.current_head_count + role.hires - role.fires,
+                  },
+                })
+              ),
+              ...formData.hr.newRoles.map((role) =>
+                prisma.hr_role_decision.create({
+                  data: {
+                    hr_decision_id: hrDecision.id,
+                    role_name: role.role_name,
+                    salary_per_head: role.salary_per_head,
+                    head_count: role.hires,
+                  },
+                })
+              ),
+            ];
+
+            await Promise.all(allRolePromises);
+            submissionResults.hr = { success: true, id: hrDecision.id };
+          }
         } catch (error) {
           submissionResults.hr = {
             success: false,
@@ -272,50 +264,43 @@ export async function comprehensiveFormSubmission(
       // 2.2. Submit Marketing Decision
       (async () => {
         try {
-          await prisma.$transaction(
-            async (tx) => {
-              const existingMarketingDecision = await tx.marketing.findFirst({
-                where: {
-                  company_id: companyId,
-                  period: currentPeriod,
-                },
-              });
-
-              if (existingMarketingDecision) {
-                const updatedMarketingDecision = await tx.marketing.update({
-                  where: { id: existingMarketingDecision.id },
-                  data: {
-                    budget: formData.marketing.budget,
-                    offline: formData.marketing.offline,
-                    online: formData.marketing.online,
-                    finalised: true,
-                  },
-                });
-                submissionResults.marketing = {
-                  success: true,
-                  id: updatedMarketingDecision.id,
-                };
-              } else {
-                const marketingDecision = await tx.marketing.create({
-                  data: {
-                    company_id: companyId,
-                    period: currentPeriod,
-                    budget: formData.marketing.budget,
-                    offline: formData.marketing.offline,
-                    online: formData.marketing.online,
-                    finalised: true,
-                  },
-                });
-                submissionResults.marketing = {
-                  success: true,
-                  id: marketingDecision.id,
-                };
-              }
+          const existingMarketingDecision = await prisma.marketing.findFirst({
+            where: {
+              company_id: companyId,
+              period: currentPeriod,
             },
-            {
-              timeout: 10000, // 10 second timeout for marketing operations
-            }
-          );
+          });
+
+          if (existingMarketingDecision) {
+            const updatedMarketingDecision = await prisma.marketing.update({
+              where: { id: existingMarketingDecision.id },
+              data: {
+                budget: formData.marketing.budget,
+                offline: formData.marketing.offline,
+                online: formData.marketing.online,
+                finalised: true,
+              },
+            });
+            submissionResults.marketing = {
+              success: true,
+              id: updatedMarketingDecision.id,
+            };
+          } else {
+            const marketingDecision = await prisma.marketing.create({
+              data: {
+                company_id: companyId,
+                period: currentPeriod,
+                budget: formData.marketing.budget,
+                offline: formData.marketing.offline,
+                online: formData.marketing.online,
+                finalised: true,
+              },
+            });
+            submissionResults.marketing = {
+              success: true,
+              id: marketingDecision.id,
+            };
+          }
         } catch (error) {
           submissionResults.marketing = {
             success: false,
@@ -331,53 +316,46 @@ export async function comprehensiveFormSubmission(
       // 2.3. Submit R&D Decision
       (async () => {
         try {
-          await prisma.$transaction(
-            async (tx) => {
-              const existingRDDecision = await tx.rd.findFirst({
-                where: {
-                  company_id: companyId,
-                  period: currentPeriod,
-                },
-              });
-
-              if (existingRDDecision) {
-                const updatedRDDecision = await tx.rd.update({
-                  where: { id: existingRDDecision.id },
-                  data: {
-                    budget: formData.rd.budget,
-                    pip: formData.rd.pip,
-                    time_to_market: formData.rd.time_to_market,
-                    total_development: formData.rd.total_development,
-                    patented: formData.rd.patented,
-                    quality_changes: formData.rd.quality_changes,
-                    finalised: true,
-                  },
-                });
-                submissionResults.rd = {
-                  success: true,
-                  id: updatedRDDecision.id,
-                };
-              } else {
-                const rdDecision = await tx.rd.create({
-                  data: {
-                    company_id: companyId,
-                    period: currentPeriod,
-                    budget: formData.rd.budget,
-                    pip: formData.rd.pip,
-                    time_to_market: formData.rd.time_to_market,
-                    total_development: formData.rd.total_development,
-                    patented: formData.rd.patented,
-                    quality_changes: formData.rd.quality_changes,
-                    finalised: true,
-                  },
-                });
-                submissionResults.rd = { success: true, id: rdDecision.id };
-              }
+          const existingRDDecision = await prisma.rd.findFirst({
+            where: {
+              company_id: companyId,
+              period: currentPeriod,
             },
-            {
-              timeout: 10000, // 10 second timeout for R&D operations
-            }
-          );
+          });
+
+          if (existingRDDecision) {
+            const updatedRDDecision = await prisma.rd.update({
+              where: { id: existingRDDecision.id },
+              data: {
+                budget: formData.rd.budget,
+                pip: formData.rd.pip,
+                time_to_market: formData.rd.time_to_market,
+                total_development: formData.rd.total_development,
+                patented: formData.rd.patented,
+                quality_changes: formData.rd.quality_changes,
+                finalised: true,
+              },
+            });
+            submissionResults.rd = {
+              success: true,
+              id: updatedRDDecision.id,
+            };
+          } else {
+            const rdDecision = await prisma.rd.create({
+              data: {
+                company_id: companyId,
+                period: currentPeriod,
+                budget: formData.rd.budget,
+                pip: formData.rd.pip,
+                time_to_market: formData.rd.time_to_market,
+                total_development: formData.rd.total_development,
+                patented: formData.rd.patented,
+                quality_changes: formData.rd.quality_changes,
+                finalised: true,
+              },
+            });
+            submissionResults.rd = { success: true, id: rdDecision.id };
+          }
         } catch (error) {
           submissionResults.rd = {
             success: false,
@@ -391,64 +369,55 @@ export async function comprehensiveFormSubmission(
       // 2.4. Submit Production Decision
       (async () => {
         try {
-          await prisma.$transaction(
-            async (tx) => {
-              const existingProductionDecision = await tx.production.findFirst({
-                where: {
-                  company_id: companyId,
-                  period: currentPeriod,
-                },
-              });
-
-              if (existingProductionDecision) {
-                const updatedProductionDecision = await tx.production.update({
-                  where: { id: existingProductionDecision.id },
-                  data: {
-                    units_to_produce: formData.production.units_to_produce,
-                    cost_per_unit: formData.production.cost_per_unit,
-                    budget:
-                      formData.production.units_to_produce *
-                      formData.production.cost_per_unit,
-                    production_capacity:
-                      formData.production.production_capacity,
-                    storage_capacity: formData.production.storage_capacity,
-                    inventory_value: formData.production.inventory_value,
-                    defect_rate: formData.production.defect_rate,
-                    finalised: true,
-                  },
-                });
-                submissionResults.production = {
-                  success: true,
-                  id: updatedProductionDecision.id,
-                };
-              } else {
-                const productionDecision = await tx.production.create({
-                  data: {
-                    company_id: companyId,
-                    period: currentPeriod,
-                    units_to_produce: formData.production.units_to_produce,
-                    cost_per_unit: formData.production.cost_per_unit,
-                    budget:
-                      formData.production.units_to_produce *
-                      formData.production.cost_per_unit,
-                    production_capacity:
-                      formData.production.production_capacity,
-                    storage_capacity: formData.production.storage_capacity,
-                    inventory_value: formData.production.inventory_value,
-                    defect_rate: formData.production.defect_rate,
-                    finalised: true,
-                  },
-                });
-                submissionResults.production = {
-                  success: true,
-                  id: productionDecision.id,
-                };
-              }
+          const existingProductionDecision = await prisma.production.findFirst({
+            where: {
+              company_id: companyId,
+              period: currentPeriod,
             },
-            {
-              timeout: 10000, // 10 second timeout for production operations
-            }
-          );
+          });
+
+          if (existingProductionDecision) {
+            const updatedProductionDecision = await prisma.production.update({
+              where: { id: existingProductionDecision.id },
+              data: {
+                units_to_produce: formData.production.units_to_produce,
+                cost_per_unit: formData.production.cost_per_unit,
+                budget:
+                  formData.production.units_to_produce *
+                  formData.production.cost_per_unit,
+                production_capacity: formData.production.production_capacity,
+                storage_capacity: formData.production.storage_capacity,
+                inventory_value: formData.production.inventory_value,
+                defect_rate: formData.production.defect_rate,
+                finalised: true,
+              },
+            });
+            submissionResults.production = {
+              success: true,
+              id: updatedProductionDecision.id,
+            };
+          } else {
+            const productionDecision = await prisma.production.create({
+              data: {
+                company_id: companyId,
+                period: currentPeriod,
+                units_to_produce: formData.production.units_to_produce,
+                cost_per_unit: formData.production.cost_per_unit,
+                budget:
+                  formData.production.units_to_produce *
+                  formData.production.cost_per_unit,
+                production_capacity: formData.production.production_capacity,
+                storage_capacity: formData.production.storage_capacity,
+                inventory_value: formData.production.inventory_value,
+                defect_rate: formData.production.defect_rate,
+                finalised: true,
+              },
+            });
+            submissionResults.production = {
+              success: true,
+              id: productionDecision.id,
+            };
+          }
         } catch (error) {
           submissionResults.production = {
             success: false,
@@ -464,55 +433,48 @@ export async function comprehensiveFormSubmission(
       // 2.5. Submit Finance Decision
       (async () => {
         try {
-          await prisma.$transaction(
-            async (tx) => {
-              const existingFinanceDecision = await tx.finance.findFirst({
-                where: {
-                  company_id: companyId,
-                  period: currentPeriod,
-                },
-              });
-
-              if (existingFinanceDecision) {
-                const updatedFinanceDecision = await tx.finance.update({
-                  where: { id: existingFinanceDecision.id },
-                  data: {
-                    investment_amount: formData.finance.investment_amount,
-                    loan_amount: formData.finance.loan_amount,
-                    repay_loan: formData.finance.repay_loan,
-                    dividend_payout: formData.finance.dividend_payout,
-                    equity_issue: formData.finance.equity_issue,
-                    finalised: true,
-                  },
-                });
-                submissionResults.finance = {
-                  success: true,
-                  id: updatedFinanceDecision.id,
-                };
-              } else {
-                const financeDecision = await tx.finance.create({
-                  data: {
-                    company_id: companyId,
-                    user_id: company.user_id,
-                    period: currentPeriod,
-                    investment_amount: formData.finance.investment_amount,
-                    loan_amount: formData.finance.loan_amount,
-                    repay_loan: formData.finance.repay_loan,
-                    dividend_payout: formData.finance.dividend_payout,
-                    equity_issue: formData.finance.equity_issue,
-                    finalised: true,
-                  },
-                });
-                submissionResults.finance = {
-                  success: true,
-                  id: financeDecision.id,
-                };
-              }
+          const existingFinanceDecision = await prisma.finance.findFirst({
+            where: {
+              company_id: companyId,
+              period: currentPeriod,
             },
-            {
-              timeout: 10000, // 10 second timeout for finance operations
-            }
-          );
+          });
+
+          if (existingFinanceDecision) {
+            const updatedFinanceDecision = await prisma.finance.update({
+              where: { id: existingFinanceDecision.id },
+              data: {
+                investment_amount: formData.finance.investment_amount,
+                loan_amount: formData.finance.loan_amount,
+                repay_loan: formData.finance.repay_loan,
+                dividend_payout: formData.finance.dividend_payout,
+                equity_issue: formData.finance.equity_issue,
+                finalised: true,
+              },
+            });
+            submissionResults.finance = {
+              success: true,
+              id: updatedFinanceDecision.id,
+            };
+          } else {
+            const financeDecision = await prisma.finance.create({
+              data: {
+                company_id: companyId,
+                user_id: company.user_id,
+                period: currentPeriod,
+                investment_amount: formData.finance.investment_amount,
+                loan_amount: formData.finance.loan_amount,
+                repay_loan: formData.finance.repay_loan,
+                dividend_payout: formData.finance.dividend_payout,
+                equity_issue: formData.finance.equity_issue,
+                finalised: true,
+              },
+            });
+            submissionResults.finance = {
+              success: true,
+              id: financeDecision.id,
+            };
+          }
         } catch (error) {
           submissionResults.finance = {
             success: false,
@@ -529,75 +491,64 @@ export async function comprehensiveFormSubmission(
       (async () => {
         try {
           if (formData.product && formData.product.name) {
-            await prisma.$transaction(
-              async (tx) => {
-                const existingProduct = await tx.product.findFirst({
-                  where: {
-                    company_id: companyId,
-                    name: formData.product!.name,
-                  },
-                });
-
-                if (existingProduct) {
-                  const updatedProduct = await tx.product.update({
-                    where: { id: existingProduct.id },
-                    data: {
-                      description: formData.product!.description,
-                      category: formData.product!.category,
-                      quality_rating: formData.product!.quality_rating,
-                      innovation_rating: formData.product!.innovation_rating,
-                      sustainability_rating: formData.product!
-                        .sustainability_rating,
-                      production_cost: formData.product!.production_cost,
-                      selling_price: formData.product!.selling_price,
-                      inventory_level: formData.product!.inventory_level,
-                      production_capacity: formData.product!
-                        .production_capacity,
-                      development_cost: formData.product!.development_cost,
-                      marketing_budget: formData.product!.marketing_budget,
-                      status: formData.product!.status,
-                      launch_period: formData.product!.launch_period,
-                      discontinue_period: formData.product!.discontinue_period,
-                    },
-                  });
-                  submissionResults.product = {
-                    success: true,
-                    id: updatedProduct.id,
-                  };
-                } else {
-                  const newProduct = await tx.product.create({
-                    data: {
-                      company_id: companyId,
-                      name: formData.product!.name,
-                      description: formData.product!.description,
-                      category: formData.product!.category,
-                      quality_rating: formData.product!.quality_rating,
-                      innovation_rating: formData.product!.innovation_rating,
-                      sustainability_rating: formData.product!
-                        .sustainability_rating,
-                      production_cost: formData.product!.production_cost,
-                      selling_price: formData.product!.selling_price,
-                      inventory_level: formData.product!.inventory_level,
-                      production_capacity: formData.product!
-                        .production_capacity,
-                      development_cost: formData.product!.development_cost,
-                      marketing_budget: formData.product!.marketing_budget,
-                      status: formData.product!.status,
-                      launch_period:
-                        formData.product!.launch_period || currentPeriod,
-                      discontinue_period: formData.product!.discontinue_period,
-                    },
-                  });
-                  submissionResults.product = {
-                    success: true,
-                    id: newProduct.id,
-                  };
-                }
+            const existingProduct = await prisma.product.findFirst({
+              where: {
+                company_id: companyId,
+                name: formData.product.name,
               },
-              {
-                timeout: 10000, // 10 second timeout for product operations
-              }
-            );
+            });
+
+            if (existingProduct) {
+              const updatedProduct = await prisma.product.update({
+                where: { id: existingProduct.id },
+                data: {
+                  description: formData.product.description,
+                  category: formData.product.category,
+                  quality_rating: formData.product.quality_rating,
+                  innovation_rating: formData.product.innovation_rating,
+                  sustainability_rating: formData.product.sustainability_rating,
+                  production_cost: formData.product.production_cost,
+                  selling_price: formData.product.selling_price,
+                  inventory_level: formData.product.inventory_level,
+                  production_capacity: formData.product.production_capacity,
+                  development_cost: formData.product.development_cost,
+                  marketing_budget: formData.product.marketing_budget,
+                  status: formData.product.status,
+                  launch_period: formData.product.launch_period,
+                  discontinue_period: formData.product.discontinue_period,
+                },
+              });
+              submissionResults.product = {
+                success: true,
+                id: updatedProduct.id,
+              };
+            } else {
+              const newProduct = await prisma.product.create({
+                data: {
+                  company_id: companyId,
+                  name: formData.product.name,
+                  description: formData.product.description,
+                  category: formData.product.category,
+                  quality_rating: formData.product.quality_rating,
+                  innovation_rating: formData.product.innovation_rating,
+                  sustainability_rating: formData.product.sustainability_rating,
+                  production_cost: formData.product.production_cost,
+                  selling_price: formData.product.selling_price,
+                  inventory_level: formData.product.inventory_level,
+                  production_capacity: formData.product.production_capacity,
+                  development_cost: formData.product.development_cost,
+                  marketing_budget: formData.product.marketing_budget,
+                  status: formData.product.status,
+                  launch_period:
+                    formData.product.launch_period || currentPeriod,
+                  discontinue_period: formData.product.discontinue_period,
+                },
+              });
+              submissionResults.product = {
+                success: true,
+                id: newProduct.id,
+              };
+            }
           }
         } catch (error) {
           submissionResults.product = {
@@ -614,73 +565,63 @@ export async function comprehensiveFormSubmission(
       // 2.7. Process Sales decisions as Product Performance
       (async () => {
         try {
-          await prisma.$transaction(
-            async (tx) => {
-              // Get the first product for the company
-              const products = await tx.product.findMany({
-                where: { company_id: companyId },
-                orderBy: { created_at: "asc" },
-                take: 1,
+          // Get the first product for the company
+          const products = await prisma.product.findMany({
+            where: { company_id: companyId },
+            orderBy: { created_at: "asc" },
+            take: 1,
+          });
+
+          if (products.length > 0) {
+            const product = products[0];
+
+            // Check if product performance record exists for this period
+            const existingPerformance =
+              await prisma.product_performance.findFirst({
+                where: {
+                  product_id: product.id,
+                  period: currentPeriod,
+                },
               });
 
-              if (products.length > 0) {
-                const product = products[0];
-
-                // Check if product performance record exists for this period
-                const existingPerformance = await tx.product_performance.findFirst(
-                  {
-                    where: {
-                      product_id: product.id,
-                      period: currentPeriod,
-                    },
-                  }
-                );
-
-                if (existingPerformance) {
-                  // Update existing product performance
-                  await tx.product_performance.update({
-                    where: { id: existingPerformance.id },
-                    data: {
-                      sales_volume: formData.sales.sales_volume,
-                      revenue: formData.sales.revenue,
-                      costs: formData.sales.costs,
-                      profit: formData.sales.profit,
-                      market_share: formData.sales.market_share,
-                      customer_satisfaction:
-                        formData.sales.customer_satisfaction,
-                    },
-                  });
-                } else {
-                  // Create new product performance record
-                  await tx.product_performance.create({
-                    data: {
-                      product_id: product.id,
-                      period: currentPeriod,
-                      sales_volume: formData.sales.sales_volume,
-                      revenue: formData.sales.revenue,
-                      costs: formData.sales.costs,
-                      profit: formData.sales.profit,
-                      market_share: formData.sales.market_share,
-                      customer_satisfaction:
-                        formData.sales.customer_satisfaction,
-                    },
-                  });
-                }
-
-                submissionResults.sales = {
-                  success: true,
-                };
-              } else {
-                submissionResults.sales = {
-                  success: false,
-                  error: "No product found for sales performance recording",
-                };
-              }
-            },
-            {
-              timeout: 30000,
+            if (existingPerformance) {
+              // Update existing product performance
+              await prisma.product_performance.update({
+                where: { id: existingPerformance.id },
+                data: {
+                  sales_volume: formData.sales.sales_volume,
+                  revenue: formData.sales.revenue,
+                  costs: formData.sales.costs,
+                  profit: formData.sales.profit,
+                  market_share: formData.sales.market_share,
+                  customer_satisfaction: formData.sales.customer_satisfaction,
+                },
+              });
+            } else {
+              // Create new product performance record
+              await prisma.product_performance.create({
+                data: {
+                  product_id: product.id,
+                  period: currentPeriod,
+                  sales_volume: formData.sales.sales_volume,
+                  revenue: formData.sales.revenue,
+                  costs: formData.sales.costs,
+                  profit: formData.sales.profit,
+                  market_share: formData.sales.market_share,
+                  customer_satisfaction: formData.sales.customer_satisfaction,
+                },
+              });
             }
-          );
+
+            submissionResults.sales = {
+              success: true,
+            };
+          } else {
+            submissionResults.sales = {
+              success: false,
+              error: "No product found for sales performance recording",
+            };
+          }
         } catch (error) {
           submissionResults.sales = {
             success: false,
@@ -699,13 +640,39 @@ export async function comprehensiveFormSubmission(
 
     console.log("All business processes completed, checking results...");
 
-    // Step 3: Final transaction to deduct budget and advance period
+    // Check if any critical operations failed
+    const failedOperations = Object.entries(submissionResults)
+      .filter(([, result]) => !result.success)
+      .map(([operation, result]) => ({ operation, error: result.error }));
+
+    if (failedOperations.length > 0) {
+      console.warn("Some operations failed:", failedOperations);
+      // Continue with period advancement even if some operations failed
+      // This ensures the application doesn't get stuck in an inconsistent state
+    }
+
+    // Step 3: Final transaction to store history and advance period (using a single optimized transaction)
     console.log(
-      "Step 3: Finalizing - deducting budget and advancing period..."
+      "Step 3: Finalizing - storing company history and advancing period..."
     );
     try {
       await prisma.$transaction(
         async (tx) => {
+          // Store current company data to history before advancing period
+          await tx.company_history.create({
+            data: {
+              company_id: companyId,
+              period: currentPeriod,
+              cash_balance: company.cash_balance,
+              data: company.data,
+              total_assets: company.total_assets,
+              total_liabilities: company.total_liabilities,
+              marketing_budget: company.marketing_budget,
+              credit_rating: company.credit_rating,
+              brand_value: company.brand_value,
+            },
+          });
+
           // Advance the period and update cash balance to projected balance
           await tx.company.update({
             where: { id: companyId },
@@ -719,7 +686,9 @@ export async function comprehensiveFormSubmission(
           submissionResults.periodAdvancement = { success: true, newPeriod };
         },
         {
-          timeout: 15000, // 15 second timeout for final operations
+          timeout: 30000, // 30 second timeout for final operations
+          maxWait: 10000, // Maximum time to wait for a connection from the pool
+          isolationLevel: "ReadCommitted", // Use a less strict isolation level for better performance
         }
       );
     } catch (error) {
@@ -729,6 +698,9 @@ export async function comprehensiveFormSubmission(
           error instanceof Error ? error.message : "Period advancement failed",
       };
       console.error("Period advancement error:", error);
+
+      // If period advancement fails, we should still return the other results
+      // but indicate that the process didn't complete fully
     }
 
     // Revalidate paths

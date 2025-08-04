@@ -20,7 +20,7 @@ export const prisma =
     errorFormat: "pretty",
   });
 
-// Configure connection pool settings for better performance
+// Optimize Prisma for high-concurrency scenarios
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }

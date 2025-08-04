@@ -36,7 +36,6 @@ const Page = () => {
     fetchSimulations();
   }, []);
 
-
   const handleSimCreated = async () => {
     setInitialLoad(true);
     await fetchSimulations();
@@ -81,8 +80,6 @@ const Page = () => {
       </div>
     );
   }
-
-
 
   return (
     <div className="min-h-screen px-6 py-10 bg-slate-900 text-white relative">
