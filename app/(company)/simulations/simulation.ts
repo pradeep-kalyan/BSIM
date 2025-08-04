@@ -8,6 +8,7 @@ export interface ExtendedSimulation {
   created_by: string;
   created_at: string;
   updated_at: string;
+
   canEdit?: boolean;
   canAccess?: boolean;
   current_period: number;
@@ -23,6 +24,11 @@ export interface ExtendedSimulation {
       updated_at: string;
     };
   }[];
+companies?: {
+  id: string;
+  name: string;
+}[];
+
 }
 export interface CompanyWithAccess {
   canAccess: boolean;

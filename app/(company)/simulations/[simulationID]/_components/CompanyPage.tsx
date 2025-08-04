@@ -40,10 +40,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   const [hasFetched, setHasFetched] = useState(false);
   const router = useRouter();
 
-  const { setSimId, simId } = useSimulation();
-  const didInit = useRef(false);
-
-  const fetchCompanies = React.useCallback(async () => {
+  const fetchCompanies = async () => {
     const user = await getCurrentUser();
     if (!user) return;
 
@@ -53,75 +50,61 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     setOwnedCompanies(companies.filter((c: any) => c.user_id === user.id));
     setAccessibleCompanies(companies.filter((c: any) => c.user_id !== user.id));
     setInitialLoad(false);
-  }, [simulationID]);
+  };
+
+  const { setSimId } = useSimulation();
+
+  const didInit = useRef(false);
 
   useEffect(() => {
     if (!simulationID || didInit.current) return;
 
     didInit.current = true;
     console.log("rendering CompanyPage");
+    if (setSimId) {
+      setSimId(simulationID);
+    }
 
-    const initializeComponent = async () => {
-      // Only set simId if it's different from current
-      if (setSimId && simId !== simulationID) {
-        setSimId(simulationID);
-      }
-      await fetchCompanies();
-    };
+    fetchCompanies();
+  }, [simulationID]);
 
-    initializeComponent();
-  }, [simulationID, fetchCompanies, setSimId, simId]);
-
-  const handleCreated = React.useCallback(async () => {
+  const handleCreated = async () => {
     setInitialLoad(true);
     await fetchCompanies();
     setShowForm(false);
     setSuccess(true);
     setHasFetched(true);
-    console.log("🔄 Company created, fetching updated list");
+    console.log("🔄 useEffect fired");
     setTimeout(() => setSuccess(false), 3000);
-  }, [fetchCompanies]);
+  };
 
-  const handleDelete = React.useCallback(
-    async (companyId: string) => {
-      try {
-        await deleteCompany(companyId);
-        await fetchCompanies();
-      } catch (err) {
-        console.error("Failed to delete company:", err);
-      }
-    },
-    [fetchCompanies]
-  );
+  const handleDelete = async (companyId: string) => {
+    try {
+      await deleteCompany(companyId);
+      await fetchCompanies();
+    } catch (err) {
+      console.error("Failed to delete company:", err);
+    }
+  };
 
   const handleEdit = (company: any) => setEditCompany(company);
 
-  const filterAndSort = React.useCallback(
-    (list: any[]) =>
-      list
-        .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        .sort((a, b) =>
-          sortBy === "name"
-            ? a.name.localeCompare(b.name)
-            : new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-        ),
-    [searchQuery, sortBy]
-  );
+  const filterAndSort = (list: any[]) =>
+    list
+      .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) =>
+        sortBy === "name"
+          ? a.name.localeCompare(b.name)
+          : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
-  const visibleCompanies = React.useMemo(() => {
-    const allCompanies = [...ownedCompanies, ...accessibleCompanies];
-    return activeTab === "owned"
+  const allCompanies = [...ownedCompanies, ...accessibleCompanies];
+  const visibleCompanies =
+    activeTab === "owned"
       ? filterAndSort(ownedCompanies)
       : activeTab === "shared"
       ? filterAndSort(accessibleCompanies)
       : filterAndSort(allCompanies);
-  }, [ownedCompanies, accessibleCompanies, activeTab, filterAndSort]);
-
-  const allCompanies = React.useMemo(
-    () => [...ownedCompanies, ...accessibleCompanies],
-    [ownedCompanies, accessibleCompanies]
-  );
 
   if (initialLoad) {
     return (
@@ -187,7 +170,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => router.push(`/simulations/compare`)}
+            onClick={() => router.push(`/simulations/${simulationID}/compare`)}
             className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
           >
             Compare Companies
