@@ -19,9 +19,9 @@ import {
   createProduct,
   launchProduct,
   discontinueProduct,
-  updateProduct, 
+  updateProduct,
 } from "@/app/_actions/product-actions";
-import ProductFormPage from "./NewProduct"; 
+import ProductFormPage from "./NewProduct";
 
 // Data types
 interface CompanyData {
@@ -98,7 +98,16 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
   // HANDLERS
 
   // Creating new product
-  const handleAddProduct = async (data: Omit<Product, "id" | "status" | "launch_period" | "discontinue_period" | "latest_performance">) => {
+  const handleAddProduct = async (
+    data: Omit<
+      Product,
+      | "id"
+      | "status"
+      | "launch_period"
+      | "discontinue_period"
+      | "latest_performance"
+    >
+  ) => {
     if (!companyData) return;
     setSubmitting(true);
     setError(null);
@@ -124,7 +133,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
     setError(null);
     try {
       await updateProduct({
-        product_id: data.id,  
+        product_id: data.id,
         name: data.name,
         description: data.description ?? undefined,
         category: data.category,
@@ -198,9 +207,8 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
   };
 
   const activeProducts = products.filter((p) => p.status === "active").length;
-  const developmentProducts = products.filter(
-    (p) => p.status === "development"
-  ).length;
+  const developmentProducts = products.filter((p) => p.status === "development")
+    .length;
   const totalProductValue = products.reduce(
     (acc, p) => acc + p.selling_price * p.inventory_level,
     0
@@ -397,8 +405,8 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${(product.sustainability_rating / 10) * 100
-                              }%`,
+                            width: `${(product.sustainability_rating / 10) *
+                              100}%`,
                           }}
                         />
                       </div>

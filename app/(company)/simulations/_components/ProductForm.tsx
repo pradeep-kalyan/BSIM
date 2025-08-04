@@ -29,7 +29,11 @@ interface ProductFormProps {
   products: ProductInput[];
   onAddProduct: () => void;
   onRemoveProduct: (index: number) => void;
-  onProductChange: (index: number, key: keyof ProductInput, value: any) => void;
+  onProductChange: (
+    index: number,
+    key: keyof ProductInput,
+    value: string | number
+  ) => void;
 }
 
 export default function ProductForm({
@@ -44,13 +48,15 @@ export default function ProductForm({
 
   useEffect(() => {
     setErrors(products.map(() => null));
-  }, [products.length]);
+  }, [products.length, products]);
 
   function validateProducts(productsToValidate: ProductInput[]) {
     const result = z.array(createProductSchema).safeParse(productsToValidate);
 
     if (!result.success) {
-      const errorArray: Array<Partial<Record<ProductField, string>>> = productsToValidate.map(() => ({}));
+      const errorArray: Array<Partial<
+        Record<ProductField, string>
+      >> = productsToValidate.map(() => ({}));
 
       for (const issue of result.error.issues) {
         if (issue.path.length >= 2) {
@@ -73,7 +79,11 @@ export default function ProductForm({
     return true;
   }
 
-  function handleFieldChange(index: number, field: ProductField, value: any) {
+  function handleFieldChange(
+    index: number,
+    field: ProductField,
+    value: string | number
+  ) {
     onProductChange(index, field, value);
     validateProducts(products);
   }
@@ -127,7 +137,9 @@ export default function ProductForm({
                   placeholder="Enter product name"
                 />
                 {errors[index]?.name && (
-                  <p className="text-red-400 text-xs mt-1">{errors[index]?.name}</p>
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.name}
+                  </p>
                 )}
               </div>
 
@@ -145,7 +157,9 @@ export default function ProductForm({
                   placeholder="Enter category"
                 />
                 {errors[index]?.category && (
-                  <p className="text-red-400 text-xs mt-1">{errors[index]?.category}</p>
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.category}
+                  </p>
                 )}
               </div>
             </div>
@@ -164,7 +178,9 @@ export default function ProductForm({
                 placeholder="Describe the product"
               />
               {errors[index]?.description && (
-                <p className="text-red-400 text-xs mt-1">{errors[index]?.description}</p>
+                <p className="text-red-400 text-xs mt-1">
+                  {errors[index]?.description}
+                </p>
               )}
             </div>
 
@@ -184,12 +200,18 @@ export default function ProductForm({
                   step="0.1"
                   value={product[field] || 0}
                   onChange={(e) =>
-                    handleFieldChange(index, field, parseFloat(e.target.value) || 0)
+                    handleFieldChange(
+                      index,
+                      field,
+                      parseFloat(e.target.value) || 0
+                    )
                   }
                   className="w-full p-2 rounded bg-slate-800 text-white"
                 />
                 {errors[index]?.[field] && (
-                  <p className="text-red-400 text-xs mt-1">{errors[index]?.[field]}</p>
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.[field]}
+                  </p>
                 )}
               </div>
             ))}
@@ -223,7 +245,9 @@ export default function ProductForm({
                   className="w-full p-2 rounded bg-slate-800 text-white"
                 />
                 {errors[index]?.[field] && (
-                  <p className="text-red-400 text-xs mt-1">{errors[index]?.[field]}</p>
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[index]?.[field]}
+                  </p>
                 )}
               </div>
             ))}

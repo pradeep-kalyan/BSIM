@@ -72,6 +72,24 @@ interface ComparisonData {
   };
 }
 
+interface PreviousDecision {
+  hr_roles?: Array<{
+    role_name: string;
+    current_head_count: number;
+    salary_per_head: number;
+  }>;
+  training_budget?: number;
+  employee_satisfaction?: number;
+  salary_budget?: number;
+  total_budget?: number;
+  total_employees?: number;
+  roles?: Array<{
+    role_name: string;
+    current_head_count: number;
+    salary_per_head: number;
+  }>;
+}
+
 interface HRComparisonModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -80,7 +98,7 @@ interface HRComparisonModalProps {
   newRoles: NewRole[];
   trainingBudget: number;
   employeeSatisfaction: number;
-  previousDecision: any; // The last submitted decision
+  previousDecision: PreviousDecision | null;
 }
 
 const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
@@ -131,8 +149,6 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
     0
   );
   const currentSalaryBudget = currentSalaryFromExisting + currentSalaryFromNew;
-
-  
 
   const currentTotalHires =
     existingRoles.reduce((acc, r) => acc + r.hires, 0) +
@@ -216,13 +232,35 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
     },
   ];
   const chartData = roleComparisonData(comparisonData);
-  function roleComparisonData(comparisonData: any) {
+  interface CurrentRoleData {
+    role_name: string;
+    salary_per_head: number;
+    head_count: number;
+  }
+
+  interface PreviousRoleData {
+    role_name: string;
+    current_head_count: number;
+    salary_per_head: number;
+  }
+
+  interface ComparisonDataType {
+    current: {
+      roles: CurrentRoleData[];
+    };
+    previous: {
+      roles: PreviousRoleData[];
+    };
+  }
+
+  function roleComparisonData(comparisonData: ComparisonDataType) {
     const current = comparisonData.current.roles;
     const previous = comparisonData.previous.roles;
 
-    return current.map((role: any) => {
+    return current.map((role: CurrentRoleData) => {
       const prevRole = previous.find(
-        (r: any) => r.role_name.toLowerCase() === role.role_name.toLowerCase()
+        (r: PreviousRoleData) =>
+          r.role_name.toLowerCase() === role.role_name.toLowerCase()
       );
 
       return {
@@ -233,13 +271,21 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
     });
   }
 
+  interface MetricCardProps {
+    title: string;
+    previous: number;
+    current: number;
+    formatter: (value: number) => string;
+    icon: React.ComponentType<{ size?: number }>;
+  }
+
   const MetricCard = ({
     title,
     previous,
     current,
     formatter,
     icon: Icon,
-  }: any) => {
+  }: MetricCardProps) => {
     const change = (() => {
       const diff = current - previous;
       const percentChange = previous !== 0 ? (diff / previous) * 100 : 0;
@@ -370,7 +416,7 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
                       borderRadius: "8px",
                       color: "#F3F4F6",
                     }}
-                    formatter={(value: any) => [formatCurrency(value), ""]}
+                    formatter={(value: number) => [formatCurrency(value), ""]}
                   />
                   <Legend />
                   <Bar dataKey="previous" fill="#3B82F6" name="Previous" />

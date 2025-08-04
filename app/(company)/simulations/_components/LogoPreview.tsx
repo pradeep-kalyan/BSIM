@@ -5,12 +5,10 @@ import Image from "next/image";
 function isValidImageSrc(src: unknown): src is string {
   return (
     typeof src === "string" &&
-    (
-      src.startsWith("https://") ||
+    (src.startsWith("https://") ||
       src.startsWith("http://") ||
       src.startsWith("data:image/") ||
-      src.startsWith("/")
-    )
+      src.startsWith("/"))
   );
 }
 
@@ -44,6 +42,7 @@ const LogoPreview: React.FC<LogoPreviewProps> = ({ src }) => {
 
   if (src.startsWith("data:image/")) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt="Logo Preview"

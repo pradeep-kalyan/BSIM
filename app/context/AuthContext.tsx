@@ -3,6 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { logoutUser, getCurrentUser } from "@/app/_actions/auth";
+import { useRouter } from "next/navigation";
 
 export interface User {
   id: string;
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Check if user is authenticated on mount
@@ -65,14 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await logoutUser();
       if (result.success) {
         setUser(null);
-        // Use router.push instead of window.location.href for better UX
-        window.location.href = "/login";
+        // Use router.push for better UX
+        router.push("/login");
       }
     } catch (error) {
       console.error("Logout failed:", error);
       // Force logout on client side
       setUser(null);
-      window.location.href = "/login";
+      router.push("/login");
     }
   };
 

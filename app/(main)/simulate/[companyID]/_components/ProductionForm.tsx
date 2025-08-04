@@ -1,7 +1,7 @@
 "use client";
 
 import { IndianRupee, Factory, Package, AlertTriangle } from "lucide-react";
-import React, { useEffect } from "react";
+import React from "react";
 import DashboardCard from "@/ui/Card";
 import { Check, TriangleAlert } from "lucide-react";
 import {
@@ -17,13 +17,12 @@ const formatNumber = (num: number) =>
 
 const ProductionForm = () => {
   const { data, setError, getError, updateData } = useProductionForm();
-  const { updateProductionBudgetImpact, getProjectedCashBalance } =
+  const { cashBalance, updateProductionBudgetImpact, projectedCashBalance } =
     useCashBalance();
   const { period, comId } = useSimulation();
   const { data: companyData } = useCompanyForm();
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
-  const [projected, setProject] = React.useState(0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value === "" ? "" : e.target.value;
@@ -33,11 +32,6 @@ const ProductionForm = () => {
     setSuccess(false); // Reset success state when user makes changes
   };
 
-  useEffect(() => {
-    const currentcash = getProjectedCashBalance();
-    setProject(currentcash);
-  }, []);
-
   const frozenData = React.useMemo(
     () => ({
       units_to_produce: data?.units_to_produce ?? 0,
@@ -46,7 +40,13 @@ const ProductionForm = () => {
       production_capacity: data?.production_capacity ?? 0,
       storage_capacity: data?.storage_capacity ?? 0,
     }),
-    []
+    [
+      data?.units_to_produce,
+      data?.cost_per_unit,
+      data?.defect_rate,
+      data?.production_capacity,
+      data?.storage_capacity,
+    ]
   );
 
   const totalCost =
@@ -63,8 +63,6 @@ const ProductionForm = () => {
       data.units_to_produce * data.cost_per_unit * (1 + data.defect_rate / 100);
     const inventory_value = data.units_to_produce * data.cost_per_unit;
 
-    console.log("Raw form data:", data);
-
     const formData: CreateProduction = {
       company_id: comId ?? "",
       period: period ?? 0,
@@ -78,24 +76,7 @@ const ProductionForm = () => {
       production_cost,
     };
 
-    console.log("Processed formData for validation:", {
-      units_to_produce: formData.units_to_produce,
-      production_capacity: formData.production_capacity,
-      shouldError: formData.units_to_produce > formData.production_capacity,
-      types: {
-        units: typeof formData.units_to_produce,
-        capacity: typeof formData.production_capacity,
-      },
-    });
-
-    console.log("Validation data:", {
-      production_cost,
-      cash_balance: companyData?.cash_balance ?? 0,
-      willExceedBudget: production_cost > (companyData?.cash_balance ?? 0),
-    });
-
     const result = createProductionSchema.safeParse(formData);
-    console.log("Validation result:", result);
 
     const fieldKeys = [
       "units_to_produce",
@@ -127,20 +108,12 @@ const ProductionForm = () => {
     }
 
     // Budget warning
-    if ((companyData?.cash_balance ?? 0) < production_cost) {
-      setBudgetAlert(
-        `⚠️ Insufficient cash balance. Required: ₹${formatNumber(
-          Math.round(production_cost)
-        )}, Available: ₹${formatNumber(companyData?.cash_balance ?? 0)}`
-      );
-      setSuccess(false); // Don't show success if there's a budget issue
-    } else {
-      setBudgetAlert(null);
-      setSuccess(true);
-    }
+    // Don't show success if there's a budget issue
+
+    setBudgetAlert(null);
+    setSuccess(true);
 
     updateProductionBudgetImpact(production_cost);
-    console.log("✅ Validated successfully", result.data);
   };
 
   return (
@@ -317,17 +290,18 @@ const ProductionForm = () => {
               </div>
               <div className="text-sm space-y-1">
                 <div className="text-slate-300">
-                  Available Cash Balance: ₹{formatNumber(projected ?? 0)}
+                  Available Cash Balance: ₹
+                  {formatNumber(cashBalance.originalCashBalance ?? 0)}
                 </div>
                 <div
                   className={`font-semibold ${
-                    totalCost > (projected ?? 0)
+                    totalCost > projectedCashBalance
                       ? "text-rose-400"
                       : "text-emerald-400"
                   }`}
                 >
-                  Remaining after production: ₹
-                  {formatNumber(Math.round(projected - totalCost))}
+                  projectedCashBalance : ₹
+                  {formatNumber(Math.round(projectedCashBalance))}
                 </div>
               </div>
             </div>

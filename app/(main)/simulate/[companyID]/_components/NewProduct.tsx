@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 interface ProductFormPageProps {
   mode: "add" | "edit";
   initialProduct?: Partial<Product>;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Partial<Product>) => void;
   onCancel: () => void;
   submitting?: boolean;
 }
@@ -55,7 +55,9 @@ export default function ProductFormPage({
         }
       : emptyProduct
   );
-  const [errors, setErrors] = useState<Partial<Record<keyof Product, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof Product, string>>>(
+    {}
+  );
 
   useEffect(() => {
     if (mode === "edit" && initialProduct) {
@@ -87,14 +89,18 @@ export default function ProductFormPage({
 
   const validate = (data: Product): Partial<Record<keyof Product, string>> => {
     const newErrors: Partial<Record<keyof Product, string>> = {};
-    if (!data.name || data.name.trim() === "") newErrors.name = "Product name required";
-    if (!data.category || data.category.trim() === "") newErrors.category = "Category required";
-    ["quality_rating", "innovation_rating", "sustainability_rating"].forEach((key) => {
-      const val = data[key as keyof Product];
-      if (typeof val === "number" && (val < 1 || val > 10)) {
-        newErrors[key as keyof Product] = "Must be 1-10";
+    if (!data.name || data.name.trim() === "")
+      newErrors.name = "Product name required";
+    if (!data.category || data.category.trim() === "")
+      newErrors.category = "Category required";
+    ["quality_rating", "innovation_rating", "sustainability_rating"].forEach(
+      (key) => {
+        const val = data[key as keyof Product];
+        if (typeof val === "number" && (val < 1 || val > 10)) {
+          newErrors[key as keyof Product] = "Must be 1-10";
+        }
       }
-    });
+    );
     return newErrors;
   };
 
@@ -116,7 +122,9 @@ export default function ProductFormPage({
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Name */}
         <div>
-          <label className="block text-sm text-slate-300 mb-1">Product Name</label>
+          <label className="block text-sm text-slate-300 mb-1">
+            Product Name
+          </label>
           <input
             type="text"
             value={product.name}
@@ -124,7 +132,9 @@ export default function ProductFormPage({
             className="w-full p-2 rounded bg-slate-900 text-white"
             required
           />
-          {errors.name && <div className="text-red-400 text-xs">{errors.name}</div>}
+          {errors.name && (
+            <div className="text-red-400 text-xs">{errors.name}</div>
+          )}
         </div>
         {/* Category */}
         <div>
@@ -136,11 +146,15 @@ export default function ProductFormPage({
             className="w-full p-2 rounded bg-slate-900 text-white"
             required
           />
-          {errors.category && <div className="text-red-400 text-xs">{errors.category}</div>}
+          {errors.category && (
+            <div className="text-red-400 text-xs">{errors.category}</div>
+          )}
         </div>
         {/* Description */}
         <div>
-          <label className="block text-sm text-slate-300 mb-1">Description</label>
+          <label className="block text-sm text-slate-300 mb-1">
+            Description
+          </label>
           <textarea
             value={product.description || ""}
             onChange={(e) => handleFieldChange("description", e.target.value)}
@@ -153,7 +167,7 @@ export default function ProductFormPage({
           {([
             ["Quality Rating", "quality_rating"],
             ["Innovation Rating", "innovation_rating"],
-            ["Sustainability Rating", "sustainability_rating"]
+            ["Sustainability Rating", "sustainability_rating"],
           ] as const).map(([label, key]) => (
             <div key={key}>
               <label className="block text-sm text-slate-300 mb-1">
@@ -164,11 +178,15 @@ export default function ProductFormPage({
                 min={1}
                 max={10}
                 value={product[key]}
-                onChange={(e) => handleFieldChange(key, parseFloat(e.target.value) || 1)}
+                onChange={(e) =>
+                  handleFieldChange(key, parseFloat(e.target.value) || 1)
+                }
                 className="w-full p-2 rounded bg-slate-900 text-white"
                 required
               />
-              {errors[key] && <div className="text-red-400 text-xs">{errors[key]}</div>}
+              {errors[key] && (
+                <div className="text-red-400 text-xs">{errors[key]}</div>
+              )}
             </div>
           ))}
         </div>
@@ -180,10 +198,12 @@ export default function ProductFormPage({
             ["Inventory Level", "inventory_level"],
             ["Production Capacity", "production_capacity"],
             ["Development Cost", "development_cost"],
-            ["Marketing Budget", "marketing_budget"]
+            ["Marketing Budget", "marketing_budget"],
           ] as const).map(([label, key]) => (
             <div key={key}>
-              <label className="block text-sm text-slate-300 mb-1">{label}</label>
+              <label className="block text-sm text-slate-300 mb-1">
+                {label}
+              </label>
               <input
                 type="number"
                 min={0}
@@ -192,9 +212,9 @@ export default function ProductFormPage({
                 onChange={(e) =>
                   handleFieldChange(
                     key,
-                    key==="inventory_level" || key==="production_capacity"
-                    ? parseInt(e.target.value) || 0
-                    : parseFloat(e.target.value) || 0
+                    key === "inventory_level" || key === "production_capacity"
+                      ? parseInt(e.target.value) || 0
+                      : parseFloat(e.target.value) || 0
                   )
                 }
                 className="w-full p-2 rounded bg-slate-900 text-white"
