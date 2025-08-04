@@ -431,3 +431,25 @@ export async function deleteCompany(companyId: string) {
 
   revalidatePath("/companies");
 }
+export async function fetchCompanyData(simulation_id: string, companies: string[]) {
+  if (!simulation_id || !companies.length) return [];
+
+  // Query your database for companies in that simulation matching the given company names
+  const result = await prisma.company.findMany({
+    where: {
+      simulation_id,
+      name: {
+        in: companies,
+      },
+    },
+    include: {
+    finance_decisions: false,
+    hr_decisions: false,
+    rd_decisions: false,
+    production_decisions: false,
+    products: false,
+  },
+  });
+
+  return result;
+}
