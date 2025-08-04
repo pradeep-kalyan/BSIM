@@ -4,7 +4,7 @@ export interface ExtendedSimulation {
   id: string;
   name: string;
   description: string | null;
-  config: any;
+  config: Record<string, unknown>;
   created_by: string;
   created_at: string;
   updated_at: string;

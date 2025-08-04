@@ -82,10 +82,10 @@ export async function getCompaniesBySimulation(simulationId: string) {
       },
     });
 
-    return companies.map((company: any) => {
+    return companies.map((company: { user_id: string; company_access: Array<{ user_id: string; access_level: string }> }) => {
       const isOwner = company.user_id === user.id;
       const accessEntry = company.company_access.find(
-        (access: any) => access.user_id === user.id
+        (access: { user_id: string; access_level: string }) => access.user_id === user.id
       );
 
       return {

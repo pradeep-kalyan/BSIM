@@ -48,7 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var prisma_1 = require("./prisma");
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var hashedPassword, admin, instructor, students, techSimulation, retailSimulation, simulationAccess, companies, products, financeRecords, period, i, baseRevenue, revenue, costs, profit, i, revenue, costs, profit, hrDecisions, _loop_1, period, rdDecisions, period, i, productionDecisions, period, i, unitsProduced, costPerUnit, marketingDecisions, period, i, totalBudget, onlineBudget, offlineBudget, productPerformances, period, _i, products_1, product, salesVolume, revenue, costs, profit;
+        var hashedPassword, admin, instructor, students, techSimulation, retailSimulation, companies, products, financeRecords, period, i, baseRevenue, revenue, costs, profit, i, revenue, costs, profit, hrDecisions, _loop_1, period, rdDecisions, period, i, productionDecisions, period, i, unitsProduced, costPerUnit, marketingDecisions, period, i, totalBudget, onlineBudget, offlineBudget, productPerformances, period, _i, products_1, product, salesVolume, revenue, costs, profit;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -218,7 +218,7 @@ function main() {
                             }),
                         ], false))];
                 case 19:
-                    simulationAccess = _a.sent();
+                    _a.sent();
                     // Create Companies
                     console.log("🏢 Creating companies...");
                     return [4 /*yield*/, Promise.all([
@@ -636,8 +636,6 @@ function main() {
                                     budget: totalBudget,
                                     offline: offlineBudget,
                                     online: onlineBudget,
-                                    roi: Math.floor(120 + Math.random() * 80), // 120-200% ROI
-                                    conversion_rate: Math.floor(3 + Math.random() * 7), // 3-10% conversion
                                     finalised: period < 3,
                                 },
                             }));

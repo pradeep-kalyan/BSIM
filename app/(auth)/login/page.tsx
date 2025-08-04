@@ -31,7 +31,7 @@ const Page = () => {
           result.message || "Login failed. Please check your credentials."
         );
       }
-    } catch (error) {
+    } catch {
       toast.error("Login failed. Please check your credentials.");
     } finally {
       setDisabled(false);
@@ -122,7 +122,7 @@ const Page = () => {
 
           <div className="w-full border-t border-slate-700 mt-5 pt-4">
             <div className="flex flex-col sm:flex-row justify-center items-center gap-2 text-sm">
-              <h2 className="text-white/80">Don't have an account?</h2>
+              <h2 className="text-white/80">Don&apos;t have an account?</h2>
               <Link
                 href={"/register"}
                 className="text-blue-400 hover:text-blue-300 font-medium transition-all duration-300 hover:underline"

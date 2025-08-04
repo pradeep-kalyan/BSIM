@@ -115,7 +115,7 @@ async function main() {
 
   // Create Simulation Access
   console.log("🔑 Setting up simulation access...");
-  const simulationAccess = await Promise.all([
+  await Promise.all([
     // Tech simulation access
     ...students.map((student) =>
       prisma.simulation_access.create({
@@ -579,8 +579,6 @@ async function main() {
             budget: totalBudget,
             offline: offlineBudget,
             online: onlineBudget,
-            roi: Math.floor(120 + Math.random() * 80), // 120-200% ROI
-            conversion_rate: Math.floor(3 + Math.random() * 7), // 3-10% conversion
             finalised: period < 3,
           },
         })

@@ -9,7 +9,11 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import DashboardCard from "@/ui/Card";
-import { useRDForm, useCashBalance, useCompanyForm } from "@/app/context/FormContext";
+import {
+  useRDForm,
+  useCashBalance,
+  useCompanyForm,
+} from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 
 const formatCurrency = (val: number) =>
@@ -17,7 +21,8 @@ const formatCurrency = (val: number) =>
 
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();
-  const { projectedCashBalance, updateRDBudgetImpact } = useCashBalance();
+  const { projectedCashBalance, updateRDBudgetImpact, cashBalance } =
+    useCashBalance();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
 
@@ -97,15 +102,6 @@ const RDForm = () => {
       return;
     }
 
-    if (totalBudget > balance) {
-      setBudgetAlert(
-        ` Insufficient cash balance. Required: ${formatCurrency(
-          totalBudget
-        )}, Available: ${formatCurrency(balance)}`
-      );
-      return;
-    }
-
     updateRDBudgetImpact(totalBudget);
     setSuccess(true);
   };
@@ -114,7 +110,9 @@ const RDForm = () => {
     <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
       <div className="max-w-5xl mx-auto py-8">
         <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold text-blue-300">R&D Dashboard</h1>
+          <h1 className="text-4xl font-extrabold text-blue-300">
+            R&D Dashboard
+          </h1>
           <span className="text-lg text-slate-400 tracking-wide">
             Period {period} • {companyData?.name}
           </span>
@@ -151,11 +149,16 @@ const RDForm = () => {
           }}
           className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700"
         >
-          <h2 className="text-2xl font-bold text-white mb-6">Set R&D Strategy</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">
+            Set R&D Strategy
+          </h2>
           <div className="grid gap-6 md:grid-cols-2">
             {fieldDefs.map(({ id, label, placeholder, min, step }) => (
               <div key={id}>
-                <label htmlFor={id} className="block text-slate-200 font-semibold mb-1">
+                <label
+                  htmlFor={id}
+                  className="block text-slate-200 font-semibold mb-1"
+                >
                   {label}
                 </label>
                 <input
@@ -180,8 +183,12 @@ const RDForm = () => {
 
           <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
+              <div className="text-slate-300">
+                Available Cash:{" "}
+                {formatCurrency(cashBalance.originalCashBalance)}
+              </div>
               <div className="text-xl text-blue-400 font-semibold">
-                Cash After R&D:{" "}
+                R&D budget:{" "}
                 <span
                   className={
                     projectedCashBalance - (data.budget ?? 0) < 0
@@ -189,11 +196,23 @@ const RDForm = () => {
                       : "text-emerald-400"
                   }
                 >
-                  {formatCurrency(projectedCashBalance - (data.budget ?? 0))}
+                  {formatCurrency(
+                    cashBalance.financeBudgetImpact - (data.budget ?? 0)
+                  )}
                 </span>
               </div>
-              <div className="text-slate-300">
-                Available Cash: {formatCurrency(projectedCashBalance)}
+
+              <div className="text-xl text-blue-400 font-semibold">
+                Projected Balance:{" "}
+                <span
+                  className={
+                    projectedCashBalance - (data.budget ?? 0) < 0
+                      ? "text-rose-400"
+                      : "text-emerald-400"
+                  }
+                >
+                  {formatCurrency(projectedCashBalance ?? 0)}
+                </span>
               </div>
             </div>
             <button

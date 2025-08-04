@@ -142,10 +142,6 @@ export const createProductionSchema = productionSchema
   .refine((data) => data.units_to_produce <= data.production_capacity, {
     message: "Units to produce cannot exceed production capacity",
     path: ["units_to_produce"],
-  })
-  .refine((data) => data.production_cost <= data.cash_balance, {
-    message: "Production cost cannot exceed cash balance",
-    path: ["production_cost"],
   });
 
 /* ---------------------- Production Form ---------------------- */

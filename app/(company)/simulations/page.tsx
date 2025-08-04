@@ -165,7 +165,7 @@ const Page = () => {
           {["owned", "shared", "all"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
               className={`px-4 py-2 rounded-md ${
                 activeTab === tab
                   ? "bg-blue-600"

@@ -25,20 +25,21 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
 
   const [success, setSuccess] = useState(false);
   const [budgetError, setBudgetError] = useState<string | null>(null);
-  const [isValidated, setIsValidated] = useState(false);
 
-  const frozenData = {
-    budget: marketingData.budget,
-    online: marketingData.online,
-    offline: marketingData.offline,
-  };
+  const frozenData = React.useMemo(
+    () => ({
+      budget: marketingData.budget,
+      online: marketingData.online,
+      offline: marketingData.offline,
+    }),
+    [marketingData.budget, marketingData.online, marketingData.offline]
+  );
 
   const handleBudgetChange = (
     field: "budget" | "online" | "offline",
     value: number
   ) => {
     setSuccess(false);
-    setIsValidated(false);
 
     // Ensure value is not negative
     if (value < 0) value = 0;
@@ -65,7 +66,6 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
 
   const handleValidate = () => {
     setBudgetError(null);
-    setIsValidated(false);
     setSuccess(false);
 
     if (marketingData.online + marketingData.offline !== marketingData.budget) {
@@ -83,7 +83,9 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
     }
     updateMarketingBudgetImpact(marketingData.budget);
     setSuccess(true);
-    setIsValidated(true);
+    updateMarketingBudgetImpact(
+      cashBalance.originalCashBalance - projectedCashBalance
+    );
   };
 
   return (
@@ -173,7 +175,8 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
           <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
               <div className="text-slate-300 text-sm">
-                Available Cash Balance: {formatCurrency(projectedCashBalance)}
+                Available Cash Balance:{" "}
+                {formatCurrency(cashBalance.originalCashBalance)}
               </div>
               <div
                 className={`font-semibold ${
@@ -182,8 +185,19 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
                     : "text-emerald-400"
                 }`}
               >
-                Remaining After Marketing:
-                {formatCurrency(projectedCashBalance - marketingData.budget)}
+                Projected Balance :{formatCurrency(projectedCashBalance)}
+              </div>
+              <div>
+                <div
+                  className={`font-semibold ${
+                    marketingData.budget > projectedCashBalance
+                      ? "text-rose-400"
+                      : "text-emerald-400"
+                  }`}
+                >
+                  Marketing Budget:
+                  {formatCurrency(marketingData.budget)}
+                </div>
               </div>
             </div>
 

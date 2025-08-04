@@ -31,8 +31,8 @@ export async function getSimulations() {
     },
   });
 
-  return simulations.map((sim: any) => {
-    let parsedConfig: any = {};
+  return simulations.map((sim: { config: string | Record<string, unknown>; created_by: string; simulation_access: Array<{ user_id: string; access_level: string }> }) => {
+    let parsedConfig: Record<string, unknown> = {};
     try {
       parsedConfig =
         typeof sim.config === "string" ? JSON.parse(sim.config) : sim.config || {};
@@ -41,7 +41,7 @@ export async function getSimulations() {
     }
 
     const isOwner = sim.created_by === user.id;
-    const accessEntry = sim.simulation_access.find((a: any) => a.user_id === user.id);
+    const accessEntry = sim.simulation_access.find((a: { user_id: string; access_level: string }) => a.user_id === user.id);
     const hasAccess = isOwner || !!accessEntry;
     const canEdit = accessEntry?.access_level === "editor" || isOwner;
 
@@ -198,7 +198,7 @@ export async function deleteSimulation(simulationId: string) {
 export async function updateSimulation(simulationId: string, data: {
   name?: string;
   description?: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
 }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
@@ -211,7 +211,7 @@ export async function updateSimulation(simulationId: string, data: {
     throw new Error("Forbidden");
   }
 
-  const updatePayload: any = {};
+  const updatePayload: Record<string, string> = {};
 
   if (data.name) updatePayload.name = data.name;
   if (data.description !== undefined) updatePayload.description = data.description;
