@@ -17,9 +17,10 @@ const formatCurrency = (val: number) =>
 const percent = (part: number, total: number) =>
   total > 0 ? ((part / total) * 100).toFixed(1) + "%" : "0%";
 
-const MarketingForm = ({ companyId }: { companyId: string }) => {
-  const { data: marketingData, updateData, setError } = useMarketingForm();
-  const { projectedCashBalance, updateMarketingBudgetImpact } = useCashBalance();
+const MarketingForm = () => {
+  const { data: marketingData, updateData } = useMarketingForm();
+  const { cashBalance, projectedCashBalance, updateMarketingBudgetImpact } =
+    useCashBalance();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
 
@@ -72,16 +73,6 @@ const MarketingForm = ({ companyId }: { companyId: string }) => {
       setBudgetError(" Online + Offline must equal total budget.");
       return;
     }
-
-    if (marketingData.budget > projectedCashBalance) {
-      setBudgetError(
-        ` Insufficient cash balance. Required: ₹${formatCurrency(
-          marketingData.budget
-        )}, Available: ${formatCurrency(projectedCashBalance)}`
-      );
-      return;
-    }
-    updateMarketingBudgetImpact(marketingData.budget);
     setSuccess(true);
     updateMarketingBudgetImpact(
       cashBalance.originalCashBalance - projectedCashBalance

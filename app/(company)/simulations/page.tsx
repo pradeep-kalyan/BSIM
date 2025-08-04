@@ -10,7 +10,7 @@ import { getCurrentUser } from "@/app/functions/jwt";
 import CreateSim from "./_components/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, PlusCircle, LayoutDashboard, Rocket } from "lucide-react";
-import CheckboxDropdown from "@/ui/CompanyCheckboxDropdown";
+import CheckboxDropdown from "@/ui/CheckboxDropdown";
 import SingleSelectDropdown from "@/ui/SingleSelectDropdown";
 import Card from "./_components/SimCard";
 import EditSimulationForm from "./_components/EditSimulationForm";

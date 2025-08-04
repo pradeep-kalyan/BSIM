@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { getSimulationscompare } from "@/app/_actions/createSim";
 import {
@@ -15,8 +15,11 @@ import {
   ArrowUpDown,
   AlertCircle,
   RefreshCw,
+  Trophy,
+  PieChart,
 } from "lucide-react";
-import CheckboxDropdown from "@/ui/CompanyCheckboxDropdown";
+import CheckboxDropdown from "@/ui/CheckboxDropdown";
+import { getCompanyComparisonData } from "@/app/_actions/companyData";
 
 // Types for better type safety
 interface Company {
@@ -53,61 +56,18 @@ interface Company {
     customer_satisfaction: number;
   }>;
 }
+interface CompanyOption {
+  id: string;
+  name: string;
+}
 
 type SortOption = "revenue" | "profit" | "assets" | "cash" | "roi";
 type MetricType = "financial" | "operational" | "innovation";
 
-async function fetchCompanyData(simulationId: string, companies: string[]): Promise<Company[]> {
-  // Simulate API delay for better UX testing
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return companies.map((name, i) => ({
-    id: `${i}`,
-    name,
-    cash_balance: Math.floor(Math.random() * 5_000_000),
-    total_assets: Math.floor(Math.random() * 10_000_000),
-    total_liabilities: Math.floor(Math.random() * 3_000_000),
-    brand_value: Math.floor(Math.random() * 1_500_000),
-    marketing_budget: Math.floor(Math.random() * 500_000),
-    current_period: 4,
-    finance: {
-      total_revenue: Math.floor(Math.random() * 3_000_000),
-      net_profit: Math.floor(Math.random() * 700_000),
-      roi: +(Math.random() * 20).toFixed(1),
-      burn_rate: Math.floor(Math.random() * 150_000),
-    },
-    hr: {
-      total_budget: Math.floor(Math.random() * 700_000),
-      employee_satisfaction: Math.floor(Math.random() * 100),
-    },
-    rd: {
-      budget: Math.floor(Math.random() * 400_000),
-      patented: Math.floor(Math.random() * 10),
-      quality_changes: Math.floor(Math.random() * 30),
-    },
-    production: {
-      production_capacity: Math.floor(Math.random() * 10_000),
-      defect_rate: +(Math.random() * 5).toFixed(2),
-    },
-    products: [
-      {
-        name: "Product A",
-        market_share: +(Math.random() * 30).toFixed(1),
-        customer_satisfaction: +(Math.random() * 5).toFixed(1),
-      },
-      {
-        name: "Product B",
-        market_share: +(Math.random() * 20).toFixed(1),
-        customer_satisfaction: +(Math.random() * 5).toFixed(1),
-      },
-    ],
-  }));
-}
-
 const ComparePage: React.FC = () => {
   const { simId: simulationId } = useSimulation();
-  const [allCompanies, setAllCompanies] = useState<string[]>([]);
-  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
+  const [allCompanies, setAllCompanies] = useState<CompanyOption[]>([]);
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
   const [companiesData, setCompaniesData] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [comparisonStarted, setComparisonStarted] = useState(false);
@@ -116,17 +76,25 @@ const ComparePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Memoized formatters for better performance
-  const formatNumber = useMemo(() => (value: number): string => {
-    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
-    return value.toLocaleString();
-  }, []);
+  const formatNumber = useMemo(
+    () =>
+      (value: number): string => {
+        if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+        if (value >= 1000) return `${(value / 1000).toFixed(2)}K`;
+        return value.toLocaleString();
+      },
+    []
+  );
 
-  const formatCurrency = useMemo(() => (value: number): string => {
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-    return `$${value.toLocaleString()}`;
-  }, []);
+  const formatCurrency = useMemo(
+    () =>
+      (value: number): string => {
+        if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
+        if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
+        return `$${value.toLocaleString()}`;
+      },
+    []
+  );
 
   // Extract metric value for sorting with better type safety
   const getMetricValue = (company: Company, metric: SortOption): number => {
@@ -148,26 +116,41 @@ const ComparePage: React.FC = () => {
 
   // Memoized sorted companies for better performance
   const sortedCompanies = useMemo(() => {
-    return [...companiesData].sort((a, b) => getMetricValue(b, sortBy) - getMetricValue(a, sortBy));
+    return [...companiesData].sort(
+      (a, b) => getMetricValue(b, sortBy) - getMetricValue(a, sortBy)
+    );
   }, [companiesData, sortBy]);
 
   // Memoized performance leaders
   const performanceLeaders = useMemo(() => {
-    if (companiesData.length === 0) return { revenue: null, roi: null, satisfaction: null };
-    
-    const revenueLeader = [...companiesData].sort((a, b) => b.finance.total_revenue - a.finance.total_revenue)[0];
-    const roiLeader = [...companiesData].sort((a, b) => b.finance.roi - a.finance.roi)[0];
-    const satisfactionLeader = [...companiesData].sort((a, b) => b.hr.employee_satisfaction - a.hr.employee_satisfaction)[0];
-    
-    return { revenue: revenueLeader, roi: roiLeader, satisfaction: satisfactionLeader };
+    if (companiesData.length === 0)
+      return { revenue: null, roi: null, satisfaction: null };
+
+    const revenueLeader = [...companiesData].sort(
+      (a, b) => b.finance.total_revenue - a.finance.total_revenue
+    )[0];
+    const roiLeader = [...companiesData].sort(
+      (a, b) => b.finance.roi - a.finance.roi
+    )[0];
+    const satisfactionLeader = [...companiesData].sort(
+      (a, b) => b.hr.employee_satisfaction - a.hr.employee_satisfaction
+    )[0];
+
+    return {
+      revenue: revenueLeader,
+      roi: roiLeader,
+      satisfaction: satisfactionLeader,
+    };
   }, [companiesData]);
 
-  const ComparisonCard: React.FC<{ title: React.ReactNode; children: React.ReactNode; className?: string }> = ({ 
-    title, 
-    children, 
-    className = "" 
-  }) => (
-    <div className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-white/10 shadow-lg ${className}`}>
+  const ComparisonCard: React.FC<{
+    title: React.ReactNode;
+    children: React.ReactNode;
+    className?: string;
+  }> = ({ title, children, className = "" }) => (
+    <div
+      className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-white/10 shadow-lg ${className}`}
+    >
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
         {title}
       </h3>
@@ -193,13 +176,33 @@ const ComparePage: React.FC = () => {
 
   // Load companies on mount
   useEffect(() => {
+    console.log("ComparePage MOUNTED");
+    return () => {
+      console.log("ComparePage UNMOUNTED");
+    };
+  }, []);
+
+  const hasFetched = useRef(false); // survives remounts
+
+  useEffect(() => {
+    if (!simulationId || hasFetched.current) return;
+
+    hasFetched.current = true; // set as soon as effect runs
+    console.log("ComparePage fetching companies");
+
     const loadCompanies = async () => {
       try {
         setError(null);
         const simulations = await getSimulationscompare();
         const currentSim = simulations.find((s: any) => s.id === simulationId);
+
         if (currentSim) {
-          setAllCompanies(currentSim.companies.map((c: any) => c.name));
+          setAllCompanies(
+            currentSim.companies.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+            }))
+          );
         } else {
           setError("Simulation not found");
         }
@@ -208,20 +211,21 @@ const ComparePage: React.FC = () => {
         console.error("Error loading companies:", err);
       }
     };
-    
-    if (simulationId) {
-      loadCompanies();
-    }
+
+    loadCompanies();
   }, [simulationId]);
 
   const handleCompareClick = async () => {
-    if (selectedCompanies.length < 2) return;
-    
+    if (selectedCompanyIds.length < 2) return;
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      const data = await fetchCompanyData(simulationId!, selectedCompanies);
+      const data = await getCompanyComparisonData(
+        simulationId!,
+        selectedCompanyIds
+      );
       setCompaniesData(data);
       setComparisonStarted(true);
     } catch (err) {
@@ -233,7 +237,7 @@ const ComparePage: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    if (selectedCompanies.length >= 2) {
+    if (selectedCompanyIds.length >= 2) {
       handleCompareClick();
     }
   };
@@ -244,7 +248,9 @@ const ComparePage: React.FC = () => {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Simulation Selected</h2>
-          <p className="text-gray-400">Please select a simulation to view company comparisons.</p>
+          <p className="text-gray-400">
+            Please select a simulation to view company comparisons.
+          </p>
         </div>
       </div>
     );
@@ -258,17 +264,20 @@ const ComparePage: React.FC = () => {
           {comparisonStarted && (
             <button
               onClick={handleRefresh}
-              disabled={loading || selectedCompanies.length < 2}
+              disabled={loading || selectedCompanyIds.length < 2}
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
           )}
         </div>
-        
+
         <p className="mb-6 text-gray-400">
-          Simulation N: <span className="text-white font-mono">{simulationId}</span>
+          Simulation N:{" "}
+          <span className="text-white font-mono">{simulationId}</span>
         </p>
 
         {error && (
@@ -281,18 +290,27 @@ const ComparePage: React.FC = () => {
         {/* Company Selection */}
         <div className="flex items-center gap-4 mb-10 flex-wrap">
           <CheckboxDropdown
-            options={allCompanies}
-            selected={selectedCompanies}
-            onChange={(updated) =>
-              updated.length <= 3 ? setSelectedCompanies(updated) : null
-            }
+            options={allCompanies.map((c) => c.name)}
+            selected={allCompanies
+              .filter((c) => selectedCompanyIds.includes(c.id))
+              .map((c) => c.name)}
+            onChange={(selectedNames) => {
+              const selectedIds = allCompanies
+                .filter((c) => selectedNames.includes(c.name))
+                .map((c) => c.id);
+
+              if (selectedIds.length <= 3) {
+                setSelectedCompanyIds(selectedIds);
+              }
+            }}
             placeholder="Select companies (max 3)"
           />
+
           <button
             onClick={handleCompareClick}
-            disabled={selectedCompanies.length < 2 || loading}
+            disabled={selectedCompanyIds.length < 2 || loading}
             className={`px-6 py-3 rounded-md font-medium transition-all flex items-center gap-2 ${
-              selectedCompanies.length >= 2 && !loading
+              selectedCompanyIds.length >= 2 && !loading
                 ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:brightness-110 shadow-lg"
                 : "bg-gray-700 text-gray-400 cursor-not-allowed"
             }`}
@@ -309,9 +327,9 @@ const ComparePage: React.FC = () => {
               </>
             )}
           </button>
-          {selectedCompanies.length > 0 && (
+          {selectedCompanyIds.length > 0 && (
             <span className="text-sm text-gray-400">
-              {selectedCompanies.length} of 3 selected
+              {selectedCompanyIds.length} of 3 selected
             </span>
           )}
         </div>
@@ -338,19 +356,21 @@ const ComparePage: React.FC = () => {
               </div>
 
               <div className="flex gap-2">
-                {(["financial", "operational", "innovation"] as const).map((metric) => (
-                  <button
-                    key={metric}
-                    onClick={() => setSelectedMetric(metric)}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      selectedMetric === metric
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    }`}
-                  >
-                    {metric.charAt(0).toUpperCase() + metric.slice(1)}
-                  </button>
-                ))}
+                {(["financial", "operational", "innovation"] as const).map(
+                  (metric) => (
+                    <button
+                      key={metric}
+                      onClick={() => setSelectedMetric(metric)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedMetric === metric
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
+                    >
+                      {metric.charAt(0).toUpperCase() + metric.slice(1)}
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
@@ -359,13 +379,17 @@ const ComparePage: React.FC = () => {
               {sortedCompanies.map((company, index) => (
                 <div key={company.id} className="relative">
                   {index === 0 && (
-                    <div className="absolute -top-3 left-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold z-10 shadow-lg">
-                      🏆 #1 Leader
+                    <div className="absolute -top-3 left-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold z-10 shadow-lg flex items-center gap-1">
+                      <Trophy className="w-4 h-4" />
+                      #1 Leader
                     </div>
                   )}
+
                   <div
                     className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border ${
-                      index === 0 ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20" : "border-white/10"
+                      index === 0
+                        ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20"
+                        : "border-white/10"
                     } transition-all hover:shadow-lg hover:border-white/20`}
                   >
                     <div className="flex items-center gap-3 mb-4">
@@ -398,7 +422,7 @@ const ComparePage: React.FC = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-400">ROI</span>
                         <span className="text-purple-400 font-semibold">
-                          {company.finance.roi}%
+                          {company.finance.roi.toFixed(2)}%
                         </span>
                       </div>
                     </div>
@@ -453,7 +477,7 @@ const ComparePage: React.FC = () => {
                   label="ROI %"
                   companies={sortedCompanies}
                   getValue={(c) => c.finance.roi}
-                  format={(v) => `${v}%`}
+                  format={(v) => `${v.toFixed(2)}%`}
                 />
                 <MetricRow
                   label="Brand Value"
@@ -494,7 +518,7 @@ const ComparePage: React.FC = () => {
                     label="Employee Satisfaction"
                     companies={sortedCompanies}
                     getValue={(c) => c.hr.employee_satisfaction}
-                    format={(v) => `${v}%`}
+                    format={(v) => `${v.toFixed(2)}%`}
                   />
                   <MetricRow
                     label="Production Capacity"
@@ -506,7 +530,7 @@ const ComparePage: React.FC = () => {
                     label="Defect Rate"
                     companies={sortedCompanies}
                     getValue={(c) => c.production.defect_rate}
-                    format={(v) => `${v}%`}
+                    format={(v) => `${v.toFixed(2)}%`}
                   />
                 </ComparisonCard>
 
@@ -538,10 +562,12 @@ const ComparePage: React.FC = () => {
                               </span>
                               <div className="flex gap-4">
                                 <span className="text-blue-400">
-                                  {product.market_share}% share
+                                  <PieChart className="w-4 h-4" />
+                                  {(product.market_share ?? 0).toFixed(2)}% share
                                 </span>
                                 <span className="text-yellow-400">
-                                  {product.customer_satisfaction}★
+                                  <Star className="w-4 h-4 fill-yellow-400 stroke-yellow-500" />
+                                  {(product.customer_satisfaction ?? 0).toFixed(2)}
                                 </span>
                               </div>
                             </div>
@@ -613,7 +639,10 @@ const ComparePage: React.FC = () => {
                   {performanceLeaders.revenue?.name}
                 </p>
                 <p className="text-green-300 text-sm">
-                  {performanceLeaders.revenue && formatCurrency(performanceLeaders.revenue.finance.total_revenue)}
+                  {performanceLeaders.revenue &&
+                    formatCurrency(
+                      performanceLeaders.revenue.finance.total_revenue
+                    )}
                 </p>
               </div>
 
@@ -628,7 +657,7 @@ const ComparePage: React.FC = () => {
                   {performanceLeaders.roi?.name}
                 </p>
                 <p className="text-blue-300 text-sm">
-                  {performanceLeaders.roi?.finance.roi}%
+                  {performanceLeaders.roi?.finance.roi.toFixed(2)}%
                 </p>
               </div>
 
