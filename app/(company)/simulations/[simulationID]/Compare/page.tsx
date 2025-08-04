@@ -19,7 +19,7 @@ import {
   PieChart,
 } from "lucide-react";
 import CheckboxDropdown from "@/ui/CheckboxDropdown";
-import { getCompanyComparisonData } from "@/app/_actions/companyData";
+import { getCompanyComparisonData } from "@/app/_actions/CompanyData";
 
 // Types for better type safety
 interface Company {
