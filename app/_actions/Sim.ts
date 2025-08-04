@@ -99,3 +99,5 @@ export async function getSimulationsByUser(userId: string) {
     throw new Error("Failed to fetch simulations");
   }
 }
+
+
