@@ -18,7 +18,7 @@ import {
   Trophy,
   PieChart,
 } from "lucide-react";
-import CheckboxDropdown from "@/ui/CheckboxDropdown";
+import CheckboxDropdown from "@/ui/CheckboxDropDown";
 import { getCompanyComparisonData } from "@/app/_actions/CompanyData";
 
 // Types for better type safety
