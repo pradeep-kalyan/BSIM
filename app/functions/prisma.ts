@@ -11,11 +11,6 @@ export const prisma =
         url: process.env.DATABASE_URL,
       },
     },
-    // Add logging for debugging
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
     // Increase error format verbosity
     errorFormat: "pretty",
   });

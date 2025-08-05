@@ -574,7 +574,41 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         {/* Step 2: Products */}
         {currentStep === 2 && (
           <div className="animate-in slide-in-from-right-5 duration-300">
-            <ProductForm onChange={setProducts} />
+            <ProductForm
+              products={products}
+              onAddProduct={() =>
+                setProducts((prev) => [
+                  ...prev,
+                  {
+                    name: "",
+                    description: "",
+                    category: "",
+                    quality_rating: 0,
+                    innovation_rating: 0,
+                    sustainability_rating: 0,
+                    production_cost: 0,
+                    selling_price: 0,
+                    inventory_level: 0,
+                    production_capacity: 0,
+                    development_cost: 0,
+                    marketing_budget: 0,
+                    status: "active",
+                    launch_period: 1,
+                    discontinue_period: undefined,
+                  },
+                ])
+              }
+              onRemoveProduct={(index) =>
+                setProducts((prev) => prev.filter((_, i) => i !== index))
+              }
+              onProductChange={(index, field, value) =>
+                setProducts((prev) => {
+                  const updated = [...prev];
+                  updated[index] = { ...updated[index], [field]: value };
+                  return updated;
+                })
+              }
+            />
           </div>
         )}
 

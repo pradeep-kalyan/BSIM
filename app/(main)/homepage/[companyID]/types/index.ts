@@ -95,10 +95,5 @@ export type DashboardData = {
     satisfaction: number;
     newHires: number;
   }>;
-  productionData: Array<{
-    month: string;
-    produced: number;
-    defects: number;
-    efficiency: number;
-  }>;
+  productionData: production[];
 };

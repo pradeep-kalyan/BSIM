@@ -1,81 +1,94 @@
 "use client";
 
-import React, { useEffect, useState ,useRef} from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   getCompaniesBySimulation,
   deleteCompany,
 } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
-import CreateCompanyForm from "../_components/CreateCompanyForm";
-import CompanyList from "../_components/ComCard";
-import {
-  CheckCircle,
-  LayoutDashboard,
-  PlusCircle,
-  Building2,
-} from "lucide-react";
+import CreateCompanyForm from "../../_components/CreateCompanyForm";
+import CompanyList from "../../_components/ComCard";
+import { CheckCircle, Building2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import EditCompanyForm from "../_components/EditCompanyForm";
+import EditCompanyForm from "../../_components/EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { useRouter } from "next/navigation";
+import { company } from "@prisma/client";
+
+interface ExtendedCompany extends company {
+  canAccess?: boolean;
+  canEdit?: boolean;
+  user_id: string;
+}
+
 interface Props {
   simulationID: string;
   simulationName: string;
 }
 
 const CompanyPage = ({ simulationID, simulationName }: Props) => {
-  const [ownedCompanies, setOwnedCompanies] = useState<any[]>([]);
-  const [accessibleCompanies, setAccessibleCompanies] = useState<any[]>([]);
+  const [ownedCompanies, setOwnedCompanies] = useState<ExtendedCompany[]>([]);
+  const [accessibleCompanies, setAccessibleCompanies] = useState<
+    ExtendedCompany[]
+  >([]);
   const [showForm, setShowForm] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [success, setSuccess] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
-  const [editCompany, setEditCompany] = useState<any | null>(null);
+  const [editCompany, setEditCompany] = useState<ExtendedCompany | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "created_at">("name");
+  const [searchQuery] = useState("");
+  const [sortBy] = useState<"name" | "created_at">("name");
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
   );
-  const [hasFetched, setHasFetched] = useState(false);
   const router = useRouter();
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     const user = await getCurrentUser();
     if (!user) return;
 
     const companies = await getCompaniesBySimulation(simulationID);
     setCurrentUserId(user.id);
 
-    setOwnedCompanies(companies.filter((c: any) => c.user_id === user.id));
-    setAccessibleCompanies(companies.filter((c: any) => c.user_id !== user.id));
+    setOwnedCompanies(
+      companies.filter(
+        (c) => c.user_id === user.id
+      ) as unknown as ExtendedCompany[]
+    );
+    setAccessibleCompanies(
+      companies.filter(
+        (c) => c.user_id !== user.id
+      ) as unknown as ExtendedCompany[]
+    );
     setInitialLoad(false);
-  };
+  }, [simulationID]);
 
-  const { setSimId } = useSimulation();
+  const { setSimId, simId } = useSimulation();
 
-const didInit = useRef(false);
+  const didInit = useRef(false);
 
-useEffect(() => {
-  if (!simulationID || didInit.current) return;
-
-  didInit.current = true;
-console.log("rendering CompanyPage")
-  if (setSimId) {
-    setSimId(simulationID);
+  const handleViewSimulations = () => {
+    router.push(`/simulations/`);
   }
 
-  fetchCompanies();
-}, [simulationID]);
+  useEffect(() => {
+    if (!simulationID || didInit.current) return;
 
+    didInit.current = true;
+    console.log("rendering CompanyPage");
+    if (setSimId) {
+      setSimId(simulationID);
+    }
 
+    fetchCompanies();
+  }, [simulationID, fetchCompanies, setSimId]);
 
   const handleCreated = async () => {
     setInitialLoad(true);
     await fetchCompanies();
     setShowForm(false);
     setSuccess(true);
-    setHasFetched(true);
     console.log("🔄 useEffect fired");
     setTimeout(() => setSuccess(false), 3000);
   };
@@ -89,9 +102,9 @@ console.log("rendering CompanyPage")
     }
   };
 
-  const handleEdit = (company: any) => setEditCompany(company);
+  const handleEdit = (company: ExtendedCompany) => setEditCompany(company);
 
-  const filterAndSort = (list: any[]) =>
+  const filterAndSort = (list: ExtendedCompany[]) =>
     list
       .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
       .sort((a, b) =>
@@ -105,8 +118,8 @@ console.log("rendering CompanyPage")
     activeTab === "owned"
       ? filterAndSort(ownedCompanies)
       : activeTab === "shared"
-      ? filterAndSort(accessibleCompanies)
-      : filterAndSort(allCompanies);
+        ? filterAndSort(accessibleCompanies)
+        : filterAndSort(allCompanies);
 
   if (initialLoad) {
     return (
@@ -127,12 +140,11 @@ console.log("rendering CompanyPage")
           {["owned", "shared", "all"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === tab
-                  ? "bg-blue-600"
-                  : "bg-slate-700 hover:bg-slate-600"
-              }`}
+              onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
+              className={`px-4 py-2 rounded-md ${activeTab === tab
+                ? "bg-blue-600"
+                : "bg-slate-700 hover:bg-slate-600"
+                }`}
             >
               {tab === "owned" ? "Owned" : tab === "all" ? "All" : "Shared"}
             </button>
@@ -154,31 +166,36 @@ console.log("rendering CompanyPage")
       )}
 
       {/* Company Counter */}
-      <div className="mb-6 flex  text-slate-400 text-sm">
-        Showing {visibleCompanies.length} of {allCompanies.length} total
-        companies.
-      </div>
-      {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
-        <div className="absolute top-4 right-4 flex gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowForm((prev) => !prev)}
-            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-          >
-            {showForm ? "View Companies" : "Create Company"}
-          </motion.button>
+      <div className="absolute top-4 right-4 flex gap-2">
+        <button
+          onClick={handleViewSimulations}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md hover:scale-105 transition-transform duration-200"
+        >
+          View Simulations
+        </button>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push(`/simulations/${simulationID}/Compare`)}
-            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-          >
-            Compare Companies
-          </motion.button>
-        </div>
-      )}
+        {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
+          <>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowForm((prev) => !prev)}
+              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+            >
+              {showForm ? "View Companies" : "Create Company"}
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push(`/simulations/${simulationID}/compare`)}
+              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+            >
+              Compare Companies
+            </motion.button>
+          </>
+        )}
+      </div>
 
       {/* Main Section */}
       <AnimatePresence mode="wait">
@@ -225,8 +242,8 @@ console.log("rendering CompanyPage")
               {activeTab === "owned"
                 ? "No owned companies yet."
                 : activeTab === "shared"
-                ? "No shared companies yet."
-                : "No companies available."}
+                  ? "No shared companies yet."
+                  : "No companies available."}
             </p>
 
             {activeTab === "owned" && (

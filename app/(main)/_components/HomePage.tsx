@@ -94,7 +94,7 @@ const FinancialTooltip = ({ active, payload, label }: TooltipProps) => {
             <span className="font-medium" style={{ color: entry.color }}>
               {entry.name}:
             </span>{" "}
-            ₹${((entry.value as number) / 1000).toFixed(0)}K
+            ₹{((entry.value as number) / 10000000).toFixed(2)} Cr
           </p>
         ))}
       </div>
@@ -109,7 +109,7 @@ const PieTooltip = ({ active, payload }: PieTooltipProps) => {
       <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
         <p className="font-medium text-gray-200">{payload[0].name}</p>
         <p className="text-gray-100">
-          Value: ₹${((payload[0].value as number) / 1000).toFixed(0)}K
+          Value: ₹{((payload[0].value as number) / 10000000).toFixed(2)} Cr
         </p>
         <p className="text-gray-100">
           Percentage: {payload[0].payload.percentage}%
@@ -133,20 +133,140 @@ interface CompanyHistoryType {
   brand_value: number;
 }
 
+interface FinancialHistoryType {
+  period: number;
+  total_revenue?: number;
+  revenue?: number;
+  net_profit?: number;
+  profit?: number;
+  cash_balance?: number;
+  operating_costs?: number;
+  roi?: number;
+  burn_rate?: number;
+}
+
+interface ProductPerformanceType {
+  period: number;
+  name?: string;
+  product?: {
+    name: string;
+  };
+  sales_volume?: number;
+  market_share?: number;
+  revenue?: number;
+  profit?: number;
+  customer_satisfaction?: number;
+}
+
+interface HRRole {
+  role_name: string;
+  salary_per_head: number;
+  head_count: number;
+}
+
+interface HRMetricsType {
+  period: number;
+  department?: string;
+  employees?: number;
+  satisfaction?: number;
+  newHires?: number;
+  totalBudget?: number;
+  total_budget?: number;
+  employeeSatisfaction?: number;
+  employee_satisfaction?: number;
+  totalEmployees?: number;
+  roles?: HRRole[];
+}
+
+interface ProductionDataType {
+  id: string;
+  company_id: string;
+  period: number;
+  units_to_produce: number;
+  cost_per_unit: number;
+  budget: number;
+  production_capacity: number;
+  storage_capacity: number | null;
+  inventory_value: number;
+  defect_rate: number;
+  finalised: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface RDDataType {
+  period: number;
+  budget?: number;
+  pip?: number;
+  patented?: number;
+  time_to_market?: number;
+}
+
+interface MarketingDataType {
+  period: number;
+  budget?: number;
+}
+
+interface HRDecisionType {
+  total_budget?: number;
+  totalBudget?: number;
+  employee_satisfaction?: number;
+  employeeSatisfaction?: number;
+  roles?: HRRole[];
+}
+
+interface RDDecisionType {
+  budget?: number;
+  pip?: number;
+  patented?: number;
+  time_to_market?: number;
+}
+
+interface ProductionDecisionType {
+  budget?: number;
+  units_to_produce?: number;
+  defect_rate?: number;
+  production_capacity?: number;
+}
+
+interface MarketingDecisionType {
+  budget?: number;
+}
+
+interface FinanceDecisionType {
+  total_revenue?: number;
+  net_profit?: number;
+  cash_balance?: number;
+  operating_costs?: number;
+  roi?: number;
+  burn_rate?: number;
+}
+
 interface DashboardData {
-  company: any;
+  company: {
+    id: string;
+    name: string;
+    current_period: number;
+    cash_balance: number;
+    data?: string;
+    total_assets: number;
+    total_liabilities: number;
+    marketing_budget: number;
+    credit_rating?: string | null;
+    brand_value: number;
+  };
   history: CompanyHistoryType[];
-  financialHistory: any[];
-  productPerformance: any[];
-  hrMetrics: any[];
-  productionData: any[];
-  rdData: any[]; // Array of all R&D decisions
-  marketingData: any[]; // Array of all marketing decisions
-  hr_decision: any;
-  rd_decision: any;
-  production_decision: any;
-  marketing_decision: any;
-  finance_decision: any;
+  financialHistory: FinancialHistoryType[];
+  productPerformance: ProductPerformanceType[];
+  hrMetrics: HRMetricsType[];
+  productionData: ProductionDataType[];
+  rdData: RDDataType[]; // Array of all R&D decisions
+  marketingData: MarketingDataType[]; // Array of all marketing decisions
+  hr_decision: HRDecisionType | null;
+  rd_decision: RDDecisionType | null;
+  production_decision: ProductionDecisionType | null;
+  marketing_decision: MarketingDecisionType | null;
+  finance_decision: FinanceDecisionType | null;
   activeProductsCount: number;
 }
 
@@ -156,7 +276,7 @@ const getPercentChange = (current: number, prev: number) => {
 };
 
 const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
-  const { setComId, setPeriod, simId } = useSimulation();
+  const { setComId, setPeriod ,simId} = useSimulation();
   const router = useRouter();
 
   // Helper function to create current period data from company object
@@ -261,10 +381,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
           totalEmployees:
             data.hr_decision.roles?.reduce(
-              (sum: Number, role: any) => sum + (role.head_count || 0),
+              (sum: number, role: HRRole) => sum + (role.head_count || 0),
               0
             ) || 0,
-          newHires: 0,
+          newHires: 0, // This would need to be calculated based on previous period
           roles: data.hr_decision.roles || [],
         },
       ]
@@ -286,10 +406,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             100
           ),
           efficiency:
-            data.production_decision.production_capacity > 0
+            (data.production_decision.production_capacity ?? 0) > 0
               ? Math.round(
                 ((data.production_decision.units_to_produce || 0) /
-                  data.production_decision.production_capacity) *
+                  (data.production_decision.production_capacity ?? 1)) *
                 100
               )
               : 0,
@@ -449,8 +569,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const netWorthChange = getPercentChange(netWorthNow, netWorthPrev);
 
   // Total Revenue change
-  const currentRevenue = finForPeriod?.total_revenue ?? 0;
-  const prevRevenue = finForPeriodPrev?.total_revenue ?? 0;
+  const currentRevenue =
+    (finForPeriod as { total_revenue?: number })?.total_revenue ?? 0;
+  const prevRevenue =
+    (finForPeriodPrev as { total_revenue?: number })?.total_revenue ?? 0;
   const revenueChange = getPercentChange(currentRevenue, prevRevenue);
 
   // Active Products change
@@ -474,7 +596,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
   const handleViewCompany = useCallback(() => {
     router.push(`/simulations/${simId}`);
-  }, [router, simId]);
+  }, [router,]);
 
   const handleBarMouseOver = useCallback(() => {
     setHoveringBar(true);
@@ -487,14 +609,20 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const prevHr =
     data.hrMetrics?.find((h) => +h.period === +(selectedPeriod - 1)) ?? {};
 
-  const totalEmployees = thisHr.totalEmployees ?? 0;
-  const prevTotalEmployees = prevHr.totalEmployees ?? 0;
-  const newHires = thisHr.newHires ?? 0;
-  const prevNewHires = prevHr.newHires ?? 0;
-  const avgSatisfaction = thisHr.employeeSatisfaction ?? 0;
-  const prevSatisfaction = prevHr.employeeSatisfaction ?? 0;
-  const hrBudget = thisHr.totalBudget ?? hr_budget;
-  const hrBudgetPrev = prevHr.totalBudget ?? hr_budget;
+  const totalEmployees =
+    (thisHr as { totalEmployees?: number }).totalEmployees ?? 0;
+  const prevTotalEmployees =
+    (prevHr as { totalEmployees?: number }).totalEmployees ?? 0;
+  const newHires = (thisHr as { newHires?: number }).newHires ?? 0;
+  const prevNewHires = (prevHr as { newHires?: number }).newHires ?? 0;
+  const avgSatisfaction =
+    (thisHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+  const prevSatisfaction =
+    (prevHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+  const hrBudget =
+    (thisHr as { totalBudget?: number }).totalBudget ?? hr_budget;
+  const hrBudgetPrev =
+    (prevHr as { totalBudget?: number }).totalBudget ?? hr_budget;
 
   // Calculate dynamic trends
   const totalEmployeesChange = getPercentChange(
@@ -554,11 +682,14 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   >
                     {periods.map((p, index) => (
                       <option key={`period-${p}-${index}`} value={p}>
-                        Period {p} {p === data?.company?.current_period ? "(Current)" : ""}
+                        Period {p}{" "}
+                        {p === data?.company?.current_period ? "(Current)" : ""}
                       </option>
                     ))}
                   </select>
-                  {isCurrentPeriod && <span className="current-period-badge">LIVE</span>}
+                  {isCurrentPeriod && (
+                    <span className="current-period-badge">LIVE</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -580,7 +711,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   {isSimulating ? "Simulating..." : "Simulate"}
                   <Play size={20} />
                 </button>
-
                 <LogoutBtn />
               </div>
             </div>
@@ -593,7 +723,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
           <DashboardCard
             title="Cash Balance"
-            value={`₹${(cash_balance / 100000).toFixed(1)}L`}
+            value={`₹${(cash_balance / 10000000).toFixed(2)} Cr`}
             subtitle="Available Funds"
             icon={DollarSign}
             change={cashChange}
@@ -601,7 +731,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           />
           <DashboardCard
             title="Net Worth"
-            value={`₹${(netWorthNow / 100000).toFixed(1)}L`}
+            value={`₹${(netWorthNow / 10000000).toFixed(2)} Cr`}
             subtitle="Assets - Liabilities"
             icon={TrendingUp}
             change={netWorthChange}
@@ -609,7 +739,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           />
           <DashboardCard
             title="Total Revenue"
-            value={`₹${((currentRevenue ?? 0) / 100000).toFixed(1)}L`}
+            value={`₹${((currentRevenue ?? 0) / 10000000).toFixed(2)} Cr`}
             subtitle={`Period ${selectedPeriod}${isCurrentPeriod ? " (Current)" : ""
               }`}
             icon={BarChart3}
@@ -663,7 +793,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 <XAxis dataKey="period" stroke="#9CA3AF" />
                 <YAxis
                   stroke="#9CA3AF"
-                  tickFormatter={(value) => `₹${value / 1000}K`}
+                  tickFormatter={(value) =>
+                    `₹${(value / 10000000).toFixed(1)} Cr`
+                  }
                 />
                 <Tooltip
                   content={<FinancialTooltip />}
@@ -762,7 +894,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               />
               <QuickStat
                 label="HR Budget"
-                value={`₹${(hrBudget / 1000).toFixed(0)}K`}
+                value={`₹${(hrBudget / 10000000).toFixed(2)} Cr`}
                 icon={Briefcase}
                 color="purple"
                 trend={hrBudgetChange}
@@ -815,7 +947,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               />
               <QuickStat
                 label="R&D Budget"
-                value={`₹${(rd_budget / 1000).toFixed(0)}K`}
+                value={`₹${(rd_budget / 10000000).toFixed(2)} Cr`}
                 icon={Factory}
                 color="blue"
                 trend={selectedPeriod > 1 ? -5 : undefined}
@@ -925,7 +1057,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                       <div className="flex justify-between text-sm text-gray-400 mt-1">
                         <span>Sales: {product.sales_volume || 0} units</span>
                         <span>
-                          Profit: ₹{((product.profit || 0) / 1000).toFixed(0)}K
+                          Profit: ₹
+                          {((product.profit || 0) / 10000000).toFixed(2)} Cr
                         </span>
                       </div>
                     </div>
@@ -958,13 +1091,16 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   <DollarSign className="text-blue-400" size={20} />
                 </div>
                 <div className="text-2xl font-bold text-white mb-1">
-                  ₹{(data?.company?.cash_balance / 100000 || 0).toFixed(1)}L
+                  ₹{(data?.company?.cash_balance / 10000000 || 0).toFixed(2)} Cr
                 </div>
                 <div className="text-xs text-blue-200">
                   Assets: ₹
-                  {(data?.company?.total_assets / 100000 || 0).toFixed(1)}L |
-                  Liabilities: ₹
-                  {(data?.company?.total_liabilities / 100000 || 0).toFixed(1)}L
+                  {(data?.company?.total_assets / 10000000 || 0).toFixed(2)} Cr
+                  | Liabilities: ₹
+                  {(data?.company?.total_liabilities / 10000000 || 0).toFixed(
+                    2
+                  )}{" "}
+                  Cr
                 </div>
               </div>
 
@@ -976,7 +1112,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   <Award className="text-green-400" size={20} />
                 </div>
                 <div className="text-2xl font-bold text-white mb-1">
-                  ₹{(data?.company?.brand_value / 1000 || 0).toFixed(0)}K
+                  ₹{(data?.company?.brand_value / 10000000 || 0).toFixed(2)} Cr
                 </div>
                 <div className="text-xs text-green-200">
                   Credit Rating: {data?.company?.credit_rating || "N/A"}

@@ -3,13 +3,13 @@
 import { IndianRupee, Globe, Store, Check, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
 import DashboardCard from "@/ui/Card";
-import Inputbox from "@/ui/Input-Box";
 import {
   useMarketingForm,
   useCashBalance,
   useCompanyForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { Slider } from "@/components/ui/slider";
 
 const formatCurrency = (val: number) =>
   `₹${val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
@@ -126,33 +126,32 @@ const MarketingForm = () => {
             Set Marketing Strategy
           </h2>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <Inputbox
+          <div className="grid gap-6 md:grid-cols-1">
+            <Slider
               label="Total Marketing Budget (₹)"
-              name="budget"
-              type="number"
-              value={marketingData.budget.toString()}
-              onChange={(e) =>
-                handleBudgetChange("budget", parseInt(e.target.value) || 0)
-              }
+              defaultValue={[marketingData.budget]}
+              value={[marketingData.budget]}
+              min={0}
+              max={companyData?.marketing_budget * 2 || 100000}
+              onValueChange={(val) => handleBudgetChange("budget", val[0])}
             />
-            <Inputbox
+
+            <Slider
               label="Online Marketing (₹)"
-              name="online"
-              type="number"
-              value={marketingData.online.toString()}
-              onChange={(e) =>
-                handleBudgetChange("online", parseInt(e.target.value) || 0)
-              }
+              defaultValue={[marketingData.online]}
+              value={[marketingData.online]}
+              min={0}
+              max={marketingData.budget}
+              onValueChange={(val) => handleBudgetChange("online", val[0])}
             />
-            <Inputbox
+
+            <Slider
               label="Offline Marketing (₹)"
-              name="offline"
-              type="number"
-              value={marketingData.offline.toString()}
-              onChange={(e) =>
-                handleBudgetChange("offline", parseInt(e.target.value) || 0)
-              }
+              defaultValue={[marketingData.offline]}
+              value={[marketingData.offline]}
+              min={0}
+              max={marketingData.budget}
+              onValueChange={(val) => handleBudgetChange("offline", val[0])}
             />
           </div>
 

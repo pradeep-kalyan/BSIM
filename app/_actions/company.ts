@@ -82,10 +82,10 @@ export async function getCompaniesBySimulation(simulationId: string) {
       },
     });
 
-    return companies.map((company: { user_id: string; company_access: Array<{ user_id: string; access_level: string }> }) => {
+    return companies.map((company) => {
       const isOwner = company.user_id === user.id;
       const accessEntry = company.company_access.find(
-        (access: { user_id: string; access_level: string }) => access.user_id === user.id
+        (access) => access.user_id === user.id
       );
 
       return {
@@ -431,7 +431,10 @@ export async function deleteCompany(companyId: string) {
 
   revalidatePath("/companies");
 }
-export async function fetchCompanyData(simulation_id: string, companies: string[]) {
+export async function fetchCompanyData(
+  simulation_id: string,
+  companies: string[]
+) {
   if (!simulation_id || !companies.length) return [];
 
   // Query your database for companies in that simulation matching the given company names
@@ -443,12 +446,12 @@ export async function fetchCompanyData(simulation_id: string, companies: string[
       },
     },
     include: {
-    finance_decisions: false,
-    hr_decisions: false,
-    rd_decisions: false,
-    production_decisions: false,
-    products: false,
-  },
+      finance_decisions: false,
+      hr_decisions: false,
+      rd_decisions: false,
+      production_decisions: false,
+      products: false,
+    },
   });
 
   return result;

@@ -45,19 +45,21 @@ const SingleSelectDropdown: React.FC<SingleSelectDropdownProps> = ({
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center justify-between gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md min-w-[200px]"
       >
-        <span className="truncate">
-          {selected || placeholder}
-        </span>
+        <span className="truncate">{selected || placeholder}</span>
         <div className="flex items-center gap-1">
           {selected && (
-            <button
+            <span
               onClick={clearSelection}
-              className="text-white/70 hover:text-white text-sm"
+              className="text-white/70 hover:text-white text-sm cursor-pointer"
             >
               ×
-            </button>
+            </span>
           )}
-          <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+          />
         </div>
       </button>
 
@@ -68,7 +70,7 @@ const SingleSelectDropdown: React.FC<SingleSelectDropdownProps> = ({
               key={option}
               onClick={() => selectOption(option)}
               className={`w-full text-left px-4 py-2 hover:bg-slate-700 cursor-pointer transition-colors ${
-                selected === option ? 'bg-slate-700 text-white-400' : ''
+                selected === option ? "bg-slate-700 text-white-400" : ""
               }`}
             >
               {option}
