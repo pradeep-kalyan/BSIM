@@ -8,28 +8,15 @@ import {
   Package,
   Play,
   Square,
-  Loader2,
   Edit,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DashboardCard from "./Card";
-import {
-  getCompanyData,
-  getCompanyProducts,
-  createProduct,
-  launchProduct,
-  discontinueProduct,
-  updateProduct,
-} from "@/app/_actions/product-actions";
 import ProductFormPage from "./NewProduct";
+import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 // Data types
-interface CompanyData {
-  id: string;
-  name: string;
-  current_period: number;
-  cash_balance: number;
-}
 interface Product {
   id: string;
   name: string;
@@ -61,125 +48,143 @@ interface ProductsFormProps {
   companyId: string;
 }
 
-const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
-  const [loading, setLoading] = useState(true);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const ProductsForm: React.FC<ProductsFormProps> = ({
+  companyId: _companyId,
+}) => {
+  // _companyId is passed but not used since we're using context for data
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { products, addProduct, updateProductByIndex } = useProductForm();
+  const { period } = useSimulation();
 
-  const [companyData, setCompanyData] = useState<CompanyData | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const { data: companyData } = useCompanyForm();
 
   // Modal state for add/edit
   const [showProductForm, setShowProductForm] = useState(false);
   const [formMode, setFormMode] = useState<"add" | "edit">("add");
   const [editProduct, setEditProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [company, companyProducts] = await Promise.all([
-          getCompanyData(companyId),
-          getCompanyProducts(companyId),
-        ]);
-        setCompanyData(company);
-        setProducts(companyProducts);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [companyId]);
-
   // HANDLERS
 
   // Creating new product
-  const handleAddProduct = async (
-    data: Omit<
-      Product,
-      | "id"
-      | "status"
-      | "launch_period"
-      | "discontinue_period"
-      | "latest_performance"
-    >
-  ) => {
-    if (!companyData) return;
+  const handleAddProduct = async (productData: Partial<Product>) => {
     setSubmitting(true);
     setError(null);
     try {
-      await createProduct({
-        company_id: companyId,
-        description: data.description ?? undefined,
-        ...data,
-      });
+      // Convert to ProductFormData format and add to context only - no DB call
+      const newProduct = {
+        id: `temp-${Date.now()}`, // Temporary ID for UI
+        name: productData.name || "",
+        description: productData.description || "",
+        category: productData.category || "",
+        quality_rating: productData.quality_rating || 0,
+        innovation_rating: productData.innovation_rating || 0,
+        sustainability_rating: productData.sustainability_rating || 0,
+        production_cost: productData.production_cost || 0,
+        selling_price: productData.selling_price || 0,
+        inventory_level: productData.inventory_level || 0,
+        production_capacity: productData.production_capacity || 2000,
+        development_cost: productData.development_cost || 0,
+        marketing_budget: productData.marketing_budget || 0,
+        status: "development", // New products start in development
+        launch_period: undefined,
+        discontinue_period: undefined,
+      };
+
+      addProduct(newProduct);
       setShowProductForm(false);
-      setEditProduct(null);
-      setFormMode("add");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create product");
+      setError("Failed to add product");
+      console.error("Error adding product:", err);
     } finally {
       setSubmitting(false);
     }
   };
 
   // Editing existing product
-  const handleUpdateProduct = async (data: Product) => {
+  const handleUpdateProduct = async (productData: Partial<Product>) => {
     setSubmitting(true);
     setError(null);
     try {
-      await updateProduct({
-        product_id: data.id,
-        name: data.name,
-        description: data.description ?? undefined,
-        category: data.category,
-        quality_rating: data.quality_rating,
-        innovation_rating: data.innovation_rating,
-        sustainability_rating: data.sustainability_rating,
-        production_cost: data.production_cost,
-        selling_price: data.selling_price,
-        production_capacity: data.production_capacity,
-        development_cost: data.development_cost,
-        marketing_budget: data.marketing_budget,
-        status: data.status,
-      });
+      if (!editProduct) return;
+
+      // Find the index of the product to update
+      const productIndex = products.findIndex((p) => p.id === editProduct.id);
+      if (productIndex === -1) return;
+
+      // Update product in context only - no DB call
+      const updatedProduct = {
+        name: productData.name || editProduct.name,
+        description: productData.description || editProduct.description || "",
+        category: productData.category || editProduct.category,
+        quality_rating:
+          productData.quality_rating ?? editProduct.quality_rating,
+        innovation_rating:
+          productData.innovation_rating ?? editProduct.innovation_rating,
+        sustainability_rating:
+          productData.sustainability_rating ??
+          editProduct.sustainability_rating,
+        production_cost:
+          productData.production_cost ?? editProduct.production_cost,
+        selling_price: productData.selling_price ?? editProduct.selling_price,
+        inventory_level:
+          productData.inventory_level ?? editProduct.inventory_level,
+        production_capacity:
+          productData.production_capacity ?? editProduct.production_capacity,
+        development_cost:
+          productData.development_cost ?? editProduct.development_cost,
+        marketing_budget:
+          productData.marketing_budget ?? editProduct.marketing_budget,
+        status: editProduct.status,
+        launch_period: editProduct.launch_period || undefined,
+        discontinue_period: editProduct.discontinue_period || undefined,
+      };
+
+      updateProductByIndex(productIndex, updatedProduct);
       setShowProductForm(false);
       setEditProduct(null);
-      setFormMode("add");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update product");
+      setError("Failed to update product");
+      console.error("Error updating product:", err);
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Launch product (status change only)
   const handleLaunchProduct = async (productId: string) => {
-    if (!companyData) return;
     setSubmitting(true);
-    setError(null);
     try {
-      await launchProduct(productId, companyData.current_period);
+      const productIndex = products.findIndex((p) => p.id === productId);
+      if (productIndex !== -1) {
+        updateProductByIndex(productIndex, {
+          status: "active",
+          launch_period: period || undefined,
+        });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to launch product");
+      setError("Failed to launch product");
+      console.error("Error launching product:", err);
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Discontinue product (status change only)
   const handleDiscontinueProduct = async (productId: string) => {
-    if (!companyData) return;
     setSubmitting(true);
-    setError(null);
     try {
-      await discontinueProduct(productId, companyData.current_period);
+      const productIndex = products.findIndex((p) => p.id === productId);
+      if (productIndex !== -1) {
+        updateProductByIndex(productIndex, {
+          status: "discontinued",
+          discontinue_period: period || undefined,
+        });
+      }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to discontinue product"
-      );
+      setError("Failed to discontinue product");
+      console.error("Error discontinuing product:", err);
     } finally {
       setSubmitting(false);
     }
@@ -188,9 +193,9 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
   // UI ONLY HELPERS
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat("en-In", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
     }).format(value);
 
   const getStatusColor = (status: string) => {
@@ -207,8 +212,9 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
   };
 
   const activeProducts = products.filter((p) => p.status === "active").length;
-  const developmentProducts = products.filter((p) => p.status === "development")
-    .length;
+  const developmentProducts = products.filter(
+    (p) => p.status === "development"
+  ).length;
   const totalProductValue = products.reduce(
     (acc, p) => acc + p.selling_price * p.inventory_level,
     0
@@ -220,31 +226,6 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
 
   // ---- RENDER ----
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-4" />
-          <p className="text-slate-300">Loading products dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">Error: {error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
   if (!companyData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -258,13 +239,18 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
       <div className="max-w-7xl mx-auto mt-2">
         {/* Header */}
         <div className="mb-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-600/20 border border-red-600 rounded-lg text-red-400">
+              {error}
+            </div>
+          )}
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-3xl font-bold text-white">
                 Products Dashboard
               </h1>
               <p className="text-slate-400">
-                Period {companyData.current_period} • {companyData.name}
+                Period {period} • {companyData.name}
               </p>
             </div>
             <button
@@ -405,8 +391,9 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${(product.sustainability_rating / 10) *
-                              100}%`,
+                            width: `${
+                              (product.sustainability_rating / 10) * 100
+                            }%`,
                           }}
                         />
                       </div>
@@ -416,8 +403,10 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                   <div className="mt-4 flex gap-2">
                     {product.status === "development" && (
                       <button
-                        onClick={() => handleLaunchProduct(product.id)}
-                        disabled={submitting}
+                        onClick={() =>
+                          product.id && handleLaunchProduct(product.id)
+                        }
+                        disabled={submitting || !product.id}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
                       >
                         <Play className="h-3 w-3" />
@@ -426,8 +415,10 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                     )}
                     {product.status === "active" && (
                       <button
-                        onClick={() => handleDiscontinueProduct(product.id)}
-                        disabled={submitting}
+                        onClick={() =>
+                          product.id && handleDiscontinueProduct(product.id)
+                        }
+                        disabled={submitting || !product.id}
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
                       >
                         <Square className="h-3 w-3" />
@@ -436,9 +427,33 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                     )}
                     <button
                       onClick={() => {
-                        setEditProduct(product);
-                        setFormMode("edit");
-                        setShowProductForm(true);
+                        // Convert ProductFormData to Product type for editing
+                        if (product.id) {
+                          const productForEdit: Product = {
+                            id: product.id,
+                            name: product.name,
+                            description: product.description || null,
+                            category: product.category,
+                            quality_rating: product.quality_rating,
+                            innovation_rating: product.innovation_rating,
+                            sustainability_rating:
+                              product.sustainability_rating,
+                            production_cost: product.production_cost,
+                            selling_price: product.selling_price,
+                            inventory_level: product.inventory_level,
+                            production_capacity: product.production_capacity,
+                            development_cost: product.development_cost,
+                            marketing_budget: product.marketing_budget,
+                            status: product.status,
+                            launch_period: product.launch_period || null,
+                            discontinue_period:
+                              product.discontinue_period || null,
+                            latest_performance: null,
+                          };
+                          setEditProduct(productForEdit);
+                          setFormMode("edit");
+                          setShowProductForm(true);
+                        }
                       }}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
                     >

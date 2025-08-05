@@ -74,14 +74,14 @@ const ComparePage = () => {
 
   // Format helpers
   const formatCurrency = (value: number) => {
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-    return `$${value.toLocaleString()}`;
+    if (value >= 10_000_000) return `₹${(value / 10_000_000).toFixed(2)} Cr`;
+    if (value >= 100_000) return `₹${(value / 100_000).toFixed(2)} L`;
+    return `₹${value.toLocaleString()}`;
   };
 
   const formatNumber = (value: number) => {
-    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+    if (value >= 10_000_000) return `${(value / 10_000_000).toFixed(2)} Cr`;
+    if (value >= 100_000) return `${(value / 100_000).toFixed(2)} L`;
     return value.toLocaleString();
   };
 
@@ -389,10 +389,7 @@ const ComparePage = () => {
                     </h4>
                     <div className="space-y-2">
                       {company.products.map((product: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className="flex justify-between text-sm"
-                        >
+                        <div key={idx} className="flex justify-between text-sm">
                           <span className="text-gray-300">{product.name}</span>
                           <div className="flex gap-4">
                             <span className="text-blue-400">
@@ -463,7 +460,9 @@ const ComparePage = () => {
           <div className="bg-gradient-to-br from-green-800/30 to-green-900/30 rounded-xl p-6 border border-green-500/30">
             <div className="flex items-center gap-3 mb-3">
               <TrendingUp className="w-6 h-6 text-green-400" />
-              <h3 className="text-lg font-semibold text-white">Revenue Leader</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Revenue Leader
+              </h3>
             </div>
             <p className="text-2xl font-bold text-green-400">
               {sortedCompanies[0]?.name}
@@ -479,13 +478,18 @@ const ComparePage = () => {
               <h3 className="text-lg font-semibold text-white">Highest ROI</h3>
             </div>
             <p className="text-2xl font-bold text-blue-400">
-              {[...companiesData].sort((a, b) => b.finance.roi - a.finance.roi)[0]
-                ?.name}
+              {
+                [...companiesData].sort(
+                  (a, b) => b.finance.roi - a.finance.roi
+                )[0]?.name
+              }
             </p>
             <p className="text-blue-300 text-sm">
-              {[
-                ...companiesData,
-              ].sort((a, b) => b.finance.roi - a.finance.roi)[0]?.finance.roi}
+              {
+                [...companiesData].sort(
+                  (a, b) => b.finance.roi - a.finance.roi
+                )[0]?.finance.roi
+              }
               %
             </p>
           </div>
@@ -498,14 +502,20 @@ const ComparePage = () => {
               </h3>
             </div>
             <p className="text-2xl font-bold text-yellow-400">
-              {[...companiesData].sort(
-                (a, b) => b.hr.employee_satisfaction - a.hr.employee_satisfaction
-              )[0]?.name}
+              {
+                [...companiesData].sort(
+                  (a, b) =>
+                    b.hr.employee_satisfaction - a.hr.employee_satisfaction
+                )[0]?.name
+              }
             </p>
             <p className="text-yellow-300 text-sm">
-              {[...companiesData].sort(
-                (a, b) => b.hr.employee_satisfaction - a.hr.employee_satisfaction
-              )[0]?.hr.employee_satisfaction}
+              {
+                [...companiesData].sort(
+                  (a, b) =>
+                    b.hr.employee_satisfaction - a.hr.employee_satisfaction
+                )[0]?.hr.employee_satisfaction
+              }
               %
             </p>
           </div>
@@ -516,4 +526,3 @@ const ComparePage = () => {
 };
 
 export default ComparePage;
-

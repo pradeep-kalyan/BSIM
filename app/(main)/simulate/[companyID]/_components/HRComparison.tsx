@@ -113,11 +113,11 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
 }) => {
   if (!isOpen || !previousDecision) return null;
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+  const formatCurrency = (value: number) => {
+    if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
+    if (value >= 100000) return `₹${(value / 100000).toFixed(2)} L`;
+    return `₹${value.toLocaleString()}`;
+  };
 
   const formatChange = (current: number, previous: number) => {
     const change = current - previous;
@@ -407,7 +407,9 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
                   <XAxis dataKey="category" stroke="#9CA3AF" />
                   <YAxis
                     stroke="#9CA3AF"
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                    tickFormatter={(value) =>
+                      `₹${(value / 10000000).toFixed(1)} Cr`
+                    }
                   />
                   <Tooltip
                     contentStyle={{

@@ -79,8 +79,8 @@ const ComparePage: React.FC = () => {
   const formatNumber = useMemo(
     () =>
       (value: number): string => {
-        if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
-        if (value >= 1000) return `${(value / 1000).toFixed(2)}K`;
+        if (value >= 10_000_000) return `${(value / 10_000_000).toFixed(2)} Cr`;
+        if (value >= 100_000) return `${(value / 100_000).toFixed(2)} L`;
         return value.toLocaleString();
       },
     []
@@ -89,9 +89,10 @@ const ComparePage: React.FC = () => {
   const formatCurrency = useMemo(
     () =>
       (value: number): string => {
-        if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
-        return `$${value.toLocaleString()}`;
+        if (value >= 10_000_000)
+          return `₹${(value / 10_000_000).toFixed(2)} Cr`;
+        if (value >= 100_000) return `₹${(value / 100_000).toFixed(2)} L`;
+        return `₹${value.toLocaleString()}`;
       },
     []
   );
@@ -563,11 +564,14 @@ const ComparePage: React.FC = () => {
                               <div className="flex gap-4">
                                 <span className="text-blue-400">
                                   <PieChart className="w-4 h-4" />
-                                  {(product.market_share ?? 0).toFixed(2)}% share
+                                  {(product.market_share ?? 0).toFixed(2)}%
+                                  share
                                 </span>
                                 <span className="text-yellow-400">
                                   <Star className="w-4 h-4 fill-yellow-400 stroke-yellow-500" />
-                                  {(product.customer_satisfaction ?? 0).toFixed(2)}
+                                  {(product.customer_satisfaction ?? 0).toFixed(
+                                    2
+                                  )}
                                 </span>
                               </div>
                             </div>

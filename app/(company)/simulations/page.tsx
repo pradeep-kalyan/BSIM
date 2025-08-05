@@ -16,7 +16,6 @@ import Card from "./_components/SimCard";
 import EditSimulationForm from "./_components/EditSimulationForm";
 import { ExtendedSimulation } from "./simulation";
 import { useRouter } from "next/navigation";
-import { useCompareStore } from "@/app/store/useCompareStore";
 const Page = () => {
   const [simulations, setSimulations] = useState<ExtendedSimulation[]>([]);
   const [showForm, setShowForm] = useState(false);
