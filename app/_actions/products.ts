@@ -2,7 +2,7 @@
 
 import prisma from "../functions/prisma";
 import { revalidatePath } from "next/cache";
-import { updateCompany } from "./Company";
+import { updateCompany } from "./company";
 import { redirect } from "next/navigation";
 
 // Product operations

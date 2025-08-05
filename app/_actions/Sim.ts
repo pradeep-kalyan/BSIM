@@ -11,8 +11,8 @@ export async function getSimulation(id: string) {
       include: {
         creator: true,
         companies: true,
-        events: true,
-        market_conditions: true,
+        // events: true, // TODO: Add events table to schema
+        // market_conditions: true, // TODO: Add market_conditions table to schema
       },
     });
     return simulation;
@@ -88,7 +88,7 @@ export async function getSimulationsByUser(userId: string) {
         _count: {
           select: {
             companies: true,
-            events: true,
+            // events: true, // TODO: Add events table to schema
           },
         },
       },
@@ -99,5 +99,3 @@ export async function getSimulationsByUser(userId: string) {
     throw new Error("Failed to fetch simulations");
   }
 }
-
-
