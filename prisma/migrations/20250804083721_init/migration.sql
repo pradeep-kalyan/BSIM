@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "users" (
+CREATE TABLE "public"."users" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
-CREATE TABLE "simulations" (
+CREATE TABLE "public"."simulations" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -27,7 +27,7 @@ CREATE TABLE "simulations" (
 );
 
 -- CreateTable
-CREATE TABLE "companies" (
+CREATE TABLE "public"."companies" (
     "id" TEXT NOT NULL,
     "simulation_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -49,7 +49,24 @@ CREATE TABLE "companies" (
 );
 
 -- CreateTable
-CREATE TABLE "simulation_access" (
+CREATE TABLE "public"."company_histories" (
+    "id" TEXT NOT NULL,
+    "company_id" TEXT NOT NULL,
+    "period" INTEGER NOT NULL,
+    "cash_balance" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "data" TEXT NOT NULL DEFAULT '{}',
+    "total_assets" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "total_liabilities" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "marketing_budget" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "credit_rating" TEXT,
+    "brand_value" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "company_histories_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."simulation_access" (
     "id" TEXT NOT NULL,
     "simulation_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -60,7 +77,7 @@ CREATE TABLE "simulation_access" (
 );
 
 -- CreateTable
-CREATE TABLE "company_access" (
+CREATE TABLE "public"."company_access" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -71,7 +88,7 @@ CREATE TABLE "company_access" (
 );
 
 -- CreateTable
-CREATE TABLE "products" (
+CREATE TABLE "public"."products" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -96,7 +113,7 @@ CREATE TABLE "products" (
 );
 
 -- CreateTable
-CREATE TABLE "finance" (
+CREATE TABLE "public"."finance" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "user_id" TEXT,
@@ -124,7 +141,7 @@ CREATE TABLE "finance" (
 );
 
 -- CreateTable
-CREATE TABLE "production" (
+CREATE TABLE "public"."production" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -143,7 +160,7 @@ CREATE TABLE "production" (
 );
 
 -- CreateTable
-CREATE TABLE "hr_decisions" (
+CREATE TABLE "public"."hr_decisions" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -160,7 +177,7 @@ CREATE TABLE "hr_decisions" (
 );
 
 -- CreateTable
-CREATE TABLE "hr_role_decisions" (
+CREATE TABLE "public"."hr_role_decisions" (
     "id" TEXT NOT NULL,
     "hr_decision_id" TEXT NOT NULL,
     "role_name" TEXT NOT NULL,
@@ -171,7 +188,7 @@ CREATE TABLE "hr_role_decisions" (
 );
 
 -- CreateTable
-CREATE TABLE "rd" (
+CREATE TABLE "public"."rd" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -189,7 +206,7 @@ CREATE TABLE "rd" (
 );
 
 -- CreateTable
-CREATE TABLE "marketing" (
+CREATE TABLE "public"."marketing" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -204,7 +221,7 @@ CREATE TABLE "marketing" (
 );
 
 -- CreateTable
-CREATE TABLE "product_performances" (
+CREATE TABLE "public"."product_performances" (
     "id" TEXT NOT NULL,
     "product_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
@@ -221,79 +238,85 @@ CREATE TABLE "product_performances" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE UNIQUE INDEX "users_email_key" ON "public"."users"("email");
 
 -- CreateIndex
-CREATE INDEX "simulations_created_by_idx" ON "simulations"("created_by");
+CREATE INDEX "simulations_created_by_idx" ON "public"."simulations"("created_by");
 
 -- CreateIndex
-CREATE INDEX "companies_simulation_id_idx" ON "companies"("simulation_id");
+CREATE INDEX "companies_simulation_id_idx" ON "public"."companies"("simulation_id");
 
 -- CreateIndex
-CREATE INDEX "companies_user_id_idx" ON "companies"("user_id");
+CREATE INDEX "companies_user_id_idx" ON "public"."companies"("user_id");
 
 -- CreateIndex
-CREATE INDEX "simulation_access_simulation_id_idx" ON "simulation_access"("simulation_id");
+CREATE INDEX "company_histories_company_id_idx" ON "public"."company_histories"("company_id");
 
 -- CreateIndex
-CREATE INDEX "simulation_access_user_id_idx" ON "simulation_access"("user_id");
+CREATE UNIQUE INDEX "company_histories_company_id_period_key" ON "public"."company_histories"("company_id", "period");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "simulation_access_simulation_id_user_id_key" ON "simulation_access"("simulation_id", "user_id");
+CREATE INDEX "simulation_access_simulation_id_idx" ON "public"."simulation_access"("simulation_id");
 
 -- CreateIndex
-CREATE INDEX "company_access_company_id_idx" ON "company_access"("company_id");
+CREATE INDEX "simulation_access_user_id_idx" ON "public"."simulation_access"("user_id");
 
 -- CreateIndex
-CREATE INDEX "company_access_user_id_idx" ON "company_access"("user_id");
+CREATE UNIQUE INDEX "simulation_access_simulation_id_user_id_key" ON "public"."simulation_access"("simulation_id", "user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "company_access_company_id_user_id_key" ON "company_access"("company_id", "user_id");
+CREATE INDEX "company_access_company_id_idx" ON "public"."company_access"("company_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "products_name_key" ON "products"("name");
+CREATE INDEX "company_access_user_id_idx" ON "public"."company_access"("user_id");
 
 -- CreateIndex
-CREATE INDEX "products_company_id_idx" ON "products"("company_id");
+CREATE UNIQUE INDEX "company_access_company_id_user_id_key" ON "public"."company_access"("company_id", "user_id");
 
 -- CreateIndex
-CREATE INDEX "finance_company_id_idx" ON "finance"("company_id");
+CREATE UNIQUE INDEX "products_name_key" ON "public"."products"("name");
 
 -- CreateIndex
-CREATE INDEX "finance_user_id_idx" ON "finance"("user_id");
+CREATE INDEX "products_company_id_idx" ON "public"."products"("company_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "finance_company_id_period_key" ON "finance"("company_id", "period");
+CREATE INDEX "finance_company_id_idx" ON "public"."finance"("company_id");
 
 -- CreateIndex
-CREATE INDEX "production_company_id_idx" ON "production"("company_id");
+CREATE INDEX "finance_user_id_idx" ON "public"."finance"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "production_company_id_period_key" ON "production"("company_id", "period");
+CREATE UNIQUE INDEX "finance_company_id_period_key" ON "public"."finance"("company_id", "period");
 
 -- CreateIndex
-CREATE INDEX "hr_decisions_company_id_idx" ON "hr_decisions"("company_id");
+CREATE INDEX "production_company_id_idx" ON "public"."production"("company_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "hr_decisions_company_id_period_key" ON "hr_decisions"("company_id", "period");
+CREATE UNIQUE INDEX "production_company_id_period_key" ON "public"."production"("company_id", "period");
 
 -- CreateIndex
-CREATE INDEX "hr_role_decisions_hr_decision_id_idx" ON "hr_role_decisions"("hr_decision_id");
+CREATE INDEX "hr_decisions_company_id_idx" ON "public"."hr_decisions"("company_id");
 
 -- CreateIndex
-CREATE INDEX "rd_company_id_idx" ON "rd"("company_id");
+CREATE UNIQUE INDEX "hr_decisions_company_id_period_key" ON "public"."hr_decisions"("company_id", "period");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "rd_company_id_period_key" ON "rd"("company_id", "period");
+CREATE INDEX "hr_role_decisions_hr_decision_id_idx" ON "public"."hr_role_decisions"("hr_decision_id");
 
 -- CreateIndex
-CREATE INDEX "marketing_company_id_idx" ON "marketing"("company_id");
+CREATE INDEX "rd_company_id_idx" ON "public"."rd"("company_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "marketing_company_id_period_key" ON "marketing"("company_id", "period");
+CREATE UNIQUE INDEX "rd_company_id_period_key" ON "public"."rd"("company_id", "period");
 
 -- CreateIndex
-CREATE INDEX "product_performances_product_id_idx" ON "product_performances"("product_id");
+CREATE INDEX "marketing_company_id_idx" ON "public"."marketing"("company_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "product_performances_product_id_period_key" ON "product_performances"("product_id", "period");
+CREATE UNIQUE INDEX "marketing_company_id_period_key" ON "public"."marketing"("company_id", "period");
+
+-- CreateIndex
+CREATE INDEX "product_performances_product_id_idx" ON "public"."product_performances"("product_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "product_performances_product_id_period_key" ON "public"."product_performances"("product_id", "period");

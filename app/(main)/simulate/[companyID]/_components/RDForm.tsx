@@ -93,7 +93,6 @@ const RDForm = () => {
     setBudgetAlert(null);
 
     const totalBudget = data.budget ?? 0;
-    const balance = projectedCashBalance;
 
     fieldDefs.forEach(({ id }) => setError(id, ""));
 

@@ -48,7 +48,9 @@ const HRDashboard = () => {
     return "₹" + value.toLocaleString(undefined, { minimumFractionDigits: 0 });
   };
   const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => {
-    const headCount = isNaN(role.head_count) ? 0 : role.head_count || 0;
+    const headCount = isNaN(role.current_head_count)
+      ? 0
+      : role.current_head_count || 0;
     return sum + headCount;
   }, 0);
   const totalHires = data.existingRoles.reduce((sum, role) => {
@@ -58,7 +60,9 @@ const HRDashboard = () => {
 
   const projectedSalaryBudget =
     data.existingRoles.reduce((sum, role) => {
-      const headCount = isNaN(role.head_count) ? 0 : role.head_count || 0;
+      const headCount = isNaN(role.current_head_count)
+        ? 0
+        : role.current_head_count || 0;
       const hires = isNaN(role.hires) ? 0 : role.hires || 0;
       const fires = isNaN(role.fires) ? 0 : role.fires || 0;
       const salaryPerHead = isNaN(role.salary_per_head)
@@ -232,7 +236,9 @@ const HRDashboard = () => {
                   {data.existingRoles.map((role, index) => (
                     <tr key={index} className="border-b border-slate-700">
                       <td className="py-1 text-white">{role.role_name}</td>
-                      <td className="py-1 text-slate-300">{role.head_count}</td>
+                      <td className="py-1 text-slate-300">
+                        {role.current_head_count}
+                      </td>
                       <td className="py-1">
                         <input
                           type="number"

@@ -4,14 +4,14 @@ import { Box, CssBaseline } from "@mui/material";
 import Form from "./_components/form";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     companyID: string;
-  };
+  }>;
 }
 
 const Page = async ({ params }: PageProps) => {
   await getCurrentUser();
-  const data = await params
+  const { companyID } = await params;
 
   return (
     <>
@@ -51,7 +51,7 @@ const Page = async ({ params }: PageProps) => {
             flexDirection: "column",
           }}
         >
-          <Form companyId={data?.companyID} />
+          <Form companyId={companyID} />
         </Box>
       </Box>
     </>

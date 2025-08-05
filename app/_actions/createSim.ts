@@ -31,29 +31,39 @@ export async function getSimulations() {
     },
   });
 
-  return simulations.map((sim: { config: string | Record<string, unknown>; created_by: string; simulation_access: Array<{ user_id: string; access_level: string }> }) => {
-    let parsedConfig: Record<string, unknown> = {};
-    try {
-      parsedConfig =
-        typeof sim.config === "string" ? JSON.parse(sim.config) : sim.config || {};
-    } catch (err) {
-      console.error("Failed to parse simulation.config", err);
+  return simulations.map(
+    (sim: {
+      config: string | Record<string, unknown>;
+      created_by: string;
+      simulation_access: Array<{ user_id: string; access_level: string }>;
+    }) => {
+      let parsedConfig: Record<string, unknown> = {};
+      try {
+        parsedConfig =
+          typeof sim.config === "string"
+            ? JSON.parse(sim.config)
+            : sim.config || {};
+      } catch (err) {
+        console.error("Failed to parse simulation.config", err);
+      }
+
+      const isOwner = sim.created_by === user.id;
+      const accessEntry = sim.simulation_access.find(
+        (a: { user_id: string; access_level: string }) => a.user_id === user.id
+      );
+      const hasAccess = isOwner || !!accessEntry;
+      const canEdit = accessEntry?.access_level === "editor" || isOwner;
+
+      return {
+        ...sim,
+        config: parsedConfig,
+        canEdit,
+        canAccess: hasAccess,
+        simulation_access: sim.simulation_access,
+        created_by: sim.created_by,
+      };
     }
-
-    const isOwner = sim.created_by === user.id;
-    const accessEntry = sim.simulation_access.find((a: { user_id: string; access_level: string }) => a.user_id === user.id);
-    const hasAccess = isOwner || !!accessEntry;
-    const canEdit = accessEntry?.access_level === "editor" || isOwner;
-
-    return {
-      ...sim,
-      config: parsedConfig,
-      canEdit,
-      canAccess: hasAccess,
-      simulation_access: sim.simulation_access,
-      created_by: sim.created_by,
-    };
-  });
+  );
 }
 
 export async function getSimulationscompare() {
@@ -98,7 +108,8 @@ export default async function createSim(formData: FormData) {
       if (rawKey && rawVal) {
         let val: string | number | boolean = rawVal;
         if (rawVal === "true" || rawVal === "false") val = rawVal === "true";
-        else if (!isNaN(Number(rawVal)) && /^\d+(\.\d+)?$/.test(rawVal)) val = Number(rawVal);
+        else if (!isNaN(Number(rawVal)) && /^\d+(\.\d+)?$/.test(rawVal))
+          val = Number(rawVal);
         config[rawKey] = val;
       }
     }
@@ -152,8 +163,11 @@ export async function grantAccessByEmail(simulationId: string, email: string) {
   const admin = await getCurrentUser();
   if (!admin) throw new Error("Unauthorized");
 
-  const simulation = await prisma.simulation.findUnique({ where: { id: simulationId } });
-  if (!simulation || simulation.created_by !== admin.id) throw new Error("Forbidden");
+  const simulation = await prisma.simulation.findUnique({
+    where: { id: simulationId },
+  });
+  if (!simulation || simulation.created_by !== admin.id)
+    throw new Error("Forbidden");
 
   const userToAdd = await prisma.user.findUnique({ where: { email } });
   if (!userToAdd) throw new Error("User not found");
@@ -173,7 +187,6 @@ export async function grantAccessByEmail(simulationId: string, email: string) {
       access_level: "editor",
     },
   });
-
 
   revalidatePath(`/simulations/${simulationId}`);
 }
@@ -195,11 +208,14 @@ export async function deleteSimulation(simulationId: string) {
 
   revalidatePath("/simulations");
 }
-export async function updateSimulation(simulationId: string, data: {
-  name?: string;
-  description?: string;
-  config?: Record<string, unknown>;
-}) {
+export async function updateSimulation(
+  simulationId: string,
+  data: {
+    name?: string;
+    description?: string;
+    config?: Record<string, unknown>;
+  }
+) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -214,8 +230,10 @@ export async function updateSimulation(simulationId: string, data: {
   const updatePayload: Record<string, string> = {};
 
   if (data.name) updatePayload.name = data.name;
-  if (data.description !== undefined) updatePayload.description = data.description;
-  if (data.config !== undefined) updatePayload.config = JSON.stringify(data.config); // ✅ Fix here
+  if (data.description !== undefined)
+    updatePayload.description = data.description;
+  if (data.config !== undefined)
+    updatePayload.config = JSON.stringify(data.config); // ✅ Fix here
 
   const updated = await prisma.simulation.update({
     where: { id: simulationId },

@@ -113,11 +113,11 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
 }) => {
   if (!isOpen || !previousDecision) return null;
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+  const formatCurrency = (value: number) => {
+    if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
+    if (value >= 100000) return `₹${(value / 100000).toFixed(2)} L`;
+    return `₹${value.toLocaleString()}`;
+  };
 
   const formatChange = (current: number, previous: number) => {
     const change = current - previous;
@@ -179,7 +179,11 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
       totalEmployees: previousTotalEmployees,
       totalHires: 0,
       totalFires: 0,
-      roles: previousDecision.roles || [],
+      roles: (previousDecision.roles || []).map((role) => ({
+        role_name: role.role_name,
+        salary_per_head: role.salary_per_head,
+        head_count: role.current_head_count,
+      })),
     },
     current: {
       totalBudget: currentSalaryBudget + trainingBudget,
@@ -240,7 +244,7 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
 
   interface PreviousRoleData {
     role_name: string;
-    current_head_count: number;
+    head_count: number;
     salary_per_head: number;
   }
 
@@ -265,7 +269,7 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
 
       return {
         role: role.role_name,
-        previous: prevRole ? prevRole.current_head_count : 0,
+        previous: prevRole ? prevRole.head_count : 0,
         current: role.head_count,
       };
     });
@@ -308,7 +312,7 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
     return (
       <div className="bg-slate-700/50 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
-          <Icon className="h-5 w-5 text-blue-400" />
+          <Icon size={20} />
           <span className="text-sm font-medium text-slate-300">{title}</span>
         </div>
         <div className="space-y-2">
@@ -407,7 +411,9 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
                   <XAxis dataKey="category" stroke="#9CA3AF" />
                   <YAxis
                     stroke="#9CA3AF"
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                    tickFormatter={(value) =>
+                      `₹${(value / 10000000).toFixed(1)} Cr`
+                    }
                   />
                   <Tooltip
                     contentStyle={{
