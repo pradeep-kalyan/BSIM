@@ -48,11 +48,8 @@ interface ProductsFormProps {
   companyId: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ProductsForm: React.FC<ProductsFormProps> = ({
-  companyId: _companyId,
-}) => {
-  // _companyId is passed but not used since we're using context for data
+const ProductsForm: React.FC<ProductsFormProps> = () => {
+  // companyId is passed but not used since we're using context for data
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { products, addProduct, updateProductByIndex } = useProductForm();

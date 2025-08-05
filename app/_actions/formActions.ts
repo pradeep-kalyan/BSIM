@@ -314,6 +314,8 @@ export async function submitProductionForm(
       create: {
         company_id: companyId,
         period: period,
+        units_to_produce: 0, // Default value
+        cost_per_unit: 0, // Default value
         production_capacity: data.production_capacity ?? 2000,
         inventory_value: data.inventory_value ?? 0,
         storage_capacity: data.storage_capacity ?? 0,
@@ -424,10 +426,9 @@ export async function submitProductForm(data: any, companyId: string) {
   try {
     const result = await prisma.product.upsert({
       where: {
-        company_id: companyId,
+        name: data.name ?? "",
       },
       update: {
-        name: data.name ?? "",
         description: data.description ?? "",
         category: data.category ?? "",
         quality_rating: data.quality_rating ?? 0,

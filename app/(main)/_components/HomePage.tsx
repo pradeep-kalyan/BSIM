@@ -159,7 +159,9 @@ interface ProductPerformanceType {
 }
 
 interface HRRole {
-  head_count?: number;
+  role_name: string;
+  salary_per_head: number;
+  head_count: number;
 }
 
 interface HRMetricsType {
@@ -177,15 +179,19 @@ interface HRMetricsType {
 }
 
 interface ProductionDataType {
+  id: string;
+  company_id: string;
   period: number;
-  month: string;
-  produced: number;
-  defects: number;
-  efficiency: number;
-  budget?: number;
-  units_to_produce?: number;
-  defect_rate?: number;
-  production_capacity?: number;
+  units_to_produce: number;
+  cost_per_unit: number;
+  budget: number;
+  production_capacity: number;
+  storage_capacity: number | null;
+  inventory_value: number;
+  defect_rate: number;
+  finalised: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface RDDataType {
@@ -256,11 +262,11 @@ interface DashboardData {
   productionData: ProductionDataType[];
   rdData: RDDataType[]; // Array of all R&D decisions
   marketingData: MarketingDataType[]; // Array of all marketing decisions
-  hr_decision: HRDecisionType;
-  rd_decision: RDDecisionType;
-  production_decision: ProductionDecisionType;
-  marketing_decision: MarketingDecisionType;
-  finance_decision: FinanceDecisionType;
+  hr_decision: HRDecisionType | null;
+  rd_decision: RDDecisionType | null;
+  production_decision: ProductionDecisionType | null;
+  marketing_decision: MarketingDecisionType | null;
+  finance_decision: FinanceDecisionType | null;
   activeProductsCount: number;
 }
 
@@ -563,8 +569,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const netWorthChange = getPercentChange(netWorthNow, netWorthPrev);
 
   // Total Revenue change
-  const currentRevenue = finForPeriod?.total_revenue ?? 0;
-  const prevRevenue = finForPeriodPrev?.total_revenue ?? 0;
+  const currentRevenue =
+    (finForPeriod as { total_revenue?: number })?.total_revenue ?? 0;
+  const prevRevenue =
+    (finForPeriodPrev as { total_revenue?: number })?.total_revenue ?? 0;
   const revenueChange = getPercentChange(currentRevenue, prevRevenue);
 
   // Active Products change
@@ -597,14 +605,20 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const prevHr =
     data.hrMetrics?.find((h) => +h.period === +(selectedPeriod - 1)) ?? {};
 
-  const totalEmployees = thisHr.totalEmployees ?? 0;
-  const prevTotalEmployees = prevHr.totalEmployees ?? 0;
-  const newHires = thisHr.newHires ?? 0;
-  const prevNewHires = prevHr.newHires ?? 0;
-  const avgSatisfaction = thisHr.employeeSatisfaction ?? 0;
-  const prevSatisfaction = prevHr.employeeSatisfaction ?? 0;
-  const hrBudget = thisHr.totalBudget ?? hr_budget;
-  const hrBudgetPrev = prevHr.totalBudget ?? hr_budget;
+  const totalEmployees =
+    (thisHr as { totalEmployees?: number }).totalEmployees ?? 0;
+  const prevTotalEmployees =
+    (prevHr as { totalEmployees?: number }).totalEmployees ?? 0;
+  const newHires = (thisHr as { newHires?: number }).newHires ?? 0;
+  const prevNewHires = (prevHr as { newHires?: number }).newHires ?? 0;
+  const avgSatisfaction =
+    (thisHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+  const prevSatisfaction =
+    (prevHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+  const hrBudget =
+    (thisHr as { totalBudget?: number }).totalBudget ?? hr_budget;
+  const hrBudgetPrev =
+    (prevHr as { totalBudget?: number }).totalBudget ?? hr_budget;
 
   // Calculate dynamic trends
   const totalEmployeesChange = getPercentChange(

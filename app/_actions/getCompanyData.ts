@@ -64,9 +64,9 @@ export async function getCompanyDashboardData(companyId: string) {
     totalBudget: hr.total_budget,
     employeeSatisfaction: hr.employee_satisfaction,
     roles: hr.roles.map((r) => ({
-      roleName: r.role_name,
-      salaryPerHead: r.salary_per_head,
-      headCount: r.head_count,
+      role_name: r.role_name,
+      salary_per_head: r.salary_per_head,
+      head_count: r.head_count,
     })),
   }));
 

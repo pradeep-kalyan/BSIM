@@ -1,21 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  getSimulations,
-  deleteSimulation,
-  getSimulationscompare,
-} from "@/app/_actions/createSim";
+import { getSimulations, deleteSimulation } from "@/app/_actions/createSim";
 import { getCurrentUser } from "@/app/functions/jwt";
 import CreateSim from "./_components/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, PlusCircle, LayoutDashboard, Rocket } from "lucide-react";
-import CheckboxDropdown from "@/ui/CheckboxDropdown";
-import SingleSelectDropdown from "@/ui/SingleSelectDropdown";
 import Card from "./_components/SimCard";
 import EditSimulationForm from "./_components/EditSimulationForm";
 import { ExtendedSimulation } from "./simulation";
-import { useRouter } from "next/navigation";
+
 const Page = () => {
   const [simulations, setSimulations] = useState<ExtendedSimulation[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -26,49 +20,15 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
   );
-  const router = useRouter();
   const [searchQuery] = useState("");
   const [sortBy] = useState<"name" | "created_at">("name");
-
-  const [selectedSimulationId, setSelectedSimulationId] = useState<
-    string | null
-  >(null);
-  const [selectedSimulationName, setSelectedSimulationName] = useState<
-    string | null
-  >(null);
-  const [participatingCompanies, setParticipatingCompanies] = useState<
-    string[]
-  >([]);
-  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
   const fetchSimulations = async () => {
     const data = await getSimulations();
     const user = await getCurrentUser();
 
-    setSimulations(
-      data.map((sim: any) => ({
-        ...sim,
-        created_at:
-          typeof sim.created_at === "string"
-            ? sim.created_at
-            : sim.created_at.toISOString(),
-        companies: sim.companies || [],
-        simulation_access: sim.simulation_access?.map((access: any) => ({
-          ...access,
-          user: {
-            ...access.user,
-            created_at:
-              typeof access.user.created_at === "string"
-                ? access.user.created_at
-                : access.user.created_at.toISOString(),
-            updated_at:
-              typeof access.user.updated_at === "string"
-                ? access.user.updated_at
-                : access.user.updated_at.toISOString(),
-          },
-        })),
-      }))
-    );
+    // Type assertion since getSimulations already processes the data correctly
+    setSimulations(data as unknown as ExtendedSimulation[]);
 
     setCurrentUserId(user?.id);
     setInitialLoad(false);
@@ -93,39 +53,6 @@ const Page = () => {
     (sim) => sim.created_by !== currentUserId && sim.canAccess
   );
   const allSimulations = [...ownedSimulations, ...sharedSimulations];
-
-  // Fetch companies for selected simulation
-  useEffect(() => {
-    if (!selectedSimulationId) return;
-
-    const fetchCompanies = async () => {
-      try {
-        const allSims = await getSimulationscompare();
-        const selectedSim = allSims.find(
-          (sim) => sim.id === selectedSimulationId
-        );
-
-        if (selectedSim?.companies?.length) {
-          const companies = Array.from(
-            new Set(
-              selectedSim.companies
-                .map((c: any) => (c.name ? c.name.trim() : c.id))
-                .filter(Boolean)
-            )
-          );
-
-          setParticipatingCompanies(companies);
-        } else {
-          setParticipatingCompanies([]);
-        }
-      } catch (error) {
-        console.error("Error fetching companies for comparison:", error);
-        setParticipatingCompanies([]);
-      }
-    };
-
-    fetchCompanies();
-  }, [selectedSimulationId]);
 
   const filterAndSort = (list: ExtendedSimulation[]) =>
     list
@@ -199,50 +126,6 @@ const Page = () => {
       {/* Dropdowns + Toggle Button */}
       {allSimulations.length > 0 && (
         <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
-          {/* Simulation Selector (SingleSelectDropdown) */}
-          <SingleSelectDropdown
-            options={allSimulations.map((sim) => sim.name)}
-            selected={selectedSimulationName}
-            onChange={(name) => {
-              setSelectedSimulationName(name);
-              const sim = allSimulations.find((s) => s.name === name);
-              if (sim) {
-                setSelectedSimulationId(sim.id);
-              } else {
-                setSelectedSimulationId(null);
-              }
-              setSelectedCompanies([]);
-            }}
-            placeholder="Select Simulation"
-          />
-
-          {/* Company Multi-select (CheckboxDropdown) */}
-          {participatingCompanies.length > 0 && selectedSimulationId && (
-            <CheckboxDropdown
-              options={participatingCompanies}
-              selected={selectedCompanies}
-              onChange={setSelectedCompanies}
-              placeholder="Select Companies"
-            />
-          )}
-          {/* Compare Changes Button */}
-
-          {selectedCompanies.length >= 2 && selectedSimulationId && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                useCompareStore
-                  .getState()
-                  .setCompareData(selectedCompanies, selectedSimulationId);
-                router.push("/simulations/Compare");
-              }}
-              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-            >
-              Compare Changes
-            </motion.button>
-          )}
-
           {/* Toggle Create/View */}
           <motion.button
             whileHover={{ scale: 1.05 }}
