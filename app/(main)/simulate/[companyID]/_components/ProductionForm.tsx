@@ -4,6 +4,7 @@ import { IndianRupee, Factory, Package, AlertTriangle } from "lucide-react";
 import React from "react";
 import DashboardCard from "@/ui/Card";
 import { Check, TriangleAlert } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
   useCompanyForm,
@@ -24,12 +25,10 @@ const ProductionForm = () => {
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
   const [success, setSuccess] = React.useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === "" ? "" : e.target.value;
-    updateData({ [e.target.name]: Number(value) });
-    setError(e.target.name, "");
-    // Don't clear budget alert on every change - let validation handle it
-    setSuccess(false); // Reset success state when user makes changes
+  const handleChange = (fieldName: string, value: number) => {
+    updateData({ [fieldName]: value });
+    setError(fieldName, "");
+    setSuccess(false);
   };
 
   const frozenData = React.useMemo(
@@ -180,82 +179,96 @@ const ProductionForm = () => {
             Set Production Strategy
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
-            {[
-              {
-                id: "units_to_produce",
-                label: "Units to Produce",
-                value: data?.units_to_produce ?? 0,
-                type: "number",
-                step: 1,
-                min: 0,
-                placeholder: "Enter number of units to produce",
-              },
-              {
-                id: "cost_per_unit",
-                label: "Cost per Unit (₹)",
-                value: data?.cost_per_unit ?? 0,
-                type: "number",
-                step: 0.01,
-                min: 0,
-                placeholder: "Manufacturing cost per unit",
-              },
-              {
-                id: "defect_rate",
-                label: "Expected Defect Rate (%)",
-                value: data?.defect_rate ?? 0,
-                type: "number",
-                step: 0.1,
-                min: 0,
-                max: 100,
-                placeholder: "Expected defect rate percentage",
-              },
-              {
-                id: "production_capacity",
-                label: "Production Capacity (Units)",
-                value: data?.production_capacity ?? 0,
-                type: "number",
-                step: 1,
-                min: 0,
-                placeholder: "Maximum production capacity per period",
-              },
-              {
-                id: "storage_capacity",
-                label: "Storage Capacity (Units)",
-                value: data?.storage_capacity ?? 0,
-                type: "number",
-                step: 1,
-                min: 0,
-                placeholder: "Maximum storage capacity for finished goods",
-              },
-            ].map((field) => (
-              <div key={field.id}>
-                <label
-                  htmlFor={field.id}
-                  className="block text-slate-200 font-semibold mb-1"
-                >
-                  {field.label}
-                </label>
-                <input
-                  id={field.id}
-                  name={field.id}
-                  type={field.type}
-                  step={field.step}
-                  min={field.min}
-                  max={field.max}
-                  value={field.value}
-                  onChange={handleChange}
-                  placeholder={field.placeholder}
-                  className={`w-full p-3 rounded-lg bg-slate-700 text-white border ${
-                    getError(field.id) ? "border-rose-500" : "border-slate-600"
-                  } focus:ring-2 focus:ring-emerald-400`}
-                />
-                {getError(field.id) && (
-                  <p className="text-rose-400 text-xs mt-1">
-                    {getError(field.id)}
-                  </p>
-                )}
-              </div>
-            ))}
+            {/* Units to Produce Slider */}
+            <div>
+              <Slider
+                label="Units to Produce"
+                defaultValue={[data?.units_to_produce ?? 0]}
+                value={[data?.units_to_produce ?? 0]}
+                min={0}
+                max={Math.max(data?.production_capacity * 2 || 2000, 1000)}
+                onValueChange={(val) =>
+                  handleChange("units_to_produce", val[0])
+                }
+              />
+              {getError("units_to_produce") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("units_to_produce")}
+                </p>
+              )}
+            </div>
+
+            {/* Cost per Unit Slider */}
+            <div>
+              <Slider
+                label="Cost per Unit (₹)"
+                defaultValue={[data?.cost_per_unit ?? 0]}
+                value={[data?.cost_per_unit ?? 0]}
+                min={0}
+                max={1000}
+                onValueChange={(val) => handleChange("cost_per_unit", val[0])}
+              />
+              {getError("cost_per_unit") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("cost_per_unit")}
+                </p>
+              )}
+            </div>
+
+            {/* Defect Rate Slider */}
+            <div>
+              <Slider
+                label="Expected Defect Rate (%)"
+                defaultValue={[data?.defect_rate ?? 0]}
+                value={[data?.defect_rate ?? 0]}
+                min={0}
+                max={100}
+                onValueChange={(val) => handleChange("defect_rate", val[0])}
+              />
+              {getError("defect_rate") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("defect_rate")}
+                </p>
+              )}
+            </div>
+
+            {/* Production Capacity Slider */}
+            <div>
+              <Slider
+                label="Production Capacity (Units)"
+                defaultValue={[data?.production_capacity ?? 0]}
+                value={[data?.production_capacity ?? 0]}
+                min={0}
+                max={5000}
+                onValueChange={(val) =>
+                  handleChange("production_capacity", val[0])
+                }
+              />
+              {getError("production_capacity") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("production_capacity")}
+                </p>
+              )}
+            </div>
+
+            {/* Storage Capacity Slider */}
+            <div>
+              <Slider
+                label="Storage Capacity (Units)"
+                defaultValue={[data?.storage_capacity ?? 0]}
+                value={[data?.storage_capacity ?? 0]}
+                min={0}
+                max={10000}
+                onValueChange={(val) =>
+                  handleChange("storage_capacity", val[0])
+                }
+              />
+              {getError("storage_capacity") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("storage_capacity")}
+                </p>
+              )}
+            </div>
 
             {/* Read-only Inventory Value */}
             <div>

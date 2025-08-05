@@ -1,8 +1,15 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, Trash2, Check, TriangleAlert } from "lucide-react";
+import {
+  PlusCircle,
+  Trash2,
+  Check,
+  TriangleAlert,
+  UserPlus,
+} from "lucide-react";
 import { ToastContainer } from "react-toastify";
+import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
   useCompanyForm,
@@ -10,7 +17,7 @@ import {
 } from "@/app/context/FormContext";
 
 import { useSimulation } from "@/app/context/SimulationContext";
-import { Users, TrendingUp, Award, Building2, IndianRupee } from "lucide-react";
+import { Users, Award, Building2, IndianRupee } from "lucide-react";
 
 const HRDashboard = () => {
   const {
@@ -34,19 +41,10 @@ const HRDashboard = () => {
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
 
   // Calculate net hiring from newRoles and existing roles combined with NaN protection
-  const netHiring =
-    (data?.newRoles?.reduce((acc, r) => {
-      const hires = isNaN(r.hires) ? 0 : r.hires || 0;
-      return acc + hires;
-    }, 0) || 0) +
-    (data?.existingRoles?.reduce((acc, r) => {
-      const hires = isNaN(r.hires) ? 0 : r.hires || 0;
-      return acc + hires;
-    }, 0) || 0);
-
   const formatCurrency = (value: number) => {
     return "₹" + value.toLocaleString(undefined, { minimumFractionDigits: 0 });
   };
+
   const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => {
     const headCount = isNaN(role.current_head_count)
       ? 0
@@ -86,8 +84,6 @@ const HRDashboard = () => {
     : data?.training_budget || 0;
   const totalHRBudget =
     (isNaN(projectedSalaryBudget) ? 0 : projectedSalaryBudget) + trainingBudget;
-  const cashAfter =
-    (isNaN(projectedCashBalance) ? 0 : projectedCashBalance) - totalHRBudget;
 
   const totalFires = data.existingRoles.reduce((sum, role) => {
     const fires = isNaN(role.fires) ? 0 : role.fires || 0;
@@ -137,395 +133,418 @@ const HRDashboard = () => {
       <ToastContainer position="top-right" />
 
       <div className="max-w-7xl mx-auto">
-        {/* Metrics UI */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 mb-2">
+        {/* Compact Metrics Dashboard */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           {/* Company Info */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-            <div className="flex items-center justify-between mb-2">
-              <Building2 className="h-8 w-8 text-blue-400" />
-              <span className="text-xl font-bold text-white text-right">
+          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className="h-4 w-4 text-blue-400" />
+              <span className="text-sm font-bold text-white">
                 {companyData.name}
               </span>
             </div>
-            <p className="text-slate-300">Period {period}</p>
-            <p className="text-sm text-slate-400">
-              {" "}
-              Cash: {formatCurrency(cashBalance.originalCashBalance || 0)}{" "}
+            <p className="text-xs text-slate-400">
+              Period {period} •{" "}
+              {formatCurrency(cashBalance.originalCashBalance || 0)}
             </p>
           </div>
 
-          {/* Projected Employees */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-            <div className="flex items-center justify-between mb-2">
-              <Users className="h-8 w-8 text-blue-400" />
-              <span className="text-2xl font-bold text-white">
+          {/* Employees */}
+          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
+            <div className="flex items-center gap-2 mb-1">
+              <Users className="h-4 w-4 text-blue-400" />
+              <span className="text-lg font-bold text-white">
                 {totalExistingHeadCount + totalHires - totalFires}
               </span>
             </div>
-            <p className="text-slate-300">Projected Employees</p>
-            <p className="text-sm text-slate-400">
-              Current: {totalExistingHeadCount}
+            <p className="text-xs text-slate-400">
+              Change: {totalHires - totalFires >= 0 ? "+" : ""}
+              {totalHires - totalFires}
             </p>
           </div>
 
-          {/* New Hires / Fires */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="h-8 w-8 text-green-400" />
-              <span className="text-2xl font-bold text-white">{netHiring}</span>
-            </div>
-            <p className="text-slate-300">New Hires</p>
-            <p className="text-sm text-slate-400">Fires: {totalFires}</p>
-          </div>
-
-          {/* HR Budget */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-            <div className="flex items-center justify-between mb-2">
-              <IndianRupee className="h-8 w-8 text-yellow-400" />
-              <span className="text-2xl font-bold text-white">
-                {formatCurrency(trainingBudget)}
+          {/* Budget */}
+          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
+            <div className="flex items-center gap-2 mb-1">
+              <IndianRupee className="h-4 w-4 text-yellow-400" />
+              <span className="text-sm font-bold text-white">
+                {formatCurrency(totalHRBudget)}
               </span>
             </div>
-            <p className="text-slate-300">Training Budget</p>
-            <p className="text-sm text-slate-400">
-              Total HR: {formatCurrency(totalHRBudget || 0)}
-            </p>
+            <p className="text-xs text-slate-400">Total HR Budget</p>
           </div>
 
-          {/* Employee Satisfaction */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
-            <div className="flex items-center justify-between mb-2">
-              <Award className="h-8 w-8 text-purple-400" />
-              <span className="text-2xl font-bold text-white">
+          {/* Satisfaction */}
+          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
+            <div className="flex items-center gap-2 mb-1">
+              <Award className="h-4 w-4 text-purple-400" />
+              <span className="text-lg font-bold text-white">
                 {isNaN(data.employee_satisfaction)
                   ? "0"
                   : data.employee_satisfaction.toFixed(0)}
                 %
               </span>
             </div>
-            <p className="text-slate-300">Employee Satisfaction</p>
-            <p className="text-sm text-slate-400">
-              Salary: {formatCurrency(projectedSalaryBudget || 0)}
-            </p>
+            <p className="text-xs text-slate-400">Satisfaction</p>
           </div>
         </div>
 
-        {/* HR Decision UI */}
-        <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl py-4 px-10 border border-slate-700 shadow-lg">
-          <h2 className="text-3xl font-bold text-white mb-2">
-            HR Decision - Period {period}
-          </h2>
-
-          {/* Existing Roles */}
-          <div className="mb-3">
-            <h3 className="text-xl font-semibold text-slate-200 mb-4">
-              Existing Roles
-            </h3>
-            <div className="overflow-x-auto border border-slate-600 px-8 pt-2 mx-4 rounded-lg">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-slate-300 border-b border-slate-600">
-                    <th>Role</th>
-                    <th>Current Count</th>
-                    <th>Salary</th>
-                    <th>Hires</th>
-                    <th>Fires</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.existingRoles.map((role, index) => (
-                    <tr key={index} className="border-b border-slate-700">
-                      <td className="py-1 text-white">{role.role_name}</td>
-                      <td className="py-1 text-slate-300">
-                        {role.current_head_count}
-                      </td>
-                      <td className="py-1">
-                        <input
-                          type="number"
-                          min={0}
-                          value={
-                            isNaN(role.salary_per_head)
-                              ? 0
-                              : role.salary_per_head
-                          }
-                          onChange={(e) => {
-                            const value = parseFloat(e.target.value);
-                            updateExistingRole(index, {
-                              salary_per_head: isNaN(value) ? 0 : value,
-                            });
-                            setSuccess(false);
-                            setBudgetAlert(null);
-                          }}
-                          className="w-24 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                        />
-                      </td>
-                      <td className="py-1">
-                        <input
-                          type="number"
-                          placeholder="0"
-                          min={0}
-                          value={isNaN(role.hires) ? 0 : role.hires ?? 0}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value);
-                            updateExistingRole(index, {
-                              hires: isNaN(value) ? 0 : value,
-                            });
-                            setSuccess(false);
-                            setBudgetAlert(null);
-                          }}
-                          className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                        />
-                      </td>
-                      <td className="py-1">
-                        <input
-                          type="number"
-                          placeholder="0"
-                          min={0}
-                          value={isNaN(role.fires) ? 0 : role.fires ?? 0}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value);
-                            updateExistingRole(index, {
-                              fires: isNaN(value) ? 0 : value,
-                            });
-                            setSuccess(false);
-                            setBudgetAlert(null);
-                          }}
-                          className="w-20 p-2 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400"
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Compact HR Decision Interface */}
+        <div className="bg-slate-800/90 rounded-xl py-4 px-4 border border-slate-600">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-500/20 rounded-lg">
+              <Users className="h-5 w-5 text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">HR Management</h2>
+              <p className="text-slate-400 text-sm">
+                Period {period} • Workforce Planning
+              </p>
             </div>
           </div>
 
-          {/* Add New Roles Section */}
-          <div>
-            <div className="flex items-center gap-4 mb-4">
-              <h3 className="text-2xl font-semibold text-slate-200">
-                Add New Roles
+          {/* Existing Roles Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-slate-100">
+                Current Workforce
               </h3>
-              <button
-                type="button"
-                onClick={() =>
-                  addNewRole({
-                    role_name: "",
-                    salary_per_head: 0,
-                    hires: 0,
-                  })
-                }
-                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors font-semibold"
-              >
-                <PlusCircle size={22} />
-                Add Role
-              </button>
+              <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
+                {data.existingRoles.length} Roles
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {data.existingRoles.map((role, index) => (
+                <div
+                  key={index}
+                  className="bg-slate-700/60 rounded-lg p-4 border border-slate-600"
+                >
+                  {/* Role Header */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <UserPlus className="h-4 w-4 text-blue-400" />
+                      <h4 className="text-lg font-bold text-white">
+                        {role.role_name}
+                      </h4>
+                    </div>
+                    <div className="text-sm text-slate-300">
+                      Current: {role.current_head_count} • Projected:{" "}
+                      {role.current_head_count +
+                        (role.hires || 0) -
+                        (role.fires || 0)}
+                    </div>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Salary Control */}
+                    <div className="bg-slate-600/30 rounded-lg p-3">
+                      <h5 className="text-sm font-semibold text-white mb-2">
+                        Salary per Employee
+                      </h5>
+                      <Slider
+                        label={`₹${(
+                          role.salary_per_head || 0
+                        ).toLocaleString()}`}
+                        value={[
+                          isNaN(role.salary_per_head)
+                            ? 0
+                            : role.salary_per_head,
+                        ]}
+                        min={0}
+                        max={Math.max(
+                          500000,
+                          (role.salary_per_head || 0) * 1.5
+                        )}
+                        onValueChange={(val) => {
+                          updateExistingRole(index, {
+                            salary_per_head: val[0],
+                          });
+                          setSuccess(false);
+                          setBudgetAlert(null);
+                        }}
+                      />
+                    </div>
+
+                    {/* Staffing Control */}
+                    <div className="bg-slate-600/30 rounded-lg p-3">
+                      <h5 className="text-sm font-semibold text-white mb-2">
+                        Staffing Changes
+                      </h5>
+                      <Slider
+                        label={`Net: ${(role.hires || 0) - (role.fires || 0)}`}
+                        value={[(role.hires || 0) - (role.fires || 0)]}
+                        min={-role.current_head_count}
+                        max={50}
+                        onValueChange={(val) => {
+                          const netChange = Math.round(val[0]);
+                          if (netChange >= 0) {
+                            updateExistingRole(index, {
+                              hires: netChange,
+                              fires: 0,
+                            });
+                          } else {
+                            updateExistingRole(index, {
+                              hires: 0,
+                              fires: Math.abs(netChange),
+                            });
+                          }
+                          setSuccess(false);
+                          setBudgetAlert(null);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* New Roles Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-slate-100">
+                Create New Positions
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-sm">
+                  {data?.newRoles?.length || 0} New
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    addNewRole({
+                      role_name: "",
+                      salary_per_head: 50000,
+                      hires: 1,
+                    })
+                  }
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                >
+                  <PlusCircle size={14} className="inline mr-1" />
+                  Add Role
+                </button>
+              </div>
             </div>
 
             {data?.newRoles?.length === 0 && (
-              <p className="text-slate-400 italic mb-1">
-                No new roles added yet.
-              </p>
+              <div className="text-center py-4 bg-slate-700/30 rounded-lg border-2 border-dashed border-slate-600">
+                <p className="text-slate-400 text-sm">
+                  No new roles created yet
+                </p>
+              </div>
             )}
 
-            {data?.newRoles?.map((role, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-4 gap-4 items-end ml-6 mb-2"
+            <div className="space-y-3">
+              {data?.newRoles?.map((role, index) => (
+                <div
+                  key={index}
+                  className="bg-green-700/20 rounded-lg p-4 border border-green-500/30"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-lg font-bold text-white">
+                      {role.role_name || "New Position"}
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => removeNewRole(index)}
+                      className="text-red-400 hover:text-red-300 bg-red-500/10 px-2 py-1 rounded text-sm"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-sm text-slate-300 mb-1 block">
+                        Position Title
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Senior Developer"
+                        value={role.role_name || ""}
+                        onChange={(e) => {
+                          updateNewRole(index, { role_name: e.target.value });
+                          setSuccess(false);
+                          setBudgetAlert(null);
+                        }}
+                        className="w-full p-3 rounded bg-slate-800 text-white border border-slate-500 focus:border-green-400 focus:outline-none text-sm placeholder-slate-400 hover:bg-slate-700 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-300 mb-1 block">
+                        Monthly Salary
+                      </label>
+                      <Slider
+                        className="w-[200px]"
+                        label={`₹${(
+                          role.salary_per_head || 50000
+                        ).toLocaleString()}`}
+                        value={[
+                          isNaN(role.salary_per_head)
+                            ? 50000
+                            : role.salary_per_head,
+                        ]}
+                        min={10000}
+                        max={200000}
+                        onValueChange={(val) => {
+                          updateNewRole(index, { salary_per_head: val[0] });
+                          setSuccess(false);
+                          setBudgetAlert(null);
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-300 mb-1 block">
+                        Positions to Fill
+                      </label>
+                      <Slider
+                        className="w-[200px]"
+                        label={`${role.hires || 1} positions`}
+                        value={[isNaN(role.hires) ? 1 : role.hires]}
+                        min={1}
+                        max={20}
+                        onValueChange={(val) => {
+                          updateNewRole(index, { hires: Math.round(val[0]) });
+                          setSuccess(false);
+                          setBudgetAlert(null);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Budget & Satisfaction Controls */}
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-slate-100 mb-3">
+              HR Budget & Culture
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Training Budget */}
+              <div className="bg-slate-700/20 rounded-lg p-4 border border-yellow-500/30">
+                <h4 className="text-sm font-bold text-white mb-2">
+                  Training & Development
+                </h4>
+                <Slider
+                  label={`Training Budget: ₹${(
+                    data?.training_budget || 0
+                  ).toLocaleString()}`}
+                  value={[
+                    isNaN(data?.training_budget)
+                      ? 0
+                      : data?.training_budget || 0,
+                  ]}
+                  min={0}
+                  max={Math.min(companyData?.cash_balance || 100000, 500000)}
+                  onValueChange={(val) => {
+                    updateData({ training_budget: val[0] });
+                    setSuccess(false);
+                    setBudgetAlert(null);
+                  }}
+                />
+              </div>
+
+              {/* Employee Satisfaction */}
+              <div className="bg-slate-700/20 rounded-lg p-4 border border-purple-500/30">
+                <h4 className="text-sm font-bold text-white mb-2">
+                  Employee Satisfaction
+                </h4>
+                <Slider
+                  label={`Target: ${(data?.employee_satisfaction || 70).toFixed(
+                    0
+                  )}%`}
+                  value={[
+                    isNaN(data?.employee_satisfaction)
+                      ? 70
+                      : data?.employee_satisfaction || 70,
+                  ]}
+                  min={0}
+                  max={100}
+                  onValueChange={(val) => {
+                    updateData({ employee_satisfaction: val[0] });
+                    setSuccess(false);
+                    setBudgetAlert(null);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Validation & Summary */}
+          <div className="space-y-4">
+            {/* Validation Button */}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleValidate}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold transition-all"
               >
-                {/* Role Name */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-slate-300 mb-1">
-                    Role Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Role Name"
-                    value={role.role_name || ""}
-                    onChange={(e) => {
-                      updateNewRole(index, { role_name: e.target.value });
-                      setSuccess(false);
-                      setBudgetAlert(null);
-                    }}
-                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
-                  />
-                </div>
+                <Check className="h-4 w-4 inline mr-2" />
+                Validate HR Decisions
+              </button>
+            </div>
 
-                {/* Salary Per Head */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-slate-300 mb-1">
-                    Salary per Head
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Salary"
-                    min={0}
-                    value={
-                      isNaN(role.salary_per_head) ? 0 : role.salary_per_head
-                    }
-                    onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      updateNewRole(index, {
-                        salary_per_head: isNaN(value) ? 0 : value,
-                      });
-                      setSuccess(false);
-                      setBudgetAlert(null);
-                    }}
-                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
-                  />
-                </div>
+            {/* Validation Messages */}
+            {(budgetAlert || success) && (
+              <div className="space-y-2">
+                {budgetAlert && (
+                  <div className="bg-rose-900/80 border border-rose-600 text-rose-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <TriangleAlert className="text-rose-400 h-4 w-4" />
+                      <span className="text-sm">{budgetAlert}</span>
+                    </div>
+                  </div>
+                )}
+                {success && !budgetAlert && (
+                  <div className="bg-green-900/80 border border-green-500 text-green-100 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <Check className="text-green-400 h-4 w-4" />
+                      <span className="text-sm">
+                        All HR decisions validated successfully!
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-                {/* Hires Count */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-slate-300 mb-1">
-                    Hires Count
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Hires"
-                    min={0}
-                    value={isNaN(role.hires) ? 0 : role.hires}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      updateNewRole(index, {
-                        hires: isNaN(value) ? 0 : value,
-                      });
-                      setSuccess(false);
-                      setBudgetAlert(null);
-                    }}
-                    className="p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
-                  />
+            {/* Summary Section */}
+            <div className="bg-slate-700/80 rounded-lg p-4 border border-slate-500">
+              <h4 className="text-lg font-bold text-white mb-3">
+                Financial Impact Summary
+              </h4>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-slate-600/40 rounded-lg p-3">
+                  <p className="text-slate-300 text-xs mb-1">Total HR Budget</p>
+                  <p className="text-lg font-bold text-white">
+                    {formatCurrency(totalHRBudget || 0)}
+                  </p>
                 </div>
-
-                {/* Remove Button */}
-                <div className="flex items-end">
-                  <button
-                    type="button"
-                    onClick={() => removeNewRole(index)}
-                    className="text-red-400 hover:text-red-300 p-2 transition-colors rounded"
-                    aria-label={`Remove role ${role.role_name}`}
-                    title="Remove Role"
+                <div className="bg-slate-600/40 rounded-lg p-3">
+                  <p className="text-slate-300 text-xs mb-1">Available Cash</p>
+                  <p className="text-lg font-bold text-white">
+                    {formatCurrency(cashBalance.originalCashBalance || 0)}
+                  </p>
+                </div>
+                <div className="bg-slate-600/40 rounded-lg p-3">
+                  <p className="text-slate-300 text-xs mb-1">Remaining Cash</p>
+                  <p
+                    className={`text-lg font-bold ${
+                      (projectedCashBalance || 0) < 0
+                        ? "text-red-400"
+                        : "text-emerald-400"
+                    }`}
                   >
-                    <Trash2 size={22} />
-                  </button>
+                    {formatCurrency(projectedCashBalance || 0)}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Budget and Satisfaction Inputs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2 mx-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Training Budget
-              </label>
-              <input
-                type="number"
-                value={
-                  isNaN(data?.training_budget) ? 0 : data?.training_budget || 0
-                }
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  updateData({
-                    training_budget: isNaN(value) ? 0 : value,
-                  });
-                  setSuccess(false);
-                  setBudgetAlert(null);
-                }}
-                min={0}
-                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Employee Satisfaction (%)
-              </label>
-              <input
-                type="number"
-                value={
-                  isNaN(data?.employee_satisfaction)
-                    ? 0
-                    : data?.employee_satisfaction || 0
-                }
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  const clampedValue = Math.min(
-                    100,
-                    Math.max(0, isNaN(value) ? 0 : value)
-                  );
-                  updateData({
-                    employee_satisfaction: clampedValue,
-                  });
-                  setSuccess(false);
-                  setBudgetAlert(null);
-                }}
-                min={0}
-                max={100}
-                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-600 focus:border-blue-400 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Validate Button */}
-          <div className="flex justify-center mb-4 mx-6">
-            <button
-              type="button"
-              onClick={handleValidate}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
-            >
-              Validate HR Decisions
-            </button>
-          </div>
-
-          {/* Validation Messages */}
-          {(budgetAlert || success) && (
-            <div className="mt-6 space-y-4 mx-6">
-              {budgetAlert && (
-                <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
-                  <div className="flex items-start gap-3">
-                    <TriangleAlert className="text-rose-500 mt-0.5" />
-                    <p className="text-sm">{budgetAlert}</p>
-                  </div>
-                </div>
-              )}
-              {success && !budgetAlert && (
-                <div className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce">
-                  <div className="flex items-center gap-3">
-                    <Check className="text-green-400 text-xl" />
-                    <p className="text-xl font-semibold">
-                      HR Decisions Validated Successfully!
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Summary Section */}
-          <h4 className="text-xl font-semibold text-white mb-2 ml-6">
-            Decision Summary
-          </h4>
-          <div className="bg-slate-700/70 rounded-xl px-6 py-4 mx-6 grid grid-cols-2 md:grid-cols-3 gap-6 text-center text-white font-semibold">
-            <div>
-              <p className="text-slate-300 text-sm mb-1">Total HR Budget</p>
-              <p className="text-2xl">{formatCurrency(totalHRBudget || 0)}</p>
-            </div>
-            <div>
-              <p className="text-slate-300 text-sm mb-1">Available Cash</p>
-              <p className="text-2xl">
-                {formatCurrency(cashBalance.originalCashBalance || 0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-slate-300 text-sm mb-1">Cash After HR</p>
-              <p
-                className={`text-2xl ${
-                  (cashAfter || 0) < 0 ? "text-red-500" : "text-green-400"
-                }`}
-              >
-                {formatCurrency(projectedCashBalance || 0)}
-              </p>
             </div>
           </div>
         </div>
