@@ -14,6 +14,7 @@ import {
   useCashBalance,
   useCompanyForm,
   useHRForm,
+  useHRRoleManagement,
 } from "@/app/context/FormContext";
 
 import { useSimulation } from "@/app/context/SimulationContext";
@@ -31,6 +32,9 @@ const HRDashboard = () => {
     removeNewRole,
   } = useHRForm();
 
+  // Get total employee count from the HR role management hook
+  const { getTotalEmployees } = useHRRoleManagement();
+
   const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
     useCashBalance();
   const { period } = useSimulation();
@@ -39,6 +43,9 @@ const HRDashboard = () => {
   // State for validation and success feedback
   const [success, setSuccess] = React.useState(false);
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
+
+  // Calculate total employee count
+  const totalEmployeeCount = getTotalEmployees();
 
   // Calculate net hiring from newRoles and existing roles combined with NaN protection
   const formatCurrency = (value: number) => {
@@ -51,9 +58,19 @@ const HRDashboard = () => {
       : role.current_head_count || 0;
     return sum + headCount;
   }, 0);
-  const totalHires = data.existingRoles.reduce((sum, role) => {
-    const hires = isNaN(role.hires) ? 0 : role.hires || 0;
-    return sum + hires;
+  const totalHires =
+    data.existingRoles.reduce((sum, role) => {
+      const hires = isNaN(role.hires) ? 0 : role.hires || 0;
+      return sum + hires;
+    }, 0) +
+    (data.newRoles?.reduce((sum, role) => {
+      const hires = isNaN(role.hires) ? 0 : role.hires || 0;
+      return sum + hires;
+    }, 0) || 0);
+
+  const totalFires = data.existingRoles.reduce((sum, role) => {
+    const fires = isNaN(role.fires) ? 0 : role.fires || 0;
+    return sum + fires;
   }, 0);
 
   const projectedSalaryBudget =
@@ -85,10 +102,7 @@ const HRDashboard = () => {
   const totalHRBudget =
     (isNaN(projectedSalaryBudget) ? 0 : projectedSalaryBudget) + trainingBudget;
 
-  const totalFires = data.existingRoles.reduce((sum, role) => {
-    const fires = isNaN(role.fires) ? 0 : role.fires || 0;
-    return sum + fires;
-  }, 0);
+  // Real-time budget validation
 
   // Validation function similar to other forms
   const handleValidate = () => {
@@ -134,7 +148,7 @@ const HRDashboard = () => {
 
       <div className="max-w-7xl mx-auto">
         {/* Compact Metrics Dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
           {/* Company Info */}
           <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
             <div className="flex items-center gap-2 mb-1">
@@ -143,24 +157,40 @@ const HRDashboard = () => {
                 {companyData.name}
               </span>
             </div>
-            <p className="text-xs text-slate-400">
-              Period {period} •{" "}
-              {formatCurrency(cashBalance.originalCashBalance || 0)}
-            </p>
+            <p className="text-xs text-slate-400">Period {period}</p>
           </div>
 
-          {/* Employees */}
+          {/* Total Employees */}
           <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
             <div className="flex items-center gap-2 mb-1">
               <Users className="h-4 w-4 text-blue-400" />
               <span className="text-lg font-bold text-white">
-                {totalExistingHeadCount + totalHires - totalFires}
+                {totalEmployeeCount}
               </span>
             </div>
-            <p className="text-xs text-slate-400">
-              Change: {totalHires - totalFires >= 0 ? "+" : ""}
-              {totalHires - totalFires}
-            </p>
+            <p className="text-xs text-slate-400">Total Staff</p>
+          </div>
+
+          {/* Total Hires */}
+          <div className="bg-green-800/80 rounded-lg p-3 border border-green-600">
+            <div className="flex items-center gap-2 mb-1">
+              <UserPlus className="h-4 w-4 text-green-400" />
+              <span className="text-lg font-bold text-white">
+                +{totalHires}
+              </span>
+            </div>
+            <p className="text-xs text-green-300">New Hires</p>
+          </div>
+
+          {/* Total Fires */}
+          <div className="bg-red-800/80 rounded-lg p-3 border border-red-600">
+            <div className="flex items-center gap-2 mb-1">
+              <Trash2 className="h-4 w-4 text-red-400" />
+              <span className="text-lg font-bold text-white">
+                -{totalFires}
+              </span>
+            </div>
+            <p className="text-xs text-red-300">Layoffs</p>
           </div>
 
           {/* Budget */}
@@ -171,7 +201,7 @@ const HRDashboard = () => {
                 {formatCurrency(totalHRBudget)}
               </span>
             </div>
-            <p className="text-xs text-slate-400">Total HR Budget</p>
+            <p className="text-xs text-slate-400">HR Budget</p>
           </div>
 
           {/* Satisfaction */}
@@ -188,6 +218,8 @@ const HRDashboard = () => {
             <p className="text-xs text-slate-400">Satisfaction</p>
           </div>
         </div>
+
+        {/* Budget Alert */}
 
         {/* Compact HR Decision Interface */}
         <div className="bg-slate-800/90 rounded-xl py-4 px-4 border border-slate-600">
@@ -519,21 +551,28 @@ const HRDashboard = () => {
               <h4 className="text-lg font-bold text-white mb-3">
                 Financial Impact Summary
               </h4>
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Total HR Budget</p>
-                  <p className="text-lg font-bold text-white">
-                    {formatCurrency(totalHRBudget || 0)}
+                  <p className="text-slate-300 text-xs mb-1">Salary Budget</p>
+                  <p className="text-lg font-bold text-yellow-400">
+                    {formatCurrency(projectedSalaryBudget || 0)}
+                  </p>
+                </div>
+                <div className="bg-slate-600/40 rounded-lg p-3">
+                  <p className="text-slate-300 text-xs mb-1">Training Budget</p>
+                  <p className="text-lg font-bold text-blue-400">
+                    {formatCurrency(data?.training_budget || 0)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
                   <p className="text-slate-300 text-xs mb-1">Available Cash</p>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-bold text-blue-300">
                     {formatCurrency(cashBalance.originalCashBalance || 0)}
                   </p>
                 </div>
+
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Remaining Cash</p>
+                  <p className="text-slate-300 text-xs mb-1">Cash After HR</p>
                   <p
                     className={`text-lg font-bold ${
                       (projectedCashBalance || 0) < 0
@@ -543,6 +582,40 @@ const HRDashboard = () => {
                   >
                     {formatCurrency(projectedCashBalance || 0)}
                   </p>
+                </div>
+              </div>
+
+              {/* Workforce Changes Summary */}
+              <div className="mt-4 pt-4 border-t border-slate-600">
+                <h5 className="text-sm font-bold text-slate-300 mb-2">
+                  Workforce Changes
+                </h5>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-blue-500/10 rounded-lg p-2">
+                    <p className="text-xs text-blue-300">Current Staff</p>
+                    <p className="text-lg font-bold text-white">
+                      {totalExistingHeadCount}
+                    </p>
+                  </div>
+                  <div className="bg-green-500/10 rounded-lg p-2">
+                    <p className="text-xs text-green-300">Net Change</p>
+                    <p
+                      className={`text-lg font-bold ${
+                        totalHires - totalFires >= 0
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {totalHires - totalFires >= 0 ? "+" : ""}
+                      {totalHires - totalFires}
+                    </p>
+                  </div>
+                  <div className="bg-purple-500/10 rounded-lg p-2">
+                    <p className="text-xs text-purple-300">Total Staff</p>
+                    <p className="text-lg font-bold text-white">
+                      {totalEmployeeCount}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

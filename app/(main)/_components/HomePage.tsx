@@ -175,6 +175,7 @@ interface HRMetricsType {
   employeeSatisfaction?: number;
   employee_satisfaction?: number;
   totalEmployees?: number;
+  total_employee_count?: number;
   roles?: HRRole[];
 }
 
@@ -212,6 +213,7 @@ interface HRDecisionType {
   totalBudget?: number;
   employee_satisfaction?: number;
   employeeSatisfaction?: number;
+  total_employee_count?: number;
   roles?: HRRole[];
 }
 
@@ -378,13 +380,55 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           {
             period: selectedPeriod,
             totalBudget: data.hr_decision.total_budget || 0,
+            total_budget: data.hr_decision.total_budget || 0,
             employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
+            employee_satisfaction: data.hr_decision.employee_satisfaction || 0,
             totalEmployees:
+              data.hr_decision.total_employee_count ||
               data.hr_decision.roles?.reduce(
                 (sum: number, role: HRRole) => sum + (role.head_count || 0),
                 0
-              ) || 0,
-            newHires: 0, // This would need to be calculated based on previous period
+              ) ||
+              0,
+            total_employee_count:
+              data.hr_decision.total_employee_count ||
+              data.hr_decision.roles?.reduce(
+                (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                0
+              ) ||
+              0,
+            // Calculate newHires as difference from previous period
+            newHires: (() => {
+              const currentTotal =
+                data.hr_decision.total_employee_count ||
+                data.hr_decision.roles?.reduce(
+                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                  0
+                ) ||
+                0;
+              const prevPeriodHR = data.hrMetrics?.find(
+                (h) => +h.period === +(selectedPeriod - 1)
+              );
+
+              type PrevHRData = {
+                totalEmployees?: number;
+                total_employee_count?: number;
+                employees?: number;
+                roles?: HRRole[];
+              };
+
+              const prevHRTyped = prevPeriodHR as PrevHRData;
+              const prevTotal =
+                prevHRTyped?.totalEmployees ??
+                prevHRTyped?.total_employee_count ??
+                prevHRTyped?.employees ??
+                prevHRTyped?.roles?.reduce(
+                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                  0
+                ) ??
+                0;
+              return Math.max(0, currentTotal - prevTotal);
+            })(),
             roles: data.hr_decision.roles || [],
           },
         ]
@@ -576,12 +620,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const revenueChange = getPercentChange(currentRevenue, prevRevenue);
 
   // Active Products change
-  const activeProducts = productPerformance.length
-    ? productPerformance.length
-    : data?.activeProductsCount || 0;
-  const activeProductsPrev = productPerformancePrev.length
-    ? productPerformancePrev.length
-    : data?.activeProductsCount || 0;
+  const activeProducts =
+    productPerformance.length || data?.activeProductsCount || 0;
+  const activeProductsPrev = productPerformancePrev.length || 0;
   const prodChange = getPercentChange(activeProducts, activeProductsPrev);
 
   // Change event: update selected period
@@ -605,20 +646,65 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const prevHr =
     data.hrMetrics?.find((h) => +h.period === +(selectedPeriod - 1)) ?? {};
 
+  // Handle multiple property name variations for HR data
+  type HRDataVariations = {
+    totalEmployees?: number;
+    total_employee_count?: number;
+    employees?: number;
+    newHires?: number;
+    new_hires?: number;
+    employeeSatisfaction?: number;
+    employee_satisfaction?: number;
+    satisfaction?: number;
+    totalBudget?: number;
+    total_budget?: number;
+    roles?: HRRole[];
+  };
+
+  const thisHrTyped = thisHr as HRDataVariations;
+  const prevHrTyped = prevHr as HRDataVariations;
+
   const totalEmployees =
-    (thisHr as { totalEmployees?: number }).totalEmployees ?? 0;
+    thisHrTyped?.totalEmployees ??
+    thisHrTyped?.total_employee_count ??
+    thisHrTyped?.employees ??
+    thisHrTyped?.roles?.reduce(
+      (sum: number, role: HRRole) => sum + (role.head_count || 0),
+      0
+    ) ??
+    0;
+
   const prevTotalEmployees =
-    (prevHr as { totalEmployees?: number }).totalEmployees ?? 0;
-  const newHires = (thisHr as { newHires?: number }).newHires ?? 0;
-  const prevNewHires = (prevHr as { newHires?: number }).newHires ?? 0;
+    prevHrTyped?.totalEmployees ??
+    prevHrTyped?.total_employee_count ??
+    prevHrTyped?.employees ??
+    prevHrTyped?.roles?.reduce(
+      (sum: number, role: HRRole) => sum + (role.head_count || 0),
+      0
+    ) ??
+    0;
+
+  const newHires = thisHrTyped?.newHires ?? thisHrTyped?.new_hires ?? 0;
+
+  const prevNewHires = prevHrTyped?.newHires ?? prevHrTyped?.new_hires ?? 0;
+
   const avgSatisfaction =
-    (thisHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+    thisHrTyped?.employeeSatisfaction ??
+    thisHrTyped?.employee_satisfaction ??
+    thisHrTyped?.satisfaction ??
+    0;
+
   const prevSatisfaction =
-    (prevHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+    prevHrTyped?.employeeSatisfaction ??
+    prevHrTyped?.employee_satisfaction ??
+    prevHrTyped?.satisfaction ??
+    0;
+
   const hrBudget =
-    (thisHr as { totalBudget?: number }).totalBudget ?? hr_budget;
+    thisHrTyped?.totalBudget ?? thisHrTyped?.total_budget ?? hr_budget;
+
   const hrBudgetPrev =
-    (prevHr as { totalBudget?: number }).totalBudget ?? hr_budget;
+    prevHrTyped?.totalBudget ?? prevHrTyped?.total_budget ?? hr_budget;
 
   // Calculate dynamic trends
   const totalEmployeesChange = getPercentChange(
@@ -924,14 +1010,14 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             <div className="space-y-4">
               <QuickStat
                 label="Active Projects"
-                value={rd_decision?.pip?.toString() || "0"}
+                value={activeProducts || "0"}
                 icon={Lightbulb}
                 color="yellow"
                 trend={selectedPeriod > 1 ? 12 : undefined}
               />
               <QuickStat
                 label="Patents Filed"
-                value={rd_decision?.patented?.toString() || "0"}
+                value={rd_decision?.patented || "0"}
                 icon={Award}
                 color="purple"
                 trend={selectedPeriod > 1 ? 50 : undefined}

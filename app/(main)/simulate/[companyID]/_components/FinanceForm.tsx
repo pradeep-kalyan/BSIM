@@ -19,7 +19,7 @@ import {
   useCompanyForm,
   useFinanceForm,
 } from "@/app/context/FormContext";
-import DashboardCard from "./Card";
+import DashboardCard from "../../../homepage/Card";
 import { createFinanceSchema } from "@/app/(main)/simulate/[companyID]/_utils/validator";
 
 const FinanceForm = () => {

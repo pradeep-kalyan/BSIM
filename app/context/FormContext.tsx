@@ -76,6 +76,7 @@ export interface HRFormData {
   employee_satisfaction: number;
   recruitment_cost: number;
   firing_cost: number;
+  total_employee_count: number;
 }
 
 export interface RDFormData {
@@ -94,6 +95,11 @@ export interface SalesFormData {
   profit: number;
   market_share: number;
   customer_satisfaction: number;
+}
+
+// Per-product sales data structure
+export interface ProductSalesData {
+  [productId: string]: SalesFormData;
 }
 
 export interface ProductFormData {
@@ -154,7 +160,7 @@ export interface FormState {
   production: ProductionFormData;
   hr: HRFormData;
   rd: RDFormData;
-  sales: SalesFormData;
+  sales: ProductSalesData; // Changed to handle multiple products
   product: ProductFormData[];
   company: CompanyFormData;
   simulation: SimulationFormData;
@@ -181,7 +187,7 @@ export type FormAction =
   | { type: "UPDATE_PRODUCTION"; payload: Partial<ProductionFormData> }
   | { type: "UPDATE_HR"; payload: Partial<HRFormData> }
   | { type: "UPDATE_RD"; payload: Partial<RDFormData> }
-  | { type: "UPDATE_SALES"; payload: Partial<SalesFormData> }
+  | { type: "UPDATE_SALES"; payload: ProductSalesData } // Changed to ProductSalesData
   | { type: "UPDATE_PRODUCT"; payload: Partial<ProductFormData> } // For backward compatibility
   | { type: "ADD_PRODUCT"; payload: ProductFormData }
   | {
@@ -264,6 +270,7 @@ const getDefaultHRData = (): HRFormData => ({
   employee_satisfaction: 0,
   recruitment_cost: 0,
   firing_cost: 0,
+  total_employee_count: 0,
 });
 
 const getDefaultRDData = (): RDFormData => ({
@@ -275,14 +282,7 @@ const getDefaultRDData = (): RDFormData => ({
   quality_changes: 0,
 });
 
-const getDefaultSalesData = (): SalesFormData => ({
-  sales_volume: 0,
-  revenue: 0,
-  costs: 0,
-  profit: 0,
-  market_share: 0,
-  customer_satisfaction: 0,
-});
+const getDefaultSalesData = (): ProductSalesData => ({});
 
 export const getDefaultProductData = (): ProductFormData => ({
   name: "",
@@ -715,7 +715,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
           hr: getDefaultHRData(),
           rd: getDefaultRDData(),
           sales: getDefaultSalesData(),
-          product: getDefaultProductData(),
+          product: [],
           company: getDefaultCompanyData(),
           simulation: getDefaultSimulationData(),
         };
@@ -766,7 +766,7 @@ interface FormContextType {
   updateProduction: (data: Partial<ProductionFormData>) => void;
   updateHR: (data: Partial<HRFormData>) => void;
   updateRD: (data: Partial<RDFormData>) => void;
-  updateSales: (data: Partial<SalesFormData>) => void;
+  updateSales: (data: ProductSalesData) => void;
   updateProduct: (data: Partial<ProductFormData>) => void;
   // New product array management functions
   addProduct: (product: ProductFormData) => void;
@@ -873,7 +873,7 @@ export function FormProvider({
     dispatch({ type: "UPDATE_RD", payload: data });
   }, []);
 
-  const updateSales = useCallback((data: Partial<SalesFormData>) => {
+  const updateSales = useCallback((data: ProductSalesData) => {
     dispatch({ type: "UPDATE_SALES", payload: data });
   }, []);
 
@@ -985,12 +985,12 @@ export function FormProvider({
     return (
       state.cashBalance.originalCashBalance +
       state.cashBalance.financeBudgetImpact +
-      state.cashBalance.salesBudgetImpact -
+      state.cashBalance.salesBudgetImpact - // Sales revenue adds to cash balance
       state.cashBalance.hrBudgetImpact -
       state.cashBalance.marketingBudgetImpact -
       state.cashBalance.productionBudgetImpact -
       state.cashBalance.rdBudgetImpact -
-      -state.cashBalance.productBudgetImpact
+      state.cashBalance.productBudgetImpact
     );
   }, [
     state.cashBalance.originalCashBalance,
@@ -1051,35 +1051,36 @@ export function FormProvider({
     [state.errors]
   );
 
-  const validateField = useCallback((field: string, value: unknown):
-    | string
-    | undefined => {
-    // Basic validation logic matching Zod schema constraints
-    if (value === null || value === undefined || value === "") {
-      // Only validate required fields as required
-      const requiredFields = ["name", "category"]; // Add other required fields as needed
-      if (requiredFields.includes(field)) {
-        return `${field} is required`;
-      }
-    }
-
-    if (typeof value === "number") {
-      if (value < 0) {
-        return `${field} must be non-negative`;
+  const validateField = useCallback(
+    (field: string, value: unknown): string | undefined => {
+      // Basic validation logic matching Zod schema constraints
+      if (value === null || value === undefined || value === "") {
+        // Only validate required fields as required
+        const requiredFields = ["name", "category"]; // Add other required fields as needed
+        if (requiredFields.includes(field)) {
+          return `${field} is required`;
+        }
       }
 
-      // Special validation for defect_rate and automation_level based on Zod schema
-      if (field === "defect_rate" && value > 1) {
-        return `${field} cannot exceed 100%`;
+      if (typeof value === "number") {
+        if (value < 0) {
+          return `${field} must be non-negative`;
+        }
+
+        // Special validation for defect_rate and automation_level based on Zod schema
+        if (field === "defect_rate" && value > 1) {
+          return `${field} cannot exceed 100%`;
+        }
+
+        if (field === "automation_level" && value > 10) {
+          return `${field} cannot exceed 10`;
+        }
       }
 
-      if (field === "automation_level" && value > 10) {
-        return `${field} cannot exceed 10`;
-      }
-    }
-
-    return undefined;
-  }, []);
+      return undefined;
+    },
+    []
+  );
 
   // Comprehensive submission methods
   const setFormCompleted = useCallback(
@@ -1128,7 +1129,7 @@ export function FormProvider({
 
   const submitAllForms = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (_companyId: string, _period: number): Promise<boolean> => {
+    async (companyId: string, _period: number): Promise<boolean> => {
       try {
         setSubmitting(true);
 
@@ -1138,15 +1139,98 @@ export function FormProvider({
           return false;
         }
 
-        return true;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (_error) {
+        // Calculate aggregated sales metrics directly
+        let totalSalesRevenue = 0;
+        let totalSalesCosts = 0;
+        let totalSalesProfit = 0;
+        let totalSalesVolume = 0;
+        let averageMarketShare = 0;
+        let averageCustomerSatisfaction = 0;
+        let productCount = 0;
+
+        Object.values(state.sales).forEach((productSales) => {
+          totalSalesRevenue += productSales.revenue || 0;
+          totalSalesCosts += productSales.costs || 0;
+          totalSalesProfit += productSales.profit || 0;
+          totalSalesVolume += productSales.sales_volume || 0;
+
+          if (productSales.market_share && productSales.market_share > 0) {
+            averageMarketShare += productSales.market_share;
+            productCount++;
+          }
+
+          if (
+            productSales.customer_satisfaction &&
+            productSales.customer_satisfaction > 0
+          ) {
+            averageCustomerSatisfaction += productSales.customer_satisfaction;
+          }
+        });
+
+        // Calculate averages
+        averageMarketShare =
+          productCount > 0 ? averageMarketShare / productCount : 0;
+        averageCustomerSatisfaction =
+          productCount > 0 ? averageCustomerSatisfaction / productCount : 0;
+
+        const comprehensiveData = {
+          hr: state.hr,
+          marketing: state.marketing,
+          rd: state.rd,
+          production: state.production,
+          finance: state.finance,
+          product: state.product.length > 0 ? state.product[0] : undefined,
+          sales: state.sales, // Pass the full per-product sales data
+          projected_balance: getProjectedCashBalance(),
+          budget_impacts: {
+            hr: state.cashBalance.hrBudgetImpact,
+            finance: state.cashBalance.financeBudgetImpact,
+            marketing: state.cashBalance.marketingBudgetImpact,
+            production: state.cashBalance.productionBudgetImpact,
+            rd: state.cashBalance.rdBudgetImpact,
+            sales: state.cashBalance.salesBudgetImpact,
+            product: state.cashBalance.productBudgetImpact,
+          },
+          // Add aggregated sales totals for easy access
+          salesTotals: {
+            totalRevenue: totalSalesRevenue,
+            totalCosts: totalSalesCosts,
+            totalProfit: totalSalesProfit,
+            totalVolume: totalSalesVolume,
+            averageMarketShare: averageMarketShare,
+            averageCustomerSatisfaction: averageCustomerSatisfaction,
+            productCount: productCount,
+          },
+        };
+
+        // Call the comprehensive form submission action
+        const { comprehensiveFormSubmission } = await import(
+          "@/app/_actions/comprehensiveFormSubmission"
+        );
+        const result = await comprehensiveFormSubmission(
+          companyId,
+          comprehensiveData
+        );
+
+        if (result.success) {
+          // Clear form state after successful submission
+          dispatch({ type: "RESET_ALL" });
+          return true;
+        } else {
+          setErrors({ submission: result.message || "Submission failed" });
+          return false;
+        }
+      } catch (error) {
+        setErrors({
+          submission:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        });
         return false;
       } finally {
         setSubmitting(false);
       }
     },
-    [validateAllForms, setErrors, setSubmitting]
+    [state, validateAllForms, setErrors, setSubmitting, getProjectedCashBalance]
   );
 
   const getCompletionStatus = useCallback(() => {
@@ -1434,31 +1518,64 @@ export function useHRForm() {
   const addExistingRole = useCallback(
     (role: ExistingRole) => {
       contextAddExistingRole(role);
-      // Auto-calculate budget after adding role
+      // Auto-calculate budget and total employee count after adding role
       setTimeout(() => {
         const budget = calculateBudgetFromRoles();
+        const existingEmployees = [...state.hr.existingRoles, role].reduce(
+          (total, r) => {
+            return (
+              total + Math.max(0, r.current_head_count + r.hires - r.fires)
+            );
+          },
+          0
+        );
+        const newEmployees = state.hr.newRoles.reduce(
+          (total, r) => total + r.hires,
+          0
+        );
+        const total_employee_count = existingEmployees + newEmployees;
+
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
           recruitment_cost: budget.recruitment_cost,
           firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
+          total_employee_count,
         });
       }, 0);
     },
-    [contextAddExistingRole, calculateBudgetFromRoles, updateDataWithCashImpact]
+    [
+      contextAddExistingRole,
+      calculateBudgetFromRoles,
+      updateDataWithCashImpact,
+      state.hr,
+    ]
   );
 
   const updateExistingRole = useCallback(
     (index: number, role: Partial<ExistingRole>) => {
       contextUpdateExistingRole(index, role);
-      // Auto-calculate budget after updating role
+      // Auto-calculate budget and total employee count after updating role
       setTimeout(() => {
         const budget = calculateBudgetFromRoles();
+        const updatedRoles = state.hr.existingRoles.map((r, i) =>
+          i === index ? { ...r, ...role } : r
+        );
+        const existingEmployees = updatedRoles.reduce((total, r) => {
+          return total + Math.max(0, r.current_head_count + r.hires - r.fires);
+        }, 0);
+        const newEmployees = state.hr.newRoles.reduce(
+          (total, r) => total + r.hires,
+          0
+        );
+        const total_employee_count = existingEmployees + newEmployees;
+
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
           recruitment_cost: budget.recruitment_cost,
           firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
+          total_employee_count,
         });
       }, 0);
     },
@@ -1466,20 +1583,34 @@ export function useHRForm() {
       contextUpdateExistingRole,
       calculateBudgetFromRoles,
       updateDataWithCashImpact,
+      state.hr,
     ]
   );
 
   const removeExistingRole = useCallback(
     (index: number) => {
       contextRemoveExistingRole(index);
-      // Auto-calculate budget after removing role
+      // Auto-calculate budget and total employee count after removing role
       setTimeout(() => {
         const budget = calculateBudgetFromRoles();
+        const remainingRoles = state.hr.existingRoles.filter(
+          (_, i) => i !== index
+        );
+        const existingEmployees = remainingRoles.reduce((total, r) => {
+          return total + Math.max(0, r.current_head_count + r.hires - r.fires);
+        }, 0);
+        const newEmployees = state.hr.newRoles.reduce(
+          (total, r) => total + r.hires,
+          0
+        );
+        const total_employee_count = existingEmployees + newEmployees;
+
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
           recruitment_cost: budget.recruitment_cost,
           firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
+          total_employee_count,
         });
       }, 0);
     },
@@ -1487,68 +1618,121 @@ export function useHRForm() {
       contextRemoveExistingRole,
       calculateBudgetFromRoles,
       updateDataWithCashImpact,
+      state.hr,
     ]
   );
 
   const addNewRole = useCallback(
     (role: NewRole) => {
       contextAddNewRole(role);
-      // Auto-calculate budget after adding role
+      // Auto-calculate budget and total employee count after adding role
       setTimeout(() => {
         const budget = calculateBudgetFromRoles();
+        const existingEmployees = state.hr.existingRoles.reduce((total, r) => {
+          return total + Math.max(0, r.current_head_count + r.hires - r.fires);
+        }, 0);
+        const newEmployees = [...state.hr.newRoles, role].reduce(
+          (total, r) => total + r.hires,
+          0
+        );
+        const total_employee_count = existingEmployees + newEmployees;
+
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
           recruitment_cost: budget.recruitment_cost,
           firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
+          total_employee_count,
         });
       }, 0);
     },
-    [contextAddNewRole, calculateBudgetFromRoles, updateDataWithCashImpact]
+    [
+      contextAddNewRole,
+      calculateBudgetFromRoles,
+      updateDataWithCashImpact,
+      state.hr,
+    ]
   );
 
   const updateNewRole = useCallback(
     (index: number, role: Partial<NewRole>) => {
       contextUpdateNewRole(index, role);
-      // Auto-calculate budget after updating role
+      // Auto-calculate budget and total employee count after updating role
       setTimeout(() => {
         const budget = calculateBudgetFromRoles();
+        const existingEmployees = state.hr.existingRoles.reduce((total, r) => {
+          return total + Math.max(0, r.current_head_count + r.hires - r.fires);
+        }, 0);
+        const updatedNewRoles = state.hr.newRoles.map((r, i) =>
+          i === index ? { ...r, ...role } : r
+        );
+        const newEmployees = updatedNewRoles.reduce(
+          (total, r) => total + r.hires,
+          0
+        );
+        const total_employee_count = existingEmployees + newEmployees;
+
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
           recruitment_cost: budget.recruitment_cost,
           firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
+          total_employee_count,
         });
       }, 0);
     },
-    [contextUpdateNewRole, calculateBudgetFromRoles, updateDataWithCashImpact]
+    [
+      contextUpdateNewRole,
+      calculateBudgetFromRoles,
+      updateDataWithCashImpact,
+      state.hr,
+    ]
   );
 
   const removeNewRole = useCallback(
     (index: number) => {
       contextRemoveNewRole(index);
-      // Auto-calculate budget after removing role
+      // Auto-calculate budget and total employee count after removing role
       setTimeout(() => {
         const budget = calculateBudgetFromRoles();
+        const existingEmployees = state.hr.existingRoles.reduce((total, r) => {
+          return total + Math.max(0, r.current_head_count + r.hires - r.fires);
+        }, 0);
+        const remainingNewRoles = state.hr.newRoles.filter(
+          (_, i) => i !== index
+        );
+        const newEmployees = remainingNewRoles.reduce(
+          (total, r) => total + r.hires,
+          0
+        );
+        const total_employee_count = existingEmployees + newEmployees;
+
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
           recruitment_cost: budget.recruitment_cost,
           firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
+          total_employee_count,
         });
       }, 0);
     },
-    [contextRemoveNewRole, calculateBudgetFromRoles, updateDataWithCashImpact]
+    [
+      contextRemoveNewRole,
+      calculateBudgetFromRoles,
+      updateDataWithCashImpact,
+      state.hr,
+    ]
   );
 
   const clearAllRoles = useCallback(() => {
     contextClearAllRoles();
-    // Reset budget when clearing all roles
+    // Reset budget and total employee count when clearing all roles
     updateDataWithCashImpact({
       salary_budget: 0,
       recruitment_cost: 0,
       firing_cost: 0,
       total_budget: state.hr.training_budget, // Keep training budget
+      total_employee_count: 0, // No employees after clearing all roles
     });
   }, [
     contextClearAllRoles,
@@ -1646,12 +1830,26 @@ export function useHRRoleContext() {
     const total_budget =
       salary_budget + state.hr.training_budget + recruitment_cost + firing_cost;
 
+    // Calculate total employee count
+    const existingEmployees = state.hr.existingRoles.reduce((total, role) => {
+      return (
+        total + Math.max(0, role.current_head_count + role.hires - role.fires)
+      );
+    }, 0);
+
+    const newEmployees = state.hr.newRoles.reduce((total, role) => {
+      return total + role.hires;
+    }, 0);
+
+    const total_employee_count = existingEmployees + newEmployees;
+
     // Update HR data with calculated values
     updateHR({
       salary_budget,
       recruitment_cost,
       firing_cost,
       total_budget,
+      total_employee_count,
     });
 
     // Update budget impact
@@ -1747,13 +1945,8 @@ export function useHRInitialization() {
 }
 
 export function useRDForm() {
-  const {
-    state,
-    updateRD,
-    setError,
-    getError,
-    updateRDBudgetImpact,
-  } = useForm();
+  const { state, updateRD, setError, getError, updateRDBudgetImpact } =
+    useForm();
 
   const updateDataWithCashImpact = useCallback(
     (data: Partial<RDFormData>) => {
@@ -1779,33 +1972,76 @@ export function useRDForm() {
 }
 
 export function useSalesForm() {
-  const {
-    state,
-    updateSales,
-    setError,
-    getError,
-    updateSalesBudgetImpact,
-  } = useForm();
+  const { state, updateSales, setError, getError, updateSalesBudgetImpact } =
+    useForm();
 
   const updateDataWithCashImpact = useCallback(
-    (data: Partial<SalesFormData>) => {
+    (data: ProductSalesData) => {
       // Calculate budget impact from the new data being passed in
-      // For sales, costs typically impact cash balance negatively
-      const costs = data.costs ?? state.sales.costs ?? 0;
-
-      const budgetImpact = costs; // costs reduce cash balance
+      // For sales, revenue should increase cash balance
+      let totalRevenue = 0;
+      Object.values(data).forEach((productSales) => {
+        totalRevenue += productSales.revenue || 0;
+      });
 
       updateSales(data);
-      updateSalesBudgetImpact(budgetImpact);
+      updateSalesBudgetImpact(totalRevenue);
     },
-    [updateSales, updateSalesBudgetImpact, state.sales]
+    [updateSales, updateSalesBudgetImpact]
   );
+
+  // Helper function to get total aggregated sales metrics
+  const getTotalSalesMetrics = useCallback(() => {
+    let totalRevenue = 0;
+    let totalCosts = 0;
+    let totalProfit = 0;
+    let totalVolume = 0;
+    let averageMarketShare = 0;
+    let averageCustomerSatisfaction = 0;
+    let productCount = 0;
+
+    Object.values(state.sales).forEach((productSales) => {
+      totalRevenue += productSales.revenue || 0;
+      totalCosts += productSales.costs || 0;
+      totalProfit += productSales.profit || 0;
+      totalVolume += productSales.sales_volume || 0;
+
+      if (productSales.market_share && productSales.market_share > 0) {
+        averageMarketShare += productSales.market_share;
+        productCount++;
+      }
+
+      if (
+        productSales.customer_satisfaction &&
+        productSales.customer_satisfaction > 0
+      ) {
+        averageCustomerSatisfaction += productSales.customer_satisfaction;
+      }
+    });
+
+    // Calculate averages
+    averageMarketShare =
+      productCount > 0 ? averageMarketShare / productCount : 0;
+    averageCustomerSatisfaction =
+      productCount > 0 ? averageCustomerSatisfaction / productCount : 0;
+
+    return {
+      totalRevenue,
+      totalCosts,
+      totalProfit,
+      totalVolume,
+      averageMarketShare,
+      averageCustomerSatisfaction,
+      productCount,
+    };
+  }, [state.sales]);
 
   return {
     data: state.sales,
     updateData: updateDataWithCashImpact,
     setError,
     getError,
+    getTotalSalesMetrics,
   };
 }
 
@@ -2239,13 +2475,15 @@ export function useHRRoleManagement() {
   // Auto-calculate and update budget fields based on roles
   const autoCalculateBudget = useCallback(() => {
     const budget = calculateBudgetFromRoles();
+    const totalEmployees = getTotalEmployees();
     updateHRData({
       salary_budget: budget.salary_budget,
       recruitment_cost: budget.recruitment_cost,
       firing_cost: budget.firing_cost,
       total_budget: budget.total_budget,
+      total_employee_count: totalEmployees,
     });
-  }, [calculateBudgetFromRoles, updateHRData]);
+  }, [calculateBudgetFromRoles, getTotalEmployees, updateHRData]);
 
   // Get roles summary for submission
   const getRolesSummary = useCallback(() => {
@@ -2298,8 +2536,9 @@ export function useHRRoleManagement() {
       }
       if (role.fires > role.current_head_count) {
         errors.push(
-          `Existing role ${index +
-            1}: Cannot fire more employees than current count`
+          `Existing role ${
+            index + 1
+          }: Cannot fire more employees than current count`
         );
       }
       if (role.current_head_count + role.hires - role.fires < 0) {

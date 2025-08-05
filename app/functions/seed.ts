@@ -623,7 +623,174 @@ async function main() {
     }
   }
 
-  await Promise.all(productPerformances);
+  // Add 5 extra periods for "Digital Dynamics" company
+  for (let period = 4; period <= 8; period++) {
+    // Finance Records
+    const revenue = 900000 + Math.random() * 200000; // Growth in revenue
+    const costs = revenue * (0.55 + Math.random() * 0.1); // Controlled costs
+    const profit = revenue - costs;
+
+    financeRecords.push(
+      prisma.finance.create({
+        data: {
+          company_id: companies[1].id, // Digital Dynamics
+          user_id: students[1].id,
+          period: period,
+          total_revenue: revenue,
+          net_profit: profit,
+          cash_balance: companies[1].cash_balance + profit * period,
+          operating_costs: costs,
+          roi: (profit / costs) * 100,
+          burn_rate: costs / 12,
+          finalised: period < 8,
+          investment_amount: period === 5 ? 300000 : 0,
+          loan_amount: period === 6 ? 150000 : 0,
+          repay_loan: period === 7 ? 50000 : 0,
+          dividend_payout: period === 8 ? profit * 0.15 : 0,
+          equity_issue: 0,
+          processed: period < 8,
+          processed_at: period < 8 ? new Date() : null,
+        },
+      })
+    );
+
+    // HR Decisions
+    hrDecisions.push(
+      prisma.hr_decision
+        .create({
+          data: {
+            company_id: companies[1].id, // Digital Dynamics
+            period: period,
+            is_submitted: period < 8,
+            salary_budget: 130000 + period * 15000,
+            training_budget: 20000 + period * 3000,
+            total_budget: 150000 + period * 18000,
+            employee_satisfaction: 8.0 + Math.random() * 1.0,
+            recruitment_cost: 30000,
+            firing_cost: period === 6 ? 15000 : 0,
+          },
+        })
+        .then((hrDecision) => {
+          return Promise.all([
+            prisma.hr_role_decision.create({
+              data: {
+                hr_decision_id: hrDecision.id,
+                role_name: "Software Engineer",
+                salary_per_head: 98000,
+                head_count: 10 + period,
+              },
+            }),
+            prisma.hr_role_decision.create({
+              data: {
+                hr_decision_id: hrDecision.id,
+                role_name: "Product Manager",
+                salary_per_head: 115000,
+                head_count: 3 + Math.floor(period / 2),
+              },
+            }),
+            prisma.hr_role_decision.create({
+              data: {
+                hr_decision_id: hrDecision.id,
+                role_name: "Marketing Specialist",
+                salary_per_head: 75000,
+                head_count: 4 + period,
+              },
+            }),
+          ]);
+        })
+    );
+
+    // R&D Decisions
+    rdDecisions.push(
+      prisma.rd.create({
+        data: {
+          company_id: companies[1].id, // Digital Dynamics
+          period: period,
+          budget: 200000 + period * 25000,
+          pip: 4 + Math.floor(Math.random() * 3),
+          time_to_market: 5 + Math.floor(Math.random() * 5),
+          total_development: 3 + period,
+          patented: Math.floor(Math.random() * 2),
+          quality_changes: Math.floor(Math.random() * 3) - 1,
+          finalised: period < 8,
+        },
+      })
+    );
+
+    // Production Decisions
+    const unitsProduced = 1800 + Math.floor(Math.random() * 1200);
+    const costPerUnit = 320 + Math.floor(Math.random() * 150);
+
+    productionDecisions.push(
+      prisma.production.create({
+        data: {
+          company_id: companies[1].id, // Digital Dynamics
+          period: period,
+          units_to_produce: unitsProduced,
+          cost_per_unit: costPerUnit,
+          production_capacity: 2700 + period * 250,
+          storage_capacity: 3500,
+          inventory_value: unitsProduced * costPerUnit,
+          defect_rate: Math.floor(Math.random() * 4),
+          finalised: period < 8,
+        },
+      })
+    );
+
+    // Marketing Decisions
+    const totalBudget = 120000 + period * 25000;
+    const onlineBudget = Math.floor(
+      totalBudget * (0.65 + Math.random() * 0.25)
+    );
+    const offlineBudget = totalBudget - onlineBudget;
+
+    marketingDecisions.push(
+      prisma.marketing.create({
+        data: {
+          company_id: companies[1].id, // Digital Dynamics
+          period: period,
+          budget: totalBudget,
+          offline: offlineBudget,
+          online: onlineBudget,
+          finalised: period < 8,
+        },
+      })
+    );
+
+    // Product Performance
+    for (const product of products) {
+      if (
+        product.company_id === companies[1].id &&
+        product.launch_period &&
+        product.launch_period <= period
+      ) {
+        const salesVolume = 1000 + Math.floor(Math.random() * 800);
+        const revenue = salesVolume * product.selling_price;
+        const costs = salesVolume * product.production_cost;
+        const profit = revenue - costs;
+
+        productPerformances.push(
+          prisma.product_performance.create({
+            data: {
+              product_id: product.id,
+              period: period,
+              data: JSON.stringify({
+                advertising_effectiveness: Math.random() * 10,
+                competitor_activity: Math.random() * 5,
+                market_trends: Math.random() * 8,
+              }),
+              sales_volume: salesVolume,
+              revenue: revenue,
+              costs: costs,
+              profit: profit,
+              market_share: 6 + Math.random() * 14,
+              customer_satisfaction: 7.5 + Math.random() * 1.5,
+            },
+          })
+        );
+      }
+    }
+  }
 
   console.log("✅ Database seeding completed successfully!");
   console.log(`
