@@ -56,7 +56,26 @@ export async function getSimulations() {
   });
 }
 
-
+export async function getSimulationscompare() {
+  try {
+    const simulations = await prisma.simulation.findMany({
+      orderBy: { created_at: "desc" },
+      include: {
+        companies: true, // ✅ Include full company objects with name
+        simulation_access: {
+          include: {
+            user: true,
+          },
+        },
+        creator: true, // Optional if used in your frontend
+      },
+    });
+    return simulations;
+  } catch (error) {
+    console.error("Error fetching simulations:", error);
+    throw new Error("Failed to fetch simulations");
+  }
+}
 
 export default async function createSim(formData: FormData) {
   const name = formData.get("name")?.toString().trim();

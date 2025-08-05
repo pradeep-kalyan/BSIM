@@ -156,7 +156,7 @@ const getPercentChange = (current: number, prev: number) => {
 };
 
 const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
-  const { setComId, setPeriod } = useSimulation();
+  const { setComId, setPeriod, simId } = useSimulation();
   const router = useRouter();
 
   // Helper function to create current period data from company object
@@ -264,7 +264,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               (sum: Number, role: any) => sum + (role.head_count || 0),
               0
             ) || 0,
-          newHires: 0, 
+          newHires: 0,
           roles: data.hr_decision.roles || [],
         },
       ]
@@ -472,6 +472,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     router.push(`/simulate/${comID}`);
   }, [router, comID]);
 
+  const handleViewCompany = useCallback(() => {
+    router.push(`/simulations/${simId}`);
+  }, [router, simId]);
+
   const handleBarMouseOver = useCallback(() => {
     setHoveringBar(true);
   }, []);
@@ -535,11 +539,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
+            {/* Left side: company info */}
             <div className="animate-slide-in-left">
               <h1 className="text-4xl font-bold mb-2">{data?.company?.name}</h1>
-              <p className="text-blue-100 text-lg">
-                Business Simulation Dashboard
-              </p>
+              <p className="text-blue-100 text-lg">Business Simulation Dashboard</p>
               <div className="flex items-center mt-3 space-x-4">
                 <div className="flex items-center space-x-2">
                   <Calendar size={16} />
@@ -551,27 +554,33 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   >
                     {periods.map((p, index) => (
                       <option key={`period-${p}-${index}`} value={p}>
-                        Period {p}{" "}
-                        {p === data?.company?.current_period ? "(Current)" : ""}
+                        Period {p} {p === data?.company?.current_period ? "(Current)" : ""}
                       </option>
                     ))}
                   </select>
-                  {isCurrentPeriod && (
-                    <span className="current-period-badge">LIVE</span>
-                  )}
+                  {isCurrentPeriod && <span className="current-period-badge">LIVE</span>}
                 </div>
               </div>
             </div>
-            <div className="flex justify-between items-center animate-fade-in-up">
+
+            {/* Right side: buttons */}
+            <div className="flex gap-3 items-center animate-fade-in-up">
+              <button
+                onClick={handleViewCompany}
+                className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+              >
+                Back to Companies
+              </button>
               <div className="flex gap-3">
                 <button
                   onClick={handleSimulate}
                   disabled={isSimulating}
-                  className="bg-purple-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   {isSimulating ? "Simulating..." : "Simulate"}
                   <Play size={20} />
                 </button>
+
                 <LogoutBtn />
               </div>
             </div>

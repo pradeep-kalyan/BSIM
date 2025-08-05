@@ -14,7 +14,7 @@ export const prisma =
     // Add logging for debugging
     log:
       process.env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
+        ? ["error", "warn"]
         : ["error"],
     // Increase error format verbosity
     errorFormat: "pretty",

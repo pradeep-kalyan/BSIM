@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState ,useRef} from "react";
 import {
   getCompaniesBySimulation,
   deleteCompany,
 } from "@/app/_actions/company";
 import { getCurrentUser } from "@/app/functions/jwt";
-import CreateCompany from "@/app/(company)/simulations/_components/CreateCompany";
+import CreateCompanyForm from "../_components/CreateCompanyForm";
 import CompanyList from "../_components/ComCard";
 import {
   CheckCircle,
@@ -17,59 +17,66 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import EditCompanyForm from "../_components/EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
-import { company } from "@prisma/client";
-
+import { useRouter } from "next/navigation";
 interface Props {
   simulationID: string;
   simulationName: string;
 }
 
-interface ExtendedCompany extends company {
-  canAccess?: boolean;
-  canEdit?: boolean;
-  user_id: string;
-}
-
 const CompanyPage = ({ simulationID, simulationName }: Props) => {
-  const [ownedCompanies, setOwnedCompanies] = useState<ExtendedCompany[]>([]);
-  const [accessibleCompanies, setAccessibleCompanies] = useState<ExtendedCompany[]>([]);
+  const [ownedCompanies, setOwnedCompanies] = useState<any[]>([]);
+  const [accessibleCompanies, setAccessibleCompanies] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [success, setSuccess] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
-  const [editCompany, setEditCompany] = useState<ExtendedCompany | null>(null);
+  const [editCompany, setEditCompany] = useState<any | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [searchQuery] = useState("");
-  const [sortBy] = useState<"name" | "created_at">("name");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "created_at">("name");
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
   );
-  // Removed unused setSimId state
+  const [hasFetched, setHasFetched] = useState(false);
+  const router = useRouter();
 
-  const fetchCompanies = React.useCallback(async () => {
+  const fetchCompanies = async () => {
     const user = await getCurrentUser();
     if (!user) return;
 
     const companies = await getCompaniesBySimulation(simulationID);
     setCurrentUserId(user.id);
 
-    setOwnedCompanies(companies.filter((c: ExtendedCompany) => c.user_id === user.id));
-    setAccessibleCompanies(companies.filter((c: ExtendedCompany) => c.user_id !== user.id));
+    setOwnedCompanies(companies.filter((c: any) => c.user_id === user.id));
+    setAccessibleCompanies(companies.filter((c: any) => c.user_id !== user.id));
     setInitialLoad(false);
-  }, [simulationID]);
+  };
 
   const { setSimId } = useSimulation();
 
-  useEffect(() => {
+const didInit = useRef(false);
+
+useEffect(() => {
+  if (!simulationID || didInit.current) return;
+
+  didInit.current = true;
+console.log("rendering CompanyPage")
+  if (setSimId) {
     setSimId(simulationID);
-    fetchCompanies();
-  }, [simulationID, setSimId, fetchCompanies]);
+  }
+
+  fetchCompanies();
+}, [simulationID]);
+
+
 
   const handleCreated = async () => {
     setInitialLoad(true);
     await fetchCompanies();
     setShowForm(false);
     setSuccess(true);
+    setHasFetched(true);
+    console.log("🔄 useEffect fired");
     setTimeout(() => setSuccess(false), 3000);
   };
 
@@ -82,9 +89,9 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     }
   };
 
-  const handleEdit = (company: ExtendedCompany) => setEditCompany(company);
+  const handleEdit = (company: any) => setEditCompany(company);
 
-  const filterAndSort = (list: ExtendedCompany[]) =>
+  const filterAndSort = (list: any[]) =>
     list
       .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
       .sort((a, b) =>
@@ -115,12 +122,12 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   return (
     <div className="min-h-screen px-3 py-5 bg-slate-900 text-white relative">
       {/* Tab Filters */}
-      <div className="mb-3 flex justify-between items-center">
+      <div className="mb-3 mt-9 flex justify-between items-center">
         <div className="flex gap-2">
           {["owned", "shared", "all"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
+              onClick={() => setActiveTab(tab as any)}
               className={`px-4 py-2 rounded-md ${
                 activeTab === tab
                   ? "bg-blue-600"
@@ -151,27 +158,26 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
         Showing {visibleCompanies.length} of {allCompanies.length} total
         companies.
       </div>
-
-      {/* Create/View Toggle Button */}
       {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowForm((prev) => !prev)}
-          className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md z-10"
-        >
-          {showForm ? (
-            <>
-              <LayoutDashboard className="w-5 h-5" />
-              View Companies
-            </>
-          ) : (
-            <>
-              <PlusCircle className="w-5 h-5" />
-              Create Company
-            </>
-          )}
-        </motion.button>
+        <div className="absolute top-4 right-4 flex gap-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowForm((prev) => !prev)}
+            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+          >
+            {showForm ? "View Companies" : "Create Company"}
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push(`/simulations/${simulationID}/Compare`)}
+            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+          >
+            Compare Companies
+          </motion.button>
+        </div>
       )}
 
       {/* Main Section */}
@@ -184,7 +190,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             exit={{ opacity: 0, scale: 0.9 }}
             className="flex justify-center"
           >
-            <CreateCompany
+            <CreateCompanyForm
               simulationID={simulationID}
               onCreated={handleCreated}
             />
@@ -224,7 +230,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             </p>
 
             {activeTab === "owned" && (
-              <CreateCompany
+              <CreateCompanyForm
                 simulationID={simulationID}
                 onCreated={handleCreated}
               />
