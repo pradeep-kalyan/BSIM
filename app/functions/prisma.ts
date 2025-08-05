@@ -11,16 +11,11 @@ export const prisma =
         url: process.env.DATABASE_URL,
       },
     },
-    // Add logging for debugging
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
-        : ["error"],
     // Increase error format verbosity
     errorFormat: "pretty",
   });
 
-// Optimize Prisma for high-concurrency scenarios
+// Configure connection pool settings for better performance
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
