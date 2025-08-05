@@ -18,7 +18,7 @@ import {
   Trophy,
   PieChart,
 } from "lucide-react";
-import CheckboxDropdown from "@/ui/CheckboxDropDown";
+import Checkboxdropdown from "@/ui/checkboxdropdown";
 import { getCompanyComparisonData } from "@/app/_actions/CompanyData";
 
 // Types for better type safety
@@ -291,7 +291,7 @@ const ComparePage: React.FC = () => {
 
         {/* Company Selection */}
         <div className="flex items-center gap-4 mb-10 flex-wrap">
-          <CheckboxDropdown
+          <Checkboxdropdown
             options={allCompanies.map((c) => c.name)}
             selected={allCompanies
               .filter((c) => selectedCompanyIds.includes(c.id))
