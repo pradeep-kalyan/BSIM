@@ -53,7 +53,7 @@ model company {
   description       String?
   logo_url          String?
   cash_balance      Float    @default(0)
-  current_period    Int      @default(0)
+  current_period    Int      @default(1)
   data              String   @default("{}")
   total_assets      Float    @default(0)
   total_liabilities Float    @default(0)
