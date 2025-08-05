@@ -9,6 +9,7 @@ export interface JWTPayload {
   id: string;
   name: string;
   role: string;
+  email: string; // Added email to the payload
   iat?: number; // issued at timestamp (added by JWT)
   exp?: number; // expiry timestamp (added by JWT)
 }
@@ -18,10 +19,9 @@ export interface JWTPayload {
  * @returns The encoded secret key as Uint8Array
  * @throws Error if JWT_SECRET is not set
  */
-export const getJwtSecret = async (): Uint8Array => {
+export const getJwtSecret = async (): Promise<Uint8Array> => {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.trim() === "") {
-    console.error("JWT_SECRET environment variable is not set");
     throw new Error("JWT secret is required for authentication");
   }
   return new TextEncoder().encode(secret);
@@ -36,8 +36,8 @@ export const generateToken = async (
   payload: Omit<JWTPayload, "iat" | "exp">
 ): Promise<string> => {
   try {
-    // Set token expiry to 30 minutes
-    const expirationTime = Math.floor(Date.now() / 1000) + 30 * 60;
+    // Set token expiry to 6 hours (6 * 60 * 60 seconds)
+    const expirationTime = Math.floor(Date.now() / 1000) + 6 * 60 * 60;
 
     // Get the JWT secret first, then use it to sign
     const secret = await getJwtSecret();
@@ -74,7 +74,7 @@ export const verifyToken = async (
 
     const secret = await getJwtSecret();
     const { payload } = await jwtVerify(token, secret);
-    return payload as JWTPayload;
+    return payload as unknown as JWTPayload;
   } catch (error) {
     console.error("Token verification failed:", error);
     return null;
@@ -86,9 +86,9 @@ export const verifyToken = async (
  * @param token - The JWT token to store in the cookie
  */
 export const setCookie = async (token: string): Promise<void> => {
-  // Set cookie expiry to match JWT expiry (30 minutes)
-  const thirtyMinutesInSeconds = 30 * 60;
-  const expiryDate = new Date(Date.now() + thirtyMinutesInSeconds * 1000);
+  // Set cookie expiry to match JWT expiry (6 hours)
+  const sixHoursInSeconds = 6 * 60 * 60;
+  const expiryDate = new Date(Date.now() + sixHoursInSeconds * 1000);
 
   const cookieStore = await cookies();
   cookieStore.set({
@@ -96,7 +96,7 @@ export const setCookie = async (token: string): Promise<void> => {
     value: token,
     httpOnly: true,
     path: "/",
-    sameSite: "lax",
+    sameSite: "strict", // Changed from 'lax' to 'strict' for better security
     expires: expiryDate,
     secure: process.env.NODE_ENV === "production", // Only use secure in production
   });
@@ -147,3 +147,95 @@ export const logoutHandler = async (): Promise<string> => {
     );
   }
 };
+
+export const getCurrentUser = async (): Promise<JWTPayload | null> => {
+  try {
+    const token = await getTokenFromCookie();
+
+    if (!token) return null;
+
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(process.env.JWT_SECRET!)
+    );
+
+    return {
+      id: payload.id as string,
+      name: payload.name as string,
+      email: payload.email as string,
+      role: payload.role as string,
+    };
+  } catch (error) {
+    console.error("Error verifying JWT:", error);
+    return null;
+  }
+};
+
+/**
+ * Checks if a token is close to expiry (within 1 hour)
+ * @param payload - The JWT payload containing expiry time
+ * @returns boolean indicating if token needs refresh
+ */
+export const isTokenNearExpiry = async (
+  payload: JWTPayload
+): Promise<boolean> => {
+  if (!payload.exp) return true;
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  const oneHourBeforeExpiry = payload.exp - 60 * 60; // 1 hour before expiry
+
+  return currentTime >= oneHourBeforeExpiry;
+};
+
+/**
+ * Refreshes the user session by generating a new token
+ * @param payload - Current user payload
+ * @returns Promise resolving to new token or null if refresh fails
+ */
+export const refreshSession = async (
+  payload: Omit<JWTPayload, "iat" | "exp">
+): Promise<string | null> => {
+  try {
+    const newToken = await generateToken(payload);
+    await setCookie(newToken);
+    return newToken;
+  } catch (error) {
+    console.error("Session refresh failed:", error);
+    return null;
+  }
+};
+
+/**
+ * Gets the authenticated user and refreshes session if needed
+ * @returns Promise resolving to the authenticated user payload if valid, null otherwise
+ */
+export const getAuthenticatedUserWithRefresh =
+  async (): Promise<JWTPayload | null> => {
+    const token = await getTokenFromCookie();
+    if (!token) {
+      return null;
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return null;
+    }
+
+    // Check if token needs refresh and refresh if necessary
+    if (await isTokenNearExpiry(payload)) {
+      console.log("Token near expiry, refreshing session...");
+      const refreshed = await refreshSession({
+        id: payload.id,
+        name: payload.name,
+        email: payload.email,
+        role: payload.role,
+      });
+
+      if (!refreshed) {
+        console.error("Failed to refresh session");
+        return null;
+      }
+    }
+
+    return payload;
+  };

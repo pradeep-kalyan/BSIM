@@ -1,34 +1,81 @@
+"use client";
+
 import React from "react";
-import { simulation } from "@prisma/client";
 import Link from "next/link";
+import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { ExtendedSimulation } from "../simulation";
+
 
 interface CardProps {
-  simulations: simulation[];
+  simulations: ExtendedSimulation[];
+  currentUserId?: string;
+  onEdit?: (sim: ExtendedSimulation) => void;
+  onDelete?: (id: string) => void;
 }
 
-const Card: React.FC<CardProps> = ({ simulations }) => {
+const Card: React.FC<CardProps> = ({
+  simulations,
+  currentUserId,
+  onEdit,
+  onDelete,
+}) => {
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this simulation?")) {
+      onDelete?.(id);
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Simulations</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {simulations.map((simulation) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {simulations.map((sim) => {
+        const isOwner = sim.created_by === currentUserId;
+
+        return (
           <div
-            key={simulation.id}
-            className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 transition duration-300 hover:scale-[1.02] hover:shadow-2xl"
-            aria-label={`Simulation: ${simulation.name}`}
+            key={sim.id}
+            className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 flex flex-col justify-between relative"
           >
-            <Link
-              href={`simulations/${simulation.id}`}
-              className="text-lg font-semibold text-white mb-2 truncate hover:text-blue-500"
-            >
-              {simulation.name}
-            </Link>
-            <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
-              {simulation.description}
-            </p>
+            {isOwner && (
+              <div className="absolute top-3 right-3 flex gap-2">
+                <button
+                  onClick={() => onEdit?.(sim)}
+                  className="p-2 bg-green-700 hover:bg-green-800 text-white rounded-full"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => handleDelete(sim.id)}
+                  className="p-2 bg-red-700 hover:bg-red-800 text-white rounded-full"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            )}
+
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-white truncate">
+                {sim.name}
+              </h3>
+              <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
+                {sim.description}
+              </p>
+            </div>
+
+            <div className="flex justify-start mt-2">
+              {(isOwner || sim.canAccess) && (
+                <Link
+                  href={`/simulations/${sim.id}`}
+                  className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-md"
+                >
+                  <ExternalLink size={16} />
+                  Open
+                </Link>
+              )}
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };

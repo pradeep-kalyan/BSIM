@@ -1,6 +1,0 @@
-{
-  "zencoder.enableRepoIndexing": true,
-  "[prisma]": {
-    "editor.formatOnSave": true
-  }
-}

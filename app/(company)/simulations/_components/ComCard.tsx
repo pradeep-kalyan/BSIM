@@ -1,36 +1,84 @@
-import React from "react";
-import { company } from "@prisma/client";
-import Link from "next/link";
+"use client";
 
-interface CardProps {
-  companies: company[];
+import React from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import { company } from "@prisma/client";
+
+import ViewDashboard from "./ViewDashboard"; 
+
+interface ExtendedCompany extends company {
+  canAccess?: boolean;
+  canEdit?: boolean;
+  user_id: string; // The creator's user ID
 }
 
-const Card: React.FC<CardProps> = ({ companies }) => {
+interface CompanyCardProps {
+  companies: ExtendedCompany[];
+  currentUserId?: string;
+  onEdit?: (company: ExtendedCompany) => void;
+  onDelete?: (id: string) => void;
+  simulationName: string;
+  simulationID?: string; // Optional, if you want to use it for navigation or other purposes
+}
+
+const CompanyList: React.FC<CompanyCardProps> = ({
+  companies,
+  currentUserId,
+  onEdit,
+  onDelete,
+}) => {
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this company?")) {
+      onDelete?.(id);
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Companies</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {companies.map((company) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {companies.map((company) => {
+        const isOwner = company.user_id === currentUserId;
+
+        return (
           <div
             key={company.id}
-            className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 transition duration-300 hover:scale-[1.02] hover:shadow-2xl"
-            aria-label={`Simulation: ${company.name}`}
+            className="bg-slate-900/80 border border-slate-700 rounded-xl shadow-lg p-5 flex flex-col justify-between relative"
           >
-            <Link
-              href={`/homepage/${company.id}`}
-              className="text-lg font-semibold text-white mb-2 truncate hover:text-blue-500"
-            >
-              {company.name}
-            </Link>
-            <p className="text-sm text-gray-400 leading-relaxed line-clamp-3">
-              {company.description}
-            </p>
+            {isOwner && (
+              <div className="absolute top-3 right-3 flex gap-2">
+                <button
+                  onClick={() => onEdit?.(company)}
+                  className="p-2 bg-green-700 hover:bg-green-800 text-white rounded-full"
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => handleDelete(company.id)}
+                  className="p-2 bg-red-700 hover:bg-red-800 text-white rounded-full"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            )}
+
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-white truncate">
+                {company.name}
+              </h3>
+              <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
+                {company.description || "No description provided."}
+              </p>
+            </div>
+
+            <div className="flex justify-start mt-2">
+              {(isOwner || company.canAccess) && (
+                <ViewDashboard companyId={company.id} />
+              )}
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };
 
-export default Card;
+export default CompanyList;
