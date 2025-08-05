@@ -11,8 +11,13 @@ import {
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 
-const formatCurrency = (val: number) =>
-  `₹${val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+const formatCurrency = (val: number): string => {
+  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
+  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
+  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
+  return `₹${val}`;
+};
+
 
 const percent = (part: number, total: number) =>
   total > 0 ? ((part / total) * 100).toFixed(1) + "%" : "0%";
@@ -97,21 +102,21 @@ const MarketingForm = () => {
             value={formatCurrency(frozenData.budget)}
             subtitle="Marketing Budget"
             icon={IndianRupee}
-            size="large"
+            size="small"
           />
           <DashboardCard
             title="Online Marketing"
             value={formatCurrency(frozenData.online)}
             subtitle="Digital Channels"
             icon={Globe}
-            size="large"
+            size="small"
           />
           <DashboardCard
             title="Offline Marketing"
             value={formatCurrency(frozenData.offline)}
             subtitle="Traditional Channels"
             icon={Store}
-            size="large"
+            size="small"
           />
         </section>
 

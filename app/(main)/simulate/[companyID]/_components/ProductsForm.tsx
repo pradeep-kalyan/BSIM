@@ -12,7 +12,7 @@ import {
   Edit,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import DashboardCard from "./Card";
+import DashboardCard from "@/ui/Card";
 import {
   getCompanyData,
   getCompanyProducts,
@@ -187,11 +187,12 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
 
   // UI ONLY HELPERS
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+  const formatCurrency = (val: number): string => {
+    if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
+    if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
+    if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
+    return `₹${val}`;
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -207,8 +208,9 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
   };
 
   const activeProducts = products.filter((p) => p.status === "active").length;
-  const developmentProducts = products.filter((p) => p.status === "development")
-    .length;
+  const developmentProducts = products.filter(
+    (p) => p.status === "development"
+  ).length;
   const totalProductValue = products.reduce(
     (acc, p) => acc + p.selling_price * p.inventory_level,
     0
@@ -289,7 +291,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
             subtitle="Currently Selling"
             icon={Package}
             size="small"
-            gradient={true}
+            gradient={false}
           />
           <DashboardCard
             title="In Development"
@@ -297,7 +299,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
             subtitle="Under Development"
             icon={Lightbulb}
             size="small"
-            gradient={true}
+            gradient={false}
           />
           <DashboardCard
             title="Portfolio Value"
@@ -305,7 +307,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
             subtitle="Total Inventory Value"
             icon={IndianRupee}
             size="small"
-            gradient={true}
+            gradient={false}
           />
           <DashboardCard
             title="Avg Quality"
@@ -313,7 +315,7 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
             subtitle="Quality Rating"
             icon={Star}
             size="small"
-            gradient={true}
+            gradient={false}
           />
         </div>
 
@@ -405,8 +407,9 @@ const ProductsForm: React.FC<ProductsFormProps> = ({ companyId }) => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${(product.sustainability_rating / 10) *
-                              100}%`,
+                            width: `${
+                              (product.sustainability_rating / 10) * 100
+                            }%`,
                           }}
                         />
                       </div>

@@ -16,8 +16,12 @@ import {
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 
-const formatCurrency = (val: number) =>
-  `₹${val.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+const formatCurrency = (val: number): string => {
+  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
+  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
+  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
+  return `₹${val}`;
+};
 
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();
@@ -124,21 +128,21 @@ const RDForm = () => {
             value={formatCurrency(data.budget ?? 0)}
             subtitle="Total R&D Allocation"
             icon={IndianRupee}
-            size="large"
+            size="small"
           />
           <DashboardCard
             title="Products in Pipeline"
             value={data.pip ?? 0}
             subtitle="Upcoming product count"
             icon={FlaskConical}
-            size="large"
+            size="small"
           />
           <DashboardCard
             title="Time to Market"
             value={`${data.time_to_market ?? 0} months`}
             subtitle="Avg time per release"
             icon={Timer}
-            size="large"
+            size="small"
           />
         </section>
 

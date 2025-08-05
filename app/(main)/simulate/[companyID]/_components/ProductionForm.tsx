@@ -1,6 +1,12 @@
 "use client";
 
-import { IndianRupee, Factory, Package, AlertTriangle } from "lucide-react";
+import {
+  IndianRupee,
+  Factory,
+  Package,
+  AlertTriangle,
+  Warehouse,
+} from "lucide-react";
 import React from "react";
 import DashboardCard from "@/ui/Card";
 import { Check, TriangleAlert } from "lucide-react";
@@ -14,7 +20,12 @@ import { CreateProduction, createProductionSchema } from "../_utils/validator";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
+const formatCurrency = (val: number): string => {
+  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
+  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
+  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
+  return `₹${val}`;
+};
 const ProductionForm = () => {
   const { data, setError, getError, updateData } = useProductionForm();
   const { cashBalance, updateProductionBudgetImpact, projectedCashBalance } =
@@ -128,43 +139,32 @@ const ProductionForm = () => {
           </span>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <DashboardCard
             title="Production Capacity"
             value={frozenData.production_capacity}
-            subtitle="Maximum units producible per period"
+            subtitle="Max output per cycle"
             icon={Factory}
-            size="large"
           />
           <DashboardCard
             title="Planned Units"
             value={frozenData.units_to_produce}
-            subtitle="Units scheduled for production"
+            subtitle="Scheduled production"
             icon={Package}
-            size="large"
           />
           <DashboardCard
             title="Storage Capacity"
             value={frozenData.storage_capacity}
-            subtitle="Maximum storage capacity"
-            icon={Package}
-            size="large"
+            subtitle="Max inventory space"
+            icon={Warehouse}
           />
           <DashboardCard
             title="Inventory Value"
             value={`₹${formatNumber(
               Math.round(frozenData.units_to_produce * frozenData.cost_per_unit)
             )}`}
-            subtitle="Value of planned inventory"
+            subtitle="Planned stock value"
             icon={IndianRupee}
-            size="large"
-          />
-          <DashboardCard
-            title="Defect Rate"
-            value={`${frozenData.defect_rate}%`}
-            subtitle="Expected defect percentage"
-            icon={AlertTriangle}
-            size="large"
           />
         </section>
 
@@ -269,7 +269,7 @@ const ProductionForm = () => {
                 id="inventory_value"
                 name="inventory_value"
                 type="text"
-                value={formatNumber(
+                value={formatCurrency(
                   Math.round(data?.units_to_produce * data?.cost_per_unit)
                 )}
                 readOnly
@@ -286,12 +286,12 @@ const ProductionForm = () => {
                 {Math.round(
                   (data?.units_to_produce * data?.defect_rate) / 100
                 )}{" "}
-                defected units): ₹{formatNumber(Math.round(totalCost))}
+                defected units): ₹{formatCurrency(Math.round(totalCost))}
               </div>
               <div className="text-sm space-y-1">
                 <div className="text-slate-300">
-                  Available Cash Balance: ₹
-                  {formatNumber(cashBalance.originalCashBalance ?? 0)}
+                  Available Cash Balance: 
+                  {" "+formatCurrency(cashBalance.originalCashBalance ?? 0)}
                 </div>
                 <div
                   className={`font-semibold ${
@@ -300,8 +300,8 @@ const ProductionForm = () => {
                       : "text-emerald-400"
                   }`}
                 >
-                  projectedCashBalance : ₹
-                  {formatNumber(Math.round(projectedCashBalance))}
+                  projectedCashBalance : 
+                  {" "+formatCurrency(Math.round(projectedCashBalance))}
                 </div>
               </div>
             </div>

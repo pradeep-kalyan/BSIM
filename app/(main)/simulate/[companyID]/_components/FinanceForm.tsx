@@ -20,15 +20,16 @@ import {
   useCompanyForm,
   useFinanceForm,
 } from "@/app/context/FormContext";
-import DashboardCard from "./Card";
+import DashboardCard from "@/ui/Card";
 import { createFinanceSchema } from "@/app/(main)/simulate/[companyID]/_utils/validator";
 
 const FinanceForm = () => {
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(value);
+const formatCurrency = (val: number): string => {
+  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
+  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
+  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
+  return `₹${val}`;
+};
 
   const { period, comId } = useSimulation();
   const { data: companyData } = useCompanyForm();
@@ -152,15 +153,15 @@ const FinanceForm = () => {
           <section className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
             <DashboardCard
               title="Original Cash Balance"
-              value={cashBalance.originalCashBalance}
-              subtitle="Maximum units producible per period"
+              value={formatCurrency(cashBalance.originalCashBalance)}
+              subtitle="MaxOutput per period"
               icon={Factory}
               size="large"
             />
             <DashboardCard
               title="Projected Cash Balance"
-              value={projectedCashBalance}
-              subtitle="Projected balance after finance decisions"
+              value={formatCurrency(projectedCashBalance)}
+              subtitle="After finance decisions"
               icon={PiggyBank}
               size="large"
             />

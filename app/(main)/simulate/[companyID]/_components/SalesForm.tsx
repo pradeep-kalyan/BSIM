@@ -17,12 +17,17 @@ import {
   useCashBalance,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-import DashboardCard from "./Card";
+import DashboardCard from "@/ui/Card";
 import type { ProductFormData } from "@/app/context/FormContext";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
+const formatCurrency = (val: number): string => {
+  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
+  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
+  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
+  return `₹${val}`;
+};
 const Sales = () => {
   const { products } = useProductForm();
   const {
@@ -55,17 +60,17 @@ const Sales = () => {
   // Calculate real-time values without causing infinite loops
   const calculatedValues = React.useMemo(() => {
     if (!selectedProductData) {
-      return { 
-        revenue: salesData?.revenue || 0, 
-        costs: salesData?.costs || 0, 
-        profit: salesData?.profit || 0 
+      return {
+        revenue: salesData?.revenue || 0,
+        costs: salesData?.costs || 0,
+        profit: salesData?.profit || 0,
       };
     }
 
     const salesVolume = salesData?.sales_volume || 0;
     const sellingPrice = selectedProductData.selling_price || 0;
     const productionCost = selectedProductData.production_cost || 0;
-    
+
     const revenue = salesVolume * sellingPrice;
     const costs = salesVolume * productionCost;
     const profit = revenue - costs;
@@ -88,25 +93,25 @@ const Sales = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const numericValue = Number(value) || 0;
-    
+
     updateSalesData({ [name]: numericValue });
-    
+
     // If sales volume changed and we have product data, auto-calculate revenue, costs, and profit
-    if (name === 'sales_volume' && selectedProductData) {
+    if (name === "sales_volume" && selectedProductData) {
       const sellingPrice = selectedProductData.selling_price || 0;
       const productionCost = selectedProductData.production_cost || 0;
       const revenue = numericValue * sellingPrice;
       const costs = numericValue * productionCost;
       const profit = revenue - costs;
-      
-      updateSalesData({ 
+
+      updateSalesData({
         sales_volume: numericValue,
         revenue,
         costs,
-        profit
+        profit,
       });
     }
-    
+
     setError(name, "");
     setSuccess(false);
     setValidationAlert(null);
@@ -157,7 +162,9 @@ const Sales = () => {
     }
 
     // Calculate costs and profit using current values
-    const costs = selectedProductData ? salesVolume * (selectedProductData.production_cost || 0) : 0;
+    const costs = selectedProductData
+      ? salesVolume * (selectedProductData.production_cost || 0)
+      : 0;
     const profit = revenue - costs;
 
     // Update sales data with calculated values
@@ -224,41 +231,31 @@ const Sales = () => {
         </header>
 
         {/* Dashboard Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <DashboardCard
             title="Total Revenue"
             value={`₹${formatNumber(Math.round(frozenSalesData.revenue))}`}
             subtitle="Expected sales revenue"
             icon={DollarSign}
-            size="large"
           />
           <DashboardCard
             title="Sales Volume"
             value={frozenSalesData.sales_volume}
             subtitle="Units to be sold"
             icon={Package}
-            size="large"
           />
           <DashboardCard
             title="Market Share"
             value={`${frozenSalesData.market_share}%`}
             subtitle="Market penetration"
             icon={TrendingUp}
-            size="large"
           />
-          <DashboardCard
-            title="Customer Satisfaction"
-            value={`${frozenSalesData.customer_satisfaction}/10`}
-            subtitle="Satisfaction rating"
-            icon={Users}
-            size="large"
-          />
+
           <DashboardCard
             title="Profit Margin"
             value={`₹${formatNumber(Math.round(frozenSalesData.profit))}`}
             subtitle="Revenue minus costs"
             icon={Star}
-            size="large"
           />
         </section>
 
@@ -358,9 +355,10 @@ const Sales = () => {
               {
                 id: "revenue",
                 label: "Total Revenue (₹) - Auto-calculated",
-                value: selectedProductData && salesData?.sales_volume
-                  ? calculatedValues.revenue
-                  : salesData?.revenue ?? 0,
+                value:
+                  selectedProductData && salesData?.sales_volume
+                    ? calculatedValues.revenue
+                    : salesData?.revenue ?? 0,
                 type: "text",
                 readOnly: true,
                 placeholder: selectedProductData
@@ -435,9 +433,13 @@ const Sales = () => {
                 id="costs"
                 name="costs"
                 type="text"
-                value={formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
-                  ? calculatedValues.costs 
-                  : salesData?.costs || 0))}
+                value={formatNumber(
+                  Math.round(
+                    selectedProductData && salesData?.sales_volume
+                      ? calculatedValues.costs
+                      : salesData?.costs || 0
+                  )
+                )}
                 readOnly
                 placeholder="Calculated total costs"
                 className="w-full p-3 rounded-lg bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed"
@@ -455,9 +457,13 @@ const Sales = () => {
                 id="profit"
                 name="profit"
                 type="text"
-                value={formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
-                  ? calculatedValues.profit 
-                  : salesData?.profit || 0))}
+                value={formatNumber(
+                  Math.round(
+                    selectedProductData && salesData?.sales_volume
+                      ? calculatedValues.profit
+                      : salesData?.profit || 0
+                  )
+                )}
                 readOnly
                 placeholder="Calculated profit"
                 className="w-full p-3 rounded-lg bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed"
@@ -470,37 +476,56 @@ const Sales = () => {
             <div className="space-y-2">
               <div className="text-xl text-blue-400 font-semibold">
                 Expected Profit: ₹
-                {formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
-                  ? calculatedValues.profit 
-                  : salesData?.profit || 0))}
+                {formatNumber(
+                  Math.round(
+                    selectedProductData && salesData?.sales_volume
+                      ? calculatedValues.profit
+                      : salesData?.profit || 0
+                  )
+                )}
               </div>
               <div className="text-sm space-y-1">
                 <div className="text-slate-300">
-                  Revenue: ₹{formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
-                    ? calculatedValues.revenue 
-                    : salesData?.revenue || 0))}
+                  Revenue:{" "}
+                  {formatCurrency(
+                    Math.round(
+                      selectedProductData && salesData?.sales_volume
+                        ? calculatedValues.revenue
+                        : salesData?.revenue || 0
+                    )
+                  )}
                 </div>
                 <div className="text-slate-300">
-                  Costs: ₹{formatNumber(Math.round(selectedProductData && salesData?.sales_volume 
-                    ? calculatedValues.costs 
-                    : salesData?.costs || 0))}
+                  Costs:{" "}
+                  {formatCurrency(
+                    Math.round(
+                      selectedProductData && salesData?.sales_volume
+                        ? calculatedValues.costs
+                        : salesData?.costs || 0
+                    )
+                  )}
                 </div>
                 <div className="text-slate-300">
-                  Projected Cash Balance : ₹
-                  {formatNumber(Math.round(projectedCashBalance))}
+                  Projected Cash Balance :
+                  {" " + formatCurrency(Math.round(projectedCashBalance))}
                 </div>
                 {selectedProductData && (
                   <div className="text-slate-300">
                     Profit Margin:{" "}
                     {(() => {
-                      const revenue = selectedProductData && salesData?.sales_volume 
-                        ? calculatedValues.revenue 
-                        : salesData?.revenue || 0;
-                      const profit = selectedProductData && salesData?.sales_volume 
-                        ? calculatedValues.profit 
-                        : salesData?.profit || 0;
-                      return revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0;
-                    })()}%
+                      const revenue =
+                        selectedProductData && salesData?.sales_volume
+                          ? calculatedValues.revenue
+                          : salesData?.revenue || 0;
+                      const profit =
+                        selectedProductData && salesData?.sales_volume
+                          ? calculatedValues.profit
+                          : salesData?.profit || 0;
+                      return revenue > 0
+                        ? ((profit / revenue) * 100).toFixed(1)
+                        : 0;
+                    })()}
+                    %
                   </div>
                 )}
               </div>
