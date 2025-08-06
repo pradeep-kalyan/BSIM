@@ -18,7 +18,7 @@ import {
   Trophy,
   PieChart,
 } from "lucide-react";
-import CheckboxDropdown from "@/ui/CheckboxDropdown";
+import Checkboxdropdown from "@/ui/checkboxdropdown";
 import { getCompanyComparisonData } from "@/app/_actions/companyData";
 
 // Types for better type safety
@@ -194,11 +194,13 @@ const ComparePage: React.FC = () => {
       try {
         setError(null);
         const simulations = await getSimulationscompare();
-        const currentSim = simulations.find((s: any) => s.id === simulationId);
+        const currentSim = simulations.find(
+          (s: { id: string }) => s.id === simulationId
+        );
 
         if (currentSim) {
           setAllCompanies(
-            currentSim.companies.map((c: any) => ({
+            currentSim.companies.map((c: { id: string; name: string }) => ({
               id: c.id,
               name: c.name,
             }))
@@ -289,7 +291,7 @@ const ComparePage: React.FC = () => {
 
         {/* Company Selection */}
         <div className="flex items-center gap-4 mb-10 flex-wrap">
-          <CheckboxDropdown
+          <Checkboxdropdown
             options={allCompanies.map((c) => c.name)}
             selected={allCompanies
               .filter((c) => selectedCompanyIds.includes(c.id))
@@ -563,11 +565,14 @@ const ComparePage: React.FC = () => {
                               <div className="flex gap-4">
                                 <span className="text-blue-400">
                                   <PieChart className="w-4 h-4" />
-                                  {(product.market_share ?? 0).toFixed(2)}% share
+                                  {(product.market_share ?? 0).toFixed(2)}%
+                                  share
                                 </span>
                                 <span className="text-yellow-400">
                                   <Star className="w-4 h-4 fill-yellow-400 stroke-yellow-500" />
-                                  {(product.customer_satisfaction ?? 0).toFixed(2)}
+                                  {(product.customer_satisfaction ?? 0).toFixed(
+                                    2
+                                  )}
                                 </span>
                               </div>
                             </div>

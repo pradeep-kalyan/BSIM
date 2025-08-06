@@ -1,8 +1,11 @@
-'use server';
+"use server";
 
 import prisma from "@/app/functions/prisma";
 
-export async function getCompanyComparisonData(simulationId: string, companyIds: string[]) {
+export async function getCompanyComparisonData(
+  simulationId: string,
+  companyIds: string[]
+) {
   const companies = await prisma.company.findMany({
     where: {
       simulation_id: simulationId,
@@ -10,27 +13,27 @@ export async function getCompanyComparisonData(simulationId: string, companyIds:
     },
     include: {
       finance_decisions: {
-        orderBy: { period: 'desc' },
+        orderBy: { period: "desc" },
         take: 1,
       },
       hr_decisions: {
-        orderBy: { period: 'desc' },
+        orderBy: { period: "desc" },
         take: 1,
       },
       rd_decisions: {
-        orderBy: { period: 'desc' },
+        orderBy: { period: "desc" },
         take: 1,
       },
       production_decisions: {
-        orderBy: { period: 'desc' },
+        orderBy: { period: "desc" },
         take: 1,
       },
       products: {
-        orderBy: { name: 'asc' }, // You can sort by 'created_at' or 'id' if needed
+        orderBy: { name: "asc" }, // You can sort by 'created_at' or 'id' if needed
         take: 3,
         include: {
           product_performances: {
-            orderBy: { period: 'desc' },
+            orderBy: { period: "desc" },
             take: 1,
           },
         },

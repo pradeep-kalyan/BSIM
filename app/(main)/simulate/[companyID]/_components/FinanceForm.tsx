@@ -5,9 +5,7 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Building2,
   PiggyBank,
-  CreditCard,
   Factory,
   Package,
   IndianRupee,
@@ -15,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
   useCompanyForm,
@@ -44,10 +43,9 @@ const formatCurrency = (val: number): string => {
   // Initialize frozen balance when component mounts
 
   // Handle input changes without updating projected balance
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === "" ? "" : e.target.value;
-    updateData({ [e.target.name]: Number(value) });
-    setError(e.target.name, "");
+  const handleChange = (fieldName: string, value: number) => {
+    updateData({ [fieldName]: value });
+    setError(fieldName, "");
     setSuccess(false); // Reset success state when user makes changes
     setBudgetAlert(null); // Clear any previous alerts
   };
@@ -189,59 +187,29 @@ const formatCurrency = (val: number): string => {
                 Cash Inflows
               </h4>
 
-              {[
-                {
-                  id: "loan_amount",
-                  label: "Loan Amount",
-                  value: data?.loan_amount ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter loan amount",
-                  icon: CreditCard,
-                },
-                {
-                  id: "equity_issue",
-                  label: "Equity Issue",
-                  value: data?.equity_issue ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter equity issue amount",
-                  icon: DollarSign,
-                },
-              ].map(
-                ({
-                  id,
-                  label,
-                  value,
-                  type,
-                  step,
-                  min,
-                  placeholder,
-                  icon: Icon,
-                }) => (
-                  <div key={id}>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      {label}
-                    </label>
-                    <div className="relative">
-                      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <input
-                        id={id}
-                        name={id}
-                        type={type}
-                        min={min}
-                        step={step}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={placeholder}
-                        value={value}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                )
-              )}
+              {/* Loan Amount Slider */}
+              <div>
+                <Slider
+                  label="Loan Amount (₹)"
+                  defaultValue={[data?.loan_amount ?? 0]}
+                  value={[data?.loan_amount ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance * 3 || 500000}
+                  onValueChange={(val) => handleChange("loan_amount", val[0])}
+                />
+              </div>
+
+              {/* Equity Issue Slider */}
+              <div>
+                <Slider
+                  label="Equity Issue (₹)"
+                  defaultValue={[data?.equity_issue ?? 0]}
+                  value={[data?.equity_issue ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance * 2 || 300000}
+                  onValueChange={(val) => handleChange("equity_issue", val[0])}
+                />
+              </div>
             </div>
 
             {/* Cash Outflows */}
@@ -251,69 +219,48 @@ const formatCurrency = (val: number): string => {
                 Cash Outflows
               </h4>
 
-              {[
-                {
-                  id: "investment_amount",
-                  label: "Investment Amount",
-                  value: data?.investment_amount ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter investment amount",
-                  icon: Building2,
-                },
-                {
-                  id: "repay_loan",
-                  label: "Loan repayment",
-                  value: data?.repay_loan ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter repay amount",
-                  icon: CreditCard,
-                },
-                {
-                  id: "dividend_payout",
-                  label: "Dividend Payout",
-                  value: data?.dividend_payout ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter dividend payout amount",
-                  icon: DollarSign,
-                },
-              ].map(
-                ({
-                  id,
-                  label,
-                  value,
-                  type,
-                  step,
-                  min,
-                  placeholder,
-                  icon: Icon,
-                }) => (
-                  <div key={id}>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      {label}
-                    </label>
-                    <div className="relative">
-                      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <input
-                        id={id}
-                        name={id}
-                        type={type}
-                        min={min}
-                        step={step}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={placeholder}
-                        value={value}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                )
-              )}
+              {/* Investment Amount Slider */}
+              <div>
+                <Slider
+                  label="Investment Amount (₹)"
+                  defaultValue={[data?.investment_amount ?? 0]}
+                  value={[data?.investment_amount ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance || 200000}
+                  onValueChange={(val) =>
+                    handleChange("investment_amount", val[0])
+                  }
+                />
+              </div>
+
+              {/* Loan Repayment Slider */}
+              <div>
+                <Slider
+                  label="Loan Repayment (₹)"
+                  defaultValue={[data?.repay_loan ?? 0]}
+                  value={[data?.repay_loan ?? 0]}
+                  min={0}
+                  max={Math.min(
+                    companyData?.total_liabilities || 100000,
+                    companyData?.cash_balance || 100000
+                  )}
+                  onValueChange={(val) => handleChange("repay_loan", val[0])}
+                />
+              </div>
+
+              {/* Dividend Payout Slider */}
+              <div>
+                <Slider
+                  label="Dividend Payout (₹)"
+                  defaultValue={[data?.dividend_payout ?? 0]}
+                  value={[data?.dividend_payout ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance || 100000}
+                  onValueChange={(val) =>
+                    handleChange("dividend_payout", val[0])
+                  }
+                />
+              </div>
             </div>
           </div>
 

@@ -1,9 +1,15 @@
 "use client";
 
-import { IndianRupee, Globe, Store, Check, TriangleAlert } from "lucide-react";
+import {
+  IndianRupee,
+  Globe,
+  Store,
+  Check,
+  TriangleAlert,
+  Building2,
+} from "lucide-react";
 import React, { useState } from "react";
-import DashboardCard from "@/ui/Card";
-import Inputbox from "@/ui/Input-Box";
+import { Slider } from "@/components/ui/slider";
 import {
   useMarketingForm,
   useCashBalance,
@@ -32,20 +38,12 @@ const MarketingForm = () => {
   const [success, setSuccess] = useState(false);
   const [budgetError, setBudgetError] = useState<string | null>(null);
 
-  const frozenData = React.useMemo(
-    () => ({
-      budget: marketingData.budget,
-      online: marketingData.online,
-      offline: marketingData.offline,
-    }),
-    [marketingData.budget, marketingData.online, marketingData.offline]
-  );
-
   const handleBudgetChange = (
     field: "budget" | "online" | "offline",
     value: number
   ) => {
     setSuccess(false);
+    setBudgetError(null);
 
     // Ensure value is not negative
     if (value < 0) value = 0;
@@ -57,38 +55,53 @@ const MarketingForm = () => {
         online: half,
         offline: value - half,
       });
-    } else {
-      const newOnline = field === "online" ? value : marketingData.online;
-      const newOffline = field === "offline" ? value : marketingData.offline;
+    } else if (field === "online") {
+      // When online changes, offline adjusts to maintain the total or creates a new total
+      const newOnline = value;
+      const currentOffline = marketingData.offline || 0;
+      const newBudget = newOnline + currentOffline;
       updateData({
         online: newOnline,
+        offline: currentOffline,
+        budget: newBudget,
+      });
+    } else if (field === "offline") {
+      // When offline changes, online stays the same and total adjusts
+      const newOffline = value;
+      const currentOnline = marketingData.online || 0;
+      const newBudget = currentOnline + newOffline;
+      updateData({
+        online: currentOnline,
         offline: newOffline,
-        budget: newOnline + newOffline,
+        budget: newBudget,
       });
     }
-
-    setBudgetError(null);
   };
 
   const handleValidate = () => {
     setBudgetError(null);
     setSuccess(false);
 
-    if (marketingData.online + marketingData.offline !== marketingData.budget) {
-      setBudgetError(" Online + Offline must equal total budget.");
+    if (marketingData.budget <= 0) {
+      setBudgetError("Marketing budget must be greater than zero.");
       return;
     }
+
+    if (marketingData.budget > (cashBalance.originalCashBalance || 0)) {
+      setBudgetError("Insufficient cash balance for this marketing budget.");
+      return;
+    }
+
     setSuccess(true);
-    updateMarketingBudgetImpact(
-      cashBalance.originalCashBalance - projectedCashBalance
-    );
+    updateMarketingBudgetImpact(marketingData.budget);
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
-      <div className="max-w-5xl mx-auto py-8">
-        <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold text-blue-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold text-blue-300 mb-2">
             Marketing Dashboard
           </h1>
           <span className="text-lg text-slate-400 tracking-wide">
@@ -159,16 +172,14 @@ const MarketingForm = () => {
                 handleBudgetChange("offline", parseInt(e.target.value) || 0)
               }
             />
-          </div>
-
-          <div className="mt-4 text-sm text-slate-400 space-y-1">
+        <div className="mt-4 text-sm text-slate-400 space-y-1">
             <p>Online: {percent(marketingData.online, marketingData.budget)}</p>
             <p>
               Offline: {percent(marketingData.offline, marketingData.budget)}
             </p>
           </div>
 
-          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+       <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
               <div className="text-slate-300 text-sm">
                 Available Cash Balance:{" "}

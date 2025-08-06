@@ -2,14 +2,15 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-interface CheckboxDropdownProps {
+
+interface checkboxdropdownProps {
   options: string[];
   selected: string[];
   onChange: (selected: string[]) => void;
   placeholder?: string;
 }
 
-const CheckboxDropdown: React.FC<CheckboxDropdownProps> = ({
+const Checkboxdropdown: React.FC<checkboxdropdownProps> = ({
   options,
   selected,
   onChange,
@@ -81,7 +82,6 @@ const CheckboxDropdown: React.FC<CheckboxDropdownProps> = ({
                   />
                   {option}
                 </div>
-                
               </label>
             );
           })}
@@ -91,4 +91,4 @@ const CheckboxDropdown: React.FC<CheckboxDropdownProps> = ({
   );
 };
 
-export default CheckboxDropdown;
+export default Checkboxdropdown;

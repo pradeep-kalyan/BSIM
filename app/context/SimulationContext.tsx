@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
 const SimulationContext = createContext<{
@@ -50,86 +50,118 @@ export const SimulationProvider = ({
     if (com) setComIdState(com);
     if (period) setPeriodState(parseInt(period));
   }, []);
-  const setCurrentPeriodWrapper = (period: number) => {
-      setPeriod(period);
-    Cookies.set("currentPeriod", period.toString(), {
-      expires: 0.25,
-      secure: true,
-      sameSite: "strict",
-      path: "/",
-    });
-  };
 
-  const setSimId = (id: string) => {
-    setSimIdState(id);
-    // Set cookie to expire in 6 hours (0.25 days)
-    Cookies.set("simId", id, {
-      expires: 0.25,
-      secure: true,
-      sameSite: "strict",
-      path: "/",
-    });
-  };
+  const setPeriodInternal = React.useCallback((id: number) => {
+    setPeriodState((prevId) => {
+      if (prevId === id) return prevId; // Prevent unnecessary state updates
 
-  const setComId = (id: string) => {
-    setComIdState(id);
-    // Set cookie to expire in 6 hours (0.25 days)
-    Cookies.set("comId", id, {
-      expires: 0.25,
-      secure: true,
-      sameSite: "strict",
-      path: "/",
-    });
-  };
+      // Set cookie to expire in 6 hours (0.25 days)
+      Cookies.set("period", id.toString(), {
+        expires: 0.25,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+      });
 
-  const setPeriod = (id: number) => {
-    setPeriodState(id);
-    // Set cookie to expire in 6 hours (0.25 days)
-    Cookies.set("period", id.toString(), {
-      expires: 0.25,
-      secure: true,
-      sameSite: "strict",
-      path: "/",
+      return id;
     });
-  };
+  }, []);
 
-  const clearSimId = () => {
+  const setCurrentPeriodWrapper = React.useCallback(
+    (period: number) => {
+      setPeriodInternal(period);
+      Cookies.set("currentPeriod", period.toString(), {
+        expires: 0.25,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+      });
+    },
+    [setPeriodInternal]
+  );
+
+  const setSimId = React.useCallback((id: string) => {
+    setSimIdState((prevId) => {
+      if (prevId === id) return prevId; // Prevent unnecessary state updates
+
+      // Set cookie to expire in 6 hours (0.25 days)
+      Cookies.set("simId", id, {
+        expires: 0.25,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+      });
+
+      return id;
+    });
+  }, []);
+
+  const setComId = React.useCallback((id: string) => {
+    setComIdState((prevId) => {
+      if (prevId === id) return prevId; // Prevent unnecessary state updates
+
+      // Set cookie to expire in 6 hours (0.25 days)
+      Cookies.set("comId", id, {
+        expires: 0.25,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+      });
+
+      return id;
+    });
+  }, []);
+
+  const clearSimId = React.useCallback(() => {
     setSimIdState(null);
     Cookies.remove("simId");
-  };
+  }, []);
 
-  const clearComId = () => {
+  const clearComId = React.useCallback(() => {
     setComIdState(null);
     Cookies.remove("comId");
-  };
+  }, []);
 
-  const clearPeriod = () => {
+  const clearPeriod = React.useCallback(() => {
     setPeriodState(null);
     Cookies.remove("period");
-  };
+  }, []);
 
-  const clearAll = () => {
+  const clearAll = React.useCallback(() => {
     clearSimId();
     clearComId();
     clearPeriod();
-  };
+  }, [clearSimId, clearComId, clearPeriod]);
+
+  const contextValue = React.useMemo(
+    () => ({
+      simId,
+      comId,
+      period,
+      isHydrated,
+      setSimId,
+      setComId,
+      setPeriod: setCurrentPeriodWrapper,
+      clearSimId,
+      clearComId,
+      clearAll,
+    }),
+    [
+      simId,
+      comId,
+      period,
+      isHydrated,
+      setSimId,
+      setComId,
+      setCurrentPeriodWrapper,
+      clearSimId,
+      clearComId,
+      clearAll,
+    ]
+  );
 
   return (
-    <SimulationContext.Provider
-      value={{
-        simId,
-        comId,
-        period,
-        isHydrated,
-        setSimId,
-        setComId,
-        setPeriod: setCurrentPeriodWrapper,
-        clearSimId,
-        clearComId,
-        clearAll,
-
-      }}
-    >
+    <SimulationContext.Provider value={contextValue}>
       {children}
     </SimulationContext.Provider>
   );
