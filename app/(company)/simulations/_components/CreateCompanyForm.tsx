@@ -7,7 +7,6 @@ import { Building2, Rocket } from "lucide-react";
 import HRDecisionForm from "@/app/(main)/_components/HRdecisionform";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 import ProductForm from "./ProductForm";
-import Image from "next/image";
 // import { createCompanyWithProducts } from "@/app/_actions/createCompanyWithProducts";
 
 interface Props {
