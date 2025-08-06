@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Slider } from "@/components/ui/slider";
 
 interface ProductFormPageProps {
   mode: "add" | "edit";
@@ -164,64 +165,113 @@ export default function ProductFormPage({
         </div>
         {/* Ratings */}
         <div className="grid grid-cols-3 gap-2">
-          {([
-            ["Quality Rating", "quality_rating"],
-            ["Innovation Rating", "innovation_rating"],
-            ["Sustainability Rating", "sustainability_rating"],
-          ] as const).map(([label, key]) => (
+          {(
+            [
+              ["Quality Rating (1-10)", "quality_rating"],
+              ["Innovation Rating (1-10)", "innovation_rating"],
+              ["Sustainability Rating (1-10)", "sustainability_rating"],
+            ] as const
+          ).map(([label, key]) => (
             <div key={key}>
-              <label className="block text-sm text-slate-300 mb-1">
-                {label} (1-10)
-              </label>
-              <input
-                type="number"
+              <Slider
+                label={label}
+                defaultValue={[product[key]]}
+                value={[product[key]]}
                 min={1}
                 max={10}
-                value={product[key]}
-                onChange={(e) =>
-                  handleFieldChange(key, parseFloat(e.target.value) || 1)
-                }
-                className="w-full p-2 rounded bg-slate-900 text-white"
-                required
+                onValueChange={(val) => handleFieldChange(key, val[0])}
               />
               {errors[key] && (
-                <div className="text-red-400 text-xs">{errors[key]}</div>
+                <div className="text-red-400 text-xs mt-1">{errors[key]}</div>
               )}
             </div>
           ))}
         </div>
         {/* Other numeric fields */}
-        <div className="grid grid-cols-3 gap-2">
-          {([
-            ["Production Cost", "production_cost"],
-            ["Selling Price", "selling_price"],
-            ["Inventory Level", "inventory_level"],
-            ["Production Capacity", "production_capacity"],
-            ["Development Cost", "development_cost"],
-            ["Marketing Budget", "marketing_budget"],
-          ] as const).map(([label, key]) => (
-            <div key={key}>
-              <label className="block text-sm text-slate-300 mb-1">
-                {label}
-              </label>
-              <input
-                type="number"
-                min={0}
-                step="any"
-                value={product[key]}
-                onChange={(e) =>
-                  handleFieldChange(
-                    key,
-                    key === "inventory_level" || key === "production_capacity"
-                      ? parseInt(e.target.value) || 0
-                      : parseFloat(e.target.value) || 0
-                  )
-                }
-                className="w-full p-2 rounded bg-slate-900 text-white"
-                required
-              />
-            </div>
-          ))}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Production Cost Slider */}
+          <div>
+            <Slider
+              label="Production Cost (₹)"
+              defaultValue={[product.production_cost]}
+              value={[product.production_cost]}
+              min={0}
+              max={10000}
+              onValueChange={(val) =>
+                handleFieldChange("production_cost", val[0])
+              }
+            />
+          </div>
+
+          {/* Selling Price Slider */}
+          <div>
+            <Slider
+              label="Selling Price (₹)"
+              defaultValue={[product.selling_price]}
+              value={[product.selling_price]}
+              min={0}
+              max={15000}
+              onValueChange={(val) =>
+                handleFieldChange("selling_price", val[0])
+              }
+            />
+          </div>
+
+          {/* Inventory Level Slider */}
+          <div>
+            <Slider
+              label="Inventory Level"
+              defaultValue={[product.inventory_level]}
+              value={[product.inventory_level]}
+              min={0}
+              max={5000}
+              onValueChange={(val) =>
+                handleFieldChange("inventory_level", Math.round(val[0]))
+              }
+            />
+          </div>
+
+          {/* Production Capacity Slider */}
+          <div>
+            <Slider
+              label="Production Capacity"
+              defaultValue={[product.production_capacity]}
+              value={[product.production_capacity]}
+              min={0}
+              max={10000}
+              onValueChange={(val) =>
+                handleFieldChange("production_capacity", Math.round(val[0]))
+              }
+            />
+          </div>
+
+          {/* Development Cost Slider */}
+          <div>
+            <Slider
+              label="Development Cost (₹)"
+              defaultValue={[product.development_cost]}
+              value={[product.development_cost]}
+              min={0}
+              max={50000}
+              onValueChange={(val) =>
+                handleFieldChange("development_cost", val[0])
+              }
+            />
+          </div>
+
+          {/* Marketing Budget Slider */}
+          <div>
+            <Slider
+              label="Marketing Budget (₹)"
+              defaultValue={[product.marketing_budget]}
+              value={[product.marketing_budget]}
+              min={0}
+              max={25000}
+              onValueChange={(val) =>
+                handleFieldChange("marketing_budget", val[0])
+              }
+            />
+          </div>
         </div>
         <div className="flex gap-3 mt-4">
           <button

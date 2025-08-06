@@ -1,9 +1,15 @@
 "use client";
 
-import { IndianRupee, Globe, Store, Check, TriangleAlert } from "lucide-react";
+import {
+  IndianRupee,
+  Globe,
+  Store,
+  Check,
+  TriangleAlert,
+  Building2,
+} from "lucide-react";
 import React, { useState } from "react";
-import DashboardCard from "@/ui/Card";
-import Inputbox from "@/ui/Input-Box";
+import { Slider } from "@/components/ui/slider";
 import {
   useMarketingForm,
   useCashBalance,
@@ -32,20 +38,12 @@ const MarketingForm = () => {
   const [success, setSuccess] = useState(false);
   const [budgetError, setBudgetError] = useState<string | null>(null);
 
-  const frozenData = React.useMemo(
-    () => ({
-      budget: marketingData.budget,
-      online: marketingData.online,
-      offline: marketingData.offline,
-    }),
-    [marketingData.budget, marketingData.online, marketingData.offline]
-  );
-
   const handleBudgetChange = (
     field: "budget" | "online" | "offline",
     value: number
   ) => {
     setSuccess(false);
+    setBudgetError(null);
 
     // Ensure value is not negative
     if (value < 0) value = 0;
@@ -57,180 +55,301 @@ const MarketingForm = () => {
         online: half,
         offline: value - half,
       });
-    } else {
-      const newOnline = field === "online" ? value : marketingData.online;
-      const newOffline = field === "offline" ? value : marketingData.offline;
+    } else if (field === "online") {
+      // When online changes, offline adjusts to maintain the total or creates a new total
+      const newOnline = value;
+      const currentOffline = marketingData.offline || 0;
+      const newBudget = newOnline + currentOffline;
       updateData({
         online: newOnline,
+        offline: currentOffline,
+        budget: newBudget,
+      });
+    } else if (field === "offline") {
+      // When offline changes, online stays the same and total adjusts
+      const newOffline = value;
+      const currentOnline = marketingData.online || 0;
+      const newBudget = currentOnline + newOffline;
+      updateData({
+        online: currentOnline,
         offline: newOffline,
-        budget: newOnline + newOffline,
+        budget: newBudget,
       });
     }
-
-    setBudgetError(null);
   };
 
   const handleValidate = () => {
     setBudgetError(null);
     setSuccess(false);
 
-    if (marketingData.online + marketingData.offline !== marketingData.budget) {
-      setBudgetError(" Online + Offline must equal total budget.");
+    if (marketingData.budget <= 0) {
+      setBudgetError("Marketing budget must be greater than zero.");
       return;
     }
+
+    if (marketingData.budget > (cashBalance.originalCashBalance || 0)) {
+      setBudgetError("Insufficient cash balance for this marketing budget.");
+      return;
+    }
+
     setSuccess(true);
-    updateMarketingBudgetImpact(
-      cashBalance.originalCashBalance - projectedCashBalance
-    );
+    updateMarketingBudgetImpact(marketingData.budget);
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
-      <div className="max-w-5xl mx-auto py-8">
-        <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold text-blue-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-extrabold text-blue-300 mb-2">
             Marketing Dashboard
           </h1>
-          <span className="text-lg text-slate-400 tracking-wide">
-            Period {period} • {companyData?.name}
-          </span>
-        </header>
-
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <DashboardCard
-            title="Total Budget"
-            value={formatCurrency(frozenData.budget)}
-            subtitle="Marketing Budget"
-            icon={IndianRupee}
-            size="small"
-          />
-          <DashboardCard
-            title="Online Marketing"
-            value={formatCurrency(frozenData.online)}
-            subtitle="Digital Channels"
-            icon={Globe}
-            size="small"
-          />
-          <DashboardCard
-            title="Offline Marketing"
-            value={formatCurrency(frozenData.offline)}
-            subtitle="Traditional Channels"
-            icon={Store}
-            size="small"
-          />
-        </section>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleValidate();
-          }}
-          className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700"
-        >
-          <h2 className="text-2xl font-bold text-white mb-6">
-            Set Marketing Strategy
-          </h2>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <Inputbox
-              label="Total Marketing Budget (₹)"
-              name="budget"
-              type="number"
-              value={marketingData.budget.toString()}
-              onChange={(e) =>
-                handleBudgetChange("budget", parseInt(e.target.value) || 0)
-              }
-            />
-            <Inputbox
-              label="Online Marketing (₹)"
-              name="online"
-              type="number"
-              value={marketingData.online.toString()}
-              onChange={(e) =>
-                handleBudgetChange("online", parseInt(e.target.value) || 0)
-              }
-            />
-            <Inputbox
-              label="Offline Marketing (₹)"
-              name="offline"
-              type="number"
-              value={marketingData.offline.toString()}
-              onChange={(e) =>
-                handleBudgetChange("offline", parseInt(e.target.value) || 0)
-              }
-            />
+          <div className="flex items-center gap-2 text-slate-400">
+            <Building2 className="h-4 w-4" />
+            <span>
+              Period {period} • {companyData?.name}
+            </span>
           </div>
+        </div>
 
-          <div className="mt-4 text-sm text-slate-400 space-y-1">
-            <p>Online: {percent(marketingData.online, marketingData.budget)}</p>
-            <p>
-              Offline: {percent(marketingData.offline, marketingData.budget)}
+        {/* Compact Metrics Dashboard */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {/* Company Cash */}
+          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
+            <div className="flex items-center gap-2 mb-2">
+              <IndianRupee className="h-4 w-4 text-yellow-400" />
+              <span className="text-sm font-bold text-white">
+                Available Cash
+              </span>
+            </div>
+            <p className="text-lg font-bold text-white">
+              {formatCurrency(cashBalance.originalCashBalance || 0)}
             </p>
           </div>
 
-          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <div className="text-slate-300 text-sm">
-                Available Cash Balance:{" "}
-                {formatCurrency(cashBalance.originalCashBalance)}
-              </div>
-              <div
-                className={`font-semibold ${
-                  marketingData.budget > projectedCashBalance
-                    ? "text-rose-400"
-                    : "text-emerald-400"
-                }`}
-              >
-                Projected Balance :{formatCurrency(projectedCashBalance)}
-              </div>
-              <div>
-                <div
-                  className={`font-semibold ${
-                    marketingData.budget > projectedCashBalance
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }`}
-                >
-                  Marketing Budget:
-                  {formatCurrency(marketingData.budget)}
-                </div>
-              </div>
+          {/* Total Budget */}
+          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
+            <div className="flex items-center gap-2 mb-2">
+              <IndianRupee className="h-4 w-4 text-blue-400" />
+              <span className="text-sm font-bold text-white">Total Budget</span>
             </div>
+            <p className="text-lg font-bold text-white">
+              {formatCurrency(marketingData.budget)}
+            </p>
+          </div>
 
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
-              >
-                Validate
-              </button>
+          {/* Online Marketing */}
+          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="h-4 w-4 text-green-400" />
+              <span className="text-sm font-bold text-white">Online</span>
+            </div>
+            <p className="text-lg font-bold text-white">
+              {formatCurrency(marketingData.online)}
+            </p>
+            <p className="text-xs text-slate-400">
+              {percent(marketingData.online, marketingData.budget)}
+            </p>
+          </div>
+
+          {/* Offline Marketing */}
+          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
+            <div className="flex items-center gap-2 mb-2">
+              <Store className="h-4 w-4 text-purple-400" />
+              <span className="text-sm font-bold text-white">Offline</span>
+            </div>
+            <p className="text-lg font-bold text-white">
+              {formatCurrency(marketingData.offline)}
+            </p>
+            <p className="text-xs text-slate-400">
+              {percent(marketingData.offline, marketingData.budget)}
+            </p>
+          </div>
+        </div>
+
+        {/* Marketing Strategy Form */}
+        <div className="bg-slate-800/90 rounded-xl p-6 border border-slate-600">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-blue-500/20 rounded-lg">
+              <Globe className="h-5 w-5 text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">
+                Marketing Strategy
+              </h2>
+              <p className="text-slate-400 text-sm">
+                Configure your marketing budget allocation
+              </p>
             </div>
           </div>
 
-          {(budgetError || success) && (
-            <div className="mt-6 space-y-4">
-              {budgetError && (
-                <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
-                  <div className="flex items-start gap-3">
-                    <TriangleAlert className="text-rose-500 mt-0.5" />
-                    <p className="text-sm">{budgetError}</p>
-                  </div>
-                </div>
-              )}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleValidate();
+            }}
+            className="space-y-6"
+          >
+            {/* Budget Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Total Marketing Budget */}
+              <div className="bg-slate-700/40 rounded-lg p-4 border border-slate-600">
+                <h4 className="text-sm font-bold text-white mb-3">
+                  Total Marketing Budget
+                </h4>
+                <Slider
+                  className="w-[150px]"
+                  label={`₹${marketingData.budget.toLocaleString()}`}
+                  value={[marketingData.budget]}
+                  min={0}
+                  max={Math.min(
+                    cashBalance.originalCashBalance || 1000000,
+                    2000000
+                  )}
+                  onValueChange={(val) => {
+                    handleBudgetChange("budget", val[0]);
+                  }}
+                />
+              </div>
 
-              {success && (
-                <div className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce">
-                  <div className="flex items-center gap-3">
-                    <Check className="text-green-400 text-xl" />
-                    <p className="text-xl font-semibold">
-                      Marketing Validate Successfully!
-                    </p>
-                  </div>
-                </div>
-              )}
+              {/* Online Marketing */}
+              <div className="bg-slate-700/40 rounded-lg p-4 border border-green-500/30">
+                <h4 className="text-sm font-bold text-white mb-3">
+                  Online Marketing
+                </h4>
+                <Slider
+                  className="w-[150px]"
+                  label={`₹${marketingData.online.toLocaleString()} (${percent(
+                    marketingData.online,
+                    marketingData.budget
+                  )})`}
+                  value={[marketingData.online]}
+                  min={0}
+                  max={Math.max(
+                    0,
+                    (cashBalance.originalCashBalance || 1000000) -
+                      marketingData.offline
+                  )}
+                  onValueChange={(val) => {
+                    handleBudgetChange("online", val[0]);
+                  }}
+                />
+              </div>
+
+              {/* Offline Marketing */}
+              <div className="bg-slate-700/40 rounded-lg p-4 border border-purple-500/30">
+                <h4 className="text-sm font-bold text-white mb-3">
+                  Offline Marketing
+                </h4>
+                <Slider
+                  className="w-[150px]"
+                  label={`₹${marketingData.offline.toLocaleString()} (${percent(
+                    marketingData.offline,
+                    marketingData.budget
+                  )})`}
+                  value={[marketingData.offline]}
+                  min={0}
+                  max={Math.max(
+                    0,
+                    (cashBalance.originalCashBalance || 1000000) -
+                      marketingData.online
+                  )}
+                  onValueChange={(val) => {
+                    handleBudgetChange("offline", val[0]);
+                  }}
+                />
+              </div>
             </div>
-          )}
-        </form>
+
+            {/* Info Section */}
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-1 bg-blue-500/20 rounded">
+                  <Check className="h-3 w-3 text-blue-400" />
+                </div>
+                <div className="text-sm text-blue-200">
+                  <p className="font-medium mb-1">Dynamic Budget Allocation</p>
+                  <p className="text-blue-300/80">
+                    Adjust individual online/offline amounts to automatically
+                    update total budget, or set total budget to split evenly
+                    between channels.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Impact Summary */}
+            <div className="bg-slate-700/80 rounded-lg p-4 border border-slate-500">
+              <h4 className="text-lg font-bold text-white mb-3">
+                Financial Impact Summary
+              </h4>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="bg-slate-600/40 rounded-lg p-3">
+                  <p className="text-slate-300 text-xs mb-1">
+                    Marketing Budget
+                  </p>
+                  <p className="text-lg font-bold text-white">
+                    {formatCurrency(marketingData.budget)}
+                  </p>
+                </div>
+                <div className="bg-slate-600/40 rounded-lg p-3">
+                  <p className="text-slate-300 text-xs mb-1">Available Cash</p>
+                  <p className="text-lg font-bold text-white">
+                    {formatCurrency(cashBalance.originalCashBalance || 0)}
+                  </p>
+                </div>
+                <div className="bg-slate-600/40 rounded-lg p-3">
+                  <p className="text-slate-300 text-xs mb-1">Remaining Cash</p>
+                  <p
+                    className={`text-lg font-bold ${
+                      projectedCashBalance < 0
+                        ? "text-red-400"
+                        : "text-emerald-400"
+                    }`}
+                  >
+                    {formatCurrency(projectedCashBalance)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Validation Button */}
+            <div className="text-center">
+              <button
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition-all shadow-lg"
+              >
+                <Check className="h-4 w-4 inline mr-2" />
+                Validate Marketing Strategy
+              </button>
+            </div>
+
+            {/* Validation Messages */}
+            {(budgetError || success) && (
+              <div className="space-y-4">
+                {budgetError && (
+                  <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <TriangleAlert className="text-rose-500 mt-0.5 h-4 w-4" />
+                      <p className="text-sm">{budgetError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="bg-green-900/60 border border-green-500 text-green-100 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <Check className="text-green-400 h-4 w-4" />
+                      <p className="text-sm font-semibold">
+                        Marketing strategy validated successfully!
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </form>
+        </div>
       </div>
     </div>
   );

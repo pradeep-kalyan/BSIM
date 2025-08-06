@@ -9,6 +9,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import DashboardCard from "@/ui/Card";
+import { Slider } from "@/components/ui/slider";
 import {
   useRDForm,
   useCashBalance,
@@ -84,11 +85,9 @@ const RDForm = () => {
     },
   ];
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const key = name as keyof typeof data;
-    updateData({ [key]: Number(value) });
-    setError(key, "");
+  const handleChange = (fieldId: keyof typeof data, value: number) => {
+    updateData({ [fieldId]: value });
+    setError(fieldId, "");
     setSuccess(false);
   };
 
@@ -97,7 +96,6 @@ const RDForm = () => {
     setBudgetAlert(null);
 
     const totalBudget = data.budget ?? 0;
-    const balance = projectedCashBalance;
 
     fieldDefs.forEach(({ id }) => setError(id, ""));
 
@@ -157,32 +155,107 @@ const RDForm = () => {
             Set R&D Strategy
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
-            {fieldDefs.map(({ id, label, placeholder, min, step }) => (
-              <div key={id}>
-                <label
-                  htmlFor={id}
-                  className="block text-slate-200 font-semibold mb-1"
-                >
-                  {label}
-                </label>
-                <input
-                  id={id}
-                  name={id}
-                  type="number"
-                  placeholder={placeholder}
-                  step={step}
-                  min={min}
-                  value={data[id] ?? 0}
-                  onChange={handleChange}
-                  className={`w-full p-3 rounded-lg bg-slate-700 text-white border ${
-                    getError(id) ? "border-rose-500" : "border-slate-600"
-                  } focus:ring-2 focus:ring-emerald-400`}
-                />
-                {getError(id) && (
-                  <p className="text-rose-400 text-xs mt-1">{getError(id)}</p>
-                )}
-              </div>
-            ))}
+            {/* R&D Budget Slider */}
+            <div>
+              <Slider
+                label="R&D Budget (₹)"
+                defaultValue={[data.budget ?? 0]}
+                value={[data.budget ?? 0]}
+                min={0}
+                max={companyData?.cash_balance * 2 || 100000}
+                onValueChange={(val) => handleChange("budget", val[0])}
+              />
+              {getError("budget") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("budget")}
+                </p>
+              )}
+            </div>
+
+            {/* Products in Pipeline Slider */}
+            <div>
+              <Slider
+                label="Products in Pipeline"
+                defaultValue={[data.pip ?? 0]}
+                value={[data.pip ?? 0]}
+                min={0}
+                max={20}
+                onValueChange={(val) => handleChange("pip", val[0])}
+              />
+              {getError("pip") && (
+                <p className="text-rose-400 text-xs mt-1">{getError("pip")}</p>
+              )}
+            </div>
+
+            {/* Time to Market Slider */}
+            <div>
+              <Slider
+                label="Time to Market (months)"
+                defaultValue={[data.time_to_market ?? 0]}
+                value={[data.time_to_market ?? 0]}
+                min={0}
+                max={36}
+                onValueChange={(val) => handleChange("time_to_market", val[0])}
+              />
+              {getError("time_to_market") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("time_to_market")}
+                </p>
+              )}
+            </div>
+
+            {/* Total Development Cost Slider */}
+            <div>
+              <Slider
+                label="Total Development Cost (₹)"
+                defaultValue={[data.total_development ?? 0]}
+                value={[data.total_development ?? 0]}
+                min={0}
+                max={companyData?.cash_balance * 3 || 150000}
+                onValueChange={(val) =>
+                  handleChange("total_development", val[0])
+                }
+              />
+              {getError("total_development") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("total_development")}
+                </p>
+              )}
+            </div>
+
+            {/* Patents Expected Slider */}
+            <div>
+              <Slider
+                label="Patents Expected"
+                defaultValue={[data.patented ?? 0]}
+                value={[data.patented ?? 0]}
+                min={0}
+                max={10}
+                onValueChange={(val) => handleChange("patented", val[0])}
+              />
+              {getError("patented") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("patented")}
+                </p>
+              )}
+            </div>
+
+            {/* Quality Improvements Slider */}
+            <div>
+              <Slider
+                label="Quality Improvements (%)"
+                defaultValue={[data.quality_changes ?? 0]}
+                value={[data.quality_changes ?? 0]}
+                min={0}
+                max={100}
+                onValueChange={(val) => handleChange("quality_changes", val[0])}
+              />
+              {getError("quality_changes") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("quality_changes")}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

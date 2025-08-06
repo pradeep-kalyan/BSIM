@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  getSimulations,
-  deleteSimulation,
-} from "@/app/_actions/createSim";
+import { getSimulations, deleteSimulation } from "@/app/_actions/createSim";
 import { getCurrentUser } from "@/app/functions/jwt";
 import CreateSim from "./_components/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,7 +9,6 @@ import { CheckCircle, PlusCircle, LayoutDashboard, Rocket } from "lucide-react";
 import Card from "./_components/SimCard";
 import EditSimulationForm from "./_components/EditSimulationForm";
 import { ExtendedSimulation } from "./simulation";
-
 
 const Page = () => {
   const [simulations, setSimulations] = useState<ExtendedSimulation[]>([]);
@@ -27,36 +23,12 @@ const Page = () => {
   const [searchQuery] = useState("");
   const [sortBy] = useState<"name" | "created_at">("name");
 
-
-
   const fetchSimulations = async () => {
     const data = await getSimulations();
     const user = await getCurrentUser();
 
-    setSimulations(
-      data.map((sim: any) => ({
-        ...sim,
-        created_at:
-          typeof sim.created_at === "string"
-            ? sim.created_at
-            : sim.created_at.toISOString(),
-        companies: sim.companies || [],
-        simulation_access: sim.simulation_access?.map((access: any) => ({
-          ...access,
-          user: {
-            ...access.user,
-            created_at:
-              typeof access.user.created_at === "string"
-                ? access.user.created_at
-                : access.user.created_at.toISOString(),
-            updated_at:
-              typeof access.user.updated_at === "string"
-                ? access.user.updated_at
-                : access.user.updated_at.toISOString(),
-          },
-        })),
-      }))
-    );
+    // Type assertion since getSimulations already processes the data correctly
+    setSimulations(data as unknown as ExtendedSimulation[]);
 
     setCurrentUserId(user?.id);
     setInitialLoad(false);
@@ -81,7 +53,6 @@ const Page = () => {
     (sim) => sim.created_by !== currentUserId && sim.canAccess
   );
   const allSimulations = [...ownedSimulations, ...sharedSimulations];
-
 
   const filterAndSort = (list: ExtendedSimulation[]) =>
     list

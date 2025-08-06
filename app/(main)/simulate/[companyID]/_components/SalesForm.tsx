@@ -17,6 +17,7 @@ import {
   useCashBalance,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { Slider } from "@/components/ui/slider";
 import DashboardCard from "@/ui/Card";
 import type { ProductFormData } from "@/app/context/FormContext";
 
@@ -336,90 +337,126 @@ const Sales = () => {
 
           {/* Sales Input Fields */}
           <div className="grid gap-6 md:grid-cols-2">
-            {[
-              {
-                id: "sales_volume",
-                label: "Sales Volume (Units)",
-                value: salesData?.sales_volume ?? 0,
-                type: "number",
-                step: 1,
-                min: 0,
-                max: selectedProductData?.inventory_level || undefined,
-                placeholder: selectedProductData
-                  ? `Max available: ${
-                      selectedProductData.inventory_level || 0
-                    } units`
-                  : "Enter sales volume",
-                disabled: !selectedProduct,
-              },
-              {
-                id: "revenue",
-                label: "Total Revenue (₹) - Auto-calculated",
-                value:
-                  selectedProductData && salesData?.sales_volume
-                    ? calculatedValues.revenue
-                    : salesData?.revenue ?? 0,
-                type: "text",
-                readOnly: true,
-                placeholder: selectedProductData
-                  ? `Auto-calculated: ₹${calculatedValues.revenue.toLocaleString()}`
-                  : "Revenue will be calculated automatically",
-                disabled: !selectedProduct,
-              },
-              {
-                id: "market_share",
-                label: "Market Share (%)",
-                value: salesData?.market_share ?? 0,
-                type: "number",
-                step: 0.1,
-                min: 0,
-                max: 100,
-                placeholder: "Market share percentage (0-100)",
-                disabled: !selectedProduct,
-              },
-              {
-                id: "customer_satisfaction",
-                label: "Customer Satisfaction Rating",
-                value: salesData?.customer_satisfaction ?? 0,
-                type: "number",
-                step: 0.1,
-                min: 1,
-                max: 10,
-                placeholder: "Satisfaction rating (1-10)",
-                disabled: !selectedProduct,
-              },
-            ].map((field) => (
-              <div key={field.id}>
-                <label
-                  htmlFor={field.id}
-                  className="block text-slate-200 font-semibold mb-1"
-                >
-                  {field.label}
-                </label>
-                <input
-                  id={field.id}
-                  name={field.id}
-                  type={field.type}
-                  step={field.step}
-                  min={field.min}
-                  max={field.max}
-                  value={
-                    field.readOnly
-                      ? formatNumber(Math.round(field.value))
-                      : field.value
+            {/* Sales Volume Slider */}
+            <div>
+              <Slider
+                label="Sales Volume (Units)"
+                defaultValue={[salesData?.sales_volume ?? 0]}
+                value={[salesData?.sales_volume ?? 0]}
+                min={0}
+                max={selectedProductData?.inventory_level || 1000}
+                onValueChange={(val) => {
+                  if (selectedProduct) {
+                    const event = {
+                      target: {
+                        name: "sales_volume",
+                        value: val[0].toString(),
+                      },
+                    } as React.ChangeEvent<HTMLInputElement>;
+                    handleInputChange(event);
                   }
-                  onChange={field.readOnly ? undefined : handleInputChange}
-                  placeholder={field.placeholder}
-                  disabled={field.disabled}
-                  readOnly={field.readOnly}
-                  className={`w-full p-3 rounded-lg ${
-                    field.readOnly
-                      ? "bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed"
-                      : "bg-slate-700 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  } disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed transition-all`}
-                />
-              </div>
-            ))}
+                }}
+                disabled={!selectedProduct}
+                className={
+                  !selectedProduct ? "opacity-50 pointer-events-none" : ""
+                }
+              />
+              {!selectedProduct && (
+                <p className="text-slate-400 text-sm mt-1">
+                  Please select a product first
+                </p>
+              )}
+            </div>
+
+            {/* Revenue - Auto-calculated, read-only */}
+            <div>
+              <label
+                htmlFor="revenue"
+                className="block text-slate-200 font-semibold mb-1"
+              >
+                Total Revenue (₹) - Auto-calculated
+              </label>
+              <input
+                id="revenue"
+                name="revenue"
+                type="text"
+                value={
+                  selectedProductData && salesData?.sales_volume
+                    ? calculatedValues.revenue.toLocaleString()
+                    : (salesData?.revenue ?? 0).toLocaleString()
+                }
+                readOnly
+                placeholder={
+                  selectedProductData
+                    ? `Auto-calculated: ₹${calculatedValues.revenue.toLocaleString()}`
+                    : "Revenue will be calculated automatically"
+                }
+                disabled={!selectedProduct}
+                className={`w-full p-3 rounded-lg bg-slate-600 text-slate-300 border border-slate-600 cursor-not-allowed transition-all`}
+              />
+            </div>
+
+            {/* Market Share Slider */}
+            <div>
+              <Slider
+                label="Market Share (%)"
+                defaultValue={[salesData?.market_share ?? 0]}
+                value={[salesData?.market_share ?? 0]}
+                min={0}
+                max={100}
+                onValueChange={(val) => {
+                  if (selectedProduct) {
+                    const event = {
+                      target: {
+                        name: "market_share",
+                        value: val[0].toString(),
+                      },
+                    } as React.ChangeEvent<HTMLInputElement>;
+                    handleInputChange(event);
+                  }
+                }}
+                disabled={!selectedProduct}
+                className={
+                  !selectedProduct ? "opacity-50 pointer-events-none" : ""
+                }
+              />
+              {!selectedProduct && (
+                <p className="text-slate-400 text-sm mt-1">
+                  Please select a product first
+                </p>
+              )}
+            </div>
+
+            {/* Customer Satisfaction Slider */}
+            <div>
+              <Slider
+                label="Customer Satisfaction Rating (1-10)"
+                defaultValue={[salesData?.customer_satisfaction ?? 1]}
+                value={[salesData?.customer_satisfaction ?? 1]}
+                min={1}
+                max={10}
+                onValueChange={(val) => {
+                  if (selectedProduct) {
+                    const event = {
+                      target: {
+                        name: "customer_satisfaction",
+                        value: val[0].toString(),
+                      },
+                    } as React.ChangeEvent<HTMLInputElement>;
+                    handleInputChange(event);
+                  }
+                }}
+                disabled={!selectedProduct}
+                className={
+                  !selectedProduct ? "opacity-50 pointer-events-none" : ""
+                }
+              />
+              {!selectedProduct && (
+                <p className="text-slate-400 text-sm mt-1">
+                  Please select a product first
+                </p>
+              )}
+            </div>
 
             {/* Read-only Calculated Fields */}
             <div>

@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider     = "postgresql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model user {
@@ -54,7 +53,7 @@ model company {
   description       String?
   logo_url          String?
   cash_balance      Float    @default(0)
-  current_period    Int      @default(0)
+  current_period    Int      @default(1)
   data              String   @default("{}")
   total_assets      Float    @default(0)
   total_liabilities Float    @default(0)
@@ -74,10 +73,31 @@ model company {
   rd_decisions         rd[]
   production_decisions production[]
   marketing_decisions  marketing[]
+  company_histories    company_history[]
 
   @@index([simulation_id])
   @@index([user_id])
   @@map("companies")
+}
+
+model company_history {
+  id                String   @id @default(cuid())
+  company_id        String
+  period            Int
+  cash_balance      Float    @default(0)
+  data              String   @default("{}")
+  total_assets      Float    @default(0)
+  total_liabilities Float    @default(0)
+  marketing_budget  Float    @default(0)
+  credit_rating     String?
+  brand_value       Float    @default(0)
+  created_at        DateTime @default(now())
+
+  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, period])
+  @@index([company_id])
+  @@map("company_histories")
 }
 
 model simulation_access {
@@ -194,7 +214,6 @@ model production {
   @@index([company_id])
 }
 
-
 model hr_decision {
   id           String   @id @default(cuid())
   company_id   String
@@ -251,15 +270,15 @@ model rd {
 }
 
 model marketing {
-  id              String   @id @default(cuid())
-  company_id      String
-  period          Int
-  budget          Int
-  offline         Int
-  online          Int
-  finalised       Boolean  @default(false)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id         String   @id @default(cuid())
+  company_id String
+  period     Int
+  budget     Int
+  offline    Int
+  online     Int
+  finalised  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
 
