@@ -1215,7 +1215,7 @@ export function FormProvider({
         const result = await comprehensiveFormSubmission(
           companyId,
           comprehensiveData
-        ); 
+        );
 
         if (result.success) {
           // Clear form state after successful submission

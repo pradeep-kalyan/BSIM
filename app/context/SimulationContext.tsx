@@ -44,7 +44,6 @@ export const SimulationProvider = ({
     const com = Cookies.get("comId");
     const period = Cookies.get("period");
 
-    console.log("Loaded simId:", sim, "comId:", com);
 
     if (sim) setSimIdState(sim);
     if (com) setComIdState(com);

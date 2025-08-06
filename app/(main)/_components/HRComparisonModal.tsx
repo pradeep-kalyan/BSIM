@@ -115,7 +115,7 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
   };
 
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
-  console.log(previousDecision);
+  
 
   const formatChange = (current: number, previous: number) => {
     const change = current - previous;
