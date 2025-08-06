@@ -102,7 +102,10 @@ const HRDashboard = () => {
   const totalHRBudget =
     (isNaN(projectedSalaryBudget) ? 0 : projectedSalaryBudget) + trainingBudget;
 
-  // Real-time budget validation
+  // Update budget impact whenever calculated budget changes
+  React.useEffect(() => {
+    updateHRBudgetImpact(totalHRBudget);
+  }, [totalHRBudget, updateHRBudgetImpact]);
 
   // Validation function similar to other forms
   const handleValidate = () => {
@@ -138,8 +141,6 @@ const HRDashboard = () => {
 
     // Check if there's enough cash
 
-    // Update the HR budget impact in the cash balance system
-    updateHRBudgetImpact(totalHRBudget);
     setSuccess(true);
   };
   return (
