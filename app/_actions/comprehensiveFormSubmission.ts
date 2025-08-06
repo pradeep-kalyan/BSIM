@@ -23,6 +23,7 @@ interface ComprehensiveFormData {
     employee_satisfaction: number;
     recruitment_cost: number;
     firing_cost: number;
+    total_employee_count: number;
   };
   marketing: {
     budget: number;
@@ -63,7 +64,7 @@ interface ComprehensiveFormData {
   };
   product?: Array<{
     name: string;
-    description?: string;
+    description?: string | null;
     category: string;
     quality_rating: number;
     innovation_rating: number;
@@ -75,8 +76,8 @@ interface ComprehensiveFormData {
     development_cost: number;
     marketing_budget: number;
     status: string;
-    launch_period?: number;
-    discontinue_period?: number;
+    launch_period?: number | null;
+    discontinue_period?: number | null;
   }>;
   sales: {
     [productId: string]: {
@@ -163,6 +164,15 @@ export async function comprehensiveFormSubmission(
       // 2.1. Submit HR Decision
       (async () => {
         try {
+          // Calculate total employee count from existing and new roles
+          const totalEmployeeCount =
+            formData.hr.existingRoles.reduce(
+              (total, role) =>
+                total + (role.current_head_count + role.hires - role.fires),
+              0
+            ) +
+            formData.hr.newRoles.reduce((total, role) => total + role.hires, 0);
+
           const existingHRDecision = await prisma.hr_decision.findFirst({
             where: {
               company_id: companyId,
@@ -183,6 +193,7 @@ export async function comprehensiveFormSubmission(
                   employee_satisfaction: formData.hr.employee_satisfaction,
                   recruitment_cost: formData.hr.recruitment_cost,
                   firing_cost: formData.hr.firing_cost,
+                  total_employee_count: totalEmployeeCount,
                   is_submitted: true,
                 },
               });
@@ -246,6 +257,7 @@ export async function comprehensiveFormSubmission(
                 employee_satisfaction: formData.hr.employee_satisfaction,
                 recruitment_cost: formData.hr.recruitment_cost,
                 firing_cost: formData.hr.firing_cost,
+                total_employee_count: totalEmployeeCount,
                 is_submitted: true,
               },
             });

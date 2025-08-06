@@ -213,7 +213,7 @@ interface HRDecisionType {
   totalBudget?: number;
   employee_satisfaction?: number;
   employeeSatisfaction?: number;
-  total_employee_count?: number;
+  total_employee_count?: number | null;
   roles?: HRRole[];
 }
 

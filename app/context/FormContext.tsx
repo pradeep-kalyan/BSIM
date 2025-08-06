@@ -105,7 +105,7 @@ export interface ProductSalesData {
 export interface ProductFormData {
   id?: string; // Optional ID for tracking existing products
   name: string;
-  description?: string;
+  description?: string | null;
   category: string;
   quality_rating: number;
   innovation_rating: number;
@@ -117,8 +117,8 @@ export interface ProductFormData {
   development_cost: number;
   marketing_budget: number;
   status: string;
-  launch_period?: number;
-  discontinue_period?: number;
+  launch_period?: number | null;
+  discontinue_period?: number | null;
 }
 
 export interface CompanyFormData {
