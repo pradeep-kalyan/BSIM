@@ -128,6 +128,13 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           employee_satisfaction: state.hr.employee_satisfaction,
           recruitment_cost: state.hr.recruitment_cost,
           firing_cost: state.hr.firing_cost,
+          total_employee_count:
+            state.hr.existingRoles.reduce(
+              (total, role) =>
+                total + (role.current_head_count + role.hires - role.fires),
+              0
+            ) +
+            state.hr.newRoles.reduce((total, role) => total + role.hires, 0),
         },
         marketing: {
           budget: state.marketing.budget,
