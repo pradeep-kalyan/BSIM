@@ -21,8 +21,6 @@ interface ComprehensiveFormData {
     training_budget: number;
     total_budget: number;
     employee_satisfaction: number;
-    recruitment_cost: number;
-    firing_cost: number;
     total_employee_count: number;
   };
   marketing: {
@@ -178,8 +176,8 @@ export async function comprehensiveFormSubmission(
                   training_budget: formData.hr.training_budget,
                   total_budget: formData.hr.total_budget,
                   employee_satisfaction: formData.hr.employee_satisfaction,
-                  recruitment_cost: formData.hr.recruitment_cost,
-                  firing_cost: formData.hr.firing_cost,
+                  recruitment_cost: 0,
+                  firing_cost: 0,
                   total_employee_count: totalEmployeeCount,
                   is_submitted: true,
                 },
@@ -239,8 +237,8 @@ export async function comprehensiveFormSubmission(
                 training_budget: formData.hr.training_budget,
                 total_budget: formData.hr.total_budget,
                 employee_satisfaction: formData.hr.employee_satisfaction,
-                recruitment_cost: formData.hr.recruitment_cost,
-                firing_cost: formData.hr.firing_cost,
+                recruitment_cost: 0,
+                firing_cost: 0,
                 total_employee_count: totalEmployeeCount,
                 is_submitted: true,
               },

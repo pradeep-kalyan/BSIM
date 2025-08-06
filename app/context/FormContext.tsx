@@ -74,8 +74,6 @@ export interface HRFormData {
   training_budget: number;
   total_budget: number;
   employee_satisfaction: number;
-  recruitment_cost: number;
-  firing_cost: number;
   total_employee_count: number;
 }
 
@@ -268,8 +266,6 @@ const getDefaultHRData = (): HRFormData => ({
   training_budget: 0,
   total_budget: 0,
   employee_satisfaction: 0,
-  recruitment_cost: 0,
-  firing_cost: 0,
   total_employee_count: 0,
 });
 
@@ -1461,16 +1457,11 @@ export function useHRForm() {
       const salary_budget = data.salary_budget ?? state.hr.salary_budget ?? 0;
       const training_budget =
         data.training_budget ?? state.hr.training_budget ?? 0;
-      const recruitment_cost =
-        data.recruitment_cost ?? state.hr.recruitment_cost ?? 0;
-      const firing_cost = data.firing_cost ?? state.hr.firing_cost ?? 0;
       const total_budget = data.total_budget ?? state.hr.total_budget ?? 0;
 
       // Use total_budget if available, otherwise calculate from components
       const budgetImpact =
-        total_budget > 0
-          ? total_budget
-          : salary_budget + training_budget + recruitment_cost + firing_cost;
+        total_budget > 0 ? total_budget : salary_budget + training_budget;
 
       updateHR(data);
       updateHRBudgetImpact(budgetImpact);
@@ -1481,8 +1472,6 @@ export function useHRForm() {
   // Helper function to calculate total budget from roles
   const calculateBudgetFromRoles = useCallback(() => {
     let salary_budget = 0;
-    let recruitment_cost = 0;
-    let firing_cost = 0;
 
     // Calculate from existing roles
     state.hr.existingRoles.forEach((role) => {
@@ -1492,29 +1481,21 @@ export function useHRForm() {
       }
 
       // Calculate recruitment cost (cost to hire new employees)
-      recruitment_cost += role.hires * role.salary_per_head;
 
       // Calculate firing cost (could be severance pay, typically a percentage of salary)
       // Assuming firing cost is equivalent to one month's salary per fired employee
-      if (role.fires > 0) {
-        firing_cost += role.fires * (role.salary_per_head / 12);
-      }
     });
 
     // Calculate from new roles
     state.hr.newRoles.forEach((role) => {
       salary_budget += role.hires * role.salary_per_head;
-      recruitment_cost += role.hires * role.salary_per_head;
       // New roles don't have firing costs
     });
 
-    const total_budget =
-      salary_budget + state.hr.training_budget + recruitment_cost + firing_cost;
+    const total_budget = salary_budget + state.hr.training_budget;
 
     return {
       salary_budget,
-      recruitment_cost,
-      firing_cost,
       total_budget,
     };
   }, [state.hr]);
@@ -1542,8 +1523,6 @@ export function useHRForm() {
 
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
-          recruitment_cost: budget.recruitment_cost,
-          firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
           total_employee_count,
         });
@@ -1577,8 +1556,6 @@ export function useHRForm() {
 
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
-          recruitment_cost: budget.recruitment_cost,
-          firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
           total_employee_count,
         });
@@ -1612,8 +1589,6 @@ export function useHRForm() {
 
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
-          recruitment_cost: budget.recruitment_cost,
-          firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
           total_employee_count,
         });
@@ -1644,8 +1619,6 @@ export function useHRForm() {
 
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
-          recruitment_cost: budget.recruitment_cost,
-          firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
           total_employee_count,
         });
@@ -1679,8 +1652,6 @@ export function useHRForm() {
 
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
-          recruitment_cost: budget.recruitment_cost,
-          firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
           total_employee_count,
         });
@@ -1714,8 +1685,6 @@ export function useHRForm() {
 
         updateDataWithCashImpact({
           salary_budget: budget.salary_budget,
-          recruitment_cost: budget.recruitment_cost,
-          firing_cost: budget.firing_cost,
           total_budget: budget.total_budget,
           total_employee_count,
         });
@@ -1734,8 +1703,6 @@ export function useHRForm() {
     // Reset budget and total employee count when clearing all roles
     updateDataWithCashImpact({
       salary_budget: 0,
-      recruitment_cost: 0,
-      firing_cost: 0,
       total_budget: state.hr.training_budget, // Keep training budget
       total_employee_count: 0, // No employees after clearing all roles
     });
@@ -1811,8 +1778,6 @@ export function useHRRoleContext() {
   // Auto-calculate budget impact whenever roles change
   const autoCalculateAndUpdateBudget = useCallback(() => {
     let salary_budget = 0;
-    let recruitment_cost = 0;
-    let firing_cost = 0;
 
     // Calculate from existing roles
     state.hr.existingRoles.forEach((role) => {
@@ -1820,21 +1785,14 @@ export function useHRRoleContext() {
       if (newHeadCount > 0) {
         salary_budget += newHeadCount * role.salary_per_head;
       }
-      recruitment_cost += role.hires * role.salary_per_head;
-      if (role.fires > 0) {
-        firing_cost += role.fires * (role.salary_per_head / 12);
-      }
     });
 
     // Calculate from new roles
     state.hr.newRoles.forEach((role) => {
       salary_budget += role.hires * role.salary_per_head;
-      recruitment_cost += role.hires * role.salary_per_head;
     });
 
-    const total_budget =
-      salary_budget + state.hr.training_budget + recruitment_cost + firing_cost;
-
+    const total_budget = salary_budget + state.hr.training_budget;
     // Calculate total employee count
     const existingEmployees = state.hr.existingRoles.reduce((total, role) => {
       return (
@@ -1851,8 +1809,6 @@ export function useHRRoleContext() {
     // Update HR data with calculated values
     updateHR({
       salary_budget,
-      recruitment_cost,
-      firing_cost,
       total_budget,
       total_employee_count,
     });
@@ -2472,10 +2428,8 @@ export function useHRRoleManagement() {
       totalHires,
       totalFires,
       netEmployeeChange,
-      hiringCost: calculateBudgetFromRoles().recruitment_cost,
-      firingCost: calculateBudgetFromRoles().firing_cost,
     };
-  }, [hrData.existingRoles, hrData.newRoles, calculateBudgetFromRoles]);
+  }, [hrData.existingRoles, hrData.newRoles]);
 
   // Auto-calculate and update budget fields based on roles
   const autoCalculateBudget = useCallback(() => {
@@ -2483,8 +2437,6 @@ export function useHRRoleManagement() {
     const totalEmployees = getTotalEmployees();
     updateHRData({
       salary_budget: budget.salary_budget,
-      recruitment_cost: budget.recruitment_cost,
-      firing_cost: budget.firing_cost,
       total_budget: budget.total_budget,
       total_employee_count: totalEmployees,
     });
