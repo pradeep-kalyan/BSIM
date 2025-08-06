@@ -6,7 +6,6 @@ import { getCompanyDashboardData } from "@/app/_actions/getCompanyData";
 const Page = async ({ params }: { params: Promise<{ companyID: string }> }) => {
   const { companyID } = await params;
   const data = await getCompanyDashboardData(companyID);
-  console.log(data);
 
   if (!data) {
     notFound();

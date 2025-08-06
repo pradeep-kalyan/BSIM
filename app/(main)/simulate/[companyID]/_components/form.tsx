@@ -114,7 +114,6 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
 
   const handleSaveAndSubmit = async () => {
     try {
-      console.log("Starting form submission...");
       setIsSubmitting(true);
 
       // Prepare comprehensive form data
@@ -199,13 +198,9 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         budget_impacts: budgetImpacts,
       };
 
-      console.log("Form data prepared, calling submission API...");
-      console.log("Products being submitted:", formData.product);
-      console.log("Total products count:", formData.product.length);
-      console.log("Sales data being submitted:", formData.sales);
-      console.log("Sales data keys:", Object.keys(formData.sales));
+     
       const result = await comprehensiveFormSubmission(companyId, formData);
-      console.log("Submission result:", result);
+    
 
       setIsSubmitting(false);
 

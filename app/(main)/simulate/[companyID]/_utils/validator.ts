@@ -82,25 +82,8 @@ export const productionSchema = z
     updated_at: z.date().default(new Date()),
   })
   .superRefine((data, ctx) => {
-    console.log("Validator superRefine called with:", {
-      units_to_produce: data.units_to_produce,
-      production_capacity: data.production_capacity,
-      comparison: data.units_to_produce > data.production_capacity,
-      types: {
-        units: typeof data.units_to_produce,
-        capacity: typeof data.production_capacity,
-      },
-    });
-
     // Ensure units to produce doesn't exceed production capacity
     if (data.units_to_produce > data.production_capacity) {
-      console.log("Adding validation error for units exceeding capacity");
-      ctx.addIssue({
-        code: "custom",
-        message: `Units to produce (${data.units_to_produce}) cannot exceed production capacity (${data.production_capacity})`,
-        path: ["units_to_produce"],
-      });
-    }
 
     // Warning for low capacity utilization (optional business rule)
     if (data.production_capacity > 0 && data.units_to_produce > 0) {
