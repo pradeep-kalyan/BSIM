@@ -62,7 +62,17 @@ export async function getCompanyDashboardData(companyId: string) {
   const hrMetrics = hrMetricsRaw.map((hr) => ({
     period: hr.period,
     totalBudget: hr.total_budget,
+    total_budget: hr.total_budget,
     employeeSatisfaction: hr.employee_satisfaction,
+    employee_satisfaction: hr.employee_satisfaction,
+    totalEmployees:
+      hr.total_employee_count ||
+      hr.roles?.reduce((sum, role) => sum + role.head_count, 0) ||
+      0,
+    total_employee_count:
+      hr.total_employee_count ||
+      hr.roles?.reduce((sum, role) => sum + role.head_count, 0) ||
+      0,
     roles: hr.roles.map((r) => ({
       role_name: r.role_name,
       salary_per_head: r.salary_per_head,
