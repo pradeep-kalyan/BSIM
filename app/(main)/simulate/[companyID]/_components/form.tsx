@@ -20,7 +20,11 @@ import ProductsForm from "./ProductsForm";
 import LogoutBtn from "@/app/(auth)/_components/Logout";
 import HRDashboard from "./HR";
 import PreviewDashboard from "./PreviewDashboard";
-import { useForm, useCashBalance } from "@/app/context/FormContext";
+import {
+  useForm,
+  useCashBalance,
+  useSalesForm,
+} from "@/app/context/FormContext";
 import { comprehensiveFormSubmission } from "@/app/_actions/comprehensiveFormSubmission";
 import { redirect } from "next/navigation";
 import Sales from "./SalesForm";
@@ -78,6 +82,9 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const { state } = useForm();
   const { projectedCashBalance, budgetImpacts } = useCashBalance();
+
+  const { getTotalSalesMetrics } = useSalesForm();
+  const salesmetrices = getTotalSalesMetrics();
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
@@ -144,47 +151,49 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           repay_loan: state.finance.repay_loan,
           dividend_payout: state.finance.dividend_payout,
           equity_issue: state.finance.equity_issue,
+          total_revenue: salesmetrices.totalRevenue,
+          net_profit: salesmetrices.totalProfit,
+          operating_costs: salesmetrices.totalCosts,
         },
-        sales: {
-          sales_volume: state.sales.sales_volume,
-          revenue: state.sales.revenue,
-          costs: state.sales.costs,
-          profit: state.sales.profit,
-          market_share: state.sales.market_share,
-          customer_satisfaction: state.sales.customer_satisfaction,
-        },
-        product:
-          state.product[0] && state.product[0].name
-            ? {
-                name: state.product[0].name,
-                description: state.product[0].description,
-                category: state.product[0].category,
-                quality_rating: state.product[0].quality_rating,
-                innovation_rating: state.product[0].innovation_rating,
-                sustainability_rating: state.product[0].sustainability_rating,
-                production_cost: state.product[0].production_cost,
-                selling_price: state.product[0].selling_price,
-                inventory_level: state.product[0].inventory_level,
-                production_capacity: state.product[0].production_capacity,
-                development_cost: state.product[0].development_cost,
-                marketing_budget: state.product[0].marketing_budget,
-                status: state.product[0].status,
-                launch_period: state.product[0].launch_period,
-                discontinue_period: state.product[0].discontinue_period,
-              }
-            : undefined,
+        sales: state.sales, // Pass the full per-product sales data object
+        product: state.product
+          .filter((product) => product && product.name)
+          .map((product) => ({
+            name: product.name,
+            description: product.description,
+            category: product.category,
+            quality_rating: product.quality_rating,
+            innovation_rating: product.innovation_rating,
+            sustainability_rating: product.sustainability_rating,
+            production_cost: product.production_cost,
+            selling_price: product.selling_price,
+            inventory_level: product.inventory_level,
+            production_capacity: product.production_capacity,
+            development_cost: product.development_cost,
+            marketing_budget: product.marketing_budget,
+            status: product.status,
+            launch_period: product.launch_period,
+            discontinue_period: product.discontinue_period,
+          })),
         projected_balance: projectedCashBalance,
         budget_impacts: budgetImpacts,
       };
 
       console.log("Form data prepared, calling submission API...");
+      console.log("Products being submitted:", formData.product);
+      console.log("Total products count:", formData.product.length);
+      console.log("Sales data being submitted:", formData.sales);
+      console.log("Sales data keys:", Object.keys(formData.sales));
       const result = await comprehensiveFormSubmission(companyId, formData);
       console.log("Submission result:", result);
 
       setIsSubmitting(false);
 
       if (result.success) {
-        // Show success message
+        // Show success message with product information
+        const productCount = formData.product.length;
+        const productText = productCount === 1 ? "product" : "products";
+
         const successDiv = document.createElement("div");
         successDiv.style.cssText = `
           position: fixed;
@@ -201,7 +210,12 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         successDiv.innerHTML = `
           <div style="display: flex; align-items: center; gap: 12px;">
             <div style="width: 20px; height: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #4caf50; font-weight: bold;">✓</div>
-            <span>Simulation submitted successfully! Advanced to period ${result.newPeriod}</span>
+            <div>
+              <div>Simulation submitted successfully!</div>
+              <div style="font-size: 12px; margin-top: 4px; opacity: 0.9;">
+                ${productCount} ${productText} submitted • Advanced to period ${result.newPeriod}
+              </div>
+            </div>
           </div>
         `;
         document.body.appendChild(successDiv);

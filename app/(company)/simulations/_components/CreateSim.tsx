@@ -8,7 +8,7 @@ import { FlaskConical, Rocket } from "lucide-react";
 
 const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
   const [loading, setLoading] = useState(false);
-const [newConfigFields, setNewConfigFields] = useState([
+  const [newConfigFields, setNewConfigFields] = useState([
     { key: "", value: "" },
   ]);
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -54,10 +54,10 @@ const [newConfigFields, setNewConfigFields] = useState([
           name="accessEmails"
         />
 
-              <DynamicConfigFields
-                fields={newConfigFields}
-                setFields={setNewConfigFields}
-              />
+        <DynamicConfigFields
+          fields={newConfigFields}
+          setFields={setNewConfigFields}
+        />
 
         <div className="flex justify-end pt-4">
           <button

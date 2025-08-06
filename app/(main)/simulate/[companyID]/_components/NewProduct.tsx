@@ -1,30 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { useForm, type ProductFormData } from "@/app/context/FormContext";
 
 interface ProductFormPageProps {
   mode: "add" | "edit";
-  initialProduct?: Partial<Product>;
-  onSubmit: (data: Partial<Product>) => void;
+  initialProduct?: Partial<ProductFormData>;
+  onSubmit: (data: Partial<ProductFormData>) => void;
   onCancel: () => void;
   submitting?: boolean;
 }
 
-type Product = {
-  id?: string;
-  name: string;
-  description?: string | null;
-  category: string;
-  quality_rating: number;
-  innovation_rating: number;
-  sustainability_rating: number;
-  production_cost: number;
-  selling_price: number;
-  inventory_level: number;
-  production_capacity: number;
-  development_cost: number;
-  marketing_budget: number;
-  status?: string;
-};
+type Product = ProductFormData;
 
 const emptyProduct: Product = {
   name: "",
@@ -39,6 +25,7 @@ const emptyProduct: Product = {
   production_capacity: 1000,
   development_cost: 0,
   marketing_budget: 0,
+  status: "development",
 };
 
 export default function ProductFormPage({
@@ -48,6 +35,7 @@ export default function ProductFormPage({
   onCancel,
   submitting,
 }: ProductFormPageProps) {
+  const { updateProductBudgetImpact } = useForm();
   const [product, setProduct] = useState<Product>(
     mode === "edit" && initialProduct
       ? {
@@ -77,15 +65,27 @@ export default function ProductFormPage({
     field: keyof Product,
     value: string | number | undefined
   ) => {
+    const newValue = field === "description" ? String(value || "") : value;
+
     setProduct((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: newValue,
     }));
+
     setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[field];
       return newErrors;
     });
+
+    // Update budget impact when development_cost or marketing_budget changes
+    if (field === "development_cost" || field === "marketing_budget") {
+      const updatedProduct = { ...product, [field]: newValue };
+      const budgetImpact =
+        (updatedProduct.development_cost || 0) +
+        (updatedProduct.marketing_budget || 0);
+      updateProductBudgetImpact(budgetImpact);
+    }
   };
 
   const validate = (data: Product): Partial<Record<keyof Product, string>> => {
@@ -116,175 +116,248 @@ export default function ProductFormPage({
   };
 
   return (
-    <div className="bg-slate-800 rounded-xl p-5 border border-slate-700/70 max-w-xl mx-auto mt-8 z-20 relative">
-      <h3 className="text-xl font-semibold text-white mb-3">
+    <div className="bg-slate-800 rounded-lg p-3 border border-slate-700/70 max-w-md mx-auto mt-4 z-20 relative">
+      <h3 className="text-lg font-semibold text-white mb-2">
         {mode === "edit" ? "Edit Product" : "Add New Product"}
       </h3>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Name */}
         <div>
-          <label className="block text-sm text-slate-300 mb-1">
+          <label className="block text-xs text-slate-300 mb-1">
             Product Name
           </label>
-          <input
+          <Input
             type="text"
             value={product.name}
             onChange={(e) => handleFieldChange("name", e.target.value)}
-            className="w-full p-2 rounded bg-slate-900 text-white"
+            className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
             required
           />
           {errors.name && (
             <div className="text-red-400 text-xs">{errors.name}</div>
           )}
         </div>
-        {/* Category */}
-        <div>
-          <label className="block text-sm text-slate-300 mb-1">Category</label>
-          <input
-            type="text"
-            value={product.category}
-            onChange={(e) => handleFieldChange("category", e.target.value)}
-            className="w-full p-2 rounded bg-slate-900 text-white"
-            required
-          />
-          {errors.category && (
-            <div className="text-red-400 text-xs">{errors.category}</div>
-          )}
+
+        {/* Category & Description in one row */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Category
+            </label>
+            <Input
+              type="text"
+              value={product.category}
+              onChange={(e) => handleFieldChange("category", e.target.value)}
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+              required
+            />
+            {errors.category && (
+              <div className="text-red-400 text-xs">{errors.category}</div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Description
+            </label>
+            <Input
+              type="text"
+              value={product.description || ""}
+              onChange={(e) => handleFieldChange("description", e.target.value)}
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+              placeholder="Optional"
+            />
+          </div>
         </div>
-        {/* Description */}
-        <div>
-          <label className="block text-sm text-slate-300 mb-1">
-            Description
-          </label>
-          <textarea
-            value={product.description || ""}
-            onChange={(e) => handleFieldChange("description", e.target.value)}
-            className="w-full p-2 rounded bg-slate-900 text-white"
-            rows={1}
-          />
-        </div>
+
         {/* Ratings */}
         <div className="grid grid-cols-3 gap-2">
-          {(
-            [
-              ["Quality Rating (1-10)", "quality_rating"],
-              ["Innovation Rating (1-10)", "innovation_rating"],
-              ["Sustainability Rating (1-10)", "sustainability_rating"],
-            ] as const
-          ).map(([label, key]) => (
-            <div key={key}>
-              <Slider
-                label={label}
-                defaultValue={[product[key]]}
-                value={[product[key]]}
-                min={1}
-                max={10}
-                onValueChange={(val) => handleFieldChange(key, val[0])}
-              />
-              {errors[key] && (
-                <div className="text-red-400 text-xs mt-1">{errors[key]}</div>
-              )}
-            </div>
-          ))}
-        </div>
-        {/* Other numeric fields */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Production Cost Slider */}
           <div>
-            <Slider
-              label="Production Cost (₹)"
-              defaultValue={[product.production_cost]}
-              value={[product.production_cost]}
-              min={0}
-              max={10000}
-              onValueChange={(val) =>
-                handleFieldChange("production_cost", val[0])
+            <label className="block text-xs text-slate-300 mb-1">
+              Quality (1-10)
+            </label>
+            <Input
+              type="number"
+              min="1"
+              max="10"
+              value={product.quality_rating}
+              onChange={(e) =>
+                handleFieldChange("quality_rating", Number(e.target.value))
               }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
             />
+            {errors.quality_rating && (
+              <div className="text-red-400 text-xs">
+                {errors.quality_rating}
+              </div>
+            )}
           </div>
 
-          {/* Selling Price Slider */}
           <div>
-            <Slider
-              label="Selling Price (₹)"
-              defaultValue={[product.selling_price]}
-              value={[product.selling_price]}
-              min={0}
-              max={15000}
-              onValueChange={(val) =>
-                handleFieldChange("selling_price", val[0])
+            <label className="block text-xs text-slate-300 mb-1">
+              Innovation (1-10)
+            </label>
+            <Input
+              type="number"
+              min="1"
+              max="10"
+              value={product.innovation_rating}
+              onChange={(e) =>
+                handleFieldChange("innovation_rating", Number(e.target.value))
               }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
             />
+            {errors.innovation_rating && (
+              <div className="text-red-400 text-xs">
+                {errors.innovation_rating}
+              </div>
+            )}
           </div>
 
-          {/* Inventory Level Slider */}
           <div>
-            <Slider
-              label="Inventory Level"
-              defaultValue={[product.inventory_level]}
-              value={[product.inventory_level]}
-              min={0}
-              max={5000}
-              onValueChange={(val) =>
-                handleFieldChange("inventory_level", Math.round(val[0]))
+            <label className="block text-xs text-slate-300 mb-1">
+              Sustainability (1-10)
+            </label>
+            <Input
+              type="number"
+              min="1"
+              max="10"
+              value={product.sustainability_rating}
+              onChange={(e) =>
+                handleFieldChange(
+                  "sustainability_rating",
+                  Number(e.target.value)
+                )
               }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
             />
-          </div>
-
-          {/* Production Capacity Slider */}
-          <div>
-            <Slider
-              label="Production Capacity"
-              defaultValue={[product.production_capacity]}
-              value={[product.production_capacity]}
-              min={0}
-              max={10000}
-              onValueChange={(val) =>
-                handleFieldChange("production_capacity", Math.round(val[0]))
-              }
-            />
-          </div>
-
-          {/* Development Cost Slider */}
-          <div>
-            <Slider
-              label="Development Cost (₹)"
-              defaultValue={[product.development_cost]}
-              value={[product.development_cost]}
-              min={0}
-              max={50000}
-              onValueChange={(val) =>
-                handleFieldChange("development_cost", val[0])
-              }
-            />
-          </div>
-
-          {/* Marketing Budget Slider */}
-          <div>
-            <Slider
-              label="Marketing Budget (₹)"
-              defaultValue={[product.marketing_budget]}
-              value={[product.marketing_budget]}
-              min={0}
-              max={25000}
-              onValueChange={(val) =>
-                handleFieldChange("marketing_budget", val[0])
-              }
-            />
+            {errors.sustainability_rating && (
+              <div className="text-red-400 text-xs">
+                {errors.sustainability_rating}
+              </div>
+            )}
           </div>
         </div>
-        <div className="flex gap-3 mt-4">
+
+        {/* Financial & Production fields in 3 columns */}
+        <div className="grid grid-cols-3 gap-2">
+          {/* Production Cost */}
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Production Cost (₹)
+            </label>
+            <Input
+              type="number"
+              min="0"
+              max="10000"
+              value={product.production_cost}
+              onChange={(e) =>
+                handleFieldChange("production_cost", Number(e.target.value))
+              }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+            />
+          </div>
+
+          {/* Selling Price */}
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Selling Price (₹)
+            </label>
+            <Input
+              type="number"
+              min="0"
+              max="15000"
+              value={product.selling_price}
+              onChange={(e) =>
+                handleFieldChange("selling_price", Number(e.target.value))
+              }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+            />
+          </div>
+
+          {/* Inventory Level */}
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Inventory Level
+            </label>
+            <Input
+              type="number"
+              min="0"
+              max="5000"
+              value={product.inventory_level}
+              onChange={(e) =>
+                handleFieldChange("inventory_level", Number(e.target.value))
+              }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {/* Production Capacity */}
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Production Capacity
+            </label>
+            <Input
+              type="number"
+              min="0"
+              max="10000"
+              value={product.production_capacity}
+              onChange={(e) =>
+                handleFieldChange("production_capacity", Number(e.target.value))
+              }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+            />
+          </div>
+
+          {/* Development Cost */}
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Development Cost (₹)
+            </label>
+            <Input
+              type="number"
+              min="0"
+              max="50000"
+              value={product.development_cost}
+              onChange={(e) =>
+                handleFieldChange("development_cost", Number(e.target.value))
+              }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+            />
+          </div>
+
+          {/* Marketing Budget */}
+          <div>
+            <label className="block text-xs text-slate-300 mb-1">
+              Marketing Budget (₹)
+            </label>
+            <Input
+              type="number"
+              min="0"
+              max="25000"
+              value={product.marketing_budget}
+              onChange={(e) =>
+                handleFieldChange("marketing_budget", Number(e.target.value))
+              }
+              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-3">
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-60"
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded disabled:opacity-60 hover:bg-blue-700 transition-colors"
             disabled={submitting}
           >
-            {mode === "edit" ? "Update Product" : "Add Product"}
+            {mode === "edit" ? "Update" : "Add Product"}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 bg-slate-600 text-white rounded"
+            className="px-3 py-1.5 text-sm bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors"
             disabled={submitting}
           >
             Cancel

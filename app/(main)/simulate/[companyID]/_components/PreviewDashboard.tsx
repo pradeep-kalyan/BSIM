@@ -63,8 +63,11 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   const { data: productionData } = useProductionForm();
   const { data: productData } = useProductForm();
   const { data: financeData } = useFinanceForm();
-  const { data: salesData } = useSalesForm();
+  const { getTotalSalesMetrics } = useSalesForm();
   const { data: companyData } = useCompanyForm();
+
+  // Get aggregated sales metrics
+  const totalSalesMetrics = getTotalSalesMetrics();
 
   // Helper function to calculate total employees
   const calculateTotalEmployees = useCallback(() => {
@@ -142,9 +145,9 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             ? "completed"
             : "pending";
         case "sales":
-          return salesData.sales_volume > 0 ||
-            salesData.revenue > 0 ||
-            salesData.market_share > 0
+          return totalSalesMetrics.totalVolume > 0 ||
+            totalSalesMetrics.totalRevenue > 0 ||
+            totalSalesMetrics.averageMarketShare > 0
             ? "completed"
             : "pending";
         default:
@@ -158,7 +161,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
       productionData,
       productData,
       financeData,
-      salesData,
+      totalSalesMetrics,
     ]
   );
 
@@ -460,36 +463,43 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
           icon: ShoppingCart,
           status: getSectionStatus("sales"),
           summary: [
-            `Sales Volume: ${salesData.sales_volume || 0} units`,
-            `Total Revenue: ${formatCurrency(salesData.revenue || 0)}`,
-            `Total Costs: ${formatCurrency(salesData.costs || 0)}`,
-            `Expected Profit: ${formatCurrency(salesData.profit || 0)}`,
-            `Market Share: ${salesData.market_share || 0}%`,
-            `Customer Satisfaction: ${salesData.customer_satisfaction || 0}/10`,
+            `Total Sales Volume: ${totalSalesMetrics.totalVolume} units`,
+            `Total Revenue: ${formatCurrency(totalSalesMetrics.totalRevenue)}`,
+            `Total Costs: ${formatCurrency(totalSalesMetrics.totalCosts)}`,
+            `Expected Profit: ${formatCurrency(totalSalesMetrics.totalProfit)}`,
+            `Average Market Share: ${totalSalesMetrics.averageMarketShare.toFixed(
+              1
+            )}%`,
+            `Average Customer Satisfaction: ${totalSalesMetrics.averageCustomerSatisfaction.toFixed(
+              1
+            )}/10`,
             `Profit Margin: ${
-              salesData.revenue > 0
-                ? (((salesData.profit || 0) / salesData.revenue) * 100).toFixed(
-                    1
-                  )
+              totalSalesMetrics.totalRevenue > 0
+                ? (
+                    (totalSalesMetrics.totalProfit /
+                      totalSalesMetrics.totalRevenue) *
+                    100
+                  ).toFixed(1)
                 : 0
             }%`,
+            `Products Selling: ${totalSalesMetrics.productCount}`,
           ],
           keyMetrics: [
             {
-              label: "Sales Volume",
-              value: `${salesData.sales_volume || 0} units`,
+              label: "Total Sales Volume",
+              value: `${totalSalesMetrics.totalVolume} units`,
             },
             {
               label: "Total Revenue",
-              value: formatCurrency(salesData.revenue || 0),
+              value: formatCurrency(totalSalesMetrics.totalRevenue),
             },
             {
               label: "Expected Profit",
-              value: formatCurrency(salesData.profit || 0),
+              value: formatCurrency(totalSalesMetrics.totalProfit),
             },
             {
-              label: "Market Share",
-              value: `${salesData.market_share || 0}%`,
+              label: "Average Market Share",
+              value: `${totalSalesMetrics.averageMarketShare.toFixed(1)}%`,
             },
           ],
         },
@@ -507,7 +517,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
     productionData,
     productData,
     financeData,
-    salesData,
+    totalSalesMetrics,
     companyData,
     getSectionStatus,
     calculateTotalEmployees,
@@ -873,13 +883,16 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                 <Typography
                   variant="h4"
                   sx={{
-                    color: salesData.profit >= 0 ? "#2196f3" : "#f44336",
+                    color:
+                      totalSalesMetrics.totalProfit >= 0
+                        ? "#2196f3"
+                        : "#f44336",
                     fontWeight: 700,
                     mt: 1,
                     fontSize: { xs: "1.5rem", md: "2rem" },
                   }}
                 >
-                  {formatCurrency(salesData.profit || 0)}
+                  {formatCurrency(totalSalesMetrics.totalProfit)}
                 </Typography>
               </Box>
 
@@ -1080,7 +1093,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                         variant="body2"
                         sx={{ color: "#4caf50", fontWeight: 600 }}
                       >
-                        +{formatCurrency(salesData.revenue || 0)}
+                        +{formatCurrency(totalSalesMetrics.totalRevenue)}
                       </Typography>
                     </Box>
                     <Box
@@ -1102,7 +1115,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                         sx={{
                           color:
                             (companyData.cash_balance || 0) +
-                              (salesData.profit || 0) -
+                              totalSalesMetrics.totalProfit -
                               (hrData.total_budget || 0) -
                               (marketingData.budget || 0) -
                               (rdData.budget || 0) >=

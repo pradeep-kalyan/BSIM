@@ -132,6 +132,15 @@ const CashBalanceDisplay: React.FC<CashBalanceDisplayProps> = ({
               </div>
             )}
 
+            {cashBalance.salesBudgetImpact > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Sales Revenue:</span>
+                <span className="text-green-400">
+                  +{formatCurrency(cashBalance.salesBudgetImpact)}
+                </span>
+              </div>
+            )}
+
             {cashBalance.financeBudgetImpact !== 0 && (
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Finance Impact:</span>

@@ -505,7 +505,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                   <label className="text-sm font-medium text-slate-300">
                     Access Granted To ({accessEmails.length})
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-32 overflow-y-auto">
+                  <div className="grid grid-cols-1  gap-3 max-h-32 overflow-y-auto">
                     {accessEmails.map((email, idx) => (
                       <div
                         key={idx}

@@ -172,6 +172,7 @@ CREATE TABLE "hr_decisions" (
     "employee_satisfaction" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "recruitment_cost" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "firing_cost" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "total_employee_count" INTEGER DEFAULT 0,
 
     CONSTRAINT "hr_decisions_pkey" PRIMARY KEY ("id")
 );

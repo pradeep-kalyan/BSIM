@@ -11,10 +11,6 @@ exports.prisma = globalForPrisma.prisma ||
                 url: process.env.DATABASE_URL,
             },
         },
-        // Add logging for debugging
-        log: process.env.NODE_ENV === "development"
-            ? ["query", "error", "warn"]
-            : ["error"],
         // Increase error format verbosity
         errorFormat: "pretty",
     });
