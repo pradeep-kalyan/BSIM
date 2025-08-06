@@ -84,6 +84,12 @@ export const productionSchema = z
   .superRefine((data, ctx) => {
     // Ensure units to produce doesn't exceed production capacity
     if (data.units_to_produce > data.production_capacity) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Units to produce cannot exceed production capacity",
+        path: ["units_to_produce"],
+      });
+    }
 
     // Warning for low capacity utilization (optional business rule)
     if (data.production_capacity > 0 && data.units_to_produce > 0) {
