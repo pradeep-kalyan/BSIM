@@ -85,6 +85,32 @@ const Sales = () => {
     updateSalesBudgetImpact(totalMetrics.totalRevenue);
   }, [totalMetrics.totalRevenue, updateSalesBudgetImpact]);
 
+  // Ensure all products have sales data entries
+  React.useEffect(() => {
+    if (products && products.length > 0) {
+      const updatedSalesData = { ...salesData };
+      let hasUpdates = false;
+
+      products.forEach((product) => {
+        if (product.id && !updatedSalesData[product.id]) {
+          updatedSalesData[product.id] = {
+            sales_volume: 0,
+            revenue: 0,
+            costs: 0,
+            profit: 0,
+            market_share: 0,
+            customer_satisfaction: 1,
+          };
+          hasUpdates = true;
+        }
+      });
+
+      if (hasUpdates) {
+        updateSalesData(updatedSalesData);
+      }
+    }
+  }, [products, salesData, updateSalesData]);
+
   // Handle slider/input change per product
   const handleProductInputChange = (
     productId: string,

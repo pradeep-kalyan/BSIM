@@ -168,14 +168,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           net_profit: salesmetrices.totalProfit,
           operating_costs: salesmetrices.totalCosts,
         },
-        sales: {
-          sales_volume: state.sales.sales_volume,
-          revenue: state.sales.revenue,
-          costs: state.sales.costs,
-          profit: state.sales.profit,
-          market_share: state.sales.market_share,
-          customer_satisfaction: state.sales.customer_satisfaction,
-        },
+        sales: state.sales, // Pass the full per-product sales data object
         product: state.product
           .filter((product) => product && product.name)
           .map((product) => ({
@@ -202,6 +195,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       console.log("Form data prepared, calling submission API...");
       console.log("Products being submitted:", formData.product);
       console.log("Total products count:", formData.product.length);
+      console.log("Sales data being submitted:", formData.sales);
+      console.log("Sales data keys:", Object.keys(formData.sales));
       const result = await comprehensiveFormSubmission(companyId, formData);
       console.log("Submission result:", result);
 

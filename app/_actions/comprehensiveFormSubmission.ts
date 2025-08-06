@@ -661,104 +661,234 @@ export async function comprehensiveFormSubmission(
           console.error("Product submission error:", error);
         }
       })(),
-
-      // 2.7. Process Sales decisions as Product Performance and update inventory
-      (async () => {
-        try {
-          // Get all products for the company
-          const products = await prisma.product.findMany({
-            where: { company_id: companyId },
-            orderBy: { created_at: "asc" },
-          });
-
-          if (products.length > 0) {
-            // Process each product's sales data
-            const productPerformancePromises = products.map(async (product) => {
-              const productSales = formData.sales[product.id];
-
-              if (productSales && productSales.sales_volume > 0) {
-                // Update inventory level by reducing sales volume
-                const newInventoryLevel = Math.max(
-                  0,
-                  product.inventory_level - productSales.sales_volume
-                );
-
-                // Update product inventory
-                await prisma.product.update({
-                  where: { id: product.id },
-                  data: {
-                    inventory_level: newInventoryLevel,
-                  },
-                });
-
-                // Check if product performance record exists for this period
-                const existingPerformance =
-                  await prisma.product_performance.findFirst({
-                    where: {
-                      product_id: product.id,
-                      period: currentPeriod,
-                    },
-                  });
-
-                if (existingPerformance) {
-                  // Update existing product performance
-                  await prisma.product_performance.update({
-                    where: { id: existingPerformance.id },
-                    data: {
-                      sales_volume: productSales.sales_volume,
-                      revenue: productSales.revenue,
-                      costs: productSales.costs,
-                      profit: productSales.profit,
-                      market_share: productSales.market_share,
-                      customer_satisfaction: productSales.customer_satisfaction,
-                    },
-                  });
-                } else {
-                  // Create new product performance record
-                  await prisma.product_performance.create({
-                    data: {
-                      product_id: product.id,
-                      period: currentPeriod,
-                      sales_volume: productSales.sales_volume,
-                      revenue: productSales.revenue,
-                      costs: productSales.costs,
-                      profit: productSales.profit,
-                      market_share: productSales.market_share,
-                      customer_satisfaction: productSales.customer_satisfaction,
-                    },
-                  });
-                }
-              }
-            });
-
-            await Promise.all(productPerformancePromises);
-
-            submissionResults.sales = {
-              success: true,
-            };
-          } else {
-            submissionResults.sales = {
-              success: false,
-              error: "No products found for sales performance recording",
-            };
-          }
-        } catch (error) {
-          submissionResults.sales = {
-            success: false,
-            error:
-              error instanceof Error
-                ? error.message
-                : "Sales submission failed",
-          };
-          console.error("Sales submission error:", error);
-        }
-      })(),
     ];
 
     // Execute all business processes in parallel
     await Promise.all(businessProcesses);
 
     console.log("All business processes completed, checking results...");
+
+    // Step 2.7: Process Sales decisions as Product Performance (after products are created/updated)
+    try {
+      console.log("Processing sales decisions as product performance...");
+      console.log("Available sales data keys:", Object.keys(formData.sales));
+      console.log("Sales data:", formData.sales);
+
+      // Get all products for the company (including newly created ones)
+      const products = await prisma.product.findMany({
+        where: { company_id: companyId },
+        orderBy: { created_at: "asc" },
+      });
+
+      console.log(
+        `Found ${products.length} products for company ${companyId}:`
+      );
+      products.forEach((product) => {
+        console.log(`- Product: ${product.name} (ID: ${product.id})`);
+      });
+
+      if (products.length > 0) {
+        // Process each product's sales data
+        const productPerformancePromises = products.map(async (product) => {
+          const productSales = formData.sales[product.id];
+
+          if (productSales && productSales.sales_volume > 0) {
+            // Update inventory level by reducing sales volume
+            const newInventoryLevel = Math.max(
+              0,
+              product.inventory_level - productSales.sales_volume
+            );
+
+            // Update product inventory
+            await prisma.product.update({
+              where: { id: product.id },
+              data: {
+                inventory_level: newInventoryLevel,
+              },
+            });
+
+            // Check if product performance record exists for this period
+            const existingPerformance =
+              await prisma.product_performance.findFirst({
+                where: {
+                  product_id: product.id,
+                  period: currentPeriod,
+                },
+              });
+
+            if (existingPerformance) {
+              // Update existing product performance
+              await prisma.product_performance.update({
+                where: { id: existingPerformance.id },
+                data: {
+                  sales_volume: productSales.sales_volume,
+                  revenue: productSales.revenue,
+                  costs: productSales.costs,
+                  profit: productSales.profit,
+                  market_share: productSales.market_share,
+                  customer_satisfaction: productSales.customer_satisfaction,
+                },
+              });
+            } else {
+              // Create new product performance record
+              await prisma.product_performance.create({
+                data: {
+                  product_id: product.id,
+                  period: currentPeriod,
+                  sales_volume: productSales.sales_volume,
+                  revenue: productSales.revenue,
+                  costs: productSales.costs,
+                  profit: productSales.profit,
+                  market_share: productSales.market_share,
+                  customer_satisfaction: productSales.customer_satisfaction,
+                },
+              });
+            }
+          }
+        });
+
+        await Promise.all(productPerformancePromises);
+
+        submissionResults.sales = {
+          success: true,
+        };
+      } else {
+        submissionResults.sales = {
+          success: false,
+          error: "No products found for sales performance recording",
+        };
+      }
+    } catch (error) {
+      submissionResults.sales = {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Sales submission failed",
+      };
+      console.error("Sales submission error:", error);
+    }
+
+    // Additional check: Process sales for any products that might have been created with names
+    // but not yet captured by the sales data with product IDs
+    if (formData.product && formData.product.length > 0) {
+      try {
+        // Create a mapping between product names and their sales data
+        const productNameToSalesDataMap = new Map();
+
+        // First, try to map by product names from the products being submitted
+        formData.product.forEach((productData, index) => {
+          // Look for sales data that might correspond to this product
+          const potentialSalesKeys = Object.keys(formData.sales);
+
+          for (const salesKey of potentialSalesKeys) {
+            // Check if the sales key matches:
+            // 1. A temporary ID pattern (temp-*)
+            // 2. Product name
+            // 3. Index-based pattern
+            if (
+              salesKey.startsWith("temp-") ||
+              salesKey === productData.name ||
+              salesKey === `product-${index}` ||
+              salesKey
+                .toLowerCase()
+                .includes(productData.name.toLowerCase().replace(/\s+/g, "_"))
+            ) {
+              productNameToSalesDataMap.set(
+                productData.name,
+                formData.sales[salesKey]
+              );
+              break; // Use the first match
+            }
+          }
+        });
+
+        for (const productData of formData.product) {
+          // Find the product by name to get its real database ID
+          const product = await prisma.product.findFirst({
+            where: {
+              company_id: companyId,
+              name: productData.name,
+            },
+          });
+
+          if (product) {
+            // Get sales data for this product
+            let productSales = formData.sales[product.id]; // Try real ID first
+
+            if (!productSales) {
+              // Try mapped sales data
+              productSales = productNameToSalesDataMap.get(productData.name);
+            }
+
+            if (!productSales) {
+              // Try other potential mappings
+              const salesDataKeys = Object.keys(formData.sales);
+              const potentialKey = salesDataKeys.find(
+                (key) =>
+                  key === product.name ||
+                  key.startsWith("temp-") ||
+                  key
+                    .toLowerCase()
+                    .includes(product.name.toLowerCase().replace(/\s+/g, "_"))
+              );
+              if (potentialKey) {
+                productSales = formData.sales[potentialKey];
+              }
+            }
+
+            if (productSales && productSales.sales_volume > 0) {
+              // Check if performance record already exists
+              const existingPerformance =
+                await prisma.product_performance.findFirst({
+                  where: {
+                    product_id: product.id,
+                    period: currentPeriod,
+                  },
+                });
+
+              if (!existingPerformance) {
+                console.log(
+                  `Creating product performance for product: ${product.name} (ID: ${product.id})`
+                );
+                console.log(`Sales data:`, productSales);
+
+                // Create new product performance record
+                await prisma.product_performance.create({
+                  data: {
+                    product_id: product.id,
+                    period: currentPeriod,
+                    sales_volume: productSales.sales_volume,
+                    revenue: productSales.revenue,
+                    costs: productSales.costs,
+                    profit: productSales.profit,
+                    market_share: productSales.market_share,
+                    customer_satisfaction: productSales.customer_satisfaction,
+                  },
+                });
+
+                // Update inventory
+                const newInventoryLevel = Math.max(
+                  0,
+                  product.inventory_level - productSales.sales_volume
+                );
+                await prisma.product.update({
+                  where: { id: product.id },
+                  data: { inventory_level: newInventoryLevel },
+                });
+              } else {
+                console.log(
+                  `Product performance already exists for product: ${product.name}`
+                );
+              }
+            } else {
+              console.log(`No sales data found for product: ${product.name}`);
+              console.log(`Available sales keys:`, Object.keys(formData.sales));
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error processing additional product sales:", error);
+      }
+    }
 
     // Check if any critical operations failed
     const failedOperations = Object.entries(submissionResults)

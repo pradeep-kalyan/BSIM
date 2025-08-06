@@ -1178,8 +1178,13 @@ export function FormProvider({
           marketing: state.marketing,
           rd: state.rd,
           production: state.production,
-          finance: state.finance,
-          product: state.product.length > 0 ? state.product[0] : undefined,
+          finance: {
+            ...state.finance,
+            net_profit: totalSalesProfit,
+            operating_costs: totalSalesCosts,
+            total_revenue: totalSalesRevenue,
+          },
+          product: state.product, // Pass the array of products
           sales: state.sales, // Pass the full per-product sales data
           projected_balance: getProjectedCashBalance(),
           budget_impacts: {
@@ -1210,7 +1215,7 @@ export function FormProvider({
         const result = await comprehensiveFormSubmission(
           companyId,
           comprehensiveData
-        );
+        ); 
 
         if (result.success) {
           // Clear form state after successful submission
