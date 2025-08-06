@@ -213,7 +213,7 @@ interface HRDecisionType {
   totalBudget?: number;
   employee_satisfaction?: number;
   employeeSatisfaction?: number;
-  total_employee_count?: number;
+  total_employee_count?: number | null;
   roles?: HRRole[];
 }
 
@@ -752,16 +752,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
   const newHires = (() => {
     // Debug logging
-    console.log("HR Data Debug:", {
-      selectedPeriod,
-      isCurrentPeriod,
-      thisHr,
-      prevHr,
-      totalEmployees,
-      prevTotalEmployees,
-      thisHrNewHires: thisHrTyped?.newHires,
-      thisHrNewHires2: thisHrTyped?.new_hires,
-    });
+    
 
     // First, check if newHires is already calculated in thisHr (for current period)
     if (thisHrTyped?.newHires !== undefined && thisHrTyped.newHires !== null) {

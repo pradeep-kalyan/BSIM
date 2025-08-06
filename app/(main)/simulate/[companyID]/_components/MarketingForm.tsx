@@ -8,7 +8,7 @@ import {
   TriangleAlert,
   Building2,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import {
   useMarketingForm,
@@ -30,12 +30,6 @@ const MarketingForm = () => {
   const { period } = useSimulation();
 
   const [budgetError, setBudgetError] = useState<string | null>(null);
-
-  // Update marketing budget impact dynamically whenever budget changes
-  useEffect(() => {
-    // No need to call updateMarketingBudgetImpact manually -
-    // it's handled by updateData in the useMarketingForm hook
-  }, [marketingData.budget]);
 
   const handleBudgetChange = (
     field: "budget" | "online" | "offline",
@@ -81,6 +75,10 @@ const MarketingForm = () => {
     }
   };
 
+  const frozenData = React.useMemo(() => {
+    const { budget, online, offline } = marketingData;
+    return { budget, online, offline };
+  }, [marketingData]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -119,7 +117,7 @@ const MarketingForm = () => {
               <span className="text-sm font-bold text-white">Total Budget</span>
             </div>
             <p className="text-lg font-bold text-white">
-              {formatCurrency(marketingData.budget)}
+              {formatCurrency(frozenData.budget)}
             </p>
           </div>
 
@@ -130,7 +128,7 @@ const MarketingForm = () => {
               <span className="text-sm font-bold text-white">Online</span>
             </div>
             <p className="text-lg font-bold text-white">
-              {formatCurrency(marketingData.online)}
+              {formatCurrency(frozenData.online)}
             </p>
             <p className="text-xs text-slate-400">
               {percent(marketingData.online, marketingData.budget)}
@@ -144,7 +142,7 @@ const MarketingForm = () => {
               <span className="text-sm font-bold text-white">Offline</span>
             </div>
             <p className="text-lg font-bold text-white">
-              {formatCurrency(marketingData.offline)}
+              {formatCurrency(frozenData.offline)}
             </p>
             <p className="text-xs text-slate-400">
               {percent(marketingData.offline, marketingData.budget)}
@@ -177,15 +175,12 @@ const MarketingForm = () => {
                   Total Marketing Budget
                 </h4>
                 <Slider
-                  className="w-[150px]"
+                  className="w-[200px]"
                   label={`₹${marketingData.budget.toLocaleString()}`}
                   value={[marketingData.budget]}
                   min={0}
-                  max={Math.min(
-                    cashBalance.originalCashBalance || 1000000,
-                    2000000
-                  )}
-                  onValueChange={(val) => {
+                  max={Math.max(100000, marketingData.budget * 2)}
+                  onValueChange={(val: number[]) => {
                     handleBudgetChange("budget", val[0]);
                   }}
                 />
@@ -197,19 +192,15 @@ const MarketingForm = () => {
                   Online Marketing
                 </h4>
                 <Slider
-                  className="w-[150px]"
+                  className="w-[200px]"
                   label={`₹${marketingData.online.toLocaleString()} (${percent(
                     marketingData.online,
                     marketingData.budget
                   )})`}
                   value={[marketingData.online]}
                   min={0}
-                  max={Math.max(
-                    0,
-                    (cashBalance.originalCashBalance || 1000000) -
-                      marketingData.offline
-                  )}
-                  onValueChange={(val) => {
+                  max={Math.max(50000, marketingData.budget * 2)}
+                  onValueChange={(val: number[]) => {
                     handleBudgetChange("online", val[0]);
                   }}
                 />
@@ -221,19 +212,15 @@ const MarketingForm = () => {
                   Offline Marketing
                 </h4>
                 <Slider
-                  className="w-[150px]"
+                  className="w-[200px]"
                   label={`₹${marketingData.offline.toLocaleString()} (${percent(
                     marketingData.offline,
                     marketingData.budget
                   )})`}
                   value={[marketingData.offline]}
                   min={0}
-                  max={Math.max(
-                    0,
-                    (cashBalance.originalCashBalance || 1000000) -
-                      marketingData.online
-                  )}
-                  onValueChange={(val) => {
+                  max={Math.max(50000, marketingData.budget * 2)}
+                  onValueChange={(val: number[]) => {
                     handleBudgetChange("offline", val[0]);
                   }}
                 />

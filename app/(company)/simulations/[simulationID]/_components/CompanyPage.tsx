@@ -72,7 +72,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     if (!simulationID || didInit.current) return;
 
     didInit.current = true;
-    console.log("rendering CompanyPage");
     if (setSimId) {
       setSimId(simulationID);
     }
@@ -85,7 +84,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     await fetchCompanies();
     setShowForm(false);
     setSuccess(true);
-    console.log("🔄 useEffect fired");
     setTimeout(() => setSuccess(false), 3000);
   };
 
