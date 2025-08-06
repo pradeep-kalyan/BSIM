@@ -177,8 +177,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Total HR Budget: ${formatCurrency(hrData.total_budget || 0)}`,
             `Salary Budget: ${formatCurrency(hrData.salary_budget || 0)}`,
             `Training Budget: ${formatCurrency(hrData.training_budget || 0)}`,
-            `Recruitment Cost: ${formatCurrency(hrData.recruitment_cost || 0)}`,
-            `Firing Cost: ${formatCurrency(hrData.firing_cost || 0)}`,
             `Existing Roles: ${hrData.existingRoles?.length || 0}`,
             `New Roles: ${hrData.newRoles?.length || 0}`,
             `Total Employees: ${calculateTotalEmployees()}`,
