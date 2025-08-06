@@ -1,13 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  IndianRupee,
-  FlaskConical,
-  Timer,
-  Check,
-  TriangleAlert,
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { IndianRupee, FlaskConical, Timer, TriangleAlert } from "lucide-react";
 import DashboardCard from "@/ui/Card";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -22,86 +16,29 @@ const formatCurrency = (val: number) =>
 
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();
-  const { projectedCashBalance, updateRDBudgetImpact, cashBalance } =
-    useCashBalance();
+  const { projectedCashBalance, cashBalance } = useCashBalance();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
 
-  const [success, setSuccess] = useState(false);
   const [budgetAlert, setBudgetAlert] = useState<string | null>(null);
 
-  const fieldDefs: {
-    id: keyof typeof data;
-    label: string;
-    placeholder: string;
-    min?: number;
-    step?: number;
-  }[] = [
-    {
-      id: "budget",
-      label: "R&D Budget (₹)",
-      placeholder: "Enter total R&D budget",
-      min: 0,
-      step: 1,
-    },
-    {
-      id: "pip",
-      label: "Products in Pipeline",
-      placeholder: "Upcoming products in development",
-      min: 0,
-      step: 1,
-    },
-    {
-      id: "time_to_market",
-      label: "Time to Market (months)",
-      placeholder: "Avg. time to market",
-      min: 0,
-      step: 1,
-    },
-    {
-      id: "total_development",
-      label: "Total Development Cost (₹)",
-      placeholder: "Expected cost of all developments",
-      min: 0,
-      step: 1,
-    },
-    {
-      id: "patented",
-      label: "Patents Expected",
-      placeholder: "Number of patents expected",
-      min: 0,
-      step: 1,
-    },
-    {
-      id: "quality_changes",
-      label: "Quality Improvements (%)",
-      placeholder: "Quality improvement target (%)",
-      min: 0,
-      step: 0.1,
-    },
-  ];
+  // Update R&D budget impact dynamically whenever budget or total_development changes
+  useEffect(() => {
+    // Budget impact is automatically handled by updateData in useRDForm hook
+  }, [data.budget, data.total_development]);
 
   const handleChange = (fieldId: keyof typeof data, value: number) => {
     updateData({ [fieldId]: value });
     setError(fieldId, "");
-    setSuccess(false);
-  };
-
-  const handleValidate = () => {
-    setSuccess(false);
     setBudgetAlert(null);
 
-    const totalBudget = data.budget ?? 0;
-
-    fieldDefs.forEach(({ id }) => setError(id, ""));
-
-    if (totalBudget <= 0) {
-      setError("budget", "Budget must be greater than zero");
-      return;
+    // Basic validation for budget
+    if (
+      fieldId === "budget" &&
+      value > (cashBalance.originalCashBalance || 0)
+    ) {
+      setBudgetAlert("Insufficient cash balance for this R&D budget.");
     }
-
-    updateRDBudgetImpact(totalBudget);
-    setSuccess(true);
   };
 
   return (
@@ -140,13 +77,7 @@ const RDForm = () => {
           />
         </section>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleValidate();
-          }}
-          className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700"
-        >
+        <div className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700">
           <h2 className="text-2xl font-bold text-white mb-6">
             Set R&D Strategy
           </h2>
@@ -288,37 +219,19 @@ const RDForm = () => {
                 </span>
               </div>
             </div>
-            <button
-              type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
-            >
-              Validate
-            </button>
           </div>
 
-          {(budgetAlert || success) && (
+          {budgetAlert && (
             <div className="mt-6 space-y-4">
-              {budgetAlert && (
-                <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
-                  <div className="flex items-start gap-3">
-                    <TriangleAlert className="text-rose-500 mt-0.5" />
-                    <p className="text-sm">{budgetAlert}</p>
-                  </div>
+              <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
+                <div className="flex items-start gap-3">
+                  <TriangleAlert className="text-rose-500 mt-0.5" />
+                  <p className="text-sm">{budgetAlert}</p>
                 </div>
-              )}
-              {success && !budgetAlert && (
-                <div className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce">
-                  <div className="flex items-center gap-3">
-                    <Check className="text-green-400 text-xl" />
-                    <p className="text-xl font-semibold">
-                      R&D Plan Validated Successfully
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
-        </form>
+        </div>
       </div>
     </div>
   );

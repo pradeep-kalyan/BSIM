@@ -8,7 +8,7 @@ import {
   TriangleAlert,
   Building2,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import {
   useMarketingForm,
@@ -25,19 +25,22 @@ const percent = (part: number, total: number) =>
 
 const MarketingForm = () => {
   const { data: marketingData, updateData } = useMarketingForm();
-  const { cashBalance, projectedCashBalance, updateMarketingBudgetImpact } =
-    useCashBalance();
+  const { cashBalance, projectedCashBalance } = useCashBalance();
   const { data: companyData } = useCompanyForm();
   const { period } = useSimulation();
 
-  const [success, setSuccess] = useState(false);
   const [budgetError, setBudgetError] = useState<string | null>(null);
+
+  // Update marketing budget impact dynamically whenever budget changes
+  useEffect(() => {
+    // No need to call updateMarketingBudgetImpact manually -
+    // it's handled by updateData in the useMarketingForm hook
+  }, [marketingData.budget]);
 
   const handleBudgetChange = (
     field: "budget" | "online" | "offline",
     value: number
   ) => {
-    setSuccess(false);
     setBudgetError(null);
 
     // Ensure value is not negative
@@ -71,24 +74,11 @@ const MarketingForm = () => {
         budget: newBudget,
       });
     }
-  };
 
-  const handleValidate = () => {
-    setBudgetError(null);
-    setSuccess(false);
-
-    if (marketingData.budget <= 0) {
-      setBudgetError("Marketing budget must be greater than zero.");
-      return;
-    }
-
-    if (marketingData.budget > (cashBalance.originalCashBalance || 0)) {
+    // Basic validation
+    if (value > (cashBalance.originalCashBalance || 0)) {
       setBudgetError("Insufficient cash balance for this marketing budget.");
-      return;
     }
-
-    setSuccess(true);
-    updateMarketingBudgetImpact(marketingData.budget);
   };
 
   return (
@@ -178,13 +168,7 @@ const MarketingForm = () => {
             </div>
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleValidate();
-            }}
-            className="space-y-6"
-          >
+          <div className="space-y-6">
             {/* Budget Controls */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Total Marketing Budget */}
@@ -308,42 +292,18 @@ const MarketingForm = () => {
               </div>
             </div>
 
-            {/* Validation Button */}
-            <div className="text-center">
-              <button
-                type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition-all shadow-lg"
-              >
-                <Check className="h-4 w-4 inline mr-2" />
-                Validate Marketing Strategy
-              </button>
-            </div>
-
             {/* Validation Messages */}
-            {(budgetError || success) && (
+            {budgetError && (
               <div className="space-y-4">
-                {budgetError && (
-                  <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <TriangleAlert className="text-rose-500 mt-0.5 h-4 w-4" />
-                      <p className="text-sm">{budgetError}</p>
-                    </div>
+                <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <TriangleAlert className="text-rose-500 mt-0.5 h-4 w-4" />
+                    <p className="text-sm">{budgetError}</p>
                   </div>
-                )}
-
-                {success && (
-                  <div className="bg-green-900/60 border border-green-500 text-green-100 rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                      <Check className="text-green-400 h-4 w-4" />
-                      <p className="text-sm font-semibold">
-                        Marketing strategy validated successfully!
-                      </p>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             )}
-          </form>
+          </div>
         </div>
       </div>
     </div>
