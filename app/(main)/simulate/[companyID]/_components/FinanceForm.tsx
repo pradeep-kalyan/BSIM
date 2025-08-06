@@ -1,27 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Building2,
   PiggyBank,
-  CreditCard,
   Factory,
   Package,
   IndianRupee,
   AlertTriangle,
-  Check,
 } from "lucide-react";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
   useCompanyForm,
   useFinanceForm,
 } from "@/app/context/FormContext";
-import DashboardCard from "./Card";
-import { createFinanceSchema } from "@/app/(main)/simulate/[companyID]/_utils/validator";
+import DashboardCard from "../../../homepage/Card";
 
 const FinanceForm = () => {
   const formatCurrency = (value: number) =>
@@ -30,34 +27,17 @@ const FinanceForm = () => {
       currency: "INR",
     }).format(value);
 
-  const { period, comId } = useSimulation();
+  const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
   const { data, updateData, setError, updateFinanceBudgetImpact } =
     useFinanceForm();
   const { cashBalance, projectedCashBalance } = useCashBalance();
 
-  // State for validation and frozen projected balance
-  const [success, setSuccess] = React.useState(false);
+  // State for validation messages
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
 
-  // Initialize frozen balance when component mounts
-
-  // Handle input changes without updating projected balance
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === "" ? "" : e.target.value;
-    updateData({ [e.target.name]: Number(value) });
-    setError(e.target.name, "");
-    setSuccess(false); // Reset success state when user makes changes
-    setBudgetAlert(null); // Clear any previous alerts
-  };
-
-  // Validation function similar to ProductionForm
-  const handleValidate = () => {
-    // Reset states at the beginning
-    setSuccess(false);
-    setBudgetAlert(null);
-
-    // Calculate the finance budget impact with null checks
+  // Calculate net finance impact dynamically
+  const netFinanceImpact = React.useMemo(() => {
     const investment_amount = data?.investment_amount ?? 0;
     const loan_amount = data?.loan_amount ?? 0;
     const repay_loan = data?.repay_loan ?? 0;
@@ -67,67 +47,37 @@ const FinanceForm = () => {
     // Positive impact = cash inflow, Negative impact = cash outflow
     const cashInflow = loan_amount + equity_issue;
     const cashOutflow = investment_amount + repay_loan + dividend_payout;
-    const netFinanceImpact = cashInflow - cashOutflow;
+    return cashInflow - cashOutflow;
+  }, [
+    data?.investment_amount,
+    data?.loan_amount,
+    data?.repay_loan,
+    data?.dividend_payout,
+    data?.equity_issue,
+  ]);
 
-    // Prepare data for validation
-    const formData = {
-      company_id: comId ?? "",
-      user_id: null,
-      period: period ?? 0,
-      total_revenue: 0,
-      net_profit: 0,
-      cash_balance: cashBalance.originalCashBalance,
-      operating_costs: 0,
-      roi: 0,
-      burn_rate: 0,
-      finalised: false,
-      investment_amount,
-      loan_amount,
-      repay_loan,
-      dividend_payout,
-      equity_issue,
-      notes: "",
-      processed: false,
-    };
+  // Update finance budget impact dynamically whenever finance values change
+  useEffect(() => {
+    updateFinanceBudgetImpact(netFinanceImpact);
+  }, [netFinanceImpact, updateFinanceBudgetImpact]);
 
-    // Validate using Zod schema
-    const result = createFinanceSchema.safeParse(formData);
+  // Handle input changes
+  const handleChange = (fieldName: string, value: number) => {
+    updateData({ [fieldName]: value });
+    setError(fieldName, "");
+    setBudgetAlert(null);
 
-    if (!result.success) {
-      // Handle validation errors
-      const firstError = result.error.issues[0];
-      setBudgetAlert(`⚠️ Validation error: ${firstError.message}`);
-      return;
-    }
-
-    // Calculate new projected balance
+    // Basic validation for negative cash balance
     const newProjectedBalance =
       cashBalance.originalCashBalance + netFinanceImpact;
-
-    // Check if projected balance would go negative
     if (newProjectedBalance < 0) {
       setBudgetAlert(
-        `⚠️ This combination would result in negative cash balance: ${formatCurrency(
+        `This combination would result in negative cash balance: ${formatCurrency(
           newProjectedBalance
         )}`
       );
-      return;
     }
-
-    // If validation passes, update the budget impact and frozen balance
-    updateFinanceBudgetImpact(netFinanceImpact);
-    setSuccess(true);
-    setBudgetAlert(null);
   };
-
-  // Calculate net finance impact (positive = cash inflow, negative = cash outflow)
-  const netFinanceImpact = Math.round(
-    (data?.loan_amount ?? 0) +
-      (data?.equity_issue ?? 0) -
-      ((data?.investment_amount ?? 0) +
-        (data?.repay_loan ?? 0) +
-        (data?.dividend_payout ?? 0))
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
@@ -188,59 +138,29 @@ const FinanceForm = () => {
                 Cash Inflows
               </h4>
 
-              {[
-                {
-                  id: "loan_amount",
-                  label: "Loan Amount",
-                  value: data?.loan_amount ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter loan amount",
-                  icon: CreditCard,
-                },
-                {
-                  id: "equity_issue",
-                  label: "Equity Issue",
-                  value: data?.equity_issue ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter equity issue amount",
-                  icon: DollarSign,
-                },
-              ].map(
-                ({
-                  id,
-                  label,
-                  value,
-                  type,
-                  step,
-                  min,
-                  placeholder,
-                  icon: Icon,
-                }) => (
-                  <div key={id}>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      {label}
-                    </label>
-                    <div className="relative">
-                      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <input
-                        id={id}
-                        name={id}
-                        type={type}
-                        min={min}
-                        step={step}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={placeholder}
-                        value={value}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                )
-              )}
+              {/* Loan Amount Slider */}
+              <div>
+                <Slider
+                  label="Loan Amount (₹)"
+                  defaultValue={[data?.loan_amount ?? 0]}
+                  value={[data?.loan_amount ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance * 3 || 500000}
+                  onValueChange={(val) => handleChange("loan_amount", val[0])}
+                />
+              </div>
+
+              {/* Equity Issue Slider */}
+              <div>
+                <Slider
+                  label="Equity Issue (₹)"
+                  defaultValue={[data?.equity_issue ?? 0]}
+                  value={[data?.equity_issue ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance * 2 || 300000}
+                  onValueChange={(val) => handleChange("equity_issue", val[0])}
+                />
+              </div>
             </div>
 
             {/* Cash Outflows */}
@@ -250,69 +170,48 @@ const FinanceForm = () => {
                 Cash Outflows
               </h4>
 
-              {[
-                {
-                  id: "investment_amount",
-                  label: "Investment Amount",
-                  value: data?.investment_amount ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter investment amount",
-                  icon: Building2,
-                },
-                {
-                  id: "repay_loan",
-                  label: "Loan repayment",
-                  value: data?.repay_loan ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter repay amount",
-                  icon: CreditCard,
-                },
-                {
-                  id: "dividend_payout",
-                  label: "Dividend Payout",
-                  value: data?.dividend_payout ?? 0,
-                  type: "number",
-                  step: 1,
-                  min: 0,
-                  placeholder: "Enter dividend payout amount",
-                  icon: DollarSign,
-                },
-              ].map(
-                ({
-                  id,
-                  label,
-                  value,
-                  type,
-                  step,
-                  min,
-                  placeholder,
-                  icon: Icon,
-                }) => (
-                  <div key={id}>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      {label}
-                    </label>
-                    <div className="relative">
-                      <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <input
-                        id={id}
-                        name={id}
-                        type={type}
-                        min={min}
-                        step={step}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder={placeholder}
-                        value={value}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                )
-              )}
+              {/* Investment Amount Slider */}
+              <div>
+                <Slider
+                  label="Investment Amount (₹)"
+                  defaultValue={[data?.investment_amount ?? 0]}
+                  value={[data?.investment_amount ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance || 200000}
+                  onValueChange={(val) =>
+                    handleChange("investment_amount", val[0])
+                  }
+                />
+              </div>
+
+              {/* Loan Repayment Slider */}
+              <div>
+                <Slider
+                  label="Loan Repayment (₹)"
+                  defaultValue={[data?.repay_loan ?? 0]}
+                  value={[data?.repay_loan ?? 0]}
+                  min={0}
+                  max={Math.min(
+                    companyData?.total_liabilities || 100000,
+                    companyData?.cash_balance || 100000
+                  )}
+                  onValueChange={(val) => handleChange("repay_loan", val[0])}
+                />
+              </div>
+
+              {/* Dividend Payout Slider */}
+              <div>
+                <Slider
+                  label="Dividend Payout (₹)"
+                  defaultValue={[data?.dividend_payout ?? 0]}
+                  value={[data?.dividend_payout ?? 0]}
+                  min={0}
+                  max={companyData?.cash_balance || 100000}
+                  onValueChange={(val) =>
+                    handleChange("dividend_payout", val[0])
+                  }
+                />
+              </div>
             </div>
           </div>
 
@@ -349,17 +248,6 @@ const FinanceForm = () => {
             </div>
           )}
 
-          {success && (
-            <div className="mt-6 p-4 bg-green-900/20 border border-green-600 rounded-lg">
-              <div className="flex items-center text-green-400">
-                <Check className="h-5 w-5 mr-2 flex-shrink-0" />
-                <span className="text-sm">
-                  ✅ Finance decisions validated successfully!
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Notes */}
           <div className="mt-6">
             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -370,17 +258,6 @@ const FinanceForm = () => {
               className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Add any notes about your financial decisions..."
             />
-          </div>
-
-          {/* Submit Button */}
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={handleValidate}
-              className="px-6 py-2 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 flex items-center space-x-2"
-            >
-              <span>Validate</span>
-            </button>
           </div>
         </div>
       </div>

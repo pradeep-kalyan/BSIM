@@ -175,6 +175,7 @@ interface HRMetricsType {
   employeeSatisfaction?: number;
   employee_satisfaction?: number;
   totalEmployees?: number;
+  total_employee_count?: number;
   roles?: HRRole[];
 }
 
@@ -212,6 +213,7 @@ interface HRDecisionType {
   totalBudget?: number;
   employee_satisfaction?: number;
   employeeSatisfaction?: number;
+  total_employee_count?: number;
   roles?: HRRole[];
 }
 
@@ -276,7 +278,7 @@ const getPercentChange = (current: number, prev: number) => {
 };
 
 const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
-  const { setComId, setPeriod ,simId} = useSimulation();
+  const { setComId, setPeriod, simId } = useSimulation();
   const router = useRouter();
 
   // Helper function to create current period data from company object
@@ -318,7 +320,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     (periods.length > 0 ? periods[periods.length - 1] : 1);
   const [selectedPeriod, setSelectedPeriod] = useState(initialPeriod);
   const [isSimulating] = useState(false);
-  const [, setHoveringBar] = useState(false);
 
   useEffect(() => {
     setComId(comID || "");
@@ -378,17 +379,92 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         {
           period: selectedPeriod,
           totalBudget: data.hr_decision.total_budget || 0,
+          total_budget: data.hr_decision.total_budget || 0,
           employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
+          employee_satisfaction: data.hr_decision.employee_satisfaction || 0,
           totalEmployees:
+            data.hr_decision.total_employee_count ||
             data.hr_decision.roles?.reduce(
               (sum: number, role: HRRole) => sum + (role.head_count || 0),
               0
-            ) || 0,
-          newHires: 0, // This would need to be calculated based on previous period
+            ) ||
+            0,
+          total_employee_count:
+            data.hr_decision.total_employee_count ||
+            data.hr_decision.roles?.reduce(
+              (sum: number, role: HRRole) => sum + (role.head_count || 0),
+              0
+            ) ||
+            0,
+          // Calculate newHires as difference from previous period
+          newHires: (() => {
+            const currentTotal =
+              data.hr_decision.total_employee_count ||
+              data.hr_decision.roles?.reduce(
+                (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                0
+              ) ||
+              0;
+            const prevPeriodHR = data.hrMetrics?.find(
+              (h) => +h.period === +(selectedPeriod - 1)
+            );
+
+            type PrevHRData = {
+              totalEmployees?: number;
+              total_employee_count?: number;
+              employees?: number;
+              roles?: HRRole[];
+            };
+
+            const prevHRTyped = prevPeriodHR as PrevHRData;
+            const prevTotal =
+              prevHRTyped?.totalEmployees ??
+              prevHRTyped?.total_employee_count ??
+              prevHRTyped?.employees ??
+              prevHRTyped?.roles?.reduce(
+                (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                0
+              ) ??
+              0;
+            return Math.max(0, currentTotal - prevTotal);
+          })(),
           roles: data.hr_decision.roles || [],
         },
       ]
-      : data.hrMetrics?.filter((h) => +h.period === +selectedPeriod) || [
+      : data.hrMetrics
+        ?.filter((h) => +h.period === +selectedPeriod)
+        .map((metric) => ({
+          ...metric,
+          // Ensure newHires is calculated for historical periods if not present
+          newHires:
+            metric.newHires ??
+            (() => {
+              const currentTotal =
+                metric.totalEmployees ??
+                metric.total_employee_count ??
+                metric.employees ??
+                metric.roles?.reduce(
+                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                  0
+                ) ??
+                0;
+
+              const prevMetric = data.hrMetrics?.find(
+                (h) => +h.period === +(selectedPeriod - 1)
+              );
+              const prevTotal =
+                prevMetric?.totalEmployees ??
+                prevMetric?.total_employee_count ??
+                prevMetric?.employees ??
+                prevMetric?.roles?.reduce(
+                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                  0
+                ) ??
+                0;
+
+              return Math.max(0, currentTotal - prevTotal);
+            })(),
+        })) || [
         { department: "No Data", employees: 0, satisfaction: 0, newHires: 0 },
       ];
 
@@ -533,8 +609,38 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     data?.company?.current_period,
   ]);
 
+  // Sales trend series for past 5 periods
+  const salesSeries = useMemo(() => {
+    const periodsToInclude = periods;
+
+    const series = periodsToInclude.map((period) => {
+      // Get all products for this period
+      const periodProducts =
+        data.productPerformance?.filter((p) => +p.period === period) || [];
+
+      // Calculate total sales volume and revenue for this period
+      const totalSalesVolume = periodProducts.reduce(
+        (sum, product) => sum + (product.sales_volume || 0),
+        0
+      );
+      const totalSalesRevenue = periodProducts.reduce(
+        (sum, product) => sum + (product.revenue || 0),
+        0
+      );
+
+      return {
+        period,
+        totalSales: totalSalesVolume,
+        salesRevenue: totalSalesRevenue,
+      };
+    });
+
+    return series;
+  }, [data.productPerformance, periods]);
+
   const chartData = {
     revenue: revenueSeries,
+    sales: salesSeries,
     departmentBudgets,
     productPerformance: productPerformance.length ? productPerformance : [],
     hrMetrics: hrMetrics.length
@@ -576,53 +682,127 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const revenueChange = getPercentChange(currentRevenue, prevRevenue);
 
   // Active Products change
-  const activeProducts = productPerformance.length
-    ? productPerformance.length
-    : data?.activeProductsCount || 0;
-  const activeProductsPrev = productPerformancePrev.length
-    ? productPerformancePrev.length
-    : data?.activeProductsCount || 0;
+  const activeProducts =
+    productPerformance.length || data?.activeProductsCount || 0;
+  const activeProductsPrev = productPerformancePrev.length || 0;
   const prodChange = getPercentChange(activeProducts, activeProductsPrev);
 
   // Change event: update selected period
   const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedPeriod(Number(e.target.value));
   };
+  
+  const handleViewCompany = useCallback(() => {
+    router.push(`/simulations/${simId}`);
+  }, [router, comID]);
 
   // Simulate button
   const handleSimulate = useCallback(() => {
     router.push(`/simulate/${comID}`);
   }, [router, comID]);
 
-  const handleViewCompany = useCallback(() => {
-    router.push(`/simulations/${simId}`);
-  }, [router,]);
-
-  const handleBarMouseOver = useCallback(() => {
-    setHoveringBar(true);
-  }, []);
-  const handleBarMouseOut = useCallback(() => {
-    setHoveringBar(false);
-  }, []);
-
   const thisHr = hrMetrics[0] || {};
-  const prevHr =
-    data.hrMetrics?.find((h) => +h.period === +(selectedPeriod - 1)) ?? {};
+  const prevHr = (() => {
+    // If we're viewing current period, look in historical data for previous period
+    if (isCurrentPeriod) {
+      return (
+        data.hrMetrics?.find((h) => +h.period === +(selectedPeriod - 1)) ?? {}
+      );
+    } else {
+      // If we're viewing a historical period, look in historical data for the previous period
+      return (
+        data.hrMetrics?.find((h) => +h.period === +(selectedPeriod - 1)) ?? {}
+      );
+    }
+  })();
+
+  // Handle multiple property name variations for HR data
+  type HRDataVariations = {
+    totalEmployees?: number;
+    total_employee_count?: number;
+    employees?: number;
+    newHires?: number;
+    new_hires?: number;
+    employeeSatisfaction?: number;
+    employee_satisfaction?: number;
+    satisfaction?: number;
+    totalBudget?: number;
+    total_budget?: number;
+    roles?: HRRole[];
+  };
+
+  const thisHrTyped = thisHr as HRDataVariations;
+  const prevHrTyped = prevHr as HRDataVariations;
 
   const totalEmployees =
-    (thisHr as { totalEmployees?: number }).totalEmployees ?? 0;
+    thisHrTyped?.totalEmployees ??
+    thisHrTyped?.total_employee_count ??
+    thisHrTyped?.employees ??
+    thisHrTyped?.roles?.reduce(
+      (sum: number, role: HRRole) => sum + (role.head_count || 0),
+      0
+    ) ??
+    0;
+
   const prevTotalEmployees =
-    (prevHr as { totalEmployees?: number }).totalEmployees ?? 0;
-  const newHires = (thisHr as { newHires?: number }).newHires ?? 0;
-  const prevNewHires = (prevHr as { newHires?: number }).newHires ?? 0;
+    prevHrTyped?.totalEmployees ??
+    prevHrTyped?.total_employee_count ??
+    prevHrTyped?.employees ??
+    prevHrTyped?.roles?.reduce(
+      (sum: number, role: HRRole) => sum + (role.head_count || 0),
+      0
+    ) ??
+    0;
+
+  const newHires = (() => {
+    // Debug logging
+    console.log("HR Data Debug:", {
+      selectedPeriod,
+      isCurrentPeriod,
+      thisHr,
+      prevHr,
+      totalEmployees,
+      prevTotalEmployees,
+      thisHrNewHires: thisHrTyped?.newHires,
+      thisHrNewHires2: thisHrTyped?.new_hires,
+    });
+
+    // First, check if newHires is already calculated in thisHr (for current period)
+    if (thisHrTyped?.newHires !== undefined && thisHrTyped.newHires !== null) {
+      return thisHrTyped.newHires;
+    }
+
+    // Check alternative property name
+    if (
+      thisHrTyped?.new_hires !== undefined &&
+      thisHrTyped.new_hires !== null
+    ) {
+      return thisHrTyped.new_hires;
+    }
+
+    // If not available, calculate it from the difference
+    return Math.max(0, totalEmployees - prevTotalEmployees);
+  })();
+
+  const prevNewHires = prevHrTyped?.newHires ?? prevHrTyped?.new_hires ?? 0;
+
   const avgSatisfaction =
-    (thisHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+    thisHrTyped?.employeeSatisfaction ??
+    thisHrTyped?.employee_satisfaction ??
+    thisHrTyped?.satisfaction ??
+    0;
+
   const prevSatisfaction =
-    (prevHr as { employeeSatisfaction?: number }).employeeSatisfaction ?? 0;
+    prevHrTyped?.employeeSatisfaction ??
+    prevHrTyped?.employee_satisfaction ??
+    prevHrTyped?.satisfaction ??
+    0;
+
   const hrBudget =
-    (thisHr as { totalBudget?: number }).totalBudget ?? hr_budget;
+    thisHrTyped?.totalBudget ?? thisHrTyped?.total_budget ?? hr_budget;
+
   const hrBudgetPrev =
-    (prevHr as { totalBudget?: number }).totalBudget ?? hr_budget;
+    prevHrTyped?.totalBudget ?? prevHrTyped?.total_budget ?? hr_budget;
 
   // Calculate dynamic trends
   const totalEmployeesChange = getPercentChange(
@@ -933,14 +1113,14 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             <div className="space-y-4">
               <QuickStat
                 label="Active Projects"
-                value={rd_decision?.pip?.toString() || "0"}
+                value={activeProducts || "0"}
                 icon={Lightbulb}
                 color="yellow"
                 trend={selectedPeriod > 1 ? 12 : undefined}
               />
               <QuickStat
                 label="Patents Filed"
-                value={rd_decision?.patented?.toString() || "0"}
+                value={rd_decision?.patented || "0"}
                 icon={Award}
                 color="purple"
                 trend={selectedPeriod > 1 ? 50 : undefined}
@@ -963,79 +1143,130 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           </ChartCard>
         </div>
 
-        {/* Product Performance */}
-        <ChartCard
-          title="Product Portfolio Performance"
-          subtitle={`${isCurrentPeriod ? "Current period" : `Period ${selectedPeriod}`
-            } metrics`}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
-              <h4 className="text-lg font-semibold text-white mb-2">
-                Sales Performance – Period {selectedPeriod}{" "}
-                {isCurrentPeriod ? "(Current)" : ""}
-              </h4>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={chartData.productPerformance}
-                  layout="vertical"
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis
-                    type="number"
-                    tick={{ fill: "#6B7280" }}
-                    stroke="#9CA3AF"
-                    domain={[0, "dataMax + 200"]}
-                  />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    tick={{ fill: "#6B7280" }}
-                    stroke="#9CA3AF"
-                    width={150}
-                  />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "transparent" }}
-                    isAnimationActive={false}
-                  />
-                  <Bar
-                    dataKey="sales_volume"
-                    fill="#3B82F6"
-                    radius={[0, 6, 6, 0]}
-                    barSize={20}
-                    onMouseOver={handleBarMouseOver}
-                    onMouseOut={handleBarMouseOut}
-                    name="Sales Volume"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold text-white mb-2">
-                Market Share & Performance
-              </h4>
-              <div className="space-y-4">
-                {chartData.productPerformance.length > 0 ? (
-                  chartData.productPerformance.map((product, index) => (
+        {/* Sales Performance & Product Portfolio */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ChartCard
+            title="Total Sales Trend"
+            subtitle={`Sales volume over last ${periods.length} periods`}
+            className="lg:col-span-2"
+          >
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart data={chartData.sales}>
+                <defs>
+                  <linearGradient
+                    id="salesGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1} />
+                  </linearGradient>
+                  <linearGradient
+                    id="salesRevenueGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="period" stroke="#9CA3AF" />
+                <YAxis
+                  stroke="#9CA3AF"
+                  yAxisId="left"
+                  tickFormatter={(value) => `${value} units`}
+                />
+                <YAxis
+                  stroke="#9CA3AF"
+                  yAxisId="right"
+                  orientation="right"
+                  tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
+                />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload || !payload.length) return null;
+                    return (
+                      <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
+                        {label && (
+                          <p className="font-medium mb-1 text-gray-200">
+                            Period {label}
+                          </p>
+                        )}
+                        {payload.map((entry, index) => (
+                          <p key={index} className="text-gray-100">
+                            <span
+                              className="font-medium"
+                              style={{ color: entry.color }}
+                            >
+                              {entry.name}:
+                            </span>{" "}
+                            {entry.dataKey === "totalSales"
+                              ? `${entry.value} units`
+                              : `₹${((entry.value as number) / 1000).toFixed(
+                                0
+                              )}K`}
+                          </p>
+                        ))}
+                      </div>
+                    );
+                  }}
+                  isAnimationActive={false}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="totalSales"
+                  stroke="#8B5CF6"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#salesGradient)"
+                  name="Sales Volume"
+                  yAxisId="left"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="salesRevenue"
+                  stroke="#F59E0B"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#salesRevenueGradient)"
+                  name="Sales Revenue"
+                  yAxisId="right"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard
+            title="Product Performance"
+            subtitle={`Period ${selectedPeriod} overview`}
+          >
+            <div className="space-y-3">
+              {chartData.productPerformance.length > 0 ? (
+                chartData.productPerformance
+                  .slice(0, 4)
+                  .map((product, index) => (
                     <div
                       key={`${product.product?.name || product.name}-${index}`}
-                      className="p-4 rounded-lg bg-white/5"
+                      className="p-3 rounded-lg bg-white/5"
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-white">
+                        <span className="font-medium text-white text-sm">
                           {product.product?.name ||
                             product.name ||
                             `Product ${index + 1}`}
                         </span>
-                        <span className="text-sm text-gray-400">
-                          {product.market_share || 0}% market share
+                        <span className="text-xs text-gray-400">
+                          {product.market_share || 0}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
+                      <div className="w-full bg-gray-700 rounded-full h-1.5 mb-2">
                         <div
-                          className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                          className="bg-gradient-to-r from-blue-500 to-green-500 h-1.5 rounded-full"
                           style={{
                             width: `${Math.min(
                               (product.market_share || 0) * 2,
@@ -1044,37 +1275,24 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                           }}
                         ></div>
                       </div>
-                      <div className="flex justify-between text-sm text-gray-400">
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <span>{product.sales_volume || 0} units</span>
                         <span>
-                          Revenue: ₹{((product.revenue || 0) / 1000).toFixed(0)}
-                          K
-                        </span>
-                        <span>
-                          Satisfaction:{" "}
-                          {(product.customer_satisfaction || 0).toFixed(1)}/10
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-400 mt-1">
-                        <span>Sales: {product.sales_volume || 0} units</span>
-                        <span>
-                          Profit: ₹
-                          {((product.profit || 0) / 10000000).toFixed(2)} Cr
+                          ₹{((product.revenue || 0) / 1000).toFixed(0)}K
                         </span>
                       </div>
                     </div>
                   ))
-                ) : (
-                  <div className="p-4 rounded-lg bg-white/5 text-center">
-                    <span className="text-gray-400">
-                      No product performance data available for Period{" "}
-                      {selectedPeriod}
-                    </span>
-                  </div>
-                )}
-              </div>
+              ) : (
+                <div className="p-4 rounded-lg bg-white/5 text-center">
+                  <span className="text-gray-400 text-sm">
+                    No products for Period {selectedPeriod}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-        </ChartCard>
+          </ChartCard>
+        </div>
 
         {/* Current Period Summary (only show for current period) */}
         {isCurrentPeriod && (

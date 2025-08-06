@@ -11,7 +11,7 @@ import {
   Edit,
 } from "lucide-react";
 import React, { useState } from "react";
-import DashboardCard from "./Card";
+import DashboardCard from "../../../homepage/Card";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";

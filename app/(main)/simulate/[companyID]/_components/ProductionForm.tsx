@@ -1,35 +1,49 @@
 "use client";
 
 import { IndianRupee, Factory, Package, AlertTriangle } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import DashboardCard from "@/ui/Card";
-import { Check, TriangleAlert } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
   useCompanyForm,
   useProductionForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-import { CreateProduction, createProductionSchema } from "../_utils/validator";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 const ProductionForm = () => {
   const { data, setError, getError, updateData } = useProductionForm();
-  const { cashBalance, updateProductionBudgetImpact, projectedCashBalance } =
+  const { cashBalance, projectedCashBalance, updateProductionBudgetImpact } =
     useCashBalance();
-  const { period, comId } = useSimulation();
+  const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === "" ? "" : e.target.value;
-    updateData({ [e.target.name]: Number(value) });
-    setError(e.target.name, "");
-    // Don't clear budget alert on every change - let validation handle it
-    setSuccess(false); // Reset success state when user makes changes
+  const handleChange = (fieldName: string, value: number) => {
+    updateData({ [fieldName]: value });
+    setError(fieldName, "");
+    setBudgetAlert(null);
+
+    // Check if the new production cost will exceed cash balance
+    const newData = { ...data, [fieldName]: value };
+    const newTotalCost =
+      newData?.units_to_produce *
+      newData?.cost_per_unit *
+      (1 + newData?.defect_rate / 100);
+
+    if (newTotalCost > projectedCashBalance) {
+      setBudgetAlert(
+        `Warning: Production cost of ₹${formatNumber(
+          Math.round(newTotalCost)
+        )} exceeds your projected cash balance of ₹${formatNumber(
+          Math.round(projectedCashBalance)
+        )}. Consider reducing production volume or cost per unit.`
+      );
+    }
   };
 
   const frozenData = React.useMemo(
@@ -54,67 +68,51 @@ const ProductionForm = () => {
     data?.cost_per_unit *
     (1 + data?.defect_rate / 100);
 
-  const handleValidate = () => {
-    // Reset states at the beginning
-    setSuccess(false);
-    setBudgetAlert(null);
+  // Calculate total production budget impact
+  const totalProductionBudget = React.useMemo(() => {
+    const qualityInvestment = data?.quality_improvement_investment ?? 0;
+    const efficiencyUpgrade = data?.efficiency_upgrade_cost ?? 0;
+    const maintenance = data?.maintenance_budget ?? 0;
+    const safety = data?.safety_investment ?? 0;
+    const environmental = data?.environmental_compliance_cost ?? 0;
+    const productionCost = totalCost ?? 0;
 
-    const production_cost =
-      data.units_to_produce * data.cost_per_unit * (1 + data.defect_rate / 100);
-    const inventory_value = data.units_to_produce * data.cost_per_unit;
+    return (
+      qualityInvestment +
+      efficiencyUpgrade +
+      maintenance +
+      safety +
+      environmental +
+      productionCost
+    );
+  }, [
+    data?.quality_improvement_investment,
+    data?.efficiency_upgrade_cost,
+    data?.maintenance_budget,
+    data?.safety_investment,
+    data?.environmental_compliance_cost,
+    totalCost,
+  ]);
 
-    const formData: CreateProduction = {
-      company_id: comId ?? "",
-      period: period ?? 0,
-      production_capacity: Number(data.production_capacity),
-      inventory_value,
-      storage_capacity: Number(data.storage_capacity),
-      cash_balance: companyData?.cash_balance ?? 0,
-      defect_rate: Number(data.defect_rate),
-      units_to_produce: Number(data.units_to_produce),
-      cost_per_unit: Number(data.cost_per_unit),
-      production_cost,
-    };
+  // Update production budget impact whenever the total changes
+  useEffect(() => {
+    updateProductionBudgetImpact(totalProductionBudget);
+  }, [totalProductionBudget, updateProductionBudgetImpact]);
 
-    const result = createProductionSchema.safeParse(formData);
-
-    const fieldKeys = [
-      "units_to_produce",
-      "cost_per_unit",
-      "defect_rate",
-      "production_capacity",
-      "storage_capacity",
-    ];
-
-    // Clear old errors
-    fieldKeys.forEach((key) => setError(key, ""));
-
-    if (!result.success) {
-      for (const issue of result.error.issues) {
-        const path = issue.path?.[0];
-        if (path === "production_cost") {
-          setBudgetAlert(
-            `⚠️ ${issue.message}. Required: ₹${formatNumber(
-              Math.round(production_cost)
-            )}, Available: ₹${formatNumber(companyData?.cash_balance ?? 0)}`
-          );
-        } else if (typeof path === "string" && fieldKeys.includes(path)) {
-          setError(path, issue.message);
-        } else {
-          console.warn("Unhandled validation issue:", issue.message);
-        }
-      }
-      return;
+  // Check for budget alerts when totalCost or projectedCashBalance changes
+  useEffect(() => {
+    if (totalCost && totalCost > projectedCashBalance) {
+      setBudgetAlert(
+        `Warning: Production cost of ₹${formatNumber(
+          Math.round(totalCost)
+        )} exceeds your projected cash balance of ₹${formatNumber(
+          Math.round(projectedCashBalance)
+        )}. Consider reducing production volume or cost per unit.`
+      );
+    } else {
+      setBudgetAlert(null);
     }
-
-    // Budget warning
-    // Don't show success if there's a budget issue
-
-    setBudgetAlert(null);
-    setSuccess(true);
-
-    updateProductionBudgetImpact(production_cost);
-  };
+  }, [totalCost, projectedCashBalance]);
 
   return (
     <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
@@ -168,94 +166,101 @@ const ProductionForm = () => {
           />
         </section>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleValidate();
-          }}
-          className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700"
-          noValidate
-        >
+        <div className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700">
           <h2 className="text-2xl font-bold text-white mb-6">
             Set Production Strategy
           </h2>
           <div className="grid gap-6 md:grid-cols-2">
-            {[
-              {
-                id: "units_to_produce",
-                label: "Units to Produce",
-                value: data?.units_to_produce ?? 0,
-                type: "number",
-                step: 1,
-                min: 0,
-                placeholder: "Enter number of units to produce",
-              },
-              {
-                id: "cost_per_unit",
-                label: "Cost per Unit (₹)",
-                value: data?.cost_per_unit ?? 0,
-                type: "number",
-                step: 0.01,
-                min: 0,
-                placeholder: "Manufacturing cost per unit",
-              },
-              {
-                id: "defect_rate",
-                label: "Expected Defect Rate (%)",
-                value: data?.defect_rate ?? 0,
-                type: "number",
-                step: 0.1,
-                min: 0,
-                max: 100,
-                placeholder: "Expected defect rate percentage",
-              },
-              {
-                id: "production_capacity",
-                label: "Production Capacity (Units)",
-                value: data?.production_capacity ?? 0,
-                type: "number",
-                step: 1,
-                min: 0,
-                placeholder: "Maximum production capacity per period",
-              },
-              {
-                id: "storage_capacity",
-                label: "Storage Capacity (Units)",
-                value: data?.storage_capacity ?? 0,
-                type: "number",
-                step: 1,
-                min: 0,
-                placeholder: "Maximum storage capacity for finished goods",
-              },
-            ].map((field) => (
-              <div key={field.id}>
-                <label
-                  htmlFor={field.id}
-                  className="block text-slate-200 font-semibold mb-1"
-                >
-                  {field.label}
-                </label>
-                <input
-                  id={field.id}
-                  name={field.id}
-                  type={field.type}
-                  step={field.step}
-                  min={field.min}
-                  max={field.max}
-                  value={field.value}
-                  onChange={handleChange}
-                  placeholder={field.placeholder}
-                  className={`w-full p-3 rounded-lg bg-slate-700 text-white border ${
-                    getError(field.id) ? "border-rose-500" : "border-slate-600"
-                  } focus:ring-2 focus:ring-emerald-400`}
-                />
-                {getError(field.id) && (
-                  <p className="text-rose-400 text-xs mt-1">
-                    {getError(field.id)}
-                  </p>
-                )}
-              </div>
-            ))}
+            {/* Units to Produce Slider */}
+            <div>
+              <Slider
+                label="Units to Produce"
+                defaultValue={[data?.units_to_produce ?? 0]}
+                value={[data?.units_to_produce ?? 0]}
+                min={0}
+                max={Math.max(data?.production_capacity * 2 || 2000, 1000)}
+                onValueChange={(val) =>
+                  handleChange("units_to_produce", val[0])
+                }
+              />
+              {getError("units_to_produce") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("units_to_produce")}
+                </p>
+              )}
+            </div>
+
+            {/* Cost per Unit Slider */}
+            <div>
+              <Slider
+                label="Cost per Unit (₹)"
+                defaultValue={[data?.cost_per_unit ?? 0]}
+                value={[data?.cost_per_unit ?? 0]}
+                min={0}
+                max={1000}
+                onValueChange={(val) => handleChange("cost_per_unit", val[0])}
+              />
+              {getError("cost_per_unit") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("cost_per_unit")}
+                </p>
+              )}
+            </div>
+
+            {/* Defect Rate Slider */}
+            <div>
+              <Slider
+                label="Expected Defect Rate (%)"
+                defaultValue={[data?.defect_rate ?? 0]}
+                value={[data?.defect_rate ?? 0]}
+                min={0}
+                max={100}
+                onValueChange={(val) => handleChange("defect_rate", val[0])}
+              />
+              {getError("defect_rate") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("defect_rate")}
+                </p>
+              )}
+            </div>
+
+            {/* Production Capacity Slider */}
+            <div>
+              <Slider
+                label="Production Capacity (Units)"
+                defaultValue={[data?.production_capacity ?? 0]}
+                value={[data?.production_capacity ?? 0]}
+                min={0}
+                max={5000}
+                onValueChange={(val) =>
+                  handleChange("production_capacity", val[0])
+                }
+              />
+              {getError("production_capacity") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("production_capacity")}
+                </p>
+              )}
+            </div>
+
+            {/* Storage Capacity Slider */}
+            <div>
+              <Slider
+                label="Storage Capacity (Units)"
+                defaultValue={[data?.storage_capacity ?? 0]}
+                value={[data?.storage_capacity ?? 0]}
+                min={0}
+                max={10000}
+                onValueChange={(val) =>
+                  handleChange("storage_capacity", val[0])
+                }
+              />
+              {getError("storage_capacity") && (
+                <p className="text-rose-400 text-xs mt-1">
+                  {getError("storage_capacity")}
+                </p>
+              )}
+            </div>
 
             {/* Read-only Inventory Value */}
             <div>
@@ -300,49 +305,27 @@ const ProductionForm = () => {
                       : "text-emerald-400"
                   }`}
                 >
-                  projectedCashBalance : ₹
+                  Projected Cash Balance: ₹
                   {formatNumber(Math.round(projectedCashBalance))}
                 </div>
               </div>
             </div>
-            <button
-              type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition shadow"
-            >
-              Validate
-            </button>
           </div>
 
-          {(budgetAlert || success) && (
+          {budgetAlert && (
             <div className="mt-6 space-y-4">
-              {budgetAlert && (
-                <div
-                  className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse"
-                  role="alert"
-                >
-                  <div className="flex items-start gap-3">
-                    <TriangleAlert className="text-rose-500 mt-0.5" />
-                    <p className="text-sm">{budgetAlert}</p>
-                  </div>
+              <div
+                className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4"
+                role="alert"
+              >
+                <div className="flex items-start gap-3">
+                  <TriangleAlert className="text-rose-500 mt-0.5" />
+                  <p className="text-sm">{budgetAlert}</p>
                 </div>
-              )}
-
-              {success && !budgetAlert && (
-                <div
-                  className="bg-green-900/60 border border-white/80 text-white rounded-lg p-4 animate-bounce"
-                  role="alert"
-                >
-                  <div className="flex items-center gap-3">
-                    <Check className="text-green-400 text-xl" />
-                    <p className="text-xl font-semibold">
-                      Form Validated Successfully
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
-        </form>
+        </div>
       </div>
     </div>
   );

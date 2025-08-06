@@ -75,31 +75,10 @@ model company {
   production_decisions production[]
   marketing_decisions  marketing[]
   company_histories    company_history[]
-  company_histories    company_history[]
 
   @@index([simulation_id])
   @@index([user_id])
   @@map("companies")
-}
-
-model company_history {
-  id                String   @id @default(cuid())
-  company_id        String
-  period            Int
-  cash_balance      Float    @default(0)
-  data              String   @default("{}")
-  total_assets      Float    @default(0)
-  total_liabilities Float    @default(0)
-  marketing_budget  Float    @default(0)
-  credit_rating     String?
-  brand_value       Float    @default(0)
-  created_at        DateTime @default(now())
-
-  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-
-  @@unique([company_id, period])
-  @@index([company_id])
-  @@map("company_histories")
 }
 
 model company_history {
@@ -249,6 +228,7 @@ model hr_decision {
   employee_satisfaction Float @default(0)
   recruitment_cost      Float @default(0)
   firing_cost           Float @default(0)
+  total_employee_count  Int?  @default(0)
 
   company company            @relation(fields: [company_id], references: [id], onDelete: Cascade)
   roles   hr_role_decision[]

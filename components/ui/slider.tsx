@@ -1,16 +1,17 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as SliderPrimitive from "@radix-ui/react-slider"
-import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import * as React from "react";
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
-interface CustomSliderProps extends React.ComponentProps<typeof SliderPrimitive.Root> {
-  label?: string
-  min?: number
-  max?: number
-  onValueChange?: (val: number[]) => void
+interface CustomSliderProps
+  extends React.ComponentProps<typeof SliderPrimitive.Root> {
+  label?: string;
+  min?: number;
+  max?: number;
+  onValueChange?: (val: number[]) => void;
 }
 
 function Slider({
@@ -23,8 +24,8 @@ function Slider({
   label,
   ...props
 }: CustomSliderProps) {
-  const [min, setMin] = React.useState(initialMin)
-  const [max, setMax] = React.useState(initialMax)
+  const [min, setMin] = React.useState(initialMin);
+  const [max, setMax] = React.useState(initialMax);
 
   const [_value, setValue] = React.useState<number[]>(
     Array.isArray(value)
@@ -32,23 +33,26 @@ function Slider({
       : Array.isArray(defaultValue)
       ? defaultValue
       : [min, max]
-  )
+  );
 
   const handleChange = (val: number[]) => {
-    setValue(val)
-    onValueChange?.(val)
-  }
+    setValue(val);
+    onValueChange?.(val);
+  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const newVal = [..._value]
-    const num = Number(e.target.value)
-    newVal[index] = num
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const newVal = [..._value];
+    const num = Number(e.target.value);
+    newVal[index] = num;
 
-    if (num > max) setMax(num)
-    if (num < min) setMin(num)
+    if (num > max) setMax(num * 2);
+    if (num < min) setMin(num);
 
-    handleChange(newVal)
-  }
+    handleChange(newVal);
+  };
 
   return (
     <div className="flex flex-col w-full gap-3 text-white">
@@ -108,7 +112,7 @@ function Slider({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export { Slider }
+export { Slider };

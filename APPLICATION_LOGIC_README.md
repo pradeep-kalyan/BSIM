@@ -1,51 +1,26 @@
-# Business Simulation Platform - Application Logic & Flow
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Application Architecture](#application-architecture)
-3. [Data Models & Relationships](#data-models--relationships)
-4. [Business Logic Flow](#business-logic-flow)
-5. [Financial Calculations](#financial-calculations)
-6. [Decision-Making Process](#decision-making-process)
-7. [Simulation Engine](#simulation-engine)
-8. [Performance Metrics](#performance-metrics)
-9. [Period Advancement Logic](#period-advancement-logic)
-10. [Dashboard Analytics](#dashboard-analytics)
+# Business Simulation Platform - Application Logic
 
 ## Overview
 
-The Business Simulation Platform is a comprehensive multi-company business simulation system that allows users to make strategic decisions across various business functions and see their impact on company performance over multiple periods.
+A comprehensive multi-company business simulation system where users make strategic decisions across 8 business functions and see real-time financial impact over multiple periods.
 
-### Core Concept
+### Core Features
 
-- **Period-Based Simulation**: Business decisions are made for discrete time periods
-- **Multi-Department Management**: Users manage HR, Marketing, R&D, Production, Finance, Products, and Sales
-- **Real-time Analytics**: Dashboard provides immediate feedback on decisions and their financial impact
-- **Comparative Analysis**: Companies can be compared across different metrics and performance indicators
+- **Period-Based Simulation**: Discrete time periods for decision-making
+- **Multi-Department Management**: HR, Marketing, R&D, Production, Finance, Products, Sales
+- **Real-time Cash Flow**: Live financial calculations and validation
+- **Comparative Analytics**: Multi-company performance tracking
 
-## Application Architecture
-
-### Technology Stack
+## Technology Stack
 
 - **Frontend**: Next.js 15, React, TypeScript, Material-UI, Recharts
 - **Backend**: Next.js Server Actions, Prisma ORM
 - **Database**: PostgreSQL
-- **Authentication**: Custom JWT-based auth system
+- **Authentication**: Custom JWT-based auth
 
-### Key Components
+## Core Data Models
 
-1. **Simulation Management**: Creates and manages simulation environments
-2. **Company Management**: Handles multiple companies within simulations
-3. **Decision Forms**: Step-by-step wizard for making business decisions
-4. **Analytics Dashboard**: Real-time performance visualization
-5. **Comparison Tools**: Multi-company performance analysis
-
-## Data Models & Relationships
-
-### Core Entities
-
-#### Company
+### Company Entity
 
 ```typescript
 interface Company {
@@ -61,7 +36,7 @@ interface Company {
 }
 ```
 
-#### Financial Records
+### Financial Records
 
 ```typescript
 interface Finance {
@@ -70,7 +45,6 @@ interface Finance {
   cash_balance: number;
   operating_costs: number;
   roi: number;
-  burn_rate: number;
   investment_amount: number;
   loan_amount: number;
   repay_loan: number;
@@ -79,48 +53,40 @@ interface Finance {
 }
 ```
 
-## Business Logic Flow
+## Application Flow
 
-### 1. Simulation Setup
+### 1. Setup Process
 
-1. **User Registration/Login**: Authentication via JWT
-2. **Simulation Creation**: Define simulation parameters and context
-3. **Company Creation**: Users create their virtual companies
-4. **Initial State**: Companies start with predefined cash balance and assets
+1. **Authentication**: User login via JWT
+2. **Simulation Creation**: Define simulation parameters
+3. **Company Creation**: Create virtual companies with initial cash balance
 
-### 2. Decision-Making Cycle
-
-Each period, users make decisions across 8 key areas:
-
-#### Decision Flow Sequence:
+### 2. Decision-Making Cycle (8 Sequential Steps)
 
 1. **Human Resources** → Employee planning and budget allocation
 2. **Marketing** → Campaign planning and channel allocation
-3. **Research & Development** → Innovation investment and project planning
+3. **Research & Development** → Innovation investment and projects
 4. **Production** → Capacity planning and quality management
 5. **Products** → Portfolio management and pricing
 6. **Sales** → Sales targets and market strategy
 7. **Finance** → Investment, loans, and dividend decisions
-8. **Preview & Submit** → Final review and submission
+8. **Preview & Submit** → Final review and atomic submission
 
-### 3. Validation & Processing
+### 3. Core Processing Logic
 
-- **Real-time Validation**: Each form validates inputs against business rules
-- **Cash Flow Validation**: Ensures decisions don't exceed available cash
-- **Comprehensive Submission**: All decisions submitted atomically
-- **Period Advancement**: Automatic progression to next period after submission
+- **Real-time Validation**: Each form validates against business rules
+- **Cash Flow Protection**: Prevents decisions exceeding available cash
+- **Atomic Submission**: All decisions submitted in single transaction
+- **Period Advancement**: Automatic progression to next period
 
-## Financial Calculations
+## Financial Engine
 
-### Cash Balance Management
-
-The system maintains a real-time projected cash balance that updates as users make decisions:
+### Real-Time Cash Balance Calculation
 
 ```typescript
-// Base calculation
 const projectedCashBalance = originalCashBalance - totalExpenses + totalIncome;
 
-// Where totalExpenses includes:
+// Expenses include:
 const totalExpenses =
   hrBudget +
   marketingBudget +
@@ -130,145 +96,47 @@ const totalExpenses =
   loanRepayment +
   dividendPayout;
 
-// And totalIncome includes:
+// Income includes:
 const totalIncome = salesRevenue + loanAmount + equityIssue;
 ```
 
-### Key Financial Metrics
+### Key Financial Formulas
 
-#### Revenue Calculation
+#### Revenue & Profit
 
 ```typescript
-// Product-based revenue
 const revenue = salesVolume * sellingPrice;
-
-// Multi-product revenue
-const totalRevenue = products.reduce((total, product) => {
-  return total + product.salesVolume * product.sellingPrice;
-}, 0);
-```
-
-#### Profit Calculation
-
-```typescript
-// Basic profit calculation
-const profit = revenue - costs;
-
-// Where costs include:
-const costs = salesVolume * productionCost + operatingCosts;
-
-// Profit margin
+const profit = revenue - (salesVolume * productionCost + operatingCosts);
 const profitMargin = (profit / revenue) * 100;
-```
-
-#### Return on Investment (ROI)
-
-```typescript
 const roi = (profit / totalCosts) * 100;
 ```
 
-#### Burn Rate
+#### HR Budget Calculation
 
 ```typescript
-const burnRate = operatingCosts / 12; // Monthly burn rate
-```
-
-### HR Budget Calculations
-
-#### Salary Budget
-
-```typescript
-// Existing roles
-const existingSalaryBudget = existingRoles.reduce((total, role) => {
-  const adjustedHeadCount = role.currentHeadCount + role.hires - role.fires;
-  return total + adjustedHeadCount * role.salaryPerHead;
-}, 0);
-
-// New roles
-const newRolesSalaryBudget = newRoles.reduce((total, role) => {
-  return total + role.hires * role.salaryPerHead;
-}, 0);
-
-// Total HR budget
 const totalHRBudget =
-  existingSalaryBudget + newRolesSalaryBudget + trainingBudget;
-```
-
-#### Employee Metrics
-
-```typescript
-// Total employees after decisions
-const totalEmployees =
   existingRoles.reduce((total, role) => {
-    return total + Math.max(0, role.currentHeadCount + role.hires - role.fires);
-  }, 0) + newRoles.reduce((total, role) => total + role.hires, 0);
-
-// Employee satisfaction impact
-const satisfactionChange = getPercentChange(
-  currentSatisfaction,
-  previousSatisfaction
-);
+    const adjustedHeadCount = role.currentHeadCount + role.hires - role.fires;
+    return total + adjustedHeadCount * role.salaryPerHead;
+  }, 0) +
+  newRolesSalaryBudget +
+  trainingBudget;
 ```
 
-### Production Calculations
-
-#### Production Costs
+#### Production Metrics
 
 ```typescript
-const totalProductionCost = unitsToProducesCode * costPerUnit;
-
-// Defect calculations
+const totalProductionCost = unitsToProduceCode * costPerUnit;
 const defectedUnits = Math.round((unitsToProduceConst * defectRate) / 100);
-const goodUnits = unitsToProduceConst - defectedUnits;
-
-// Efficiency calculation
 const efficiency = (unitsToProduceConst / productionCapacity) * 100;
 ```
 
-### Marketing Budget Allocation
+## Form Management & Validation
+
+### Real-Time Cash Tracking
 
 ```typescript
-// Budget split validation
-const isValidBudgetSplit = online + offline === totalBudget;
-
-// Percentage allocation
-const onlinePercentage = (online / totalBudget) * 100;
-const offlinePercentage = (offline / totalBudget) * 100;
-```
-
-### R&D Investment Impact
-
-```typescript
-// R&D metrics tracked:
-const rdMetrics = {
-  budget: rdBudget,
-  projectsInPipeline: pip,
-  timeToMarket: timeToMarket,
-  totalDevelopmentProjects: totalDevelopment,
-  patentsFiled: patented,
-  qualityImprovements: qualityChanges,
-};
-```
-
-## Decision-Making Process
-
-### Form Context Management
-
-The application uses React Context to manage form state across all decision areas:
-
-```typescript
-// Cash balance tracking
 const useCashBalance = () => {
-  const [cashBalance, setCashBalance] = useState({
-    originalCashBalance: 0,
-    hrBudgetImpact: 0,
-    marketingBudgetImpact: 0,
-    rdBudgetImpact: 0,
-    productionBudgetImpact: 0,
-    financeBudgetImpact: 0,
-    salesBudgetImpact: 0,
-  });
-
   const projectedCashBalance =
     originalCashBalance -
     hrBudgetImpact -
@@ -280,28 +148,19 @@ const useCashBalance = () => {
 };
 ```
 
-### Validation Rules
+### Business Rules Validation
 
-#### Cash Flow Validation
+- **Cash Flow**: No negative cash balance allowed
+- **HR**: Employee counts cannot go negative after hires/fires
+- **Marketing**: Online + Offline must equal total budget
+- **Production**: Units cannot exceed capacity
+- **Sales**: Market share must be 0-100%
 
-- No decision can result in negative cash balance
-- All budget allocations must be within available funds
-- Real-time validation prevents invalid submissions
-
-#### Business Logic Validation
-
-- HR: Employee counts cannot be negative after hires/fires
-- Marketing: Online + Offline must equal total budget
-- Production: Units to produce cannot exceed capacity
-- Sales: Market share must be between 0-100%
-
-### Comprehensive Form Submission
-
-All decisions are submitted atomically using a single transaction:
+### Comprehensive Submission Process
 
 ```typescript
 const comprehensiveFormSubmission = async (companyId, formData) => {
-  // Process all business areas in parallel
+  // Submit all business areas in parallel
   const results = await Promise.all([
     submitHRDecision(),
     submitMarketingDecision(),
@@ -312,182 +171,100 @@ const comprehensiveFormSubmission = async (companyId, formData) => {
     submitSalesData(),
   ]);
 
-  // Store company history and advance period
+  // Store history and advance period
   await storeHistoryAndAdvancePeriod();
 };
 ```
 
-## Simulation Engine
+## Period Advancement Engine
 
-### Period Advancement Logic
+### State Transition Process
 
-When all decisions are submitted:
+1. **Pre-Validation**: Ensure all required decisions completed
+2. **Financial Calculation**: Calculate period-end financial position
+3. **History Storage**: Store current state in `company_history` table
+4. **Decision Recording**: Store all business decisions with period reference
+5. **State Update**: Update company's current period and cash balance
+6. **Reset**: Ready for next period's decisions
 
-1. **Historical Data Storage**: Current company state saved to `company_history`
-2. **Decision Processing**: All business decisions stored with period reference
-3. **Financial Updates**: Company cash balance updated based on decisions
-4. **Period Increment**: `current_period` incremented by 1
-5. **State Reset**: Ready for next period's decisions
-
-### Performance Calculation Engine
+### Database Transaction
 
 ```typescript
-// Period performance metrics
+await prisma.$transaction(async (tx) => {
+  // Store company history
+  await tx.company_history.create({
+    data: { company_id: companyId, period: currentPeriod,
+            cash_balance: company.cash_balance, ... }
+  });
+
+  // Update company for next period
+  await tx.company.update({
+    where: { id: companyId },
+    data: { current_period: { increment: 1 }, cash_balance: projectedBalance }
+  });
+});
+```
+
+### Performance Calculation
+
+```typescript
 const calculatePeriodPerformance = (companyData, decisions) => {
   const revenue = calculateRevenue(decisions.sales, decisions.production);
   const costs = calculateCosts(decisions);
   const profit = revenue - costs;
-  const marketShare = calculateMarketShare(
-    decisions.sales,
-    decisions.marketing
-  );
 
   return {
     revenue,
     costs,
     profit,
-    marketShare,
+    marketShare: calculateMarketShare(decisions.sales, decisions.marketing),
     roi: (profit / costs) * 100,
     cashFlow: revenue - costs,
-    customerSatisfaction: decisions.sales.customerSatisfaction,
   };
 };
 ```
 
-## Performance Metrics
+## Analytics & Dashboard
 
-### Financial Performance Indicators
+### Key Performance Indicators
 
-- **Revenue Growth**: Period-over-period revenue comparison
-- **Profit Margins**: Gross and net profit margins
-- **ROI**: Return on investment across all business areas
-- **Cash Position**: Cash balance trends and projections
-- **Asset Utilization**: Total assets vs. liabilities ratio
+- **Financial**: Revenue Growth, Profit Margins, ROI, Cash Position
+- **Operational**: Production Efficiency, Employee Productivity, Market Share
+- **Trend Analysis**: Period-over-period comparisons with percentage changes
 
-### Operational Metrics
+### Real-Time Visualizations
 
-- **Production Efficiency**: Capacity utilization and defect rates
-- **Employee Productivity**: Revenue per employee
-- **Market Position**: Market share and competitive standing
-- **Innovation Index**: R&D investment as percentage of revenue
+- **Revenue & Profit Trend**: Area charts showing financial performance
+- **Department Budget Allocation**: Pie charts for budget distribution
+- **Production Metrics**: Bar charts for efficiency tracking
+- **Product Performance**: Sales volume and market share analysis
 
-### Trend Analysis
+### Trend Calculation
 
 ```typescript
 const getPercentChange = (current, previous) => {
   if (previous === 0 || !previous) return undefined;
   return +(((current - previous) / previous) * 100).toFixed(1);
 };
-
-// Applied to all key metrics for trend visualization
-const trendAnalysis = {
-  cashBalanceChange: getPercentChange(currentCash, previousCash),
-  revenueChange: getPercentChange(currentRevenue, previousRevenue),
-  profitChange: getPercentChange(currentProfit, previousProfit),
-  marketShareChange: getPercentChange(currentShare, previousShare),
-};
 ```
 
-## Period Advancement Logic
+## Core Business Constraints
 
-### State Transition Process
+### Financial Rules
 
-1. **Pre-Validation**: Ensure all required decisions are made
-2. **Data Validation**: Validate all form data against business rules
-3. **Financial Calculation**: Calculate period-end financial position
-4. **History Storage**: Store current state in `company_history` table
-5. **Decision Recording**: Store all business decisions with period reference
-6. **State Update**: Update company's current period and cash balance
-7. **Cleanup**: Reset form state for next period
-
-### Database Transaction Flow
-
-```typescript
-await prisma.$transaction(async (tx) => {
-  // Store company history
-  await tx.company_history.create({
-    data: {
-      company_id: companyId,
-      period: currentPeriod,
-      cash_balance: company.cash_balance,
-      total_assets: company.total_assets,
-      total_liabilities: company.total_liabilities,
-      // ... other metrics
-    },
-  });
-
-  // Update company for next period
-  await tx.company.update({
-    where: { id: companyId },
-    data: {
-      current_period: { increment: 1 },
-      cash_balance: projectedBalance,
-    },
-  });
-});
-```
-
-## Dashboard Analytics
-
-### Real-Time Performance Tracking
-
-The dashboard provides comprehensive analytics across multiple dimensions:
-
-#### Financial Dashboard Cards
-
-- **Cash Balance**: Current liquidity position with trend indicators
-- **Net Worth**: Assets minus liabilities with growth percentage
-- **Revenue**: Period revenue with period-over-period comparison
-- **Active Products**: Product portfolio size and growth
-
-#### Interactive Charts
-
-1. **Revenue & Profit Trend**: Area chart showing financial performance over time
-2. **Department Budget Allocation**: Pie chart showing budget distribution
-3. **Production Metrics**: Bar chart showing production efficiency
-4. **Product Performance**: Sales volume and market share by product
-
-#### Comparative Analytics
-
-```typescript
-// Multi-period comparison
-const periodComparison = periods.map((period) => {
-  const periodData = getPeriodData(period);
-  return {
-    period,
-    revenue: periodData.revenue,
-    profit: periodData.profit,
-    marketShare: periodData.marketShare,
-    employees: periodData.employees,
-  };
-});
-```
-
-### Data Visualization Components
-
-- **ResponsiveContainer**: Ensures charts adapt to screen size
-- **Custom Tooltips**: Show detailed metrics on hover
-- **Gradient Fills**: Visual enhancement for area charts
-- **Color Coding**: Consistent color scheme across all visualizations
-
-## Key Business Rules & Constraints
-
-### Financial Constraints
-
-- Companies cannot have negative cash balances
+- No negative cash balances allowed
 - All expenses must be covered by available funds
-- Loan amounts cannot exceed creditworthiness limits
+- Loan amounts limited by creditworthiness
 
-### Operational Constraints
+### Operational Rules
 
 - Production cannot exceed capacity
-- Employee counts cannot be negative
-- Market share is capped at 100% total across all companies
+- Employee counts cannot go negative
+- Market share capped at 100% total across companies
 
 ### Validation Framework
 
 ```typescript
-// Example validation schema using Zod
 const financeSchema = z.object({
   investment_amount: z.number().min(0),
   loan_amount: z.number().min(0),
@@ -497,14 +274,386 @@ const financeSchema = z.object({
 });
 ```
 
-## Conclusion
+## Simulate Page - Data Flow & Logic
 
-The Business Simulation Platform provides a comprehensive, realistic business management experience through:
+### Page Architecture
 
-- **Complex Financial Modeling**: Realistic cash flow and financial calculations
-- **Multi-Department Integration**: Interconnected business decisions
-- **Real-Time Analytics**: Immediate feedback on decision impact
-- **Period-Based Progression**: Structured business cycles
-- **Comparative Analysis**: Multi-company performance evaluation
+The simulate page (`/simulate/[companyID]`) is the core decision-making interface where users make strategic business decisions across 8 sequential steps. The page follows a wizard-based flow with real-time cash balance tracking.
 
-The system successfully simulates real-world business challenges while providing educational value and strategic decision-making practice.
+### Data Flow Architecture
+
+```
+Page Load → Form Context Initialization → Step Navigation → Real-Time Calculations → Comprehensive Submission
+```
+
+### Step-by-Step Logic Flow
+
+#### 1. **Page Initialization**
+
+```typescript
+// Main page component loads with company ID
+const Page = async ({ params }: { params: Promise<{ companyID: string }> }) => {
+  await getCurrentUser();
+  const { companyID } = await params;
+  return <Form companyId={companyID} />;
+};
+```
+
+#### 2. **Form Context Setup**
+
+The form uses React Context (`FormContext`) to manage state across all 8 steps:
+
+```typescript
+interface FormState {
+  finance: FinanceFormData;
+  marketing: MarketingFormData;
+  production: ProductionFormData;
+  hr: HRFormData;
+  rd: RDFormData;
+  sales: SalesFormData;
+  product: ProductFormData[];
+  cashBalance: CashBalanceState;
+  projected_balance: number;
+}
+```
+
+#### 3. **Real-Time Cash Balance Calculation**
+
+Each form step updates cash balance impact in real-time:
+
+```typescript
+// Base cash balance calculation
+const useCashBalance = () => {
+  const projectedCashBalance =
+    originalCashBalance -
+    hrBudgetImpact -
+    marketingBudgetImpact -
+    rdBudgetImpact -
+    productionBudgetImpact -
+    financeBudgetImpact +
+    salesBudgetImpact;
+};
+
+// Individual department calculations:
+// HR Impact: salary_budget + training_budget + recruitment_cost + firing_cost
+// Marketing Impact: total budget allocation
+// R&D Impact: budget + total_development costs
+// Production Impact: quality_investment + efficiency_upgrade + maintenance + safety + compliance
+// Finance Impact: investment + loan_repayment + dividends - loan_amount - equity_issue
+// Sales Impact: negative costs impact, positive revenue impact
+```
+
+### 8-Step Decision Process
+
+#### Step 1: Human Resources (HR)
+
+**Logic**: Manage workforce planning and budget allocation
+
+```typescript
+// HR Budget Calculation
+const calculateHRBudget = () => {
+  let salary_budget = 0;
+  let recruitment_cost = 0;
+  let firing_cost = 0;
+
+  // Existing roles calculation
+  existingRoles.forEach((role) => {
+    const newHeadCount = role.current_head_count + role.hires - role.fires;
+    salary_budget += newHeadCount * role.salary_per_head;
+    recruitment_cost += role.hires * role.salary_per_head;
+    firing_cost += role.fires * (role.salary_per_head / 12); // Severance
+  });
+
+  // New roles calculation
+  newRoles.forEach((role) => {
+    salary_budget += role.hires * role.salary_per_head;
+    recruitment_cost += role.hires * role.salary_per_head;
+  });
+
+  return salary_budget + training_budget + recruitment_cost + firing_cost;
+};
+```
+
+#### Step 2: Marketing
+
+**Logic**: Plan marketing campaigns and budget allocation
+
+```typescript
+// Marketing Budget Validation
+const validateMarketingBudget = (
+  online: number,
+  offline: number,
+  total: number
+) => {
+  const isValidSplit = online + offline === total;
+  const onlinePercentage = (online / total) * 100;
+  const offlinePercentage = (offline / total) * 100;
+
+  return { isValidSplit, onlinePercentage, offlinePercentage };
+};
+```
+
+#### Step 3: Research & Development (R&D)
+
+**Logic**: Innovation investment and project planning
+
+```typescript
+// R&D Impact Calculation
+const rdBudgetImpact = rdBudget + totalDevelopmentCost;
+const rdMetrics = {
+  budget: rdBudget,
+  projectsInPipeline: pip,
+  timeToMarket: timeToMarket,
+  totalDevelopmentProjects: totalDevelopment,
+  patentsFiled: patented,
+  qualityImprovements: qualityChanges,
+};
+```
+
+#### Step 4: Production
+
+**Logic**: Capacity planning and quality management
+
+```typescript
+// Production Calculations
+const totalProductionCost = unitsToProduceCode * costPerUnit;
+const defectedUnits = Math.round((unitsToProduceConst * defectRate) / 100);
+const goodUnits = unitsToProduceConst - defectedUnits;
+const efficiency = (unitsToProduceConst / productionCapacity) * 100;
+
+// Production Budget Impact
+const productionBudgetImpact =
+  quality_improvement_investment +
+  efficiency_upgrade_cost +
+  maintenance_budget +
+  safety_investment +
+  environmental_compliance_cost;
+```
+
+#### Step 5: Products
+
+**Logic**: Portfolio management and pricing
+
+```typescript
+// Product Budget Impact
+const productBudgetImpact = development_cost + marketing_budget;
+
+// Product Lifecycle Management
+const productStatus = {
+  development: "In development phase",
+  launched: "Active in market",
+  discontinued: "End of lifecycle",
+};
+```
+
+#### Step 6: Sales
+
+**Logic**: Sales targets and market strategy
+
+```typescript
+// Sales Calculations
+const revenue = salesVolume * sellingPrice;
+const profit = revenue - (salesVolume * productionCost + operatingCosts);
+const profitMargin = (profit / revenue) * 100;
+
+// Sales Impact (positive for revenue, negative for costs)
+const salesBudgetImpact = revenue - costs;
+```
+
+#### Step 7: Finance
+
+**Logic**: Investment, loans, and dividend decisions
+
+```typescript
+// Finance Impact Calculation
+const financeBudgetImpact =
+  -investment_amount + // Outflow
+  -loan_repayment + // Outflow
+  -dividend_payout + // Outflow
+  +loan_amount + // Inflow
+  +equity_issue; // Inflow
+```
+
+#### Step 8: Preview & Submit
+
+**Logic**: Final review and comprehensive submission
+
+### Comprehensive Submission Process
+
+#### Data Aggregation
+
+```typescript
+const formData = {
+  hr: { existingRoles, newRoles, salary_budget, training_budget, total_budget, ... },
+  marketing: { budget, offline, online },
+  rd: { budget, pip, time_to_market, total_development, patented, quality_changes },
+  production: { production_capacity, units_to_produce, cost_per_unit, ... },
+  finance: { investment_amount, loan_amount, repay_loan, dividend_payout, equity_issue },
+  sales: { sales_volume, revenue, costs, profit, market_share, customer_satisfaction },
+  product: { name, category, quality_rating, production_cost, selling_price, ... },
+  projected_balance: projectedCashBalance,
+  budget_impacts: budgetImpacts,
+};
+```
+
+#### Server-Side Processing (`comprehensiveFormSubmission`)
+
+The submission follows a parallel processing approach:
+
+```typescript
+const comprehensiveFormSubmission = async (companyId: string, formData: ComprehensiveFormData) => {
+  // Step 1: Get company information
+  const company = await prisma.company.findUnique({ where: { id: companyId } });
+
+  // Step 2: Process all business areas in parallel
+  const businessProcesses = [
+    submitHRDecision(),
+    submitMarketingDecision(),
+    submitRDDecision(),
+    submitProductionDecision(),
+    submitFinanceDecision(),
+    submitProductData(),
+    submitSalesData()
+  ];
+
+  await Promise.all(businessProcesses);
+
+  // Step 3: Store history and advance period (atomic transaction)
+  await prisma.$transaction(async (tx) => {
+    // Store company history
+    await tx.company_history.create({
+      data: { company_id: companyId, period: currentPeriod, ... }
+    });
+
+    // Advance period and update cash balance
+    await tx.company.update({
+      where: { id: companyId },
+      data: {
+        current_period: { increment: 1 },
+        cash_balance: projectedBalance
+      }
+    });
+  });
+};
+```
+
+### Database Operations per Step
+
+#### HR Decision Storage
+
+```sql
+-- Create HR decision record
+INSERT INTO hr_decision (company_id, period, salary_budget, training_budget, total_budget, ...)
+
+-- Create role decisions
+INSERT INTO hr_role_decision (hr_decision_id, role_name, salary_per_head, head_count)
+```
+
+#### Marketing Decision Storage
+
+```sql
+INSERT INTO marketing (company_id, period, budget, offline, online, finalised)
+```
+
+#### R&D Decision Storage
+
+```sql
+INSERT INTO rd (company_id, period, budget, pip, time_to_market, total_development, ...)
+```
+
+#### Production Decision Storage
+
+```sql
+INSERT INTO production (company_id, period, units_to_produce, cost_per_unit,
+                       production_capacity, defect_rate, finalised)
+```
+
+#### Finance Decision Storage
+
+```sql
+INSERT INTO finance (company_id, period, investment_amount, loan_amount,
+                    repay_loan, dividend_payout, equity_issue, finalised)
+```
+
+#### Product Management
+
+```sql
+-- Create or update product
+INSERT INTO product (company_id, name, category, quality_rating, production_cost, ...)
+ON CONFLICT (company_id, name) DO UPDATE SET ...
+```
+
+#### Sales Performance Storage
+
+```sql
+INSERT INTO product_performance (product_id, period, sales_volume, revenue,
+                                costs, profit, market_share, customer_satisfaction)
+```
+
+### Cash Flow Validation Rules
+
+#### Real-Time Validation
+
+- **Negative Cash Prevention**: `projectedCashBalance >= 0`
+- **Budget Constraint**: `totalExpenses <= availableCash + incomingSources`
+- **Business Logic**: Each department has specific validation rules
+
+#### Validation Examples
+
+```typescript
+// HR Validation
+const isValidHR = () => {
+  const totalEmployees = existingRoles.reduce(
+    (total, role) =>
+      total + Math.max(0, role.currentHeadCount + role.hires - role.fires),
+    0
+  );
+  return totalEmployees >= 0 && totalBudget <= availableCash;
+};
+
+// Marketing Validation
+const isValidMarketing = () => online + offline === totalBudget;
+
+// Production Validation
+const isValidProduction = () => unitsToProduceConst <= productionCapacity;
+```
+
+### Error Handling & Recovery
+
+#### Form-Level Error Handling
+
+```typescript
+try {
+  const result = await comprehensiveFormSubmission(companyId, formData);
+  if (result.success) {
+    showSuccessMessage();
+    redirect(`/homepage/${companyId}`);
+  } else {
+    showErrorMessage(result.message);
+  }
+} catch (error) {
+  showGenericErrorMessage();
+}
+```
+
+#### Server-Side Error Recovery
+
+- **Partial Success Handling**: Continue processing even if some operations fail
+- **Transaction Rollback**: Critical operations use database transactions
+- **Graceful Degradation**: Non-critical failures don't stop period advancement
+
+### Performance Optimizations
+
+#### Parallel Processing
+
+- All business decisions processed simultaneously (not sequentially)
+- Database operations optimized with batch inserts where possible
+- Real-time calculations use React useMemo and useCallback
+
+#### State Management
+
+- Form state persisted in React Context to prevent data loss
+- Real-time validation prevents invalid submissions
+- Optimistic UI updates for better user experience
+
+This simulate page represents the core business logic engine of the application, handling complex multi-step decision making with real-time financial impact calculations and robust data persistence.
