@@ -212,7 +212,7 @@ const MarketingForm = () => {
                 </h4>
                 <Slider
                   className="w-[200px]"
-                  label={`${formatCurrency(marketingData.offline)} (${percent(
+                  label={`${marketingData.offline.toLocaleString()} (${percent(
                     marketingData.offline,
                     marketingData.budget
                   )})`}

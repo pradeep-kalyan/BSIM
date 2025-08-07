@@ -3,14 +3,14 @@ import React from "react";
 import Form from "./_components/form";
 
 interface PageProps {
-  params: Promise<{
+  params: {
     companyID: string;
-  }>;
+  };
 }
 
 const Page = async ({ params }: PageProps) => {
   await getCurrentUser();
-  const { companyID } = await params;
+  const { companyID } = params;
 
   return (
     <div className="min-h-screen w-screen relative overflow-hidden bg-gradient-to-br from-[#0c0c0c] via-[#1a1a2e] to-[#16213e]">

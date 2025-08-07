@@ -253,7 +253,7 @@ const Sales = () => {
         </header>
 
         {/* Dashboard Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <section className="grid grid-cols-1 md:grid-cols- gap-6 mb-10">
           <DashboardCard
             title="Total Revenue"
             value={`₹${formatNumber(Math.round(totalMetrics.totalRevenue))}`}

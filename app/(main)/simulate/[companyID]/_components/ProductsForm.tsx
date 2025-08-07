@@ -10,7 +10,7 @@ import {
   Square,
   Edit,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardCard from "@/ui/Card";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";

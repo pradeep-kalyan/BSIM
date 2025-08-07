@@ -87,20 +87,9 @@ const ComparePage: React.FC = () => {
     []
   );
 
-<<<<<<< HEAD
-=======
   const { simId } = useSimulation();
 
-  const formatCurrency = useMemo(
-    () =>
-      (value: number): string => {
-        if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
-        return `$${value.toLocaleString()}`;
-      },
-    []
-  );
->>>>>>> 9e1210ffb1c77dc0c3445c8181350087e13426e9
+
 
   // Extract metric value for sorting with better type safety
   const getMetricValue = (company: Company, metric: SortOption): number => {
