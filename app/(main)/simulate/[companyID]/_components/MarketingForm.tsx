@@ -92,7 +92,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
           />
@@ -105,7 +104,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
             subtext="100%"
@@ -119,7 +117,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
             subtext={percent(marketingData.online, marketingData.budget)}
@@ -133,7 +130,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
             subtext={percent(marketingData.offline, marketingData.budget)}

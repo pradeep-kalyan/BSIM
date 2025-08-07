@@ -48,7 +48,6 @@ const RDForm = () => {
           label="R&D Budget"
           value={data.budget ?? 0}
           isCurrency={true}
-          currencyCode="INR"
           Icon={IndianRupee}
           iconColor="text-yellow-400"
           labelColor="text-white"

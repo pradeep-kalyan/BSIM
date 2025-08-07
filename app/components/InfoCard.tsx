@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react"
+import formatCurrency from "../functions/formatCurrency"
 
 interface InfoCardProps {
     label: string
@@ -8,7 +9,6 @@ interface InfoCardProps {
     labelColor?: string
     valueColor?: string
     isCurrency?: boolean
-    currencyCode?: string
     width?: string
     height?: string
     subtext?: string
@@ -23,7 +23,6 @@ export default function InfoCard({
     labelColor = "text-white",
     valueColor = "text-white",
     isCurrency = false,
-    currencyCode = "INR",
     width = "w-full",
     height = "h-auto",
     subtext,
@@ -32,17 +31,13 @@ export default function InfoCard({
     const displayValue =
         typeof value === "number"
             ? isCurrency
-                ? value.toLocaleString("en-IN", {
-                    style: "currency",
-                    currency: currencyCode,
-                    maximumFractionDigits: 0,
-                })
+                ? formatCurrency(value) + suffix
                 : value.toLocaleString() + suffix
             : value
 
     return (
         <div
-            className={`bg-slate-800/50 shadow-md rounded-xl p-5 shadow-md border border-slate-600 ${width} ${height}`}
+            className={`bg-slate-800/50 shadow-md rounded-xl p-5 border border-slate-600 ${width} ${height}`}
         >
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">

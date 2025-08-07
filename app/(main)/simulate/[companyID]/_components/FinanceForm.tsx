@@ -82,7 +82,6 @@ const FinanceForm = () => {
             label="Original Cash Balance"
             value={parseFloat(cashBalance.originalCashBalance.toFixed(0))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={Factory}
             width="w-full"
             height="h-full"
@@ -92,7 +91,6 @@ const FinanceForm = () => {
             label="Projected Cash Balance"
             value={parseFloat(projectedCashBalance.toFixed(0))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={PiggyBank}
             width="w-full"
             height="h-full"
@@ -102,7 +100,6 @@ const FinanceForm = () => {
             label="Total Liabilities"
             value={parseFloat(companyData?.total_liabilities.toFixed(0))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={Package}
             width="w-full"
             height="h-full"
@@ -112,7 +109,6 @@ const FinanceForm = () => {
             label="Total Assets"
             value={parseFloat(companyData?.total_assets.toFixed(0))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={IndianRupee}
             width="w-full"
             height="h-full"

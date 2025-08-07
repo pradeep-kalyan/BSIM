@@ -183,7 +183,6 @@ const HRDashboard = () => {
             Icon={IndianRupee}
             iconColor="text-yellow-400"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
           />

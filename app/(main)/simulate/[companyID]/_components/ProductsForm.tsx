@@ -258,7 +258,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
             label="Portfolio Value"
             value={totalProductValue}
             isCurrency={true}
-            currencyCode="INR"
             Icon={IndianRupee}
             width="w-full"
             height="h-full"

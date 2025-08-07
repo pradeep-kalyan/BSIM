@@ -246,7 +246,6 @@ const Sales = () => {
           label="Total Revenue"
           value={totalMetrics.totalRevenue}
           isCurrency={true}
-          currencyCode="INR"
           Icon={DollarSign}
           width="w-full"
           height="h-full"
@@ -281,7 +280,6 @@ const Sales = () => {
           label="Total Profit"
           value={totalMetrics.totalProfit}
           isCurrency={true}
-          currencyCode="INR"
           Icon={Star}
           width="w-full"
           height="h-full"
@@ -386,8 +384,6 @@ const Sales = () => {
                     }
                   />
                 </div>
-
-                {/* Calculated fields */}
 
                 {/* Actions */}
                 <div className="mt-4 flex items-center gap-4">
