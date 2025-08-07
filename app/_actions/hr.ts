@@ -32,6 +32,12 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
   } = input;
 
   try {
+    // Calculate total employee count
+    const totalEmployeeCount = roles.reduce(
+      (total, role) => total + role.head_count,
+      0
+    );
+
     const result = await prisma.$transaction(async (tx: any) => {
       const company = await tx.company.findUnique({
         where: { id: company_id },
@@ -62,6 +68,7 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
           training_budget,
           total_budget,
           employee_satisfaction,
+          total_employee_count: totalEmployeeCount,
           roles: {
             create: roles.map((role) => ({
               role_name: role.role_name,

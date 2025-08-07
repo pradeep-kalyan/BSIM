@@ -34,25 +34,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      console.log("🔍 Checking auth status...");
 
       // Use server action instead of fetch request
       const userData = await getCurrentUser();
 
       if (userData) {
-        console.log("User authenticated:", userData);
         setUser(userData);
       } else {
         // If userData is null, user is not authenticated
-        console.log("User not authenticated");
         setUser(null);
       }
-    } catch (error) {
-      console.error("Auth check failed:", error);
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
-      console.log("Auth check completed");
     }
   };
 

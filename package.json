@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "next lint && npx tsc --noEmit",
     "seed": "node app/functions/seed",
     "gitpush": "read -p 'Commit message: ' msg && git add . && git commit -m \"$msg\" && git push",
     "postinstall": "npx prisma generate"

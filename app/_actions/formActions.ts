@@ -47,6 +47,7 @@ export async function getInitialFormData(companyId: string, period: number) {
           employee_satisfaction: true,
           recruitment_cost: true,
           firing_cost: true,
+          total_employee_count: true,
         },
       }),
       prisma.hr_decision.findFirst({

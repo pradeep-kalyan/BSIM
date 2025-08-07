@@ -21,8 +21,7 @@ interface ComprehensiveFormData {
     training_budget: number;
     total_budget: number;
     employee_satisfaction: number;
-    recruitment_cost: number;
-    firing_cost: number;
+    total_employee_count: number;
   };
   marketing: {
     budget: number;
@@ -63,7 +62,7 @@ interface ComprehensiveFormData {
   };
   product?: Array<{
     name: string;
-    description?: string;
+    description?: string | null;
     category: string;
     quality_rating: number;
     innovation_rating: number;
@@ -75,8 +74,8 @@ interface ComprehensiveFormData {
     development_cost: number;
     marketing_budget: number;
     status: string;
-    launch_period?: number;
-    discontinue_period?: number;
+    launch_period?: number | null;
+    discontinue_period?: number | null;
   }>;
   sales: {
     [productId: string]: {
@@ -104,19 +103,7 @@ export async function comprehensiveFormSubmission(
   companyId: string,
   formData: ComprehensiveFormData
 ) {
-  console.log("Starting comprehensive form submission for company:", companyId);
-
   // Log budget breakdown for debugging
-  if (formData.budget_impacts) {
-    console.log("Budget breakdown:", {
-      projected_balance: formData.projected_balance,
-      budget_impacts: formData.budget_impacts,
-      total_costs: Object.values(formData.budget_impacts).reduce(
-        (sum, impact) => sum + Math.abs(impact),
-        0
-      ),
-    });
-  }
 
   try {
     // Get company information first (simple query, no transaction needed)
@@ -156,13 +143,21 @@ export async function comprehensiveFormSubmission(
     > = {};
 
     // Step 2: Process all business areas in parallel using direct operations (no nested transactions)
-    console.log("Step 2: Processing all business decisions in parallel...");
 
     // Create array of promises for parallel execution
     const businessProcesses = [
       // 2.1. Submit HR Decision
       (async () => {
         try {
+          // Calculate total employee count from existing and new roles
+          const totalEmployeeCount =
+            formData.hr.existingRoles.reduce(
+              (total, role) =>
+                total + (role.current_head_count + role.hires - role.fires),
+              0
+            ) +
+            formData.hr.newRoles.reduce((total, role) => total + role.hires, 0);
+
           const existingHRDecision = await prisma.hr_decision.findFirst({
             where: {
               company_id: companyId,
@@ -181,8 +176,9 @@ export async function comprehensiveFormSubmission(
                   training_budget: formData.hr.training_budget,
                   total_budget: formData.hr.total_budget,
                   employee_satisfaction: formData.hr.employee_satisfaction,
-                  recruitment_cost: formData.hr.recruitment_cost,
-                  firing_cost: formData.hr.firing_cost,
+                  recruitment_cost: 0,
+                  firing_cost: 0,
+                  total_employee_count: totalEmployeeCount,
                   is_submitted: true,
                 },
               });
@@ -230,9 +226,6 @@ export async function comprehensiveFormSubmission(
                 success: true,
                 id: existingHRDecision.id,
               };
-              console.log(
-                `HR decision for period ${currentPeriod} is already submitted, preserving historical data.`
-              );
             }
           } else {
             // Create new HR decision
@@ -244,8 +237,9 @@ export async function comprehensiveFormSubmission(
                 training_budget: formData.hr.training_budget,
                 total_budget: formData.hr.total_budget,
                 employee_satisfaction: formData.hr.employee_satisfaction,
-                recruitment_cost: formData.hr.recruitment_cost,
-                firing_cost: formData.hr.firing_cost,
+                recruitment_cost: 0,
+                firing_cost: 0,
+                total_employee_count: totalEmployeeCount,
                 is_submitted: true,
               },
             });
@@ -320,9 +314,6 @@ export async function comprehensiveFormSubmission(
                 success: true,
                 id: existingMarketingDecision.id,
               };
-              console.log(
-                `Marketing decision for period ${currentPeriod} is already finalized, preserving historical data.`
-              );
             }
           } else {
             const marketingDecision = await prisma.marketing.create({
@@ -387,9 +378,6 @@ export async function comprehensiveFormSubmission(
                 success: true,
                 id: existingRDDecision.id,
               };
-              console.log(
-                `R&D decision for period ${currentPeriod} is already finalized, preserving historical data.`
-              );
             }
           } else {
             const rdDecision = await prisma.rd.create({
@@ -455,9 +443,6 @@ export async function comprehensiveFormSubmission(
                 success: true,
                 id: existingProductionDecision.id,
               };
-              console.log(
-                `Production decision for period ${currentPeriod} is already finalized, preserving historical data.`
-              );
             }
           } else {
             const productionDecision = await prisma.production.create({
@@ -531,9 +516,6 @@ export async function comprehensiveFormSubmission(
                 success: true,
                 id: existingFinanceDecision.id,
               };
-              console.log(
-                `Finance decision for period ${currentPeriod} is already finalized, preserving historical data.`
-              );
             }
           } else {
             const financeDecision = await prisma.finance.create({
@@ -666,25 +648,12 @@ export async function comprehensiveFormSubmission(
     // Execute all business processes in parallel
     await Promise.all(businessProcesses);
 
-    console.log("All business processes completed, checking results...");
-
     // Step 2.7: Process Sales decisions as Product Performance (after products are created/updated)
     try {
-      console.log("Processing sales decisions as product performance...");
-      console.log("Available sales data keys:", Object.keys(formData.sales));
-      console.log("Sales data:", formData.sales);
-
       // Get all products for the company (including newly created ones)
       const products = await prisma.product.findMany({
         where: { company_id: companyId },
         orderBy: { created_at: "asc" },
-      });
-
-      console.log(
-        `Found ${products.length} products for company ${companyId}:`
-      );
-      products.forEach((product) => {
-        console.log(`- Product: ${product.name} (ID: ${product.id})`);
       });
 
       if (products.length > 0) {
@@ -846,11 +815,6 @@ export async function comprehensiveFormSubmission(
                 });
 
               if (!existingPerformance) {
-                console.log(
-                  `Creating product performance for product: ${product.name} (ID: ${product.id})`
-                );
-                console.log(`Sales data:`, productSales);
-
                 // Create new product performance record
                 await prisma.product_performance.create({
                   data: {
@@ -874,14 +838,7 @@ export async function comprehensiveFormSubmission(
                   where: { id: product.id },
                   data: { inventory_level: newInventoryLevel },
                 });
-              } else {
-                console.log(
-                  `Product performance already exists for product: ${product.name}`
-                );
               }
-            } else {
-              console.log(`No sales data found for product: ${product.name}`);
-              console.log(`Available sales keys:`, Object.keys(formData.sales));
             }
           }
         }
@@ -901,10 +858,6 @@ export async function comprehensiveFormSubmission(
       // This ensures the application doesn't get stuck in an inconsistent state
     }
 
-    // Step 3: Final transaction to store history and advance period (using a single optimized transaction)
-    console.log(
-      "Step 3: Finalizing - storing company history and advancing period..."
-    );
     try {
       await prisma.$transaction(
         async (tx) => {
@@ -940,18 +893,6 @@ export async function comprehensiveFormSubmission(
             0,
             company.total_liabilities + liabilityChanges
           );
-
-          console.log("Financial impact calculations:", {
-            originalAssets: company.total_assets,
-            originalLiabilities: company.total_liabilities,
-            loanAmount: formData.finance.loan_amount,
-            loanRepayment: formData.finance.repay_loan,
-            equityIssue: formData.finance.equity_issue,
-            assetChanges,
-            liabilityChanges,
-            newTotalAssets,
-            newTotalLiabilities,
-          });
 
           // Advance the period and update cash balance, assets, and liabilities
           await tx.company.update({
@@ -989,7 +930,6 @@ export async function comprehensiveFormSubmission(
     revalidatePath(`/simulate/${companyId}`);
     revalidatePath(`/homepage/${companyId}`);
 
-    console.log("Form submission completed successfully");
     return {
       success: true,
       message: "All form data submitted successfully and period advanced",
