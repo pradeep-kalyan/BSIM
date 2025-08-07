@@ -14,11 +14,10 @@ import {
   useCashBalance,
   useCompanyForm,
 } from "@/app/context/FormContext";
+import formatCurrency from "@/app/functions/formatCurrency";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
 
-const formatCurrency = (val: number) =>
-  `₹${val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
 const percent = (part: number, total: number) =>
   total > 0 ? ((part / total) * 100).toFixed(1) + "%" : "0%";
@@ -176,7 +175,7 @@ const MarketingForm = () => {
                 </h4>
                 <Slider
                   className="w-[200px]"
-                  label={`₹${marketingData.budget.toLocaleString()}`}
+                  label={`${formatCurrency(marketingData.budget)}`}
                   value={[marketingData.budget]}
                   min={0}
                   max={Math.max(100000, marketingData.budget * 2)}
@@ -193,7 +192,7 @@ const MarketingForm = () => {
                 </h4>
                 <Slider
                   className="w-[200px]"
-                  label={`₹${marketingData.online.toLocaleString()} (${percent(
+                  label={`${formatCurrency(marketingData.online)} (${percent(
                     marketingData.online,
                     marketingData.budget
                   )})`}
@@ -213,7 +212,7 @@ const MarketingForm = () => {
                 </h4>
                 <Slider
                   className="w-[200px]"
-                  label={`₹${marketingData.offline.toLocaleString()} (${percent(
+                  label={`${marketingData.offline.toLocaleString()} (${percent(
                     marketingData.offline,
                     marketingData.budget
                   )})`}

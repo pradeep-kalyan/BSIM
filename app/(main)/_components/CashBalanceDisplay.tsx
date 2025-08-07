@@ -3,7 +3,7 @@
 import React from "react";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import { useCashBalance } from "@/app/context/FormContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 interface CashBalanceDisplayProps {
   showBreakdown?: boolean;
   className?: string;
@@ -16,11 +16,7 @@ const CashBalanceDisplay: React.FC<CashBalanceDisplayProps> = ({
   const { originalCashBalance, projectedCashBalance, cashBalance } =
     useCashBalance();
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+
 
   const netChange = projectedCashBalance - originalCashBalance;
   const isPositive = netChange > 0;

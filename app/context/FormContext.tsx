@@ -75,6 +75,8 @@ export interface HRFormData {
   total_budget: number;
   employee_satisfaction: number;
   total_employee_count: number;
+  recruitment_cost:number;
+  firing_cost:number;
 }
 
 export interface RDFormData {
@@ -267,6 +269,8 @@ const getDefaultHRData = (): HRFormData => ({
   total_budget: 0,
   employee_satisfaction: 0,
   total_employee_count: 0,
+  recruitment_cost:0,
+  firing_cost:0
 });
 
 const getDefaultRDData = (): RDFormData => ({

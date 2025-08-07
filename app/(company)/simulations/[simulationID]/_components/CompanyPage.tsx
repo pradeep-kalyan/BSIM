@@ -14,7 +14,7 @@ import EditCompanyForm from "../../_components/EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { useRouter } from "next/navigation";
 import { company } from "@prisma/client";
-
+import { getSimulationWithOwnership } from "@/app/_actions/createSim";
 interface ExtendedCompany extends company {
   canAccess?: boolean;
   canEdit?: boolean;
@@ -31,6 +31,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   const [accessibleCompanies, setAccessibleCompanies] = useState<
     ExtendedCompany[]
   >([]);
+  const [isSimulationOwner, setIsSimulationOwner] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -76,11 +77,24 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     if (!simulationID || didInit.current) return;
 
     didInit.current = true;
-    if (setSimId) {
-      setSimId(simulationID);
-    }
+    console.log("rendering CompanyPage");
 
-    fetchCompanies();
+    const init = async () => {
+      const user = await getCurrentUser();
+      if (!user) return;
+
+      const simulation = await getSimulationWithOwnership(simulationID);
+      setIsSimulationOwner(simulation.isOwner);
+      setCurrentUserId(user.id);
+
+      if (setSimId) {
+        setSimId(simulationID);
+      }
+
+      await fetchCompanies();
+    };
+
+    init();
   }, [simulationID, fetchCompanies, setSimId]);
 
   const handleCreated = async () => {
@@ -164,37 +178,32 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
       )}
 
       {/* Company Counter */}
+      <div className="mb-6 flex  text-slate-400 text-sm">
+        Showing {visibleCompanies.length} of {allCompanies.length} total
+        companies.
+      </div>
       <div className="absolute top-4 right-4 flex gap-2">
-        <button
-          onClick={handleViewSimulations}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md hover:scale-105 transition-transform duration-200"
-        >
-          View Simulations
-        </button>
-
-        {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
-          <>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowForm((prev) => !prev)}
-              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-            >
-              {showForm ? "View Companies" : "Create Company"}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push(`/simulations/${simulationID}/compare`)}
-              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-            >
-              Compare Companies
-            </motion.button>
-          </>
+      {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowForm((prev) => !prev)}
+            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+          >
+            {showForm ? "View Companies" : "Create Company"}
+          </motion.button>
+      )}
+        {isSimulationOwner && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push(`/simulations/${simulationID}/compare`)}
+            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+          >
+            Compare Companies
+          </motion.button>
         )}
       </div>
-
       {/* Main Section */}
       <AnimatePresence mode="wait">
         {showForm ? (

@@ -16,7 +16,7 @@ import {
   useHRForm,
   useHRRoleManagement,
 } from "@/app/context/FormContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { Users, Award, Building2, IndianRupee } from "lucide-react";
 
@@ -24,9 +24,7 @@ const HRDashboard = () => {
   const {
     data,
     updateData,
-
     updateExistingRole,
-
     addNewRole,
     updateNewRole,
     removeNewRole,
@@ -47,10 +45,6 @@ const HRDashboard = () => {
   // Calculate total employee count
   const totalEmployeeCount = getTotalEmployees();
 
-  // Calculate net hiring from newRoles and existing roles combined with NaN protection
-  const formatCurrency = (value: number) => {
-    return "₹" + value.toLocaleString(undefined, { minimumFractionDigits: 0 });
-  };
 
   const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => {
     const headCount = isNaN(role.current_head_count)
@@ -410,9 +404,9 @@ const HRDashboard = () => {
                       </label>
                       <Slider
                         className="w-[200px]"
-                        label={`₹${(
+                        label={`${formatCurrency(
                           role.salary_per_head || 50000
-                        ).toLocaleString()}`}
+                        )}`}
                         value={[
                           isNaN(role.salary_per_head)
                             ? 50000
@@ -463,9 +457,7 @@ const HRDashboard = () => {
                   Training & Development
                 </h4>
                 <Slider
-                  label={`Training Budget: ₹${(
-                    data?.training_budget || 0
-                  ).toLocaleString()}`}
+                  label={`Training Budget: ${formatCurrency(data?.training_budget || 0)}`}
                   value={[
                     isNaN(data?.training_budget)
                       ? 0

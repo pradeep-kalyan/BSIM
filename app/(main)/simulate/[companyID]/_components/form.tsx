@@ -1,17 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Button,
-  Paper,
-  Fade,
-  Box,
-  Typography,
-  useTheme,
-  useMediaQuery,
-  LinearProgress,
-  Link,
-  CircularProgress,
-} from "@mui/material";
+import { useBreakpoint } from "@/app/lib/utils/useBreakPoint";
 import {
   DollarSign,
   Users,
@@ -90,9 +79,7 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ companyId }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const { state } = useForm();
   const { projectedCashBalance, budgetImpacts } = useCashBalance();
 
@@ -381,551 +368,253 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
   const progress = ((activeStep + 1) / steps.length) * 100;
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        height: "100vh",
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
+    <div className="w-full h-screen flex flex-col md:flex-row overflow-hidden relative">
       {/* Submission Overlay */}
       {isSubmitting && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
-            backdropFilter: "blur(4px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "not-allowed",
-          }}
-        >
-          <Paper
-            elevation={24}
-            sx={{
-              padding: 4,
-              backgroundColor: "rgba(18, 20, 24, 0.95)",
-              borderRadius: 3,
-              border: "1px solid rgba(33, 150, 243, 0.3)",
-              backdropFilter: "blur(20px)",
-              textAlign: "center",
-              maxWidth: "400px",
-              margin: 2,
-            }}
-          >
-            <CircularProgress
-              size={60}
-              thickness={4}
-              sx={{
-                color: "#2196f3",
-                mb: 3,
-                "& .MuiCircularProgress-circle": {
-                  strokeLinecap: "round",
-                },
-              }}
-            />
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#fff",
-                fontWeight: 600,
-                mb: 2,
-                background: "linear-gradient(135deg, #fff 0%, #64b5f6 100%)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
+        <div className="fixed inset-0 w-screen h-screen bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center cursor-not-allowed">
+          <div className="p-6 bg-[#121418f2] rounded-xl border border-[#2196f34d] backdrop-blur-2xl text-center max-w-[400px] m-2">
+            <div className="w-15 h-15 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mb-6" />
+
+            <h2 className="text-lg font-semibold mb-4 bg-gradient-to-br from-white to-blue-400 bg-clip-text text-transparent">
               Submitting Simulation
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: "#aaa",
-                mb: 1,
-                lineHeight: 1.5,
-              }}
-            >
+            </h2>
+            <p className="text-sm text-gray-400 mb-2 leading-relaxed">
               Processing your business decisions and advancing to the next
               period...
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#666",
-                fontStyle: "italic",
-              }}
-            >
+            </p>
+
+            <p className="text-xs text-gray-500 italic">
               Please do not close this window or navigate away
-            </Typography>
-          </Paper>
-        </Box>
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Sidebar with Steps */}
-      <Paper
-        elevation={12}
-        sx={{
-          width: isMobile ? "100%" : isTablet ? "240px" : "280px",
-          height: isMobile ? "auto" : "100vh",
-          bgcolor: "rgba(8, 10, 15, 0.95)",
-          borderRadius: 0,
-          borderRight: isMobile ? "none" : "1px solid rgba(255, 255, 255, 0.1)",
-          backdropFilter: "blur(20px)",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          position: "relative",
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background:
-              "linear-gradient(180deg, rgba(33, 150, 243, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%)",
-            pointerEvents: "none",
-          },
-        }}
-      >
+      <div className="w-full md:w-[240px] lg:w-[280px] h-auto md:h-screen bg-[#080a0f]/95 backdrop-blur-2xl border-r border-white/10 overflow-hidden flex flex-col relative">
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-blue-500/5 to-black/10" />
         {/* Header */}
-        <Box
-          sx={{
-            p: 2.5,
-            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <Box sx={{ mb: 2 }}>
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-            >
-              <Typography
-                variant="caption"
-                sx={{ color: "#64b5f6", fontWeight: 600 }}
-              >
+        <div className="p-4 border-b border-white/10 relative z-10">
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold text-blue-300">
                 Progress
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ color: "#64b5f6", fontWeight: 600 }}
-              >
+              </span>
+              <span className="text-xs font-semibold text-blue-300">
                 {Math.round(progress)}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 10,
-                borderRadius: 5,
-                bgcolor: "rgba(255, 255, 255, 0.1)",
-                "& .MuiLinearProgress-bar": {
-                  background:
-                    "linear-gradient(90deg, #2196f3, #21cbf3, #00e676)",
-                  borderRadius: 5,
-                  transition: "all 0.6s ease",
-                },
-              }}
-            />
-          </Box>
+              </span>
+            </div>
 
-          <Typography
-            variant="caption"
-            sx={{ color: "#888", display: "block" }}
-          >
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 via-cyan-400 to-green-400"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400">
             Step {activeStep + 1} of {steps.length} • {steps[activeStep].label}
-          </Typography>
-        </Box>
+          </p>
+        </div>
 
-        {/* Steps List */}
-        <Box
-          sx={{ flex: 1, overflow: "auto", position: "relative", zIndex: 1 }}
-        >
+        <div className="flex-1 overflow-auto relative z-10">
           {steps.map((step, index) => {
-            const IconComponent = step.icon;
+            const Icon = step.icon;
             const isActive = index === activeStep;
             const isCompleted = index < activeStep;
 
+            const containerClasses = [
+              "px-4 py-3 border-b border-white/5 transition-all",
+              isSubmitting ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+              isActive
+                ? "bg-blue-500/10 border-l-4 border-blue-500 translate-x-1"
+                : isCompleted
+                ? "bg-green-500/5 border-l-4 border-green-500 hover:translate-x-1"
+                : "border-l-4 border-transparent hover:bg-white/5 hover:translate-x-1",
+            ].join(" ");
+
             return (
-              <Box
+              <div
                 key={step.label}
+                className={containerClasses}
                 onClick={() => !isSubmitting && handleStepClick(index)}
-                sx={{
-                  p: 2,
-                  cursor: isSubmitting ? "not-allowed" : "pointer",
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
-                  bgcolor: isActive
-                    ? "rgba(33, 150, 243, 0.15)"
-                    : isCompleted
-                    ? "rgba(76, 175, 80, 0.05)"
-                    : "transparent",
-                  borderLeft: isActive
-                    ? "4px solid #2196f3"
-                    : isCompleted
-                    ? "4px solid #4caf50"
-                    : "4px solid transparent",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform: isActive ? "translateX(4px)" : "translateX(0)",
-                  opacity: isSubmitting ? 0.6 : 1,
-                  "&:hover": !isSubmitting
-                    ? {
-                        bgcolor: isActive
-                          ? "rgba(33, 150, 243, 0.2)"
-                          : isCompleted
-                          ? "rgba(76, 175, 80, 0.1)"
-                          : "rgba(255, 255, 255, 0.05)",
-                        transform: "translateX(4px)",
-                      }
-                    : {},
-                }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: "10px",
-                      bgcolor: isCompleted
-                        ? "#4caf50"
+                {/* Step Content */}
+                <div className="flex items-start gap-3 mb-1">
+                  {/* Icon Badge */}
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                      isCompleted
+                        ? "bg-green-500 shadow-md"
                         : isActive
-                        ? "#2196f3"
-                        : "rgba(255, 255, 255, 0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      mr: 2,
-                      transition: "all 0.3s ease",
-                      boxShadow:
-                        isActive || isCompleted
-                          ? "0 4px 12px rgba(33, 150, 243, 0.3)"
-                          : "none",
-                    }}
+                        ? "bg-blue-500 shadow-md"
+                        : "bg-white/10"
+                    }`}
                   >
-                    <IconComponent
+                    <Icon
                       size={16}
-                      color={isCompleted || isActive ? "#fff" : "#666"}
+                      color={isActive || isCompleted ? "#fff" : "#666"}
                     />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        color: isActive
-                          ? "#fff"
+                  </div>
+
+                  {/* Labels */}
+                  <div className="flex-1">
+                    <h4
+                      className={`text-sm font-medium mb-0.5 ${
+                        isActive
+                          ? "text-white"
                           : isCompleted
-                          ? "#81c784"
-                          : "#bbb",
-                        fontWeight: isActive ? 700 : isCompleted ? 600 : 500,
-                        fontSize: "0.9rem",
-                        mb: 0.3,
-                      }}
+                          ? "text-green-300"
+                          : "text-gray-300"
+                      }`}
                     >
                       {step.label}
-                    </Typography>
+                    </h4>
+
+                    {/* Description (only show on desktop) */}
                     {!isMobile && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: isActive
-                            ? "#b3d9ff"
+                      <p
+                        className={`text-xs leading-snug ${
+                          isActive
+                            ? "text-blue-200"
                             : isCompleted
-                            ? "#a5d6a7"
-                            : "#666",
-                          fontSize: "0.75rem",
-                          lineHeight: 1.4,
-                        }}
+                            ? "text-green-200"
+                            : "text-gray-500"
+                        }`}
                       >
                         {step.description}
-                      </Typography>
+                      </p>
                     )}
-                  </Box>
-                </Box>
+                  </div>
+                </div>
 
-                {/* Step indicator */}
-                <Box sx={{ display: "flex", alignItems: "center", ml: 4.5 }}>
-                  <Box
-                    sx={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: "50%",
-                      bgcolor: isCompleted
-                        ? "#4caf50"
+                {/* Step Indicator */}
+                <div className="flex items-center ml-12">
+                  <div
+                    className={`w-[5px] h-[5px] rounded-full mr-2 ${
+                      isCompleted
+                        ? "bg-green-500"
                         : isActive
-                        ? "#2196f3"
-                        : "rgba(255, 255, 255, 0.2)",
-                      mr: 1,
-                    }}
+                        ? "bg-blue-500"
+                        : "bg-white/20"
+                    }`}
                   />
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: isActive
-                        ? "#64b5f6"
-                        : isCompleted
-                        ? "#4caf50"
-                        : "#555",
-                      fontSize: "0.65rem",
-                    }}
+                  <span
+                    className={`text-[0.65rem] ${
+                      isCompleted
+                        ? "text-green-500"
+                        : isActive
+                        ? "text-blue-300"
+                        : "text-gray-500"
+                    }`}
                   >
                     {isCompleted
                       ? "Completed"
                       : isActive
                       ? "In Progress"
                       : "Pending"}
-                  </Typography>
-                </Box>
-              </Box>
+                  </span>
+                </div>
+              </div>
             );
           })}
-        </Box>
+        </div>
 
         {/* Footer */}
-        <Box
-          sx={{
-            p: 2,
-            borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-            bgcolor: "rgba(0, 0, 0, 0.2)",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          <Typography
-            variant="caption"
-            sx={{ color: "#666", textAlign: "center", display: "block" }}
-          >
+        <div className="p-4 border-t border-white/10 bg-black/20 relative z-10">
+          <p className="text-xs text-gray-500 text-center">
             Click on any step to navigate directly
-          </Typography>
-        </Box>
-      </Paper>
+          </p>
+        </div>
+      </div>
 
       {/* Main Content Area */}
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
-        }}
-      >
-        <Paper
-          elevation={0}
-          sx={{
-            flex: 1,
-            bgcolor: "rgba(18, 20, 24, 0.95)",
-            borderRadius: 0,
-            backdropFilter: "blur(20px)",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            position: "relative",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background:
-                "linear-gradient(135deg, rgba(33, 150, 243, 0.02) 0%, rgba(0, 0, 0, 0.05) 100%)",
-              pointerEvents: "none",
-            },
-          }}
-        >
+      <div className="flex-1 flex flex-col h-screen">
+        {/* Content Wrapper */}
+        <div className="flex-1 bg-[#121418f2] backdrop-blur-2xl flex flex-col overflow-hidden relative">
+          {/* Background gradient overlay (from ::before) */}
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-500/5 to-black/5" />
+
           {/* Content Header */}
-          <Box
-            sx={{
-              px: 3,
-              py: 1,
-              borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-              bgcolor: "rgba(8, 10, 15, 0.8)",
-              position: "relative",
-              zIndex: 1,
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center" }}>
+          <div className="px-6 py-2 border-b border-white/10 bg-[#080a0f]/80 relative z-10 flex items-center gap-4">
+            <div className="flex items-center">
               {React.createElement(steps[activeStep].icon, {
                 size: 24,
-                style: { color: "#64b5f6", marginRight: "12px" },
+                className: "text-blue-300 mr-3",
               })}
-              <Box sx={{ py: 0.5 }}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: "#fff",
-                    fontWeight: 700,
-                    mb: 0.1,
-                    background:
-                      "linear-gradient(135deg, #fff 0%, #64b5f6 100%)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    fontSize: "1rem",
-                  }}
-                >
+              <div className="py-1">
+                <h2 className="text-base font-bold mb-[2px] bg-gradient-to-br from-white to-blue-400 bg-clip-text text-transparent">
                   {steps[activeStep].label}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "#aaa", lineHeight: 1.3, fontSize: "0.85rem" }}
-                >
+                </h2>
+                <p className="text-sm text-gray-400 leading-snug">
                   {steps[activeStep].description}
-                </Typography>
-              </Box>
-            </Box>
-            <Box sx={{ flexGrow: 1 }} />
-            <Link
+                </p>
+              </div>
+            </div>
+            <div className="flex-grow" />
+            <a
               href={`/homepage/${companyId}`}
-              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 !text-white text-sm px-3 py-2 rounded-md !no-underline"
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-md no-underline"
             >
               Dashboard
-            </Link>
+            </a>
             <div className="flex items-center gap-1">
               <LogoutBtn />
             </div>
-          </Box>
+          </div>
 
           {/* Content Body */}
-          <Box
-            sx={{
-              flex: 1,
-              overflow: "auto",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            <Fade in timeout={600} key={activeStep}>
-              <Box sx={{ height: "100%", minHeight: "400px" }}>
-                {renderStepContent(activeStep)}
-              </Box>
-            </Fade>
-          </Box>
+          <div className="flex-1 overflow-auto relative z-10">
+            {/* You can replace this with animation library like Framer Motion */}
+            <div className="min-h-[400px] h-full">
+              {renderStepContent(activeStep)}
+            </div>
+          </div>
 
           {/* Navigation Controls */}
-          <Box
-            sx={{
-              px: 3,
-              py: 1,
-              borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-              bgcolor: "rgba(8, 10, 15, 0.8)",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 2,
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            <Button
+          <div className="px-6 py-2 border-t border-white/10 bg-[#080a0f]/80 flex justify-between items-center gap-4 relative z-10">
+            {/* Previous Button */}
+            <button
               onClick={handleBack}
               disabled={activeStep === 0 || isSubmitting}
-              variant="outlined"
-              size="medium"
-              sx={{
-                color: "#bbb",
-                borderColor: "rgba(255, 255, 255, 0.2)",
-                borderWidth: 2,
-                minWidth: "100px",
-                height: "40px",
-                borderRadius: "10px",
-                fontWeight: 600,
-                textTransform: "none",
-                "&:hover": {
-                  borderColor: "rgba(255, 255, 255, 0.4)",
-                  bgcolor: "rgba(255, 255, 255, 0.05)",
-                  transform: "translateY(-1px)",
-                },
-                "&:disabled": {
-                  borderColor: "rgba(255, 255, 255, 0.1)",
-                  color: "#555",
-                },
-                transition: "all 0.3s ease",
-              }}
+              className={`min-w-[100px] h-10 rounded-xl font-semibold text-sm border-2 transition-all ${
+                activeStep === 0 || isSubmitting
+                  ? "border-white/10 text-gray-500 cursor-not-allowed"
+                  : "border-white/20 text-gray-300 hover:border-white/40 hover:bg-white/5 hover:-translate-y-[1px]"
+              }`}
             >
               Previous
-            </Button>
+            </button>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Typography
-                variant="body2"
-                sx={{ color: "#888", fontSize: "0.85rem" }}
-              >
-                Step
-              </Typography>
-              <Box
-                sx={{
-                  bgcolor: "rgba(33, 150, 243, 0.2)",
-                  color: "#64b5f6",
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: "6px",
-                  fontWeight: 700,
-                  fontSize: "0.85rem",
-                }}
-              >
+            {/* Step Info */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Step</span>
+              <span className="px-2 py-0.5 text-blue-300 bg-blue-500/20 text-sm font-bold rounded-md">
                 {activeStep + 1} / {steps.length}
-              </Box>
-            </Box>
+              </span>
+            </div>
 
-            <Button
+            {/* Next Button */}
+            <button
               onClick={handleNext}
               disabled={activeStep > steps.length - 1 || isSubmitting}
-              variant="contained"
-              size="medium"
-              sx={{
-                background: isSubmitting
-                  ? "#666"
-                  : "linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)",
-                color: "#fff",
-                fontWeight: 700,
-                minWidth: "100px",
-                height: "40px",
-                borderRadius: "10px",
-                textTransform: "none",
-                boxShadow: isSubmitting
-                  ? "none"
-                  : "0 6px 20px rgba(33, 150, 243, 0.4)",
-                "&:hover": {
-                  background: isSubmitting
-                    ? "#666"
-                    : "linear-gradient(135deg, #1976d2 0%, #1cb5e0 100%)",
-                  boxShadow: isSubmitting
-                    ? "none"
-                    : "0 8px 24px rgba(33, 150, 243, 0.5)",
-                  transform: isSubmitting ? "none" : "translateY(-1px)",
-                },
-                "&:disabled": {
-                  background: "#333",
-                  color: "#666",
-                  boxShadow: "none",
-                },
-                transition: "all 0.3s ease",
-              }}
+              className={`min-w-[100px] h-10 rounded-xl text-white font-bold text-sm transition-all ${
+                isSubmitting
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-500 via-cyan-400 to-green-400 shadow-md hover:from-blue-700 hover:to-cyan-500 hover:-translate-y-[1px]"
+              }`}
             >
               {isSubmitting
                 ? "Submitting..."
                 : activeStep === steps.length - 1
                 ? "save & submit"
                 : "Next Step"}
-            </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </Box>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

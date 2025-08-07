@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Checkboxdropdown from "@/ui/checkboxdropdown";
 import { getCompanyComparisonData } from "@/app/_actions/companyData";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 // Types for better type safety
 interface Company {
   id: string;
@@ -89,15 +89,7 @@ const ComparePage: React.FC = () => {
 
   const { simId } = useSimulation();
 
-  const formatCurrency = useMemo(
-    () =>
-      (value: number): string => {
-        if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
-        return `$${value.toLocaleString()}`;
-      },
-    []
-  );
+
 
   // Extract metric value for sorting with better type safety
   const getMetricValue = (company: Company, metric: SortOption): number => {

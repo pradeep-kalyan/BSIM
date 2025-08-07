@@ -10,12 +10,12 @@ import {
   Square,
   Edit,
 } from "lucide-react";
-import React, { useState } from "react";
-import DashboardCard from "../../../homepage/Card";
+import React, { useState, useEffect } from "react";
+import DashboardCard from "@/ui/Card";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 // Data types
 interface Product {
   id: string;
@@ -187,13 +187,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
     }
   };
 
-  // UI ONLY HELPERS
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-In", {
-      style: "currency",
-      currency: "INR",
-    }).format(value);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -272,7 +265,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
             subtitle="Currently Selling"
             icon={Package}
             size="small"
-            gradient={true}
+            gradient={false}
           />
           <DashboardCard
             title="In Development"
@@ -280,7 +273,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
             subtitle="Under Development"
             icon={Lightbulb}
             size="small"
-            gradient={true}
+            gradient={false}
           />
           <DashboardCard
             title="Portfolio Value"
@@ -288,7 +281,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
             subtitle="Total Inventory Value"
             icon={IndianRupee}
             size="small"
-            gradient={true}
+            gradient={false}
           />
           <DashboardCard
             title="Avg Quality"
@@ -296,7 +289,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
             subtitle="Quality Rating"
             icon={Star}
             size="small"
-            gradient={true}
+            gradient={false}
           />
         </div>
 
