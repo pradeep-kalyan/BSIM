@@ -752,7 +752,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
   const newHires = (() => {
     // Debug logging
-    
 
     // First, check if newHires is already calculated in thisHr (for current period)
     if (thisHrTyped?.newHires !== undefined && thisHrTyped.newHires !== null) {
@@ -1276,82 +1275,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           </ChartCard>
         </div>
 
-        {/* Current Period Summary (only show for current period) */}
-        {isCurrentPeriod && (
-          <ChartCard
-            title="Current Period Summary"
-            subtitle={`Live data for Period ${selectedPeriod}`}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-blue-300 text-sm font-medium">
-                    Cash Position
-                  </span>
-                  <DollarSign className="text-blue-400" size={20} />
-                </div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  ₹{(data?.company?.cash_balance / 10000000 || 0).toFixed(2)} Cr
-                </div>
-                <div className="text-xs text-blue-200">
-                  Assets: ₹
-                  {(data?.company?.total_assets / 10000000 || 0).toFixed(2)} Cr
-                  | Liabilities: ₹
-                  {(data?.company?.total_liabilities / 10000000 || 0).toFixed(
-                    2
-                  )}{" "}
-                  Cr
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-green-300 text-sm font-medium">
-                    Brand Value
-                  </span>
-                  <Award className="text-green-400" size={20} />
-                </div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  ₹{(data?.company?.brand_value / 10000000 || 0).toFixed(2)} Cr
-                </div>
-                <div className="text-xs text-green-200">
-                  Credit Rating: {data?.company?.credit_rating || "N/A"}
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-purple-300 text-sm font-medium">
-                    Total Employees
-                  </span>
-                  <Users className="text-purple-400" size={20} />
-                </div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  {totalEmployees}
-                </div>
-                <div className="text-xs text-purple-200">
-                  Satisfaction: {avgSatisfaction.toFixed(1)}/10
-                </div>
-              </div>
-
-              <div className="p-4 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/20 border border-orange-500/30">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-orange-300 text-sm font-medium">
-                    Production
-                  </span>
-                  <Factory className="text-orange-400" size={20} />
-                </div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  {production_decision?.units_to_produce || 0}
-                </div>
-                <div className="text-xs text-orange-200">
-                  Capacity: {production_decision?.production_capacity || 0}{" "}
-                  units
-                </div>
-              </div>
-            </div>
-          </ChartCard>
-        )}
       </div>
     </div>
   );

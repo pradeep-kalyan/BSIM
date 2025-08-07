@@ -3,7 +3,18 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: false,
   images: {
-    domains: ["tse1.mm.bing.net", "example.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "tse1.mm.bing.net",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "example.com",
+        pathname: "/**", // Adjust if your company logo is in a subpath
+      },
+    ],
   },
 };
 
