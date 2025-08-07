@@ -7,10 +7,9 @@ import { TriangleAlert } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
-  useCompanyForm,
   useProductionForm,
 } from "@/app/context/FormContext";
-import { useSimulation } from "@/app/context/SimulationContext";
+import InfoCard from "@/app/components/InfoCard";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -19,8 +18,6 @@ const ProductionForm = () => {
   const { data, setError, getError, updateData } = useProductionForm();
   const { cashBalance, projectedCashBalance, updateProductionBudgetImpact } =
     useCashBalance();
-  const { period } = useSimulation();
-  const { data: companyData } = useCompanyForm();
   const [budgetAlert, setBudgetAlert] = React.useState<string | null>(null);
 
   const handleChange = (fieldName: string, value: number) => {
@@ -115,58 +112,46 @@ const ProductionForm = () => {
   }, [totalCost, projectedCashBalance]);
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
-      <div className="max-w-5xl mx-auto py-8">
-        <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold text-blue-300">
-            Production Dashboard
-          </h1>
-          <span className="text-lg text-slate-400 tracking-wide">
-            Period {period} • {companyData?.name}
-          </span>
-        </header>
+    <div className="bg-slate-800/50 shadow-md py-4 px-6">
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <InfoCard
+          label="Production Capacity"
+          value={frozenData.production_capacity}
+          Icon={Factory}
+          iconColor="text-purple-400"
+          labelColor="text-white"
+          valueColor="text-white"
+        />
+        <InfoCard
+          label="Planned Units"
+          value={frozenData.units_to_produce}
+          Icon={Package}
+          iconColor="text-blue-400"
+          labelColor="text-white"
+          valueColor="text-white"
+        />
+        <InfoCard
+          label="Storage Capacity"
+          value={frozenData.storage_capacity}
+          Icon={Package}
+          iconColor="text-indigo-400"
+          labelColor="text-white"
+          valueColor="text-white"
+        />
+        <InfoCard
+          label="Inventory Value"
+          value={Math.round(frozenData.units_to_produce * frozenData.cost_per_unit)}
+          isCurrency={true}
+          currencyCode="INR"
+          Icon={IndianRupee}
+          iconColor="text-yellow-400"
+          labelColor="text-white"
+          valueColor="text-white"
+        />
+      </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
-          <DashboardCard
-            title="Production Capacity"
-            value={frozenData.production_capacity}
-            subtitle="Maximum units producible per period"
-            icon={Factory}
-            size="large"
-          />
-          <DashboardCard
-            title="Planned Units"
-            value={frozenData.units_to_produce}
-            subtitle="Units scheduled for production"
-            icon={Package}
-            size="large"
-          />
-          <DashboardCard
-            title="Storage Capacity"
-            value={frozenData.storage_capacity}
-            subtitle="Maximum storage capacity"
-            icon={Package}
-            size="large"
-          />
-          <DashboardCard
-            title="Inventory Value"
-            value={`₹${formatNumber(
-              Math.round(frozenData.units_to_produce * frozenData.cost_per_unit)
-            )}`}
-            subtitle="Value of planned inventory"
-            icon={IndianRupee}
-            size="large"
-          />
-          <DashboardCard
-            title="Defect Rate"
-            value={`${frozenData.defect_rate}%`}
-            subtitle="Expected defect percentage"
-            icon={AlertTriangle}
-            size="large"
-          />
-        </section>
-
-        <div className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700">
+      <div className="max-w-full mx-auto py-4">
+        <div className="bg-slate-800/50 shadow-md rounded-2xl px-8 py-6 border border-slate-700">
           <h2 className="text-2xl font-bold text-white mb-6">
             Set Production Strategy
           </h2>
@@ -299,11 +284,10 @@ const ProductionForm = () => {
                   {formatNumber(cashBalance.originalCashBalance ?? 0)}
                 </div>
                 <div
-                  className={`font-semibold ${
-                    totalCost > projectedCashBalance
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }`}
+                  className={`font-semibold ${totalCost > projectedCashBalance
+                    ? "text-rose-400"
+                    : "text-emerald-400"
+                    }`}
                 >
                   Projected Cash Balance: ₹
                   {formatNumber(Math.round(projectedCashBalance))}

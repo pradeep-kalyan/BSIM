@@ -9,7 +9,6 @@ import {
   Chip,
   Divider,
   CircularProgress,
-  Alert,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -19,7 +18,6 @@ import {
   Factory,
   Package,
   DollarSign,
-  BarChart3,
   ShoppingCart,
 } from "lucide-react";
 import {
@@ -177,8 +175,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Total HR Budget: ${formatCurrency(hrData.total_budget || 0)}`,
             `Salary Budget: ${formatCurrency(hrData.salary_budget || 0)}`,
             `Training Budget: ${formatCurrency(hrData.training_budget || 0)}`,
-            `Recruitment Cost: ${formatCurrency(hrData.recruitment_cost || 0)}`,
-            `Firing Cost: ${formatCurrency(hrData.firing_cost || 0)}`,
             `Existing Roles: ${hrData.existingRoles?.length || 0}`,
             `New Roles: ${hrData.newRoles?.length || 0}`,
             `Total Employees: ${calculateTotalEmployees()}`,
@@ -585,126 +581,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
         p: 3,
       }}
     >
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Paper
-          sx={{
-            bgcolor: "rgba(8, 10, 15, 0.8)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            borderRadius: 3,
-            p: 4,
-            position: "relative",
-            overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background:
-                "linear-gradient(135deg, rgba(100, 181, 246, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)",
-              pointerEvents: "none",
-            },
-          }}
-        >
-          <Box sx={{ position: "relative", zIndex: 1 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 3,
-                  bgcolor: "rgba(100, 181, 246, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mr: 3,
-                  border: "1px solid rgba(100, 181, 246, 0.2)",
-                }}
-              >
-                <BarChart3 size={28} color="#64b5f6" />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    color: "#fff",
-                    fontWeight: 700,
-                    mb: 1,
-                    background:
-                      "linear-gradient(135deg, #fff 0%, #64b5f6 100%)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    fontSize: { xs: "1.75rem", md: "2.5rem" },
-                  }}
-                >
-                  Strategic Overview
-                </Typography>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: "#64b5f6",
-                    fontWeight: 500,
-                    mb: 1,
-                    fontSize: { xs: "1rem", md: "1.25rem" },
-                  }}
-                >
-                  {companyData.name || "Your Company"}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: "#aaa",
-                    lineHeight: 1.6,
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Comprehensive review of strategic decisions across all
-                  business units
-                </Typography>
-              </Box>
-            </Box>
-
-            <Alert
-              severity={
-                sections.every((s) => s.status === "completed")
-                  ? "success"
-                  : "warning"
-              }
-              sx={{
-                bgcolor: sections.every((s) => s.status === "completed")
-                  ? "rgba(76, 175, 80, 0.1)"
-                  : "rgba(255, 193, 7, 0.1)",
-                border: sections.every((s) => s.status === "completed")
-                  ? "1px solid rgba(76, 175, 80, 0.3)"
-                  : "1px solid rgba(255, 193, 7, 0.3)",
-                color: sections.every((s) => s.status === "completed")
-                  ? "#81c784"
-                  : "#ffb74d",
-                borderRadius: 2,
-                "& .MuiAlert-icon": {
-                  color: sections.every((s) => s.status === "completed")
-                    ? "#4caf50"
-                    : "#ff9800",
-                },
-                "& .MuiAlert-message": {
-                  fontWeight: 500,
-                },
-              }}
-            >
-              {sections.every((s) => s.status === "completed")
-                ? "All business units configured successfully! Your strategy is ready for implementation."
-                : `Configuration Progress: ${
-                    sections.filter((s) => s.status === "completed").length
-                  } of ${
-                    sections.length
-                  } sections completed. Review pending areas below.`}
-            </Alert>
-          </Box>
-        </Paper>
-      </Box>
 
       {/* Financial Overview */}
       <Box sx={{ mb: 4 }}>

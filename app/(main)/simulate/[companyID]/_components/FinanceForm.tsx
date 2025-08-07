@@ -18,7 +18,7 @@ import {
   useCompanyForm,
   useFinanceForm,
 } from "@/app/context/FormContext";
-import DashboardCard from "../../../homepage/Card";
+import InfoCard from "@/app/components/InfoCard";
 
 const FinanceForm = () => {
   const formatCurrency = (value: number) =>
@@ -80,55 +80,58 @@ const FinanceForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
-      <div className="max-w-7xl mx-auto mt-2">
-        {/* Header */}
-        <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold text-blue-300">
-            Financial Dashboard
-          </h1>
-          <span className="text-lg text-slate-400 tracking-wide">
-            Period {period} • {companyData?.name}
-          </span>
-        </header>
+    <div className="bg-slate-800/50 shadow-md py-4 px-6">
+      <div className="max-w-7xl mx-auto ">
+
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <InfoCard
+            label="Original Cash Balance"
+            value={parseFloat(cashBalance.originalCashBalance.toFixed(0))}
+            isCurrency={true}
+            currencyCode="INR"
+            Icon={Factory}
+            width="w-full"
+            height="h-full"
+            iconColor="text-green-400"
+          />
+          <InfoCard
+            label="Projected Cash Balance"
+            value={parseFloat(projectedCashBalance.toFixed(0))}
+            isCurrency={true}
+            currencyCode="INR"
+            Icon={PiggyBank}
+            width="w-full"
+            height="h-full"
+            iconColor="text-purple-400"
+          />
+          <InfoCard
+            label="Total Liabilities"
+            value={parseFloat(companyData?.total_liabilities.toFixed(0))}
+            isCurrency={true}
+            currencyCode="INR"
+            Icon={Package}
+            width="w-full"
+            height="h-full"
+            iconColor="text-red-400"
+          />
+          <InfoCard
+            label="Total Assets"
+            value={parseFloat(companyData?.total_assets.toFixed(0))}
+            isCurrency={true}
+            currencyCode="INR"
+            Icon={IndianRupee}
+            width="w-full"
+            height="h-full"
+            iconColor="text-blue-400"
+          />
+        </section>
 
         {/* Finance Decision Form */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700 mb-6">
+        <div className="bg-slate-800/50 shadow-md rounded-xl p-6 border border-slate-700 mb-6">
           <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
             <DollarSign className="h-6 w-6 mr-2 text-green-400" />
             Financial Decisions
           </h3>
-
-          <section className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
-            <DashboardCard
-              title="Original Cash Balance"
-              value={cashBalance.originalCashBalance.toFixed(0)}
-              subtitle="Maximum units producible per period"
-              icon={Factory}
-              size="large"
-            />
-            <DashboardCard
-              title="Projected Cash Balance"
-              value={projectedCashBalance.toFixed(0)}
-              subtitle="Projected balance after finance decisions"
-              icon={PiggyBank}
-              size="large"
-            />
-            <DashboardCard
-              title="Total Liabilities"
-              value={companyData?.total_liabilities.toFixed(0)}
-              subtitle="Maximum storage capacity"
-              icon={Package}
-              size="large"
-            />
-            <DashboardCard
-              title="Total Assets"
-              value={companyData?.total_assets.toFixed(0)}
-              subtitle="Value of planned inventory"
-              icon={IndianRupee}
-              size="large"
-            />
-          </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Cash Inflows */}
@@ -212,7 +215,7 @@ const FinanceForm = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-2">
               <div className="text-xl text-blue-400 font-semibold">
                 Net Finance Impact: {formatCurrency(netFinanceImpact)}
@@ -223,11 +226,10 @@ const FinanceForm = () => {
                   {formatCurrency(cashBalance.originalCashBalance)}
                 </div>
                 <div
-                  className={`font-semibold ${
-                    projectedCashBalance < 0
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }`}
+                  className={`font-semibold ${projectedCashBalance < 0
+                    ? "text-rose-400"
+                    : "text-emerald-400"
+                    }`}
                 >
                   Projected Cash Balance: {formatCurrency(projectedCashBalance)}
                 </div>
@@ -244,18 +246,6 @@ const FinanceForm = () => {
               </div>
             </div>
           )}
-
-          {/* Notes */}
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Notes (Optional)
-            </label>
-            <textarea
-              rows={3}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Add any notes about your financial decisions..."
-            />
-          </div>
         </div>
       </div>
     </div>

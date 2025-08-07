@@ -35,10 +35,13 @@ import {
   useForm,
   useCashBalance,
   useSalesForm,
+  useCompanyForm,
 } from "@/app/context/FormContext";
 import { comprehensiveFormSubmission } from "@/app/_actions/comprehensiveFormSubmission";
 import { redirect } from "next/navigation";
 import Sales from "./SalesForm";
+import { da } from "zod/v4/locales";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 const steps = [
   {
@@ -95,9 +98,10 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
   const { state } = useForm();
   const { projectedCashBalance, budgetImpacts } = useCashBalance();
-
   const { getTotalSalesMetrics } = useSalesForm();
   const salesmetrices = getTotalSalesMetrics();
+  const { data: companyData } = useCompanyForm();
+  const { period } = useSimulation();
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
@@ -196,9 +200,9 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         budget_impacts: budgetImpacts,
       };
 
-     
+
       const result = await comprehensiveFormSubmission(companyId, formData);
-    
+
 
       setIsSubmitting(false);
 
@@ -569,25 +573,25 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                   bgcolor: isActive
                     ? "rgba(33, 150, 243, 0.15)"
                     : isCompleted
-                    ? "rgba(76, 175, 80, 0.05)"
-                    : "transparent",
+                      ? "rgba(76, 175, 80, 0.05)"
+                      : "transparent",
                   borderLeft: isActive
                     ? "4px solid #2196f3"
                     : isCompleted
-                    ? "4px solid #4caf50"
-                    : "4px solid transparent",
+                      ? "4px solid #4caf50"
+                      : "4px solid transparent",
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   transform: isActive ? "translateX(4px)" : "translateX(0)",
                   opacity: isSubmitting ? 0.6 : 1,
                   "&:hover": !isSubmitting
                     ? {
-                        bgcolor: isActive
-                          ? "rgba(33, 150, 243, 0.2)"
-                          : isCompleted
+                      bgcolor: isActive
+                        ? "rgba(33, 150, 243, 0.2)"
+                        : isCompleted
                           ? "rgba(76, 175, 80, 0.1)"
                           : "rgba(255, 255, 255, 0.05)",
-                        transform: "translateX(4px)",
-                      }
+                      transform: "translateX(4px)",
+                    }
                     : {},
                 }}
               >
@@ -600,8 +604,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                       bgcolor: isCompleted
                         ? "#4caf50"
                         : isActive
-                        ? "#2196f3"
-                        : "rgba(255, 255, 255, 0.1)",
+                          ? "#2196f3"
+                          : "rgba(255, 255, 255, 0.1)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -625,8 +629,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                         color: isActive
                           ? "#fff"
                           : isCompleted
-                          ? "#81c784"
-                          : "#bbb",
+                            ? "#81c784"
+                            : "#bbb",
                         fontWeight: isActive ? 700 : isCompleted ? 600 : 500,
                         fontSize: "0.9rem",
                         mb: 0.3,
@@ -641,8 +645,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                           color: isActive
                             ? "#b3d9ff"
                             : isCompleted
-                            ? "#a5d6a7"
-                            : "#666",
+                              ? "#a5d6a7"
+                              : "#666",
                           fontSize: "0.75rem",
                           lineHeight: 1.4,
                         }}
@@ -663,8 +667,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                       bgcolor: isCompleted
                         ? "#4caf50"
                         : isActive
-                        ? "#2196f3"
-                        : "rgba(255, 255, 255, 0.2)",
+                          ? "#2196f3"
+                          : "rgba(255, 255, 255, 0.2)",
                       mr: 1,
                     }}
                   />
@@ -674,16 +678,16 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                       color: isActive
                         ? "#64b5f6"
                         : isCompleted
-                        ? "#4caf50"
-                        : "#555",
+                          ? "#4caf50"
+                          : "#555",
                       fontSize: "0.65rem",
                     }}
                   >
                     {isCompleted
                       ? "Completed"
                       : isActive
-                      ? "In Progress"
-                      : "Pending"}
+                        ? "In Progress"
+                        : "Pending"}
                   </Typography>
                 </Box>
               </Box>
@@ -747,7 +751,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           <Box
             sx={{
               px: 3,
-              py: 1,
+              py: 1.5,
               borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
               bgcolor: "rgba(8, 10, 15, 0.8)",
               position: "relative",
@@ -788,6 +792,14 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               </Box>
             </Box>
             <Box sx={{ flexGrow: 1 }} />
+            <div className="flex flex-col items-end mr-4">
+              <h1 className=" font-bold text-white/90">
+                {`${companyData.name} `}
+              </h1>
+              <span className="text-sm text-gray-300">
+              Period {period}
+            </span>
+            </div>
             <Link
               href={`/homepage/${companyId}`}
               className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 !text-white text-sm px-3 py-2 rounded-md !no-underline"
@@ -819,7 +831,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           <Box
             sx={{
               px: 3,
-              py: 1,
+              py: 1.5,
               borderTop: "1px solid rgba(255, 255, 255, 0.1)",
               bgcolor: "rgba(8, 10, 15, 0.8)",
               display: "flex",
@@ -919,8 +931,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               {isSubmitting
                 ? "Submitting..."
                 : activeStep === steps.length - 1
-                ? "save & submit"
-                : "Next Step"}
+                  ? "save & submit"
+                  : "Next Step"}
             </Button>
           </Box>
         </Paper>
