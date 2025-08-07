@@ -98,7 +98,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     await fetchCompanies();
     setShowForm(false);
     setSuccess(true);
-    console.log("🔄 useEffect fired");
     setTimeout(() => setSuccess(false), 3000);
   };
 

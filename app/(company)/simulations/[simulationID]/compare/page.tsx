@@ -166,12 +166,7 @@ const ComparePage: React.FC = () => {
   );
 
   // Load companies on mount
-  useEffect(() => {
-    console.log("ComparePage MOUNTED");
-    return () => {
-      console.log("ComparePage UNMOUNTED");
-    };
-  }, []);
+ 
 
   const hasFetched = useRef(false); // survives remounts
 
@@ -179,7 +174,6 @@ const ComparePage: React.FC = () => {
     if (!simulationId || hasFetched.current) return;
 
     hasFetched.current = true; // set as soon as effect runs
-    console.log("ComparePage fetching companies");
 
     const loadCompanies = async () => {
       try {

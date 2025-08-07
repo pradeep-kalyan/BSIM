@@ -249,7 +249,6 @@ export default function ProductFormPage({
             <Input
               type="number"
               min="0"
-              max="10000"
               value={product.production_cost}
               onChange={(e) =>
                 handleFieldChange("production_cost", Number(e.target.value))
@@ -266,7 +265,6 @@ export default function ProductFormPage({
             <Input
               type="number"
               min="0"
-              max="15000"
               value={product.selling_price}
               onChange={(e) =>
                 handleFieldChange("selling_price", Number(e.target.value))
@@ -278,12 +276,11 @@ export default function ProductFormPage({
           {/* Inventory Level */}
           <div>
             <label className="block text-xs text-slate-300 mb-1">
-              Inventory Level
+              Inventory Capacity
             </label>
             <Input
               type="number"
               min="0"
-              max="5000"
               value={product.inventory_level}
               onChange={(e) =>
                 handleFieldChange("inventory_level", Number(e.target.value))
@@ -302,7 +299,6 @@ export default function ProductFormPage({
             <Input
               type="number"
               min="0"
-              max="10000"
               value={product.production_capacity}
               onChange={(e) =>
                 handleFieldChange("production_capacity", Number(e.target.value))
@@ -319,7 +315,6 @@ export default function ProductFormPage({
             <Input
               type="number"
               min="0"
-              max="50000"
               value={product.development_cost}
               onChange={(e) =>
                 handleFieldChange("development_cost", Number(e.target.value))
@@ -336,7 +331,6 @@ export default function ProductFormPage({
             <Input
               type="number"
               min="0"
-              max="25000"
               value={product.marketing_budget}
               onChange={(e) =>
                 handleFieldChange("marketing_budget", Number(e.target.value))

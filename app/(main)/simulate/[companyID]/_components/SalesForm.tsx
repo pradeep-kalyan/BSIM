@@ -64,7 +64,11 @@ const Sales = () => {
     let totalRevenue = 0,
       totalCosts = 0,
       totalProfit = 0,
-      totalVolume = 0;
+      totalVolume = 0,
+      totalMarketShare = 0,
+      totalCustomerSatisfaction = 0,
+      productCount = 0;
+
     products?.forEach((p) => {
       if (!p.id) return; // Skip products without IDs
       const vals = calculatedValues[p.id] || {
@@ -72,12 +76,30 @@ const Sales = () => {
         costs: 0,
         profit: 0,
       };
+      const pSales = salesData?.[p.id] || {};
+
       totalRevenue += vals.revenue;
       totalCosts += vals.costs;
       totalProfit += vals.profit;
-      totalVolume += salesData?.[p.id]?.sales_volume || 0;
+      totalVolume += pSales.sales_volume || 0;
+      totalMarketShare += pSales.market_share || 0;
+      totalCustomerSatisfaction += pSales.customer_satisfaction || 0;
+      productCount++;
     });
-    return { totalRevenue, totalCosts, totalProfit, totalVolume };
+
+    const avgMarketShare =
+      productCount > 0 ? totalMarketShare / productCount : 0;
+    const avgCustomerSatisfaction =
+      productCount > 0 ? totalCustomerSatisfaction / productCount : 0;
+
+    return {
+      totalRevenue,
+      totalCosts,
+      totalProfit,
+      totalVolume,
+      avgMarketShare,
+      avgCustomerSatisfaction,
+    };
   }, [products, calculatedValues, salesData]);
 
   // Update cash balance impact whenever total revenue changes
@@ -133,6 +155,7 @@ const Sales = () => {
         [field]: value,
       },
     };
+
     updateSalesData(updatedSalesData);
     setError(field, "");
     setSuccessProducts((prev) => ({ ...prev, [productId]: false }));
@@ -246,16 +269,16 @@ const Sales = () => {
             size="large"
           />
           <DashboardCard
-            title="Market Share"
-            value="Per product"
-            subtitle="Varies by product"
+            title="Avg Market Share"
+            value={`${totalMetrics.avgMarketShare.toFixed(1)}%`}
+            subtitle="Average across products"
             icon={TrendingUp}
             size="large"
           />
           <DashboardCard
-            title="Customer Satisfaction"
-            value="Per product"
-            subtitle="Varies by product"
+            title="Avg Customer Satisfaction"
+            value={`${totalMetrics.avgCustomerSatisfaction.toFixed(1)}/10`}
+            subtitle="Average satisfaction score"
             icon={Users}
             size="large"
           />
@@ -283,74 +306,89 @@ const Sales = () => {
             return (
               <div
                 key={productId}
-                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-8 border border-slate-700"
+                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-8 border border-slate-700 flex justify-between items-center"
               >
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  {product.name}
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
-                  <div className="text-slate-300">
-                    <span className="font-medium text-blue-300">Category:</span>{" "}
-                    <p className="text-white">{product.category}</p>
+                <div className="flex flex-col justify-center items-center">
+                  <h2 className="text-2xl font-bold text-white mb-4">
+                    {product.name}
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">
+                        Category:
+                      </span>{" "}
+                      <p className="text-white">{product.category}</p>
+                    </div>
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">Price:</span>{" "}
+                      <p className="text-white">₹{product.selling_price}</p>
+                    </div>
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">
+                        Inventory:
+                      </span>{" "}
+                      <p className="text-white">
+                        {product.inventory_level} units
+                      </p>
+                    </div>
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">
+                        Cost/unit:
+                      </span>{" "}
+                      <p className="text-white">₹{product.production_cost}</p>
+                    </div>
                   </div>
-                  <div className="text-slate-300">
-                    <span className="font-medium text-blue-300">Price:</span>{" "}
-                    <p className="text-white">₹{product.selling_price}</p>
-                  </div>
-                  <div className="text-slate-300">
-                    <span className="font-medium text-blue-300">
-                      Inventory:
-                    </span>{" "}
-                    <p className="text-white">
-                      {product.inventory_level} units
-                    </p>
-                  </div>
-                  <div className="text-slate-300">
-                    <span className="font-medium text-blue-300">
-                      Cost/unit:
-                    </span>{" "}
-                    <p className="text-white">₹{product.production_cost}</p>
+                  <div className=" text-slate-300">
+                    <div>
+                      Revenue: ₹{formatNumber(Math.round(calc.revenue))}
+                    </div>
+                    <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
+                    <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
                   </div>
                 </div>
-
-                <Slider
-                  label="Sales Volume (Units)"
-                  value={[pSales.sales_volume || 0]}
-                  min={0}
-                  max={product.inventory_level || 1000}
-                  onValueChange={(val) =>
-                    handleProductInputChange(productId, "sales_volume", val[0])
-                  }
-                />
-                <Slider
-                  label="Market Share (%)"
-                  value={[pSales.market_share || 0]}
-                  min={0}
-                  max={100}
-                  onValueChange={(val) =>
-                    handleProductInputChange(productId, "market_share", val[0])
-                  }
-                />
-                <Slider
-                  label="Customer Satisfaction (1-10)"
-                  value={[pSales.customer_satisfaction || 1]}
-                  min={1}
-                  max={10}
-                  onValueChange={(val) =>
-                    handleProductInputChange(
-                      productId,
-                      "customer_satisfaction",
-                      val[0]
-                    )
-                  }
-                />
+                <div className="flex flex-col justify-center items-center">
+                  <Slider
+                    label="Sales Volume (Units)"
+                    value={[pSales.sales_volume || 0]}
+                    min={0}
+                    max={product.inventory_level || 1000}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "sales_volume",
+                        val[0]
+                      )
+                    }
+                  />
+                  <Slider
+                    label="Market Share (%)"
+                    value={[pSales.market_share || 0]}
+                    min={0}
+                    max={100}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "market_share",
+                        val[0]
+                      )
+                    }
+                  />
+                  <Slider
+                    label="Customer Satisfaction (1-10)"
+                    value={[pSales.customer_satisfaction || 1]}
+                    min={1}
+                    max={10}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "customer_satisfaction",
+                        val[0]
+                      )
+                    }
+                  />
+                </div>
 
                 {/* Calculated fields */}
-                <div className="mt-4 text-slate-300 space-y-1">
-                  <div>Revenue: ₹{formatNumber(Math.round(calc.revenue))}</div>
-                  <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
-                  <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
-                </div>
 
                 {/* Actions */}
                 <div className="mt-4 flex items-center gap-4">

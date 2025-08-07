@@ -110,14 +110,14 @@ const FinanceForm = () => {
             />
             <DashboardCard
               title="Total Liabilities"
-              value={companyData?.total_liabilities}
+              value={companyData?.total_liabilities.toFixed(0)}
               subtitle="Maximum storage capacity"
               icon={Package}
               size="large"
             />
             <DashboardCard
               title="Total Assets"
-              value={companyData?.total_assets}
+              value={companyData?.total_assets.toFixed(0)}
               subtitle="Value of planned inventory"
               icon={IndianRupee}
               size="large"
@@ -139,7 +139,7 @@ const FinanceForm = () => {
                   defaultValue={[data?.loan_amount ?? 0]}
                   value={[data?.loan_amount ?? 0]}
                   min={0}
-                  max={companyData?.cash_balance * 3 || 500000}
+                  max={500000}
                   onValueChange={(val) => handleChange("loan_amount", val[0])}
                 />
               </div>
@@ -151,7 +151,7 @@ const FinanceForm = () => {
                   defaultValue={[data?.equity_issue ?? 0]}
                   value={[data?.equity_issue ?? 0]}
                   min={0}
-                  max={companyData?.cash_balance * 2 || 300000}
+                  max={300000}
                   onValueChange={(val) => handleChange("equity_issue", val[0])}
                 />
               </div>
@@ -171,7 +171,7 @@ const FinanceForm = () => {
                   defaultValue={[data?.investment_amount ?? 0]}
                   value={[data?.investment_amount ?? 0]}
                   min={0}
-                  max={companyData?.cash_balance || 200000}
+                  max={200000}
                   onValueChange={(val) =>
                     handleChange("investment_amount", val[0])
                   }
@@ -185,10 +185,7 @@ const FinanceForm = () => {
                   defaultValue={[data?.repay_loan ?? 0]}
                   value={[data?.repay_loan ?? 0]}
                   min={0}
-                  max={Math.min(
-                    companyData?.total_liabilities || 100000,
-                    companyData?.cash_balance || 100000
-                  )}
+                  max={100000}
                   onValueChange={(val) => handleChange("repay_loan", val[0])}
                 />
               </div>
@@ -200,7 +197,7 @@ const FinanceForm = () => {
                   defaultValue={[data?.dividend_payout ?? 0]}
                   value={[data?.dividend_payout ?? 0]}
                   min={0}
-                  max={companyData?.cash_balance || 100000}
+                  max={100000}
                   onValueChange={(val) =>
                     handleChange("dividend_payout", val[0])
                   }

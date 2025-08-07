@@ -89,6 +89,11 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
       const total_budget =
         training_budget + recruitment_cost + firing_cost + salary_budget;
 
+      const totalEmployeeCount = newRoleStates.reduce(
+        (total, role) => total + role.head_count,
+        0
+      );
+
       const existingDecision = await tx.hr_decision.findFirst({
         where: { company_id, period },
       });
@@ -122,6 +127,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
             employee_satisfaction,
             recruitment_cost,
             firing_cost,
+            total_employee_count: totalEmployeeCount,
           },
         });
 
@@ -157,6 +163,7 @@ export async function submitHRDecisionForPeriod(input: SubmitHRDecisionInput) {
             employee_satisfaction,
             recruitment_cost,
             firing_cost,
+            total_employee_count: totalEmployeeCount,
           },
         });
 
