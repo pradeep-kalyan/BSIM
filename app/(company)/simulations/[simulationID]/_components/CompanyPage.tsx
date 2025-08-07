@@ -14,7 +14,6 @@ import EditCompanyForm from "../../_components/EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { useRouter } from "next/navigation";
 import { company } from "@prisma/client";
-
 interface ExtendedCompany extends company {
   canAccess?: boolean;
   canEdit?: boolean;
@@ -76,11 +75,21 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     if (!simulationID || didInit.current) return;
 
     didInit.current = true;
-    if (setSimId) {
-      setSimId(simulationID);
-    }
 
-    fetchCompanies();
+    const init = async () => {
+      const user = await getCurrentUser();
+      if (!user) return;
+
+      setCurrentUserId(user.id);
+
+      if (setSimId) {
+        setSimId(simulationID);
+      }
+
+      await fetchCompanies();
+    };
+
+    init();
   }, [simulationID, fetchCompanies, setSimId]);
 
   const handleCreated = async () => {
@@ -165,6 +174,10 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
       )}
 
       {/* Company Counter */}
+      <div className="mb-6 flex  text-slate-400 text-sm">
+        Showing {visibleCompanies.length} of {allCompanies.length} total
+        companies.
+      </div>
       <div className="absolute top-4 right-4 flex gap-2">
         <button
           onClick={handleViewSimulations}
@@ -197,7 +210,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           </>
         )}
       </div>
-
       {/* Main Section */}
       <AnimatePresence mode="wait">
         {showForm ? (

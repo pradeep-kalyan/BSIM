@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { getSimulationscompare } from "@/app/_actions/createSim";
@@ -18,10 +24,13 @@ import {
   RefreshCw,
   Trophy,
   PieChart,
+  Download,
+  LoaderCircle,
 } from "lucide-react";
 import Checkboxdropdown from "@/ui/checkboxdropdown";
 import { getCompanyComparisonData } from "@/app/_actions/companyData";
-
+import formatCurrency from "@/app/functions/formatCurrency";
+import { useExport } from "@/hooks/useExport";
 // Types for better type safety
 interface Company {
   id: string;
@@ -76,6 +85,8 @@ const ComparePage: React.FC = () => {
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("financial");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const comparePageRef = useRef<HTMLDivElement>(null);
+  const { exportDashboard, isExporting } = useExport();
   // Memoized formatters for better performance
   const formatNumber = useMemo(
     () =>
@@ -88,16 +99,6 @@ const ComparePage: React.FC = () => {
   );
 
   const { simId } = useSimulation();
-
-  const formatCurrency = useMemo(
-    () =>
-      (value: number): string => {
-        if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
-        return `$${value.toLocaleString()}`;
-      },
-    []
-  );
 
   // Extract metric value for sorting with better type safety
   const getMetricValue = (company: Company, metric: SortOption): number => {
@@ -177,12 +178,13 @@ const ComparePage: React.FC = () => {
     </div>
   );
 
-  const hasFetched = useRef(false); 
+  const hasFetched = useRef(false);
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!simulationId || hasFetched.current) return;
 
-    hasFetched.current = true; 
+    hasFetched.current = true;
 
     const loadCompanies = async () => {
       try {
@@ -242,6 +244,70 @@ const ComparePage: React.FC = () => {
     router.push(`/simulations/${simId}`);
   }, [router, simId]);
 
+  const handleExportComparison = useCallback(async () => {
+    if (!comparePageRef.current) return;
+
+    try {
+      // Temporarily modify styles for full content capture
+      const originalStyle = comparePageRef.current.style.cssText;
+      const originalClass = comparePageRef.current.className;
+
+      // Remove height restrictions and overflow for export
+      comparePageRef.current.style.height = "auto";
+      comparePageRef.current.style.overflow = "visible";
+      comparePageRef.current.style.maxHeight = "none";
+      comparePageRef.current.style.minHeight = "auto";
+      comparePageRef.current.className = originalClass.replace(
+        "min-h-screen",
+        "min-h-full"
+      );
+
+      // Add export-specific styles
+      const exportStyle = document.createElement("style");
+      exportStyle.textContent = `
+        .capturing-screenshot {
+          height: auto !important;
+          overflow: visible !important;
+          max-height: none !important;
+          min-height: auto !important;
+        }
+        .capturing-screenshot * {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+      `;
+      document.head.appendChild(exportStyle);
+
+      // Wait for layout to adjust
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const filename = `company-comparison-${simulationId}-${
+        new Date().toISOString().split("T")[0]
+      }`;
+      await exportDashboard(comparePageRef.current, filename);
+
+      // Clean up
+      document.head.removeChild(exportStyle);
+
+      // Restore original styles
+      comparePageRef.current.style.cssText = originalStyle;
+      comparePageRef.current.className = originalClass;
+    } catch (error) {
+      console.error("Export failed:", error);
+      // Restore original styles in case of error
+      if (comparePageRef.current) {
+        comparePageRef.current.style.cssText = "";
+        comparePageRef.current.className =
+          "min-h-screen bg-slate-900 text-white p-6";
+      }
+      // Clean up style element if it exists
+      const exportStyle = document.querySelector("style[data-export]");
+      if (exportStyle) {
+        document.head.removeChild(exportStyle);
+      }
+    }
+  }, [exportDashboard, simulationId]);
+
   if (!simulationId) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-slate-900">
@@ -257,11 +323,28 @@ const ComparePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
+    <div
+      ref={comparePageRef}
+      className="min-h-screen bg-slate-900 text-white p-6"
+    >
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4" ref={container}>
           <h1 className="text-3xl font-bold">Company Comparison Dashboard</h1>
           <div className="flex items-center gap-4">
+            {comparisonStarted && companiesData.length > 0 && (
+              <button
+                onClick={handleExportComparison}
+                disabled={isExporting}
+                className="flex items-center gap-2 bg-[rgba(33,150,243,0.1)] hover:bg-[rgba(33,150,243,0.2)] border border-[rgba(33,150,243,0.3)] hover:border-[rgba(33,150,243,0.5)] rounded-lg px-4 py-2 text-[#64b5f6] hover:text-[#42a5f5] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExporting ? (
+                  <LoaderCircle className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {isExporting ? "Exporting..." : "Export Comparison"}
+              </button>
+            )}
             <button
               onClick={handleViewCompany}
               className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
@@ -317,10 +400,11 @@ const ComparePage: React.FC = () => {
           <button
             onClick={handleCompareClick}
             disabled={selectedCompanyIds.length < 2 || loading}
-            className={`px-6 py-3 rounded-md font-medium transition-all flex items-center gap-2 ${selectedCompanyIds.length >= 2 && !loading
-              ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:brightness-110 shadow-lg"
-              : "bg-gray-700 text-gray-400 cursor-not-allowed"
-              }`}
+            className={`px-6 py-3 rounded-md font-medium transition-all flex items-center gap-2 ${
+              selectedCompanyIds.length >= 2 && !loading
+                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:brightness-110 shadow-lg"
+                : "bg-gray-700 text-gray-400 cursor-not-allowed"
+            }`}
           >
             {loading ? (
               <>
@@ -334,11 +418,14 @@ const ComparePage: React.FC = () => {
               </>
             )}
           </button>
+
           {selectedCompanyIds.length > 0 && (
             <span className="text-sm text-gray-400">
               {selectedCompanyIds.length} of 3 selected
             </span>
           )}
+
+          {/* Additional Export Button in Company Selection Area */}
         </div>
 
         {/* Comparison Results */}
@@ -368,10 +455,11 @@ const ComparePage: React.FC = () => {
                     <button
                       key={metric}
                       onClick={() => setSelectedMetric(metric)}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedMetric === metric
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                        }`}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedMetric === metric
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
                     >
                       {metric.charAt(0).toUpperCase() + metric.slice(1)}
                     </button>
@@ -392,10 +480,11 @@ const ComparePage: React.FC = () => {
                   )}
 
                   <div
-                    className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border ${index === 0
-                      ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20"
-                      : "border-white/10"
-                      } transition-all hover:shadow-lg hover:border-white/20`}
+                    className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border ${
+                      index === 0
+                        ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20"
+                        : "border-white/10"
+                    } transition-all hover:shadow-lg hover:border-white/20`}
                   >
                     <div className="flex items-center gap-3 mb-4">
                       <div className="p-2 bg-blue-500/20 rounded-lg">

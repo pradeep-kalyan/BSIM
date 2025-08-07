@@ -97,7 +97,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               damping: 25,
               stiffness: 100,
             }}
-            className="w-full max-w-7xl mx-auto px-4 py-8"
+           
           >
             {children}
           </motion.div>

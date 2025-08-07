@@ -40,29 +40,66 @@ export const exportElementAsImage = async (
     throw new Error("Element has no dimensions - cannot export");
   }
 
+  // Set default font styles to prevent html-to-image font errors
+  const prevFontFamily = element.style.fontFamily;
+  const prevFont = element.style.font;
+  
+  // Ensure font properties are properly set
+  if (!element.style.fontFamily) {
+    element.style.fontFamily = "Inter, Arial, sans-serif";
+  }
+  
+  // Remove any undefined font property to prevent html-to-image errors
+  if (!element.style.font || element.style.font === 'undefined') {
+    element.style.removeProperty('font');
+  }
+  
   // Add capture class for special styling
   element.classList.add("capturing-screenshot");
 
   try {
     // Wait for all charts and content to fully render
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Get actual content dimensions including scrollable content
+    const fullHeight = Math.max(
+      element.scrollHeight,
+      element.offsetHeight,
+      element.clientHeight,
+      800
+    );
+    const fullWidth = Math.max(
+      element.scrollWidth,
+      element.offsetWidth,
+      element.clientWidth,
+      1200
+    );
 
     const captureOptions = {
       quality,
       backgroundColor,
-      width: width || Math.max(elementRect.width, 1200),
-      height: height || Math.max(elementRect.height, 800),
+      width: width || fullWidth,
+      height: height || fullHeight,
       style: {
         transform: "scale(1)",
         transformOrigin: "top left",
-        width: `${width || Math.max(elementRect.width, 1200)}px`,
-        height: `${height || Math.max(elementRect.height, 800)}px`,
+        width: `${width || fullWidth}px`,
+        height: `${height || fullHeight}px`,
+        overflow: "visible",
+        position: "static",
+        maxHeight: "none",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "16px",
+        fontWeight: "400",
+        lineHeight: "1.5",
       },
       pixelRatio,
-      skipFonts: true,
+      skipFonts: true, // Skip font loading to avoid font-related errors
       useCORS: true,
       allowTaint: true,
       cacheBust: true,
+      scrollX: 0,
+      scrollY: 0,
     };
 
     let dataUrl: string;
@@ -70,7 +107,6 @@ export const exportElementAsImage = async (
     // Try PNG first, fallback to JPEG
     if (format === "png") {
       try {
-        console.log("Attempting PNG capture with options:", captureOptions);
         dataUrl = await htmlToImage.toPng(element, captureOptions);
 
         if (
@@ -80,15 +116,13 @@ export const exportElementAsImage = async (
         ) {
           throw new Error("Invalid PNG data URL generated");
         }
-      } catch (pngError) {
-        console.log("PNG method failed, trying JPEG method:", pngError);
+      } catch {
 
         // Fallback to JPEG
         const jpegOptions = {
           ...captureOptions,
           quality: Math.min(quality, 0.9),
         };
-        console.log("Attempting JPEG capture with options:", jpegOptions);
         dataUrl = await htmlToImage.toJpeg(element, jpegOptions);
 
         if (
@@ -105,7 +139,6 @@ export const exportElementAsImage = async (
         ...captureOptions,
         quality: Math.min(quality, 0.9),
       };
-      console.log("Attempting JPEG capture with options:", jpegOptions);
       dataUrl = await htmlToImage.toJpeg(element, jpegOptions);
 
       if (
@@ -125,7 +158,6 @@ export const exportElementAsImage = async (
     link.click();
     document.body.removeChild(link);
 
-    console.log(`${format.toUpperCase()} capture successful`);
   } catch (error) {
     console.error("Export failed:", error);
 
@@ -138,8 +170,22 @@ export const exportElementAsImage = async (
 
     throw new Error(errorMessage);
   } finally {
-    // Remove capture class
+    // Remove capture class and restore font styles
     element.classList.remove("capturing-screenshot");
+    
+    // Restore previous font family
+    if (prevFontFamily) {
+      element.style.fontFamily = prevFontFamily;
+    } else {
+      element.style.removeProperty("fontFamily");
+    }
+    
+    // Restore previous font property
+    if (prevFont && prevFont !== 'undefined') {
+      element.style.font = prevFont;
+    } else {
+      element.style.removeProperty("font");
+    }
   }
 };
 
@@ -156,12 +202,24 @@ export const exportDashboard = async (
   const defaultFilename =
     filename || `dashboard_${new Date().toISOString().split("T")[0]}`;
 
+  // Get the full scrollable content dimensions
+  const scrollHeight = element.scrollHeight;
+  const scrollWidth = element.scrollWidth;
+  const clientHeight = element.clientHeight;
+  const clientWidth = element.clientWidth;
+
+  // Use the larger of the two dimensions to capture all content
+  const captureHeight = Math.max(scrollHeight, clientHeight, 800);
+  const captureWidth = Math.max(scrollWidth, clientWidth, 1200);
+
   return exportElementAsImage({
     element,
     filename: defaultFilename,
     format: "png",
     quality: 1,
-    backgroundColor: "#0f172a",
+    backgroundColor: "rgba(18,20,24,0.95)", // Match dashboard background
     pixelRatio: 1.5,
+    width: captureWidth,
+    height: captureHeight,
   });
 };

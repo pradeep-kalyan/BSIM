@@ -10,9 +10,8 @@ import {
   useCompanyForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import formatCurrency from "@/app/functions/formatCurrency";
 
-const formatCurrency = (val: number) =>
-  `₹${val.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();
@@ -59,21 +58,21 @@ const RDForm = () => {
             value={formatCurrency(data.budget ?? 0)}
             subtitle="Total R&D Allocation"
             icon={IndianRupee}
-            size="large"
+            size="small"
           />
           <DashboardCard
             title="Products in Pipeline"
             value={data.pip ?? 0}
             subtitle="Upcoming product count"
             icon={FlaskConical}
-            size="large"
+            size="small"
           />
           <DashboardCard
             title="Time to Market"
             value={`${data.time_to_market ?? 0} months`}
             subtitle="Avg time per release"
             icon={Timer}
-            size="large"
+            size="small"
           />
         </section>
 

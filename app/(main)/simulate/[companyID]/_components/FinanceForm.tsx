@@ -18,15 +18,9 @@ import {
   useCompanyForm,
   useFinanceForm,
 } from "@/app/context/FormContext";
-import DashboardCard from "../../../homepage/Card";
-
+import DashboardCard from "@/ui/Card";
+import formatCurrency from "@/app/functions/formatCurrency";
 const FinanceForm = () => {
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(value);
-
   const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
   const { data, updateData, setError, updateFinanceBudgetImpact } =
@@ -102,31 +96,31 @@ const FinanceForm = () => {
           <section className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
             <DashboardCard
               title="Original Cash Balance"
-              value={cashBalance.originalCashBalance.toFixed(0)}
-              subtitle="Maximum units producible per period"
+              value={formatCurrency(cashBalance.originalCashBalance)}
+              subtitle="MaxOutput per period"
               icon={Factory}
-              size="large"
+              
             />
             <DashboardCard
               title="Projected Cash Balance"
-              value={projectedCashBalance.toFixed(0)}
-              subtitle="Projected balance after finance decisions"
+              value={formatCurrency(projectedCashBalance)}
+              subtitle="After finance decisions"
               icon={PiggyBank}
-              size="large"
+             
             />
             <DashboardCard
               title="Total Liabilities"
               value={companyData?.total_liabilities.toFixed(0)}
               subtitle="Maximum storage capacity"
               icon={Package}
-              size="large"
+              
             />
             <DashboardCard
               title="Total Assets"
               value={companyData?.total_assets.toFixed(0)}
               subtitle="Value of planned inventory"
               icon={IndianRupee}
-              size="large"
+              
             />
           </section>
 

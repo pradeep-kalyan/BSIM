@@ -288,7 +288,7 @@ const CreateCompany = ({ simulationID, onCreated }: Props) => {
       case 0:
         return form.name.trim() !== "";
       case 1:
-        return hrRoles.some((role) => role.role_name.trim() !== "");
+        return true
       case 2:
         return true;
       default:
@@ -457,6 +457,7 @@ const CreateCompany = ({ simulationID, onCreated }: Props) => {
 
           <div className="flex items-center gap-3">
             {currentStep < steps.length - 1 ? (
+              
               <button
                 type="button"
                 onClick={handleNext}

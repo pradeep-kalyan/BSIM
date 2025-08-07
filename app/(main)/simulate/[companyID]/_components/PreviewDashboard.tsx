@@ -1,17 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Box,
-  Typography,
-  Paper,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
-import {
   CheckCircle,
   Users,
   TrendingUp,
@@ -19,9 +8,12 @@ import {
   Factory,
   Package,
   DollarSign,
-  BarChart3,
   ShoppingCart,
+  LoaderCircle,
+  Download,
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   useFinanceForm,
   useMarketingForm,
@@ -34,9 +26,8 @@ import {
   useCashBalance,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/hooks/useExport";
-
 interface PreviewDashboardProps {
   companyId: string;
   onEditSection?: (section: number) => void;
@@ -56,6 +47,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const { projectedCashBalance } = useCashBalance();
   const [sections, setSections] = useState<SectionSummary[]>([]);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const { exportDashboard, isExporting } = useExport();
 
   // Get form data from context
   const { period } = useSimulation();
@@ -67,8 +60,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   const { data: financeData } = useFinanceForm();
   const { getTotalSalesMetrics } = useSalesForm();
   const { data: companyData } = useCompanyForm();
-  const { exportDashboard, isExporting } = useExport();
-  const container = useRef<HTMLDivElement>(null);
 
   // Get aggregated sales metrics
   const totalSalesMetrics = getTotalSalesMetrics();
@@ -99,17 +90,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
     if (sellingPrice === 0) return 0;
     return ((sellingPrice - productionCost) / sellingPrice) * 100;
   }, [productData]);
-
-  // Helper function to format currency
-  const formatCurrency = (value: number) => {
-    if (value >= 10000000) {
-      return `₹${(value / 10000000).toFixed(2)} Cr`;
-    } else if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(2)} L`;
-    } else {
-      return `₹${value.toFixed(0)}`;
-    }
-  };
 
   // Helper function to determine section status
   const getSectionStatus = useCallback(
@@ -526,6 +506,70 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
     calculateProfitMargin,
   ]);
 
+  const handleExportDashboard = useCallback(async () => {
+    if (!dashboardRef.current) return;
+
+    try {
+      // Temporarily modify styles for full content capture
+      const originalStyle = dashboardRef.current.style.cssText;
+      const originalClass = dashboardRef.current.className;
+
+      // Remove height restrictions and overflow for export
+      dashboardRef.current.style.height = "auto";
+      dashboardRef.current.style.overflow = "visible";
+      dashboardRef.current.style.maxHeight = "none";
+      dashboardRef.current.style.minHeight = "auto";
+      dashboardRef.current.className = originalClass.replace(
+        "h-full overflow-auto",
+        "min-h-full overflow-visible"
+      );
+
+      // Add export-specific styles
+      const exportStyle = document.createElement("style");
+      exportStyle.textContent = `
+        .capturing-screenshot {
+          height: auto !important;
+          overflow: visible !important;
+          max-height: none !important;
+          min-height: auto !important;
+        }
+        .capturing-screenshot * {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+      `;
+      document.head.appendChild(exportStyle);
+
+      // Wait for layout to adjust
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const filename = `business-simulation-dashboard-${period}-${
+        new Date().toISOString().split("T")[0]
+      }`;
+      await exportDashboard(dashboardRef.current, filename);
+
+      // Clean up
+      document.head.removeChild(exportStyle);
+
+      // Restore original styles
+      dashboardRef.current.style.cssText = originalStyle;
+      dashboardRef.current.className = originalClass;
+    } catch (error) {
+      console.error("Export failed:", error);
+      // Restore original styles in case of error
+      if (dashboardRef.current) {
+        dashboardRef.current.style.cssText = "";
+        dashboardRef.current.className =
+          "h-full bg-[rgba(18,20,24,0.95)] text-white overflow-auto p-3";
+      }
+      // Clean up style element if it exists
+      const exportStyle = document.querySelector("style[data-export]");
+      if (exportStyle) {
+        document.head.removeChild(exportStyle);
+      }
+    }
+  }, [exportDashboard, period]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -542,11 +586,13 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle size={16} color="#4caf50" />;
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case "in-progress":
-        return <CircularProgress size={16} sx={{ color: "#ff9800" }} />;
+        return (
+          <LoaderCircle className="w-4 h-4 text-yellow-500 animate-spin" />
+        );
       case "pending":
-        return <CircularProgress size={16} sx={{ color: "#666" }} />;
+        return <LoaderCircle className="w-4 h-4 text-muted animate-spin" />;
       default:
         return null;
     }
@@ -554,328 +600,86 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          bgcolor: "rgba(18, 20, 24, 0.95)",
-          color: "#fff",
-        }}
-      >
-        <Box sx={{ textAlign: "center" }}>
-          <CircularProgress size={60} sx={{ color: "#64b5f6", mb: 3 }} />
-          <Typography variant="h6" sx={{ color: "#fff", mb: 1 }}>
+      <div className="h-full flex items-center justify-center bg-[rgba(18,20,24,0.95)] text-white">
+        <div className="text-center">
+          <LoaderCircle className="w-15 h-15 text-blue-400 animate-spin mb-3 mx-auto" />
+          <h2 className="text-lg font-semibold text-white mb-1">
             Preparing Your Dashboard
-          </Typography>
-          <Typography variant="body2" sx={{ color: "#aaa" }}>
+          </h2>
+          <p className="text-sm text-muted-foreground">
             Compiling all your strategic decisions...
-          </Typography>
-        </Box>
-      </Box>
+          </p>
+        </div>
+      </div>
     );
   }
 
-  const capture = async () => {
-    try {
-      if (!container.current) {
-        console.error("Container ref is not available");
-        alert("Unable to capture: Dashboard container is not available");
-        return;
-      }
-
-      await exportDashboard(container.current);
-    } catch (error) {
-      console.error("Export failed:", error);
-
-      let errorMessage = "Dashboard export failed. ";
-      if (error instanceof Error) {
-        errorMessage += error.message;
-      } else {
-        errorMessage += "Unknown error occurred.";
-      }
-
-      alert(errorMessage + " Please check the console for more details.");
-    }
-  };
-
   return (
-    <Box
-      sx={{
-        height: "100%",
-        bgcolor: "rgba(18, 20, 24, 0.95)",
-        color: "#fff",
-        overflow: "auto",
-        p: 3,
-      }}
-      ref={container}
+    <div
+      ref={dashboardRef}
+      className="h-full bg-[rgba(18,20,24,0.95)] text-white overflow-auto p-3"
     >
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Paper
-          sx={{
-            bgcolor: "rgba(8, 10, 15, 0.8)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            borderRadius: 3,
-            p: 4,
-            position: "relative",
-            overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background:
-                "linear-gradient(135deg, rgba(100, 181, 246, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)",
-              pointerEvents: "none",
-            },
-          }}
-        >
-          <Box sx={{ position: "relative", zIndex: 1 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 3,
-                  bgcolor: "rgba(100, 181, 246, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mr: 3,
-                  border: "1px solid rgba(100, 181, 246, 0.2)",
-                }}
-              >
-                <BarChart3 size={28} color="#64b5f6" />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    color: "#fff",
-                    fontWeight: 700,
-                    mb: 1,
-                    background:
-                      "linear-gradient(135deg, #fff 0%, #64b5f6 100%)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    fontSize: { xs: "1.75rem", md: "2.5rem" },
-                  }}
-                >
-                  Strategic Overview
-                </Typography>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: "#64b5f6",
-                    fontWeight: 500,
-                    mb: 1,
-                    fontSize: { xs: "1rem", md: "1.25rem" },
-                  }}
-                >
-                  {companyData.name || "Your Company"}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: "#aaa",
-                    lineHeight: 1.6,
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  Comprehensive review of strategic decisions across all
-                  business units
-                </Typography>
-              </Box>
-            </Box>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">
+            Dashboard Preview
+          </h1>
+          <p className="text-[#bbb] text-sm">
+            Period {period} - Strategic Overview
+          </p>
+        </div>
 
-            <Alert
-              severity={
-                sections.every((s) => s.status === "completed")
-                  ? "success"
-                  : "warning"
-              }
-              sx={{
-                bgcolor: sections.every((s) => s.status === "completed")
-                  ? "rgba(76, 175, 80, 0.1)"
-                  : "rgba(255, 193, 7, 0.1)",
-                border: sections.every((s) => s.status === "completed")
-                  ? "1px solid rgba(76, 175, 80, 0.3)"
-                  : "1px solid rgba(255, 193, 7, 0.3)",
-                color: sections.every((s) => s.status === "completed")
-                  ? "#81c784"
-                  : "#ffb74d",
-                borderRadius: 2,
-                "& .MuiAlert-icon": {
-                  color: sections.every((s) => s.status === "completed")
-                    ? "#4caf50"
-                    : "#ff9800",
-                },
-                "& .MuiAlert-message": {
-                  fontWeight: 500,
-                },
-              }}
-            >
-              {sections.every((s) => s.status === "completed")
-                ? "All business units configured successfully! Your strategy is ready for implementation."
-                : `Configuration Progress: ${
-                    sections.filter((s) => s.status === "completed").length
-                  } of ${
-                    sections.length
-                  } sections completed. Review pending areas below.`}
-            </Alert>
-          </Box>
-        </Paper>
-      </Box>
+        {/* Export Button */}
+        <button
+          onClick={handleExportDashboard}
+          disabled={isExporting}
+          className="flex items-center gap-2 bg-[rgba(33,150,243,0.1)] hover:bg-[rgba(33,150,243,0.2)] border border-[rgba(33,150,243,0.3)] hover:border-[rgba(33,150,243,0.5)] rounded-lg px-4 py-2 text-[#64b5f6] hover:text-[#42a5f5] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isExporting ? (
+            <LoaderCircle className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          {isExporting ? "Exporting..." : "Export Dashboard"}
+        </button>
+      </div>
 
       {/* Financial Overview */}
-      <Box sx={{ mb: 4 }}>
-        <Paper
-          sx={{
-            bgcolor: "rgba(8, 10, 15, 0.8)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            borderRadius: 3,
-            p: 4,
-            position: "relative",
-            overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background:
-                "linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)",
-              pointerEvents: "none",
-            },
-          }}
-        >
-          <Box sx={{ position: "relative", zIndex: 1 }}>
-            <Typography
-              variant="h5"
-              sx={{
-                color: "#fff",
-                fontWeight: 700,
-                mb: 3,
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
+      <div className="mb-4">
+        <div className="relative overflow-hidden bg-[rgba(8,10,15,0.8)] border border-[rgba(255,255,255,0.1)] rounded-xl p-4 before:absolute before:inset-0 before:content-[''] before:bg-[linear-gradient(135deg,rgba(76,175,80,0.05)_0%,rgba(33,150,243,0.02)_100%)] before:pointer-events-none">
+          <div className="relative z-[1]">
+            <h3 className="text-white font-bold mb-3 flex items-center gap-2">
               <DollarSign size={24} color="#4caf50" />
               Financial Overview
-            </Typography>
+            </h3>
 
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  sm: "repeat(2, 1fr)",
-                  lg: "repeat(5, 1fr)",
-                },
-                gap: 3,
-              }}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               {/* Current Cash Balance */}
-              <Box
-                sx={{
-                  bgcolor: "rgba(76, 175, 80, 0.1)",
-                  border: "1px solid rgba(76, 175, 80, 0.3)",
-                  borderRadius: 2,
-                  p: 3,
-                  textAlign: "center",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "#81c784",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                  }}
-                >
+              <div className="bg-[rgba(76,175,80,0.1)] border border-[rgba(76,175,80,0.3)] rounded-lg p-3 text-center">
+                <p className="text-[#81c784] text-xs mt-3 font-semibold">
                   CURRENT CASH BALANCE (period : {period})
-                </Typography>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color: "#4caf50",
-                    fontWeight: 700,
-                    mt: 1,
-                    fontSize: { xs: "1.5rem", md: "2rem" },
-                  }}
-                >
+                </p>
+                <h2 className="text-[#4caf50] font-bold mt-7 text-[1.5rem] md:text-[1.5rem]">
                   {formatCurrency(companyData.cash_balance || 0)}
-                </Typography>
-              </Box>
+                </h2>
+              </div>
 
-              <Box
-                sx={{
-                  bgcolor: "rgba(76, 175, 80, 0.1)",
-                  border: "1px solid rgba(76, 175, 80, 0.3)",
-                  borderRadius: 2,
-                  p: 3,
-                  textAlign: "center",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "#81c784",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                  }}
-                >
+              <div className="bg-[rgba(76,175,80,0.1)] border border-[rgba(76,175,80,0.3)] rounded-lg p-3 text-center">
+                <p className="text-[#81c784] text-xs mt-3 font-semibold">
                   PROJECTED CASH BALANCE (period : {(period ?? 0) + 1})
-                </Typography>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color: "#4caf50",
-                    fontWeight: 700,
-                    mt: 1,
-                    fontSize: { xs: "1.5rem", md: "2rem" },
-                  }}
-                >
+                </p>
+                <h2 className="text-[#4caf50] font-bold mt-7 text-[1.5rem] md:text-[1.5rem]">
                   {formatCurrency(projectedCashBalance || 0)}
-                </Typography>
-              </Box>
+                </h2>
+              </div>
 
               {/* Total Budgets Impact */}
-              <Box
-                sx={{
-                  bgcolor: "rgba(255, 152, 0, 0.1)",
-                  border: "1px solid rgba(255, 152, 0, 0.3)",
-                  borderRadius: 2,
-                  p: 3,
-                  textAlign: "center",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "#ffb74d",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                  }}
-                >
+              <div className="bg-[rgba(255,152,0,0.1)] border border-[rgba(255,152,0,0.3)] rounded-lg p-3 text-center">
+                <p className="text-[#ffb74d] text-xs mt-3 font-semibold">
                   TOTAL BUDGET ALLOCATION
-                </Typography>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color: "#ff9800",
-                    fontWeight: 700,
-                    mt: 1,
-                    fontSize: { xs: "1.5rem", md: "2rem" },
-                  }}
-                >
+                </p>
+                <h2 className="text-[#ff9800] font-bold mt-7 text-[1.5rem] md:text-[1.5rem]">
                   {formatCurrency(
                     (hrData.total_budget || 0) +
                       (marketingData.budget || 0) +
@@ -883,529 +687,270 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                       (financeData.investment_amount || 0) +
                       (financeData.loan_amount || 0)
                   )}
-                </Typography>
-              </Box>
+                </h2>
+              </div>
 
               {/* Projected Profit */}
-              <Box
-                sx={{
-                  bgcolor: "rgba(33, 150, 243, 0.1)",
-                  border: "1px solid rgba(33, 150, 243, 0.3)",
-                  borderRadius: 2,
-                  p: 3,
-                  textAlign: "center",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "#64b5f6",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                  }}
-                >
+              <div className="bg-[rgba(33,150,243,0.1)] border border-[rgba(33,150,243,0.3)] rounded-lg p-3 text-center">
+                <p className="text-[#64b5f6] text-xs mt-3 font-semibold">
                   PROJECTED PROFIT
-                </Typography>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color:
-                      totalSalesMetrics.totalProfit >= 0
-                        ? "#2196f3"
-                        : "#f44336",
-                    fontWeight: 700,
-                    mt: 1,
-                    fontSize: { xs: "1.5rem", md: "2rem" },
-                  }}
+                </p>
+                <h2
+                  className={`font-bold mt-9 text-[1.5rem] md:text-[1.5rem] ${
+                    totalSalesMetrics.totalProfit >= 0
+                      ? "text-blue-500"
+                      : "text-red-500"
+                  }`}
                 >
                   {formatCurrency(totalSalesMetrics.totalProfit)}
-                </Typography>
-              </Box>
+                </h2>
+              </div>
 
               {/* Net Worth */}
-              <Box
-                sx={{
-                  bgcolor: "rgba(156, 39, 176, 0.1)",
-                  border: "1px solid rgba(156, 39, 176, 0.3)",
-                  borderRadius: 2,
-                  p: 3,
-                  textAlign: "center",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "#ba68c8",
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                  }}
-                >
+              <div className="bg-[rgba(156,39,176,0.1)] border border-[rgba(156,39,176,0.3)] rounded-lg p-3 text-center">
+                <p className="text-[#ba68c8] text-xs mt-3 font-semibold">
                   NET WORTH
-                </Typography>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color: "#9c27b0",
-                    fontWeight: 700,
-                    mt: 1,
-                    fontSize: { xs: "1.5rem", md: "2rem" },
-                  }}
-                >
+                </p>
+
+                <p className="text-purple-600 font-bold mt-9 text-[1.5rem] md:text-[1.5rem]">
                   {formatCurrency(
                     (companyData.total_assets || 0) -
                       (companyData.total_liabilities || 0)
                   )}
-                </Typography>
-              </Box>
-            </Box>
+                </p>
+              </div>
+            </div>
 
             {/* Detailed Financial Breakdown */}
-            <Box sx={{ mt: 4 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  color: "#fff",
-                  fontWeight: 600,
-                  mb: 2,
-                }}
-              >
+            <div className="mt-4">
+              <h2 className="text-white font-semibold text-lg mb-2">
                 Financial Position Details
-              </Typography>
+              </h2>
 
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
-                  gap: 3,
-                }}
-              >
+              <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
                 {/* Assets & Liabilities */}
-                <Box
-                  sx={{
-                    bgcolor: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: 2,
-                    p: 3,
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ color: "#64b5f6", fontWeight: 600, mb: 2 }}
-                  >
+                <div className="bg-[rgba(255,255,255,0.03)] border border-white/10 rounded-lg p-3">
+                  <h3 className="text-[#64b5f6] font-semibold text-base mb-2">
                     Balance Sheet
-                  </Typography>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}
-                  >
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        Total Assets:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#4caf50", fontWeight: 600 }}
-                      >
+                  </h3>
+
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">Total Assets:</p>
+                      <p className="text-sm text-green-500 font-semibold">
                         {formatCurrency(companyData.total_assets || 0)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        Total Liabilities:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#f44336", fontWeight: 600 }}
-                      >
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">Total Liabilities:</p>
+                      <p className="text-sm text-red-500 font-semibold">
                         {formatCurrency(companyData.total_liabilities || 0)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        Brand Value:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#9c27b0", fontWeight: 600 }}
-                      >
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">Brand Value:</p>
+                      <p className="text-sm text-purple-600 font-semibold">
                         {formatCurrency(companyData.brand_value || 0)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        Credit Rating:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#fff", fontWeight: 600 }}
-                      >
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">Credit Rating:</p>
+                      <p className="text-white font-semibold text-sm">
                         {companyData.credit_rating || "Not Rated"}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Cash Flow Impact */}
-                <Box
-                  sx={{
-                    bgcolor: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: 2,
-                    p: 3,
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ color: "#64b5f6", fontWeight: 600, mb: 2 }}
-                  >
+                <div className="bg-[rgba(255,255,255,0.03)] border border-white/10 rounded-lg p-3">
+                  <h3 className="text-[#64b5f6] font-semibold text-base mb-2">
                     Cash Flow Impact
-                  </Typography>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}
-                  >
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        HR Budget:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#f44336", fontWeight: 600 }}
-                      >
+                  </h3>
+
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">HR Budget:</p>
+                      <p className="text-sm text-red-500 font-semibold">
                         -{formatCurrency(hrData.total_budget || 0)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        Marketing Budget:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#f44336", fontWeight: 600 }}
-                      >
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">Marketing Budget:</p>
+                      <p className="text-sm text-red-500 font-semibold">
                         -{formatCurrency(marketingData.budget || 0)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        R&D Budget:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#f44336", fontWeight: 600 }}
-                      >
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">R&amp;D Budget:</p>
+                      <p className="text-sm text-red-500 font-semibold">
                         -{formatCurrency(rdData.budget || 0)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", justifyContent: "space-between" }}
-                    >
-                      <Typography variant="body2" sx={{ color: "#bbb" }}>
-                        Expected Revenue:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#4caf50", fontWeight: 600 }}
-                      >
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <p className="text-sm text-[#bbb]">Expected Revenue:</p>
+                      <p className="text-sm text-green-500 font-semibold">
                         +{formatCurrency(totalSalesMetrics.totalRevenue)}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        pt: 1,
-                        borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#fff", fontWeight: 600 }}
-                      >
+                      </p>
+                    </div>
+
+                    <div className="flex justify-between pt-1 border-t border-white/10">
+                      <p className="text-white font-semibold text-sm">
                         Projected Cash Balance:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color:
-                            (companyData.cash_balance || 0) +
-                              totalSalesMetrics.totalProfit -
-                              (hrData.total_budget || 0) -
-                              (marketingData.budget || 0) -
-                              (rdData.budget || 0) >=
-                            0
-                              ? "#4caf50"
-                              : "#f44336",
-                          fontWeight: 600,
-                        }}
+                      </p>
+
+                      <p
+                        className={`font-semibold text-sm ${
+                          (companyData.cash_balance || 0) +
+                            totalSalesMetrics.totalProfit -
+                            (hrData.total_budget || 0) -
+                            (marketingData.budget || 0) -
+                            (rdData.budget || 0) >=
+                          0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
                       >
                         {formatCurrency(projectedCashBalance)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Summary Cards Grid */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            md: "repeat(2, 1fr)",
-            lg: "repeat(3, 1fr)",
-          },
-          gap: 3,
-          mb: 4,
-        }}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3 mb-4">
         {sections.map((section, index) => {
           const IconComponent = section.icon;
           return (
             <Card
               key={section.title}
-              sx={{
-                bgcolor: "rgba(8, 10, 15, 0.8)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: 3,
-                height: "100%",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                cursor: "pointer",
-                position: "relative",
-                overflow: "hidden",
-                "&::before": {
-                  content: '""',
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  background: `linear-gradient(135deg, ${getStatusColor(
-                    section.status
-                  )}08 0%, transparent 100%)`,
-                  pointerEvents: "none",
-                },
-                "&:hover": {
-                  transform: "translateY(-6px)",
-                  boxShadow: "0 12px 40px rgba(33, 150, 243, 0.15)",
-                  borderColor: "rgba(100, 181, 246, 0.4)",
-                  "& .section-icon": {
-                    transform: "scale(1.1)",
-                    boxShadow: `0 8px 24px ${getStatusColor(section.status)}40`,
-                  },
-                },
-              }}
               onClick={() => onEditSection?.(index)}
+              className={cn(
+                "relative h-full cursor-pointer overflow-hidden border border-white/10 bg-[#080a0fcc] transition-all duration-300",
+                "hover:-translate-y-1.5 hover:border-[#64b5f680] hover:shadow-[0_12px_40px_rgba(33,150,243,0.15)]"
+              )}
+              style={{
+                // Gradient overlay on top of card
+                backgroundImage: `linear-gradient(135deg, ${getStatusColor(
+                  section.status
+                )}08 0%, transparent 100%)`,
+                backgroundBlendMode: "overlay",
+              }}
             >
-              <CardContent sx={{ p: 4, position: "relative", zIndex: 1 }}>
+              <div className="relative z-[1] p-4">
                 {/* Header */}
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    className="section-icon"
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 2.5,
-                      bgcolor: `${getStatusColor(section.status)}15`,
+                <div className="mb-3 flex items-center">
+                  <div
+                    className="section-icon mr-2.5 flex h-12 w-12 items-center justify-center rounded-[10px] transition-all duration-300 ease-in-out"
+                    style={{
+                      backgroundColor: `${getStatusColor(section.status)}15`,
                       border: `1px solid ${getStatusColor(section.status)}30`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      mr: 2.5,
-                      transition: "all 0.3s ease",
                     }}
                   >
                     <IconComponent
                       size={24}
                       color={getStatusColor(section.status)}
                     />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 600,
-                        mb: 1,
-                        fontSize: "1.1rem",
-                      }}
-                    >
-                      {section.title}
-                    </Typography>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {getStatusIcon(section.status)}
-                      <Chip
-                        label={section.status.replace("-", " ")}
-                        size="small"
-                        sx={{
-                          ml: 1,
-                          bgcolor: `${getStatusColor(section.status)}20`,
-                          color: getStatusColor(section.status),
-                          fontSize: "0.7rem",
-                          height: 22,
-                          fontWeight: 500,
-                          textTransform: "capitalize",
-                          border: `1px solid ${getStatusColor(
-                            section.status
-                          )}30`,
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                </Box>
+                  </div>
 
-                <Divider sx={{ bgcolor: "rgba(255, 255, 255, 0.08)", mb: 3 }} />
+                  <div className="flex-1">
+                    <h3 className="mb-1 text-[1.1rem] font-semibold text-white">
+                      {section.title}
+                    </h3>
+
+                    <div className="flex items-center">
+                      {getStatusIcon(section.status)}
+
+                      <span
+                        className="ml-1 inline-flex items-center justify-center rounded border px-2 py-[2px] text-xs font-medium capitalize"
+                        style={{
+                          backgroundColor: `${getStatusColor(
+                            section.status
+                          )}20`,
+                          color: getStatusColor(section.status),
+                          borderColor: `${getStatusColor(section.status)}30`,
+                          height: "22px",
+                          fontSize: "0.7rem",
+                        }}
+                      >
+                        {section.status.replace("-", " ")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr className="mb-3 border-0 h-px bg-white/10" />
 
                 {/* Key Metrics */}
                 {section.keyMetrics && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        color: "#64b5f6",
-                        mb: 2,
-                        fontWeight: 600,
-                        fontSize: "0.85rem",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
+                  <div className="mb-3">
+                    <p className="text-[#64b5f6] mb-2 font-semibold text-[0.85rem] uppercase tracking-[0.5px]">
                       Key Metrics
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 1.5,
-                      }}
-                    >
+                    </p>
+
+                    <div className="flex flex-col gap-3">
                       {section.keyMetrics.map((metric, idx) => (
-                        <Box
+                        <div
                           key={idx}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            py: 1,
-                            px: 2,
-                            borderRadius: 1.5,
-                            bgcolor: "rgba(255, 255, 255, 0.03)",
-                            border: "1px solid rgba(255, 255, 255, 0.05)",
-                          }}
+                          className="flex justify-between items-center py-1 px-2 rounded-xl bg-white/5 border border-white/10"
                         >
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: "#bbb",
-                              fontWeight: 500,
-                              fontSize: "0.8rem",
-                            }}
-                          >
+                          <span className="text-[#bbb] font-medium text-[0.8rem]">
                             {metric.label}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "#fff",
-                              fontWeight: 600,
-                              fontSize: "0.85rem",
-                            }}
-                          >
+                          </span>
+                          <span className="text-white font-semibold text-[0.85rem]">
                             {metric.value}
-                          </Typography>
-                        </Box>
+                          </span>
+                        </div>
                       ))}
-                    </Box>
-                  </Box>
+                    </div>
+                  </div>
                 )}
 
                 {/* Summary Points */}
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      color: "#64b5f6",
-                      mb: 2,
-                      fontWeight: 600,
-                      fontSize: "0.85rem",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
+                <div>
+                  <p className="text-[#64b5f6] mb-2 font-semibold text-[0.85rem] uppercase tracking-[0.5px]">
                     Strategic Summary
-                  </Typography>
-                  <Box sx={{ maxHeight: 140, overflow: "auto" }}>
+                  </p>
+
+                  <div className="max-h-[140px] overflow-auto pr-1">
                     {section.summary.slice(0, 4).map((point, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          mb: 1.5,
-                          py: 0.5,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: "50%",
-                            bgcolor: getStatusColor(section.status),
-                            mt: 1,
-                            mr: 1.5,
-                            flexShrink: 0,
+                      <div key={idx} className="flex items-start mb-1.5 py-0.5">
+                        <div
+                          className="w-[6px] h-[6px] rounded-full mt-1 mr-1.5 flex-shrink-0"
+                          style={{
+                            backgroundColor: getStatusColor(section.status),
                           }}
                         />
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: "#ccc",
-                            fontSize: "0.8rem",
-                            lineHeight: 1.5,
-                            fontWeight: 400,
-                          }}
-                        >
+                        <p className="text-[#ccc] text-[0.8rem] font-normal leading-snug">
                           {point}
-                        </Typography>
-                      </Box>
+                        </p>
+                      </div>
                     ))}
+
                     {section.summary.length > 4 && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: "#64b5f6",
-                          fontStyle: "italic",
-                          fontSize: "0.75rem",
-                          ml: 2.5,
-                        }}
-                      >
+                      <p className="text-[#64b5f6] italic text-[0.75rem] ml-6">
                         +{section.summary.length - 4} more items...
-                      </Typography>
+                      </p>
                     )}
-                  </Box>
-                </Box>
-              </CardContent>
+                  </div>
+                </div>
+              </div>
             </Card>
           );
         })}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 
