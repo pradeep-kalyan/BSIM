@@ -8,7 +8,6 @@ import {
   Factory,
   Package,
   DollarSign,
-  BarChart3,
   ShoppingCart,
   LoaderCircle,
 } from "lucide-react";
@@ -159,8 +158,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Total HR Budget: ${formatCurrency(hrData.total_budget || 0)}`,
             `Salary Budget: ${formatCurrency(hrData.salary_budget || 0)}`,
             `Training Budget: ${formatCurrency(hrData.training_budget || 0)}`,
-            `Recruitment Cost: ${formatCurrency(hrData.recruitment_cost || 0)}`,
-            `Firing Cost: ${formatCurrency(hrData.firing_cost || 0)}`,
             `Existing Roles: ${hrData.existingRoles?.length || 0}`,
             `New Roles: ${hrData.newRoles?.length || 0}`,
             `Total Employees: ${calculateTotalEmployees()}`,
@@ -555,52 +552,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   ).length;
   return (
     <div className="h-full bg-[rgba(18,20,24,0.95)] text-white overflow-auto p-3">
-      {/* Header */}
-      <div className="mb-4">
-        <div className="relative bg-[rgba(8,10,15,0.8)] border border-white/10 rounded-xl p-6 overflow-hidden">
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(100,181,246,0.05)_0%,rgba(33,150,243,0.02)_100%)] pointer-events-none z-0" />
-
-          {/* Content Layer */}
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              {/* Icon container */}
-              <div className="w-14 h-14 flex items-center justify-center bg-[rgba(100,181,246,0.1)] border border-[#64b5f633] rounded-lg mr-4">
-                <BarChart3 size={28} color="#64b5f6" />
-              </div>
-
-              {/* Text */}
-              <div className="flex-1">
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-r from-white to-[#64b5f6] bg-clip-text text-transparent">
-                  Strategic Overview
-                </h1>
-                <p className="text-[#64b5f6] font-medium text-base md:text-lg mb-1">
-                  {companyData.name || "Your Company"}
-                </p>
-                <p className="text-sm text-[#aaa] leading-relaxed">
-                  Comprehensive review of strategic decisions across all
-                  business units
-                </p>
-              </div>
-            </div>
-
-            {/* Alert Box */}
-            <Alert
-              className={`border ${
-                allCompleted
-                  ? "border-green-300 bg-green-100/10 text-green-300"
-                  : "border-yellow-300 bg-yellow-100/10 text-yellow-300"
-              } rounded-md`}
-            >
-              <AlertDescription className="font-medium">
-                {allCompleted
-                  ? "All business units configured successfully! Your strategy is ready for implementation."
-                  : `Configuration Progress: ${completedCount} of ${sections.length} sections completed. Review pending areas below.`}
-              </AlertDescription>
-            </Alert>
-          </div>
-        </div>
-      </div>
 
       {/* Financial Overview */}
       <div className="mb-4">

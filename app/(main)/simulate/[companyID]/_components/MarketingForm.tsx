@@ -6,7 +6,6 @@ import {
   Store,
   Check,
   TriangleAlert,
-  Building2,
 } from "lucide-react";
 import React, { useState } from "react";
 import {
@@ -17,6 +16,7 @@ import {
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
+import InfoCard from "@/app/components/InfoCard"
 
 
 const percent = (part: number, total: number) =>
@@ -79,74 +79,65 @@ const MarketingForm = () => {
     return { budget, online, offline };
   }, [marketingData]);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="min-h-screen bg-slate-800/50 shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-extrabold text-blue-300 mb-2">
-            Marketing Dashboard
-          </h1>
-          <div className="flex items-center gap-2 text-slate-400">
-            <Building2 className="h-4 w-4" />
-            <span>
-              Period {period} • {companyData?.name}
-            </span>
-          </div>
-        </div>
 
         {/* Compact Metrics Dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {/* Company Cash */}
-          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
-            <div className="flex items-center gap-2 mb-2">
-              <IndianRupee className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm font-bold text-white">
-                Available Cash
-              </span>
-            </div>
-            <p className="text-lg font-bold text-white">
-              {formatCurrency(cashBalance.originalCashBalance || 0)}
-            </p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <InfoCard
+            label="Available Cash"
+            value={cashBalance.originalCashBalance || 0}
+            Icon={IndianRupee}
+            iconColor="text-yellow-400"
+            labelColor="text-white"
+            valueColor="text-white"
+            isCurrency={true}
+            currencyCode="INR"
+            width="w-full"
+            height="h-30"
+          />
 
-          {/* Total Budget */}
-          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
-            <div className="flex items-center gap-2 mb-2">
-              <IndianRupee className="h-4 w-4 text-blue-400" />
-              <span className="text-sm font-bold text-white">Total Budget</span>
-            </div>
-            <p className="text-lg font-bold text-white">
-              {formatCurrency(frozenData.budget)}
-            </p>
-          </div>
+          <InfoCard
+            label="Total Budget"
+            value={frozenData.budget}
+            Icon={IndianRupee}
+            iconColor="text-blue-400"
+            labelColor="text-white"
+            valueColor="text-white"
+            isCurrency={true}
+            currencyCode="INR"
+            width="w-full"
+            height="h-30"
+            subtext="100%"
+          />
 
-          {/* Online Marketing */}
-          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
-            <div className="flex items-center gap-2 mb-2">
-              <Globe className="h-4 w-4 text-green-400" />
-              <span className="text-sm font-bold text-white">Online</span>
-            </div>
-            <p className="text-lg font-bold text-white">
-              {formatCurrency(frozenData.online)}
-            </p>
-            <p className="text-xs text-slate-400">
-              {percent(marketingData.online, marketingData.budget)}
-            </p>
-          </div>
+          <InfoCard
+            label="Online"
+            value={frozenData.online}
+            Icon={Globe}
+            iconColor="text-green-400"
+            labelColor="text-white"
+            valueColor="text-white"
+            isCurrency={true}
+            currencyCode="INR"
+            width="w-full"
+            height="h-30"
+            subtext={percent(marketingData.online, marketingData.budget)}
+          />
 
-          {/* Offline Marketing */}
-          <div className="bg-slate-800/80 rounded-lg p-4 border border-slate-600">
-            <div className="flex items-center gap-2 mb-2">
-              <Store className="h-4 w-4 text-purple-400" />
-              <span className="text-sm font-bold text-white">Offline</span>
-            </div>
-            <p className="text-lg font-bold text-white">
-              {formatCurrency(frozenData.offline)}
-            </p>
-            <p className="text-xs text-slate-400">
-              {percent(marketingData.offline, marketingData.budget)}
-            </p>
-          </div>
+          <InfoCard
+            label="Offline"
+            value={frozenData.offline}
+            Icon={Store}
+            iconColor="text-purple-400"
+            labelColor="text-white"
+            valueColor="text-white"
+            isCurrency={true}
+            currencyCode="INR"
+            width="w-full"
+            height="h-30"
+            subtext={percent(marketingData.offline, marketingData.budget)}
+          />
         </div>
 
         {/* Marketing Strategy Form */}
@@ -169,7 +160,7 @@ const MarketingForm = () => {
             {/* Budget Controls */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Total Marketing Budget */}
-              <div className="bg-slate-700/40 rounded-lg p-4 border border-slate-600">
+              <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <h4 className="text-sm font-bold text-white mb-3">
                   Total Marketing Budget
                 </h4>
@@ -186,7 +177,7 @@ const MarketingForm = () => {
               </div>
 
               {/* Online Marketing */}
-              <div className="bg-slate-700/40 rounded-lg p-4 border border-green-500/30">
+              <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <h4 className="text-sm font-bold text-white mb-3">
                   Online Marketing
                 </h4>
@@ -206,7 +197,7 @@ const MarketingForm = () => {
               </div>
 
               {/* Offline Marketing */}
-              <div className="bg-slate-700/40 rounded-lg p-4 border border-purple-500/30">
+              <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <h4 className="text-sm font-bold text-white mb-3">
                   Offline Marketing
                 </h4>
@@ -244,7 +235,7 @@ const MarketingForm = () => {
             </div>
 
             {/* Financial Impact Summary */}
-            <div className="bg-slate-700/80 rounded-lg p-4 border border-slate-500">
+            <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
               <h4 className="text-lg font-bold text-white mb-3">
                 Financial Impact Summary
               </h4>
@@ -266,11 +257,10 @@ const MarketingForm = () => {
                 <div className="bg-slate-600/40 rounded-lg p-3">
                   <p className="text-slate-300 text-xs mb-1">Remaining Cash</p>
                   <p
-                    className={`text-lg font-bold ${
-                      projectedCashBalance < 0
-                        ? "text-red-400"
-                        : "text-emerald-400"
-                    }`}
+                    className={`text-lg font-bold ${projectedCashBalance < 0
+                      ? "text-red-400"
+                      : "text-emerald-400"
+                      }`}
                   >
                     {formatCurrency(projectedCashBalance)}
                   </p>

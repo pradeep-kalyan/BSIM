@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { IndianRupee, FlaskConical, Timer, TriangleAlert } from "lucide-react";
-import DashboardCard from "@/ui/Card";
+import InfoCard from "@/app/components/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import {
   useRDForm,
@@ -41,43 +41,59 @@ const RDForm = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
-      <div className="max-w-5xl mx-auto py-8">
-        <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold text-blue-300">
-            R&D Dashboard
-          </h1>
-          <span className="text-lg text-slate-400 tracking-wide">
-            Period {period} • {companyData?.name}
-          </span>
-        </header>
+    <div className="bg-slate-800/50 shadow-md p-4">
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <DashboardCard
-            title="R&D Budget"
-            value={formatCurrency(data.budget ?? 0)}
-            subtitle="Total R&D Allocation"
-            icon={IndianRupee}
-            size="small"
-          />
-          <DashboardCard
-            title="Products in Pipeline"
-            value={data.pip ?? 0}
-            subtitle="Upcoming product count"
-            icon={FlaskConical}
-            size="small"
-          />
-          <DashboardCard
-            title="Time to Market"
-            value={`${data.time_to_market ?? 0} months`}
-            subtitle="Avg time per release"
-            icon={Timer}
-            size="small"
-          />
-        </section>
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 mx-2">
+        <InfoCard
+          label="R&D Budget"
+          value={data.budget ?? 0}
+          isCurrency={true}
+          currencyCode="INR"
+          Icon={IndianRupee}
+          iconColor="text-yellow-400"
+          labelColor="text-white"
+          valueColor="text-white"
+          width="w-full"
+          height="h-full"
+        />
+        <InfoCard
+          label="Products in Pipeline"
+          value={data.pip ?? 0}
+          isCurrency={false}
+          Icon={FlaskConical}
+          iconColor="text-blue-400"
+          labelColor="text-white"
+          valueColor="text-white"
+          width="w-full"
+          height="h-full"
+        />
+        <InfoCard
+          label="Time to Market"
+          value={`${data.time_to_market ?? 0} Months`}
+          isCurrency={false}
+          Icon={Timer}
+          iconColor="text-green-400"
+          labelColor="text-white"
+          valueColor="text-white"
+          width="w-full"
+          height="h-full"
+        />
+        <InfoCard
+          label="Quality Improvements"
+          value={`${data.quality_changes ?? 0}%`}
+          isCurrency={false}
+          Icon={Timer}
+          iconColor="text-green-400"
+          labelColor="text-white"
+          valueColor="text-white"
+          width="w-full"
+          height="h-full"
+        />
+      </section>
 
-        <div className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700">
-          <h2 className="text-2xl font-bold text-white mb-6">
+      <div className="max-w-full mx-2 ">
+        <div className="bg-slate-800/50 shadow-md rounded-2xl py-4 px-6 border border-slate-700">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Set R&D Strategy
           </h2>
           <div className="grid gap-6 md:grid-cols-2">

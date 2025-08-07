@@ -75,8 +75,6 @@ export interface HRFormData {
   total_budget: number;
   employee_satisfaction: number;
   total_employee_count: number;
-  recruitment_cost:number;
-  firing_cost:number;
 }
 
 export interface RDFormData {
@@ -269,8 +267,6 @@ const getDefaultHRData = (): HRFormData => ({
   total_budget: 0,
   employee_satisfaction: 0,
   total_employee_count: 0,
-  recruitment_cost:0,
-  firing_cost:0
 });
 
 const getDefaultRDData = (): RDFormData => ({
@@ -294,10 +290,10 @@ export const getDefaultProductData = (): ProductFormData => ({
   production_cost: 0,
   selling_price: 0,
   inventory_level: 0,
-  production_capacity: 2000, // matches Zod default
+  production_capacity: 2000, 
   development_cost: 0,
   marketing_budget: 0,
-  status: "development", // matches Zod default
+  status: "active", 
 });
 
 export const getDefaultCompanyData = (): CompanyFormData => ({
@@ -1483,11 +1479,6 @@ export function useHRForm() {
       if (newHeadCount > 0) {
         salary_budget += newHeadCount * role.salary_per_head;
       }
-
-      // Calculate recruitment cost (cost to hire new employees)
-
-      // Calculate firing cost (could be severance pay, typically a percentage of salary)
-      // Assuming firing cost is equivalent to one month's salary per fired employee
     });
 
     // Calculate from new roles
