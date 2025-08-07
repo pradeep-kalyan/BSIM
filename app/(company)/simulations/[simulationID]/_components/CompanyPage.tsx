@@ -65,13 +65,9 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     setInitialLoad(false);
   }, [simulationID]);
 
-  const { setSimId, simId } = useSimulation();
+  const { setSimId,} = useSimulation();
 
   const didInit = useRef(false);
-
-  const handleViewSimulations = () => {
-    router.push(`/simulations/`);
-  }
 
   useEffect(() => {
     if (!simulationID || didInit.current) return;

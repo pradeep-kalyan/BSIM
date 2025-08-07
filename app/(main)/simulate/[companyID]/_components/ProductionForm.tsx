@@ -1,6 +1,6 @@
 "use client";
 
-import { IndianRupee, Factory, Package, AlertTriangle,Warehouse } from "lucide-react";
+import { IndianRupee, Factory, Package,Warehouse } from "lucide-react";
 import React, { useEffect } from "react";
 import DashboardCard from "@/ui/Card";
 import { TriangleAlert } from "lucide-react";

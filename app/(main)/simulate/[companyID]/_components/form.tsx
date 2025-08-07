@@ -79,7 +79,7 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ companyId }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isMobile, isTablet, isDesktop } = useBreakpoint();
+  const { isMobile} = useBreakpoint();
   const { state } = useForm();
   const { projectedCashBalance, budgetImpacts } = useCashBalance();
 

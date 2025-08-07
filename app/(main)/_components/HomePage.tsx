@@ -279,7 +279,7 @@ const getPercentChange = (current: number, prev: number) => {
 };
 
 const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
-  const { setComId, setPeriod, simId } = useSimulation();
+  const { setComId, setPeriod } = useSimulation();
   const router = useRouter();
 
   // Helper function to create current period data from company object
@@ -692,10 +692,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedPeriod(Number(e.target.value));
   };
-
-  const handleViewCompany = useCallback(() => {
-    router.push(`/simulations/${simId}`);
-  }, [router, simId]);
 
   // Simulate button
   const handleSimulate = useCallback(() => {
