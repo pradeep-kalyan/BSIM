@@ -173,7 +173,7 @@ const MarketingForm = () => {
               <div className="bg-slate-700/40 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Total Marketing(₹/per year)"
-                  text="Total marketing budget allocation for this period. Higher budgets can increase brand awareness, customer acquisition, and market share."
+                  text="Total marketing budget allocation"
                 />
                 <Slider
                   className="w-[200px]"
@@ -191,7 +191,7 @@ const MarketingForm = () => {
               <div className="bg-slate-700/40 rounded-lg p-4 border border-green-500/30">
                 <TooltipWrapper
                   label="Online Marketing(₹/per year)"
-                  text="Budget allocated to online marketing channels including social media, search ads, email campaigns, and digital advertising."
+                  text="Digital marketing channels budget"
                 />
                 <Slider
                   className="w-[200px]"
@@ -212,7 +212,7 @@ const MarketingForm = () => {
               <div className="bg-slate-700/40 rounded-lg p-4 border border-purple-500/30">
                 <TooltipWrapper
                   label="Offline Marketing(₹/per year)"
-                  text="Budget for traditional marketing channels including print ads, radio, TV commercials, billboards, and event sponsorships."
+                  text="Traditional marketing channels budget"
                 />
                 <Slider
                   className="w-[200px]"

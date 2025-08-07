@@ -274,7 +274,7 @@ const HRDashboard = () => {
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Salary per employee"
-                        text="Annual salary per employee for this role. Higher salaries can improve employee satisfaction and retention but increase operating costs."
+                        text="Annual salary per employee"
                       />
                       <Slider
                         label={`₹${(
@@ -304,7 +304,7 @@ const HRDashboard = () => {
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Staffing Changes"
-                        text="Net change in headcount for this role. Positive values mean hiring, negative values mean layoffs. Consider skills requirements and costs."
+                        text="Net headcount change"
                       />
                       <Slider
                         label={`Net: ${(role.hires || 0) - (role.fires || 0)}`}
@@ -410,7 +410,7 @@ const HRDashboard = () => {
                     <div>
                       <TooltipWrapper
                         label="Salary (₹/per year)"
-                        text="salary for this new role. Consider market rates, role requirements, and budget constraints when setting compensation."
+                        text="Annual compensation package"
                       />
                       <Slider
                         className="w-[200px]"
@@ -435,7 +435,7 @@ const HRDashboard = () => {
                     <div>
                       <TooltipWrapper
                         label="Headcount"
-                        text="Number of positions to create for this new role. Consider workload requirements and budget impact when deciding headcount."
+                        text="Number of new positions"
                       />
                       <Slider
                         className="w-[200px]"
@@ -466,7 +466,7 @@ const HRDashboard = () => {
               <div className="bg-slate-700/20 rounded-lg p-4 border border-yellow-500/30">
                 <TooltipWrapper
                   label="Training Budget (₹/per year)"
-                  text="Budget allocated for employee training and development programs. Higher training budgets improve skills, productivity, and employee retention."
+                  text="Employee development budget allocation"
                 />
                 <Slider
                   label={`₹${(data?.training_budget || 0).toLocaleString()}`}
@@ -489,7 +489,7 @@ const HRDashboard = () => {
               <div className="bg-slate-700/20 rounded-lg p-4 border border-purple-500/30">
                 <TooltipWrapper
                   label="Employee Satisfaction"
-                  text="Target employee satisfaction percentage. Higher satisfaction leads to better productivity, lower turnover, and improved company culture."
+                  text="Target employee satisfaction percentage"
                 />
                 <Slider
                   label={`${(data?.employee_satisfaction || 70).toFixed(0)}%`}

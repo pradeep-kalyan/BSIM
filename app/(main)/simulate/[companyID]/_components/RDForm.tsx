@@ -86,7 +86,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="R&D Budget (₹)"
-                tooltipText="Set the total budget allocation for Research & Development activities. Higher budgets can lead to faster innovation and better product development."
+                tooltipText="Total R&D allocation"
                 defaultValue={[data.budget ?? 0]}
                 value={[data.budget ?? 0]}
                 min={0}
@@ -104,7 +104,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Products in Pipeline"
-                tooltipText="Number of products currently under development. More products in pipeline can increase market opportunities but require more resources."
+                tooltipText="Products under development"
                 defaultValue={[data.pip ?? 0]}
                 value={[data.pip ?? 0]}
                 min={0}
@@ -120,7 +120,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Time to Market (months)"
-                tooltipText="Average time required to bring a product from development to market launch. Shorter time-to-market can provide competitive advantages."
+                tooltipText="Development to launch time"
                 defaultValue={[data.time_to_market ?? 0]}
                 value={[data.time_to_market ?? 0]}
                 min={0}
@@ -138,7 +138,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Patents Expected"
-                tooltipText="Number of patents expected to be filed from current R&D activities. Patents provide intellectual property protection and competitive advantages."
+                tooltipText="Intellectual property protection"
                 defaultValue={[data.patented ?? 0]}
                 value={[data.patented ?? 0]}
                 min={0}
@@ -156,7 +156,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Quality Improvements (%)"
-                tooltipText="Percentage improvement in product quality expected from R&D investments. Higher quality can increase customer satisfaction and market share."
+                tooltipText="Product quality enhancement"
                 defaultValue={[data.quality_changes ?? 0]}
                 value={[data.quality_changes ?? 0]}
                 min={0}
