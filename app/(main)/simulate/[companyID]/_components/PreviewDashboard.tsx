@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   Typography,
@@ -35,6 +35,8 @@ import {
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 
+import { useExport } from "@/hooks/useExport";
+
 interface PreviewDashboardProps {
   companyId: string;
   onEditSection?: (section: number) => void;
@@ -65,6 +67,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   const { data: financeData } = useFinanceForm();
   const { getTotalSalesMetrics } = useSalesForm();
   const { data: companyData } = useCompanyForm();
+  const { exportDashboard, isExporting } = useExport();
+  const container = useRef<HTMLDivElement>(null);
 
   // Get aggregated sales metrics
   const totalSalesMetrics = getTotalSalesMetrics();
@@ -573,6 +577,29 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
     );
   }
 
+  const capture = async () => {
+    try {
+      if (!container.current) {
+        console.error("Container ref is not available");
+        alert("Unable to capture: Dashboard container is not available");
+        return;
+      }
+
+      await exportDashboard(container.current);
+    } catch (error) {
+      console.error("Export failed:", error);
+
+      let errorMessage = "Dashboard export failed. ";
+      if (error instanceof Error) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += "Unknown error occurred.";
+      }
+
+      alert(errorMessage + " Please check the console for more details.");
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -582,6 +609,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
         overflow: "auto",
         p: 3,
       }}
+      ref={container}
     >
       {/* Header */}
       <Box sx={{ mb: 4 }}>
