@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getSimulations, deleteSimulation } from "@/app/_actions/createSim";
+
+import { getSimulations,deleteSimulation,} from "@/app/_actions/createSim";
+
 import { getCurrentUser } from "@/app/functions/jwt";
 import CreateSim from "./_components/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";

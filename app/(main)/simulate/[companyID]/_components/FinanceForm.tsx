@@ -19,14 +19,8 @@ import {
   useFinanceForm,
 } from "@/app/context/FormContext";
 import InfoCard from "@/app/components/InfoCard";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 const FinanceForm = () => {
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-    }).format(value);
-
   const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
   const { data, updateData, setError, updateFinanceBudgetImpact } =

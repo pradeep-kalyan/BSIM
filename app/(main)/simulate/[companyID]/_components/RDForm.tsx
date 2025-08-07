@@ -10,9 +10,8 @@ import {
   useCompanyForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import formatCurrency from "@/app/functions/formatCurrency";
 
-const formatCurrency = (val: number) =>
-  `₹${val.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();

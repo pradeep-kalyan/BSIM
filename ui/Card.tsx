@@ -19,6 +19,12 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   const isNegative = typeof change === "number" && change < 0;
   const cardHeight =
     size === "large" ? "h-48" : size === "small" ? "h-32" : "h-40";
+const formatIndianNumber = (value: number): string => {
+  if (value >= 1_00_00_000) return (value / 1_00_00_000).toFixed(1) + "Cr";
+  if (value >= 1_00_000) return (value / 1_00_000).toFixed(1) + "L";
+  if (value >= 1_000) return (value / 1_000).toFixed(1) + "K";
+  return value.toString();
+};
 
   return (
     <div
@@ -43,19 +49,17 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
               {subtitle && <p className="text-xs opacity-70">{subtitle}</p>}
             </div>
             {Icon && (
-              <div className="p-3 rounded-lg bg-white/20 backdrop-blur-sm">
                 <Icon size={size === "large" ? 28 : 20} />
-              </div>
             )}
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
             <div
               className={`font-bold ${
-                size === "large" ? "text-4xl" : "text-3xl"
+                size === "large" ? "text-2xl" : "text-2xl"
               } mb-2`}
             >
-              {typeof value === "number" ? value.toLocaleString() : value}
+              {typeof value === "number" ? formatIndianNumber(value) : value}
             </div>
             {typeof change === "number" && (
               <div

@@ -10,12 +10,12 @@ import {
   Square,
   Edit,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState ,useEffect } from "react";
 import InfoCard from "@/app/components/InfoCard";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 // Data types
 interface Product {
   id: string;
@@ -187,13 +187,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
     }
   };
 
-  // UI ONLY HELPERS
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-In", {
-      style: "currency",
-      currency: "INR",
-    }).format(value);
 
   const getStatusColor = (status: string) => {
     switch (status) {
