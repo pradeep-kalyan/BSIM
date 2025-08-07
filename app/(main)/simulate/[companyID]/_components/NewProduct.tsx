@@ -39,9 +39,9 @@ export default function ProductFormPage({
   const [product, setProduct] = useState<Product>(
     mode === "edit" && initialProduct
       ? {
-          ...emptyProduct,
-          ...initialProduct,
-        }
+        ...emptyProduct,
+        ...initialProduct,
+      }
       : emptyProduct
   );
   const [errors, setErrors] = useState<Partial<Record<keyof Product, string>>>(

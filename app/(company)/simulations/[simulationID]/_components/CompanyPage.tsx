@@ -64,9 +64,13 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     setInitialLoad(false);
   }, [simulationID]);
 
-  const { setSimId } = useSimulation();
+  const { setSimId, simId } = useSimulation();
 
   const didInit = useRef(false);
+
+  const handleViewSimulations = () => {
+    router.push(`/simulations/`);
+  }
 
   useEffect(() => {
     if (!simulationID || didInit.current) return;
@@ -112,8 +116,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     activeTab === "owned"
       ? filterAndSort(ownedCompanies)
       : activeTab === "shared"
-      ? filterAndSort(accessibleCompanies)
-      : filterAndSort(allCompanies);
+        ? filterAndSort(accessibleCompanies)
+        : filterAndSort(allCompanies);
 
   if (initialLoad) {
     return (
@@ -135,11 +139,10 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === tab
-                  ? "bg-blue-600"
-                  : "bg-slate-700 hover:bg-slate-600"
-              }`}
+              className={`px-4 py-2 rounded-md ${activeTab === tab
+                ? "bg-blue-600"
+                : "bg-slate-700 hover:bg-slate-600"
+                }`}
             >
               {tab === "owned" ? "Owned" : tab === "all" ? "All" : "Shared"}
             </button>
@@ -161,31 +164,36 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
       )}
 
       {/* Company Counter */}
-      <div className="mb-6 flex  text-slate-400 text-sm">
-        Showing {visibleCompanies.length} of {allCompanies.length} total
-        companies.
-      </div>
-      {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
-        <div className="absolute top-4 right-4 flex gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowForm((prev) => !prev)}
-            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-          >
-            {showForm ? "View Companies" : "Create Company"}
-          </motion.button>
+      <div className="absolute top-4 right-4 flex gap-2">
+        <button
+          onClick={handleViewSimulations}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md hover:scale-105 transition-transform duration-200"
+        >
+          View Simulations
+        </button>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push(`/simulations/${simulationID}/compare`)}
-            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-          >
-            Compare Companies
-          </motion.button>
-        </div>
-      )}
+        {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
+          <>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowForm((prev) => !prev)}
+              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+            >
+              {showForm ? "View Companies" : "Create Company"}
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push(`/simulations/${simulationID}/compare`)}
+              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+            >
+              Compare Companies
+            </motion.button>
+          </>
+        )}
+      </div>
 
       {/* Main Section */}
       <AnimatePresence mode="wait">
@@ -232,8 +240,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
               {activeTab === "owned"
                 ? "No owned companies yet."
                 : activeTab === "shared"
-                ? "No shared companies yet."
-                : "No companies available."}
+                  ? "No shared companies yet."
+                  : "No companies available."}
             </p>
 
             {activeTab === "owned" && (

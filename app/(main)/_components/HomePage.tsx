@@ -278,7 +278,7 @@ const getPercentChange = (current: number, prev: number) => {
 };
 
 const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
-  const { setComId, setPeriod } = useSimulation();
+  const { setComId, setPeriod, simId } = useSimulation();
   const router = useRouter();
 
   // Helper function to create current period data from company object
@@ -343,17 +343,17 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const finForPeriod =
     isCurrentPeriod && data.finance_decision
       ? {
-          period: selectedPeriod,
-          total_revenue: data.finance_decision.total_revenue || 0,
-          net_profit: data.finance_decision.net_profit || 0,
-          cash_balance:
-            data.finance_decision.cash_balance ||
-            data?.company?.cash_balance ||
-            0,
-          operating_costs: data.finance_decision.operating_costs || 0,
-          roi: data.finance_decision.roi || 0,
-          burn_rate: data.finance_decision.burn_rate || 0,
-        }
+        period: selectedPeriod,
+        total_revenue: data.finance_decision.total_revenue || 0,
+        net_profit: data.finance_decision.net_profit || 0,
+        cash_balance:
+          data.finance_decision.cash_balance ||
+          data?.company?.cash_balance ||
+          0,
+        operating_costs: data.finance_decision.operating_costs || 0,
+        roi: data.finance_decision.roi || 0,
+        burn_rate: data.finance_decision.burn_rate || 0,
+      }
       : data.financialHistory?.find((f) => +f.period === +selectedPeriod) || {};
 
   const finForPeriodPrev =
@@ -363,9 +363,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   // Product performance - include current period products
   const productPerformance = isCurrentPeriod
     ? data.productPerformance?.filter((p) => +p.period === +selectedPeriod) ||
-      []
+    []
     : data.productPerformance?.filter((p) => +p.period === +selectedPeriod) ||
-      [];
+    [];
 
   const productPerformancePrev =
     data.productPerformance?.filter(
@@ -376,125 +376,125 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const hrMetrics =
     isCurrentPeriod && data.hr_decision
       ? [
-          {
-            period: selectedPeriod,
-            totalBudget: data.hr_decision.total_budget || 0,
-            total_budget: data.hr_decision.total_budget || 0,
-            employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
-            employee_satisfaction: data.hr_decision.employee_satisfaction || 0,
-            totalEmployees:
+        {
+          period: selectedPeriod,
+          totalBudget: data.hr_decision.total_budget || 0,
+          total_budget: data.hr_decision.total_budget || 0,
+          employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
+          employee_satisfaction: data.hr_decision.employee_satisfaction || 0,
+          totalEmployees:
+            data.hr_decision.total_employee_count ||
+            data.hr_decision.roles?.reduce(
+              (sum: number, role: HRRole) => sum + (role.head_count || 0),
+              0
+            ) ||
+            0,
+          total_employee_count:
+            data.hr_decision.total_employee_count ||
+            data.hr_decision.roles?.reduce(
+              (sum: number, role: HRRole) => sum + (role.head_count || 0),
+              0
+            ) ||
+            0,
+          // Calculate newHires as difference from previous period
+          newHires: (() => {
+            const currentTotal =
               data.hr_decision.total_employee_count ||
               data.hr_decision.roles?.reduce(
                 (sum: number, role: HRRole) => sum + (role.head_count || 0),
                 0
               ) ||
-              0,
-            total_employee_count:
-              data.hr_decision.total_employee_count ||
-              data.hr_decision.roles?.reduce(
+              0;
+            const prevPeriodHR = data.hrMetrics?.find(
+              (h) => +h.period === +(selectedPeriod - 1)
+            );
+
+            type PrevHRData = {
+              totalEmployees?: number;
+              total_employee_count?: number;
+              employees?: number;
+              roles?: HRRole[];
+            };
+
+            const prevHRTyped = prevPeriodHR as PrevHRData;
+            const prevTotal =
+              prevHRTyped?.totalEmployees ??
+              prevHRTyped?.total_employee_count ??
+              prevHRTyped?.employees ??
+              prevHRTyped?.roles?.reduce(
                 (sum: number, role: HRRole) => sum + (role.head_count || 0),
                 0
-              ) ||
-              0,
-            // Calculate newHires as difference from previous period
-            newHires: (() => {
+              ) ??
+              0;
+            return Math.max(0, currentTotal - prevTotal);
+          })(),
+          roles: data.hr_decision.roles || [],
+        },
+      ]
+      : data.hrMetrics
+        ?.filter((h) => +h.period === +selectedPeriod)
+        .map((metric) => ({
+          ...metric,
+          // Ensure newHires is calculated for historical periods if not present
+          newHires:
+            metric.newHires ??
+            (() => {
               const currentTotal =
-                data.hr_decision.total_employee_count ||
-                data.hr_decision.roles?.reduce(
-                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
-                  0
-                ) ||
-                0;
-              const prevPeriodHR = data.hrMetrics?.find(
-                (h) => +h.period === +(selectedPeriod - 1)
-              );
-
-              type PrevHRData = {
-                totalEmployees?: number;
-                total_employee_count?: number;
-                employees?: number;
-                roles?: HRRole[];
-              };
-
-              const prevHRTyped = prevPeriodHR as PrevHRData;
-              const prevTotal =
-                prevHRTyped?.totalEmployees ??
-                prevHRTyped?.total_employee_count ??
-                prevHRTyped?.employees ??
-                prevHRTyped?.roles?.reduce(
+                metric.totalEmployees ??
+                metric.total_employee_count ??
+                metric.employees ??
+                metric.roles?.reduce(
                   (sum: number, role: HRRole) => sum + (role.head_count || 0),
                   0
                 ) ??
                 0;
+
+              const prevMetric = data.hrMetrics?.find(
+                (h) => +h.period === +(selectedPeriod - 1)
+              );
+              const prevTotal =
+                prevMetric?.totalEmployees ??
+                prevMetric?.total_employee_count ??
+                prevMetric?.employees ??
+                prevMetric?.roles?.reduce(
+                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                  0
+                ) ??
+                0;
+
               return Math.max(0, currentTotal - prevTotal);
             })(),
-            roles: data.hr_decision.roles || [],
-          },
-        ]
-      : data.hrMetrics
-          ?.filter((h) => +h.period === +selectedPeriod)
-          .map((metric) => ({
-            ...metric,
-            // Ensure newHires is calculated for historical periods if not present
-            newHires:
-              metric.newHires ??
-              (() => {
-                const currentTotal =
-                  metric.totalEmployees ??
-                  metric.total_employee_count ??
-                  metric.employees ??
-                  metric.roles?.reduce(
-                    (sum: number, role: HRRole) => sum + (role.head_count || 0),
-                    0
-                  ) ??
-                  0;
-
-                const prevMetric = data.hrMetrics?.find(
-                  (h) => +h.period === +(selectedPeriod - 1)
-                );
-                const prevTotal =
-                  prevMetric?.totalEmployees ??
-                  prevMetric?.total_employee_count ??
-                  prevMetric?.employees ??
-                  prevMetric?.roles?.reduce(
-                    (sum: number, role: HRRole) => sum + (role.head_count || 0),
-                    0
-                  ) ??
-                  0;
-
-                return Math.max(0, currentTotal - prevTotal);
-              })(),
-          })) || [
-          { department: "No Data", employees: 0, satisfaction: 0, newHires: 0 },
-        ];
+        })) || [
+        { department: "No Data", employees: 0, satisfaction: 0, newHires: 0 },
+      ];
 
   // Production data - use current decision for current period
   const productionData =
     isCurrentPeriod && data.production_decision
       ? [
-          {
-            period: selectedPeriod,
-            month: "Current",
-            produced: data.production_decision.units_to_produce || 0,
-            defects: Math.round(
-              ((data.production_decision.units_to_produce || 0) *
-                (data.production_decision.defect_rate || 0)) /
+        {
+          period: selectedPeriod,
+          month: "Current",
+          produced: data.production_decision.units_to_produce || 0,
+          defects: Math.round(
+            ((data.production_decision.units_to_produce || 0) *
+              (data.production_decision.defect_rate || 0)) /
+            100
+          ),
+          efficiency:
+            (data.production_decision.production_capacity ?? 0) > 0
+              ? Math.round(
+                ((data.production_decision.units_to_produce || 0) /
+                  (data.production_decision.production_capacity ?? 1)) *
                 100
-            ),
-            efficiency:
-              (data.production_decision.production_capacity ?? 0) > 0
-                ? Math.round(
-                    ((data.production_decision.units_to_produce || 0) /
-                      (data.production_decision.production_capacity ?? 1)) *
-                      100
-                  )
-                : 0,
-            budget: data.production_decision.budget || 0,
-          },
-        ]
+              )
+              : 0,
+          budget: data.production_decision.budget || 0,
+        },
+      ]
       : data.productionData?.filter((d) => +d.period === +selectedPeriod) || [
-          { month: "Current", produced: 0, defects: 0, efficiency: 0 },
-        ];
+        { month: "Current", produced: 0, defects: 0, efficiency: 0 },
+      ];
 
   // Get period-specific decisions from arrays when available
   const hr_decision = isCurrentPeriod
@@ -560,9 +560,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       color: "#EF4444",
       percentage: totalDeptBudget
         ? 100 -
-          (Math.round((rd_budget / totalDeptBudget) * 100) +
-            Math.round((production_budget / totalDeptBudget) * 100) +
-            Math.round((marketing_budget / totalDeptBudget) * 100))
+        (Math.round((rd_budget / totalDeptBudget) * 100) +
+          Math.round((production_budget / totalDeptBudget) * 100) +
+          Math.round((marketing_budget / totalDeptBudget) * 100))
         : 0,
     },
   ];
@@ -589,16 +589,16 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       );
       return periodData
         ? {
-            ...periodData,
-            revenue: periodData.total_revenue || periodData.revenue || 0,
-            profit: periodData.net_profit || periodData.profit || 0,
-          }
+          ...periodData,
+          revenue: periodData.total_revenue || periodData.revenue || 0,
+          profit: periodData.net_profit || periodData.profit || 0,
+        }
         : {
-            period,
-            revenue: 0,
-            profit: 0,
-            total_revenue: 0,
-          };
+          period,
+          revenue: 0,
+          profit: 0,
+          total_revenue: 0,
+        };
     });
 
     return series;
@@ -646,13 +646,13 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     hrMetrics: hrMetrics.length
       ? hrMetrics
       : [
-          {
-            department: "No Data",
-            employees: 0,
-            satisfaction: 0,
-            newHires: 0,
-          },
-        ],
+        {
+          department: "No Data",
+          employees: 0,
+          satisfaction: 0,
+          newHires: 0,
+        },
+      ],
     productionData: productionData.length
       ? productionData
       : [{ month: "Current", produced: 0, defects: 0, efficiency: 0 }],
@@ -691,6 +691,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedPeriod(Number(e.target.value));
   };
+  
+  const handleViewCompany = useCallback(() => {
+    router.push(`/simulations/${simId}`);
+  }, [router, simId]);
 
   // Simulate button
   const handleSimulate = useCallback(() => {
@@ -751,9 +755,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     0;
 
   const newHires = (() => {
-    // Debug logging
     
-
     // First, check if newHires is already calculated in thisHr (for current period)
     if (thisHrTyped?.newHires !== undefined && thisHrTyped.newHires !== null) {
       return thisHrTyped.newHires;
@@ -834,11 +836,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
+            {/* Left side: company info */}
             <div className="animate-slide-in-left">
               <h1 className="text-4xl font-bold mb-2">{data?.company?.name}</h1>
-              <p className="text-blue-100 text-lg">
-                Business Simulation Dashboard
-              </p>
+              <p className="text-blue-100 text-lg">Business Simulation Dashboard</p>
               <div className="flex items-center mt-3 space-x-4">
                 <div className="flex items-center space-x-2">
                   <Calendar size={16} />
@@ -861,12 +862,20 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 </div>
               </div>
             </div>
-            <div className="flex justify-between items-center animate-fade-in-up">
+
+            {/* Right side: buttons */}
+            <div className="flex gap-3 items-center animate-fade-in-up">
+              <button
+                onClick={handleViewCompany}
+                className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+              >
+                Back to Companies
+              </button>
               <div className="flex gap-3">
                 <button
                   onClick={handleSimulate}
                   disabled={isSimulating}
-                  className="bg-purple-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   {isSimulating ? "Simulating..." : "Simulate"}
                   <Play size={20} />
@@ -900,9 +909,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           <DashboardCard
             title="Total Revenue"
             value={`₹${((currentRevenue ?? 0) / 10000000).toFixed(2)} Cr`}
-            subtitle={`Period ${selectedPeriod}${
-              isCurrentPeriod ? " (Current)" : ""
-            }`}
+            subtitle={`Period ${selectedPeriod}${isCurrentPeriod ? " (Current)" : ""
+              }`}
             icon={BarChart3}
             change={revenueChange}
             className="stagger-3"
@@ -986,9 +994,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
           <ChartCard
             title="Department Budgets"
-            subtitle={`${
-              isCurrentPeriod ? "Current" : `Period ${selectedPeriod}`
-            } allocation`}
+            subtitle={`${isCurrentPeriod ? "Current" : `Period ${selectedPeriod}`
+              } allocation`}
           >
             <ResponsiveContainer width="100%" height={300}>
               <RechartsPieChart>
@@ -1190,8 +1197,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                             {entry.dataKey === "totalSales"
                               ? `${entry.value} units`
                               : `₹${((entry.value as number) / 1000).toFixed(
-                                  0
-                                )}K`}
+                                0
+                              )}K`}
                           </p>
                         ))}
                       </div>

@@ -9,13 +9,13 @@ import {
   Building2,
 } from "lucide-react";
 import React, { useState } from "react";
-import { Slider } from "@/components/ui/slider";
 import {
   useMarketingForm,
   useCashBalance,
   useCompanyForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { Slider } from "@/components/ui/slider";
 
 const formatCurrency = (val: number) =>
   `₹${val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
