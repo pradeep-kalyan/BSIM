@@ -65,7 +65,7 @@ const CreateCompany = ({ simulationID, onCreated }: Props) => {
     const loadFirstCompany = async () => {
       try {
         const firstCompany = await getFirstCompany(simulationID);
-
+        
         if (firstCompany) {
           setForm((prev) => ({
             ...prev,

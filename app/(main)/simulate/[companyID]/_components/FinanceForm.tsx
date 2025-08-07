@@ -99,28 +99,28 @@ const FinanceForm = () => {
               value={formatCurrency(cashBalance.originalCashBalance)}
               subtitle="MaxOutput per period"
               icon={Factory}
-              size="large"
+              
             />
             <DashboardCard
               title="Projected Cash Balance"
               value={formatCurrency(projectedCashBalance)}
               subtitle="After finance decisions"
               icon={PiggyBank}
-              size="large"
+             
             />
             <DashboardCard
               title="Total Liabilities"
               value={companyData?.total_liabilities.toFixed(0)}
               subtitle="Maximum storage capacity"
               icon={Package}
-              size="large"
+              
             />
             <DashboardCard
               title="Total Assets"
               value={companyData?.total_assets.toFixed(0)}
               subtitle="Value of planned inventory"
               icon={IndianRupee}
-              size="large"
+              
             />
           </section>
 

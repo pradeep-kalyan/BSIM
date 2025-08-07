@@ -189,7 +189,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
 
       await createHRDecisionWithRoles({
         company_id: companyId,
-        period: 0,
+        period: 1,
         is_submitted: true,
         salary_budget: totalSalary,
         training_budget: trainingBudget,
@@ -275,21 +275,19 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                  currentStep === index
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${currentStep === index
                     ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                     : currentStep > index
-                    ? "bg-green-500 text-white"
-                    : "bg-slate-700 text-slate-400"
-                }`}
+                      ? "bg-green-500 text-white"
+                      : "bg-slate-700 text-slate-400"
+                  }`}
               >
                 {currentStep > index ? "✓" : index + 1}
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${
-                    currentStep > index ? "bg-green-500" : "bg-slate-700"
-                  }`}
+                  className={`w-8 h-0.5 mx-2 transition-colors duration-300 ${currentStep > index ? "bg-green-500" : "bg-slate-700"
+                    }`}
                 />
               )}
             </div>
@@ -617,11 +615,10 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             type="button"
             onClick={handlePrevious}
             disabled={currentStep === 0}
-            className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${
-              currentStep === 0
+            className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${currentStep === 0
                 ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
                 : "bg-slate-700 hover:bg-slate-600 text-white"
-            }`}
+              }`}
           >
             <svg
               className="w-4 h-4"
@@ -645,11 +642,10 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                 type="button"
                 onClick={handleNext}
                 disabled={!canProceedToNext()}
-                className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${
-                  canProceedToNext()
+                className={`flex items-center gap-2 px-6 py-3 font-medium rounded transition-all duration-200 ${canProceedToNext()
                     ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25"
                     : "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                }`}
+                  }`}
               >
                 Next
                 <svg
@@ -668,7 +664,8 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
               </button>
             ) : (
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 disabled={loading || !form.name.trim()}
                 className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded shadow-lg shadow-blue-600/25 transition-all duration-200"
               >

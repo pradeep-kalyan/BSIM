@@ -65,9 +65,13 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     setInitialLoad(false);
   }, [simulationID]);
 
-  const { setSimId } = useSimulation();
+  const { setSimId, simId } = useSimulation();
 
   const didInit = useRef(false);
+
+  const handleViewSimulations = () => {
+    router.push(`/simulations/`);
+  }
 
   useEffect(() => {
     if (!simulationID || didInit.current) return;
@@ -126,8 +130,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     activeTab === "owned"
       ? filterAndSort(ownedCompanies)
       : activeTab === "shared"
-      ? filterAndSort(accessibleCompanies)
-      : filterAndSort(allCompanies);
+        ? filterAndSort(accessibleCompanies)
+        : filterAndSort(allCompanies);
 
   if (initialLoad) {
     return (
@@ -149,11 +153,10 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === tab
-                  ? "bg-blue-600"
-                  : "bg-slate-700 hover:bg-slate-600"
-              }`}
+              className={`px-4 py-2 rounded-md ${activeTab === tab
+                ? "bg-blue-600"
+                : "bg-slate-700 hover:bg-slate-600"
+                }`}
             >
               {tab === "owned" ? "Owned" : tab === "all" ? "All" : "Shared"}
             </button>
@@ -246,8 +249,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
               {activeTab === "owned"
                 ? "No owned companies yet."
                 : activeTab === "shared"
-                ? "No shared companies yet."
-                : "No companies available."}
+                  ? "No shared companies yet."
+                  : "No companies available."}
             </p>
 
             {activeTab === "owned" && (

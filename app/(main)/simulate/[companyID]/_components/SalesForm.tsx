@@ -253,41 +253,33 @@ const Sales = () => {
         </header>
 
         {/* Dashboard Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <DashboardCard
             title="Total Revenue"
             value={`₹${formatNumber(Math.round(totalMetrics.totalRevenue))}`}
             subtitle="Expected sales revenue"
             icon={DollarSign}
-            size="large"
           />
           <DashboardCard
             title="Total Volume"
             value={totalMetrics.totalVolume}
             subtitle="Units to be sold"
             icon={Package}
-            size="large"
           />
           <DashboardCard
             title="Avg Market Share"
             value={`${totalMetrics.avgMarketShare.toFixed(1)}%`}
             subtitle="Average across products"
             icon={TrendingUp}
-            size="large"
+            
           />
-          <DashboardCard
-            title="Avg Customer Satisfaction"
-            value={`${totalMetrics.avgCustomerSatisfaction.toFixed(1)}/10`}
-            subtitle="Average satisfaction score"
-            icon={Users}
-            size="large"
-          />
+          
           <DashboardCard
             title="Total Profit"
             value={`₹${formatNumber(Math.round(totalMetrics.totalProfit))}`}
             subtitle="Revenue minus costs"
             icon={Star}
-            size="large"
+           
           />
         </section>
 

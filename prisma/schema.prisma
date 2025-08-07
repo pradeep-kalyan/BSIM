@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgres"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model user {
@@ -31,7 +32,7 @@ model simulation {
   name           String
   description    String?
   config         String   @default("{}")
-  current_period Int      @default(0)
+  current_period Int      @default(1)
   status         String   @default("active")
   created_by     String
   created_at     DateTime @default(now())

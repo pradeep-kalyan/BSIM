@@ -88,7 +88,7 @@ const RDForm = () => {
                 defaultValue={[data.budget ?? 0]}
                 value={[data.budget ?? 0]}
                 min={0}
-                max={companyData?.cash_balance * 2 || 100000}
+                max={data.budget * 2 || 100000}
                 onValueChange={(val) => handleChange("budget", val[0])}
               />
               {getError("budget") && (
@@ -126,25 +126,6 @@ const RDForm = () => {
               {getError("time_to_market") && (
                 <p className="text-rose-400 text-xs mt-1">
                   {getError("time_to_market")}
-                </p>
-              )}
-            </div>
-
-            {/* Total Development Cost Slider */}
-            <div>
-              <Slider
-                label="Total Development Cost (₹)"
-                defaultValue={[data.total_development ?? 0]}
-                value={[data.total_development ?? 0]}
-                min={0}
-                max={companyData?.cash_balance * 3 || 150000}
-                onValueChange={(val) =>
-                  handleChange("total_development", val[0])
-                }
-              />
-              {getError("total_development") && (
-                <p className="text-rose-400 text-xs mt-1">
-                  {getError("total_development")}
                 </p>
               )}
             </div>

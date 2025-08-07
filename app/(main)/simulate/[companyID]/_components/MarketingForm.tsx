@@ -9,14 +9,14 @@ import {
   Building2,
 } from "lucide-react";
 import React, { useState } from "react";
-import { Slider } from "@/components/ui/slider";
 import {
   useMarketingForm,
   useCashBalance,
   useCompanyForm,
 } from "@/app/context/FormContext";
-import { useSimulation } from "@/app/context/SimulationContext";
 import formatCurrency from "@/app/functions/formatCurrency";
+import { useSimulation } from "@/app/context/SimulationContext";
+import { Slider } from "@/components/ui/slider";
 
 
 const percent = (part: number, total: number) =>
@@ -175,7 +175,7 @@ const MarketingForm = () => {
                 </h4>
                 <Slider
                   className="w-[200px]"
-                  label={`₹${marketingData.budget.toLocaleString()}`}
+                  label={`${formatCurrency(marketingData.budget)}`}
                   value={[marketingData.budget]}
                   min={0}
                   max={Math.max(100000, marketingData.budget * 2)}
@@ -192,7 +192,7 @@ const MarketingForm = () => {
                 </h4>
                 <Slider
                   className="w-[200px]"
-                  label={`₹${marketingData.online.toLocaleString()} (${percent(
+                  label={`${formatCurrency(marketingData.online)} (${percent(
                     marketingData.online,
                     marketingData.budget
                   )})`}
@@ -212,7 +212,7 @@ const MarketingForm = () => {
                 </h4>
                 <Slider
                   className="w-[200px]"
-                  label={`₹${marketingData.offline.toLocaleString()} (${percent(
+                  label={`${formatCurrency(marketingData.offline)} (${percent(
                     marketingData.offline,
                     marketingData.budget
                   )})`}

@@ -84,7 +84,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
         production_capacity: productData.production_capacity || 2000,
         development_cost: productData.development_cost || 0,
         marketing_budget: productData.marketing_budget || 0,
-        status: "development", // New products start in development
+        status: "active",
         launch_period: undefined,
         discontinue_period: undefined,
       };

@@ -100,7 +100,7 @@ export async function getCompaniesBySimulation(simulationId: string) {
   }
 }
 
-// Get first comapany
+// Get first company
 export async function getFirstCompany(simulationId: string) {
   const companies = await getCompaniesBySimulation(simulationId);
   return companies.length > 0 ? companies[0] : null;

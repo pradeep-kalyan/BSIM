@@ -56,7 +56,7 @@ const formatIndianNumber = (value: number): string => {
           <div className="flex-1 flex flex-col justify-center">
             <div
               className={`font-bold ${
-                size === "large" ? "text-3xl" : "text-3xl"
+                size === "large" ? "text-2xl" : "text-2xl"
               } mb-2`}
             >
               {typeof value === "number" ? formatIndianNumber(value) : value}

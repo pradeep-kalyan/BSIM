@@ -125,44 +125,34 @@ const ProductionForm = () => {
           </span>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <DashboardCard
             title="Production Capacity"
             value={frozenData.production_capacity}
-            subtitle="Maximum units producible per period"
+            subtitle="Max units produce per period"
             icon={Factory}
-            size="large"
           />
           <DashboardCard
             title="Planned Units"
             value={frozenData.units_to_produce}
-            subtitle="Units scheduled for production"
+            subtitle="Scheduled for production"
             icon={Package}
-            size="large"
           />
           <DashboardCard
             title="Storage Capacity"
             value={frozenData.storage_capacity}
             subtitle="Maximum storage capacity"
             icon={Warehouse}
-            size="large"
           />
           <DashboardCard
             title="Inventory Value"
             value={`₹${formatNumber(
               Math.round(frozenData.units_to_produce * frozenData.cost_per_unit)
             )}`}
-            subtitle="Value of planned inventory"
+            subtitle="planned inventory"
             icon={IndianRupee}
-            size="large"
           />
-          <DashboardCard
-            title="Defect Rate"
-            value={`${frozenData.defect_rate}%`}
-            subtitle="Expected defect percentage"
-            icon={AlertTriangle}
-            size="large"
-          />
+         
         </section>
 
         <div className="bg-slate-800/50 shadow-md rounded-2xl p-6 border border-slate-700">
