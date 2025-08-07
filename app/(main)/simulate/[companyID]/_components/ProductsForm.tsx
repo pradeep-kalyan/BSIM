@@ -10,8 +10,8 @@ import {
   Square,
   Edit,
 } from "lucide-react";
-import React, { useState } from "react";
-import DashboardCard from "@/ui/Card";
+import React, { useState ,useEffect } from "react";
+import InfoCard from "@/app/components/InfoCard";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
@@ -218,86 +218,80 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
 
   if (!companyData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-800/50 shadow-md flex items-center justify-center">
         <p className="text-slate-300">No company data found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
+    <div className="bg-slate-800/50 shadow-md py-2 px-6">
       <div className="max-w-7xl mx-auto mt-2">
         {/* Header */}
-        <div className="mb-6">
+        <div>
           {error && (
             <div className="mb-4 p-3 bg-red-600/20 border border-red-600 rounded-lg text-red-400">
               {error}
             </div>
           )}
+        </div>
+
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <InfoCard
+            label="Active Products"
+            value={activeProducts}
+            Icon={Package}
+            width="w-full"
+            height="h-full"
+            iconColor="text-emerald-400"
+          />
+          <InfoCard
+            label="In Development"
+            value={developmentProducts}
+            Icon={Lightbulb}
+            width="w-full"
+            height="h-full"
+            iconColor="text-yellow-400"
+          />
+          <InfoCard
+            label="Portfolio Value"
+            value={totalProductValue}
+            isCurrency={true}
+            currencyCode="INR"
+            Icon={IndianRupee}
+            width="w-full"
+            height="h-full"
+            iconColor="text-green-400"
+          />
+          <InfoCard
+            label="Avg Quality"
+            value={parseFloat(avgQualityRating.toFixed(1))}
+            Icon={Star}
+            width="w-full"
+            height="h-full"
+            iconColor="text-yellow-300"
+          />
+        </div>
+
+        {/* Products List */}
+        <div className="bg-slate-800/50 shadow-md rounded-xl p-6 border border-slate-700 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-white">
-                Products Dashboard
-              </h1>
-              <p className="text-slate-400">
-                Period {period} • {companyData.name}
-              </p>
-            </div>
+            <h2 className="flex items-center text-2xl font-bold text-white mb-6">
+              Product Portfolio
+            </h2>
             <button
               onClick={() => {
                 setFormMode("add");
                 setEditProduct(null);
                 setShowProductForm(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mb-2"
             >
               <Plus className="h-4 w-4" />
               New Product
             </button>
           </div>
-        </div>
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <DashboardCard
-            title="Active Products"
-            value={activeProducts.toString()}
-            subtitle="Currently Selling"
-            icon={Package}
-            size="small"
-            gradient={false}
-          />
-          <DashboardCard
-            title="In Development"
-            value={developmentProducts.toString()}
-            subtitle="Under Development"
-            icon={Lightbulb}
-            size="small"
-            gradient={false}
-          />
-          <DashboardCard
-            title="Portfolio Value"
-            value={formatCurrency(totalProductValue)}
-            subtitle="Total Inventory Value"
-            icon={IndianRupee}
-            size="small"
-            gradient={false}
-          />
-          <DashboardCard
-            title="Avg Quality"
-            value={avgQualityRating.toFixed(1)}
-            subtitle="Quality Rating"
-            icon={Star}
-            size="small"
-            gradient={false}
-          />
-        </div>
-
-        {/* Products List */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700 mb-6">
-          <h2 className="text-2xl font-bold text-white mb-6">
-            Product Portfolio
-          </h2>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <Package className="h-16 w-16 text-slate-600 mx-auto mb-4" />
@@ -310,7 +304,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
               {products.map((product) => (
                 <div
                   key={product.id}
-                  className="bg-slate-700/50 rounded-lg p-4 border border-slate-600"
+                  className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg font-semibold text-white">
@@ -381,9 +375,8 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${
-                              (product.sustainability_rating / 10) * 100
-                            }%`,
+                            width: `${(product.sustainability_rating / 10) * 100
+                              }%`,
                           }}
                         />
                       </div>
@@ -463,7 +456,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
               <div className="absolute top-1 right-2">
                 <button
                   onClick={() => setShowProductForm(false)}
-                  className="text-slate-400 bg-slate-800 rounded-full p-1 hover:text-white"
+                  className="text-slate-400 bg-slate-800 rounded-full p-1 hover:text-white p-2"
                   title="Close"
                 >
                   ×
