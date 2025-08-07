@@ -7,6 +7,8 @@ import {
   Check,
   TriangleAlert,
   UserPlus,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { ToastContainer } from "react-toastify";
 import { Slider } from "@/components/ui/slider";
@@ -17,8 +19,8 @@ import {
   useHRRoleManagement,
 } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
-import { useSimulation } from "@/app/context/SimulationContext";
-import { Users, Award, Building2, IndianRupee } from "lucide-react";
+import InfoCard from "@/app/components/InfoCard";
+import { Users, Award, IndianRupee } from "lucide-react";
 import { TooltipWrapper } from "@/components/ui/tooltip";
 
 const HRDashboard = () => {
@@ -36,7 +38,6 @@ const HRDashboard = () => {
 
   const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
     useCashBalance();
-  const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
 
   // State for validation and success feedback
@@ -45,7 +46,6 @@ const HRDashboard = () => {
 
   // Calculate total employee count
   const totalEmployeeCount = getTotalEmployees();
-
 
   const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => {
     const headCount = isNaN(role.current_head_count)
@@ -137,104 +137,81 @@ const HRDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
+    <div className="bg-slate-800/50 shadow-md py-4 px-6">
       <ToastContainer position="top-right" />
 
       <div className="max-w-7xl mx-auto">
         {/* Compact Metrics Dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
-          {/* Company Info */}
-          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
-            <div className="flex items-center gap-2 mb-1">
-              <Building2 className="h-4 w-4 text-blue-400" />
-              <span className="text-sm font-bold text-white">
-                {companyData.name}
-              </span>
-            </div>
-            <p className="text-xs text-slate-400">Period {period}</p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+          <InfoCard
+            label="Total Staff"
+            value={totalEmployeeCount}
+            Icon={Users}
+            iconColor="text-blue-400"
+            isCurrency={false}
+            width="w-full"
+            height="h-30"
+          />
 
-          {/* Total Employees */}
-          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="h-4 w-4 text-blue-400" />
-              <span className="text-lg font-bold text-white">
-                {totalEmployeeCount}
-              </span>
-            </div>
-            <p className="text-xs text-slate-400">Total Staff</p>
-          </div>
+          <InfoCard
+            label="New Hires"
+            value={totalHires}
+            Icon={TrendingUp}
+            iconColor="text-green-400"
+            isCurrency={false}
+            width="w-full"
+            height="h-30"
+            subtext={""}
+          />
 
-          {/* Total Hires */}
-          <div className="bg-green-800/80 rounded-lg p-3 border border-green-600">
-            <div className="flex items-center gap-2 mb-1">
-              <UserPlus className="h-4 w-4 text-green-400" />
-              <span className="text-lg font-bold text-white">
-                +{totalHires}
-              </span>
-            </div>
-            <p className="text-xs text-green-300">New Hires</p>
-          </div>
+          <InfoCard
+            label="Layoffs"
+            value={totalFires}
+            Icon={TrendingDown}
+            iconColor="text-red-400"
+            isCurrency={false}
+            width="w-full"
+            height="h-30"
+            subtext={""}
+          />
 
-          {/* Total Fires */}
-          <div className="bg-red-800/80 rounded-lg p-3 border border-red-600">
-            <div className="flex items-center gap-2 mb-1">
-              <Trash2 className="h-4 w-4 text-red-400" />
-              <span className="text-lg font-bold text-white">
-                -{totalFires}
-              </span>
-            </div>
-            <p className="text-xs text-red-300">Layoffs</p>
-          </div>
+          <InfoCard
+            label="HR Budget"
+            value={totalHRBudget}
+            Icon={IndianRupee}
+            iconColor="text-yellow-400"
+            isCurrency={true}
+            width="w-full"
+            height="h-30"
+          />
 
-          {/* Budget */}
-          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
-            <div className="flex items-center gap-2 mb-1">
-              <IndianRupee className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm font-bold text-white">
-                {formatCurrency(totalHRBudget)}
-              </span>
-            </div>
-            <p className="text-xs text-slate-400">HR Budget</p>
-          </div>
-
-          {/* Satisfaction */}
-          <div className="bg-slate-800/80 rounded-lg p-3 border border-slate-600">
-            <div className="flex items-center gap-2 mb-1">
-              <Award className="h-4 w-4 text-purple-400" />
-              <span className="text-lg font-bold text-white">
-                {isNaN(data.employee_satisfaction)
-                  ? "0"
-                  : data.employee_satisfaction.toFixed(0)}
-                %
-              </span>
-            </div>
-            <p className="text-xs text-slate-400">Satisfaction</p>
-          </div>
+          <InfoCard
+            label="Satisfaction"
+            value={`${
+              isNaN(data.employee_satisfaction)
+                ? 0
+                : parseFloat(data.employee_satisfaction.toFixed(0))
+            }%`}
+            Icon={Award}
+            iconColor="text-purple-400"
+            isCurrency={false}
+            width="w-full"
+            height="h-30"
+            subtext=""
+          />
         </div>
 
-        {/* Budget Alert */}
-
         {/* Compact HR Decision Interface */}
-        <div className="bg-slate-800/90 rounded-xl py-4 px-4 border border-slate-600">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Users className="h-5 w-5 text-blue-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">HR Management</h2>
-              <p className="text-slate-400 text-sm">
-                Period {period} • Workforce Planning
-              </p>
-            </div>
-          </div>
-
+        <div className="bg-slate-800/50 shadow-md rounded-xl py-4 px-4 border border-slate-600">
           {/* Existing Roles Section */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-slate-100">
-                Current Workforce
-              </h3>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-400" />
+                <h3 className="text-lg font-bold text-slate-100">
+                  Current Workforce
+                </h3>
+              </div>
               <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
                 {data.existingRoles.length} Roles
               </span>
@@ -244,7 +221,7 @@ const HRDashboard = () => {
               {data.existingRoles.map((role, index) => (
                 <div
                   key={index}
-                  className="bg-slate-700/60 rounded-lg p-4 border border-slate-600"
+                  className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600"
                 >
                   {/* Role Header */}
                   <div className="flex items-center justify-between mb-3">
@@ -267,7 +244,7 @@ const HRDashboard = () => {
                     {/* Salary Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
-                        label="Salary per employee"
+                        label="Salary per employee (₹/year)"
                         text="Annual salary per employee"
                       />
                       <Slider
@@ -459,7 +436,7 @@ const HRDashboard = () => {
               {/* Training Budget */}
               <div className="bg-slate-700/20 rounded-lg p-4 border border-yellow-500/30">
                 <TooltipWrapper
-                  label="Training Budget (₹/per year)"
+                  label="Training Budget (₹/year)"
                   text="Employee development budget allocation"
                 />
                 <Slider
@@ -480,7 +457,8 @@ const HRDashboard = () => {
               </div>
 
               {/* Employee Satisfaction */}
-              <div className="bg-slate-700/20 rounded-lg p-4 border border-purple-500/30">
+
+              <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Employee Satisfaction"
                   text="Target employee satisfaction percentage"
@@ -543,7 +521,7 @@ const HRDashboard = () => {
             )}
 
             {/* Summary Section */}
-            <div className="bg-slate-700/80 rounded-lg p-4 border border-slate-500">
+            <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
               <h4 className="text-lg font-bold text-white mb-3">
                 Financial Impact Summary
               </h4>

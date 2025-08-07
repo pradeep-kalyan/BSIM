@@ -12,7 +12,6 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import FinanceForm from "./FinanceForm";
-// import HRDashboard from "./HR";
 import MarketingForm from "./MarketingForm";
 import RDForm from "./RDForm";
 import ProductionForm from "./ProductionForm";
@@ -24,10 +23,12 @@ import {
   useForm,
   useCashBalance,
   useSalesForm,
+  useCompanyForm,
 } from "@/app/context/FormContext";
 import { comprehensiveFormSubmission } from "@/app/_actions/comprehensiveFormSubmission";
 import { redirect } from "next/navigation";
 import Sales from "./SalesForm";
+import { useSimulation } from "@/app/context/SimulationContext";
 
 const steps = [
   {
@@ -82,9 +83,10 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
   const { isMobile } = useBreakpoint();
   const { state } = useForm();
   const { projectedCashBalance, budgetImpacts } = useCashBalance();
-
   const { getTotalSalesMetrics } = useSalesForm();
   const salesmetrices = getTotalSalesMetrics();
+  const { data: companyData } = useCompanyForm();
+  const { period } = useSimulation();
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
@@ -183,12 +185,11 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         budget_impacts: budgetImpacts,
       };
 
-      const result = await comprehensiveFormSubmission(companyId, formData);
 
+      const result = await comprehensiveFormSubmission(companyId, formData);
       setIsSubmitting(false);
 
       if (result.success) {
-        // Show success message with product information
         const productCount = formData.product.length;
         const productText = productCount === 1 ? "product" : "products";
 
@@ -428,8 +429,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               isActive
                 ? "bg-blue-500/10 border-l-4 border-blue-500 translate-x-1"
                 : isCompleted
-                ? "bg-green-500/5 border-l-4 border-green-500 hover:translate-x-1"
-                : "border-l-4 border-transparent hover:bg-white/5 hover:translate-x-1",
+                  ? "bg-green-500/5 border-l-4 border-green-500 hover:translate-x-1"
+                  : "border-l-4 border-transparent hover:bg-white/5 hover:translate-x-1",
             ].join(" ");
 
             return (
@@ -442,13 +443,12 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 <div className="flex items-start gap-3 mb-1">
                   {/* Icon Badge */}
                   <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-                      isCompleted
-                        ? "bg-green-500 shadow-md"
-                        : isActive
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isCompleted
+                      ? "bg-green-500 shadow-md"
+                      : isActive
                         ? "bg-blue-500 shadow-md"
                         : "bg-white/10"
-                    }`}
+                      }`}
                   >
                     <Icon
                       size={16}
@@ -459,13 +459,12 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                   {/* Labels */}
                   <div className="flex-1">
                     <h4
-                      className={`text-sm font-medium mb-0.5 ${
-                        isActive
-                          ? "text-white"
-                          : isCompleted
+                      className={`text-sm font-medium mb-0.5 ${isActive
+                        ? "text-white"
+                        : isCompleted
                           ? "text-green-300"
                           : "text-gray-300"
-                      }`}
+                        }`}
                     >
                       {step.label}
                     </h4>
@@ -473,13 +472,12 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                     {/* Description (only show on desktop) */}
                     {!isMobile && (
                       <p
-                        className={`text-xs leading-snug ${
-                          isActive
-                            ? "text-blue-200"
-                            : isCompleted
+                        className={`text-xs leading-snug ${isActive
+                          ? "text-blue-200"
+                          : isCompleted
                             ? "text-green-200"
                             : "text-gray-500"
-                        }`}
+                          }`}
                       >
                         {step.description}
                       </p>
@@ -490,28 +488,26 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 {/* Step Indicator */}
                 <div className="flex items-center ml-12">
                   <div
-                    className={`w-[5px] h-[5px] rounded-full mr-2 ${
-                      isCompleted
-                        ? "bg-green-500"
-                        : isActive
+                    className={`w-[5px] h-[5px] rounded-full mr-2 ${isCompleted
+                      ? "bg-green-500"
+                      : isActive
                         ? "bg-blue-500"
                         : "bg-white/20"
-                    }`}
+                      }`}
                   />
                   <span
-                    className={`text-[0.65rem] ${
-                      isCompleted
-                        ? "text-green-500"
-                        : isActive
+                    className={`text-[0.65rem] ${isCompleted
+                      ? "text-green-500"
+                      : isActive
                         ? "text-blue-300"
                         : "text-gray-500"
-                    }`}
+                      }`}
                   >
                     {isCompleted
                       ? "Completed"
                       : isActive
-                      ? "In Progress"
-                      : "Pending"}
+                        ? "In Progress"
+                        : "Pending"}
                   </span>
                 </div>
               </div>
@@ -551,9 +547,13 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               </div>
             </div>
             <div className="flex-grow" />
+            <div className="flex flex-col justify-end text-white mr-2">
+              <h2 className="text-xl font-bold">{companyData.name}</h2>
+              <span className="text-s flex justify-end text-gray-300">Period {period}</span>
+            </div>
             <a
               href={`/homepage/${companyId}`}
-              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-md no-underline"
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-m font-semibold px-3 py-2 rounded-md no-underline"
             >
               Dashboard
             </a>
@@ -576,11 +576,10 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             <button
               onClick={handleBack}
               disabled={activeStep === 0 || isSubmitting}
-              className={`min-w-[100px] h-10 rounded-xl font-semibold text-sm border-2 transition-all ${
-                activeStep === 0 || isSubmitting
-                  ? "border-white/10 text-gray-500 cursor-not-allowed"
-                  : "border-white/20 text-gray-300 hover:border-white/40 hover:bg-white/5 hover:-translate-y-[1px]"
-              }`}
+              className={`min-w-[100px] h-10 rounded-xl font-semibold text-sm border-2 transition-all ${activeStep === 0 || isSubmitting
+                ? "border-white/10 text-gray-500 cursor-not-allowed"
+                : "border-white/20 text-gray-300 hover:border-white/40 hover:bg-white/5 hover:-translate-y-[1px]"
+                }`}
             >
               Previous
             </button>
@@ -597,17 +596,16 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             <button
               onClick={handleNext}
               disabled={activeStep > steps.length - 1 || isSubmitting}
-              className={`min-w-[100px] h-10 rounded-xl text-white font-bold text-sm transition-all ${
-                isSubmitting
-                  ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-500 via-cyan-400 to-green-400 shadow-md hover:from-blue-700 hover:to-cyan-500 hover:-translate-y-[1px]"
-              }`}
+              className={`min-w-[100px] h-10 rounded-xl text-white font-bold text-sm transition-all ${isSubmitting
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-gradient-to-r from-blue-500 via-cyan-400 to-green-400 shadow-md hover:from-blue-700 hover:to-cyan-500 hover:-translate-y-[1px]"
+                }`}
             >
               {isSubmitting
                 ? "Submitting..."
                 : activeStep === steps.length - 1
-                ? "save & submit"
-                : "Next Step"}
+                  ? "save & submit"
+                  : "Next Step"}
             </button>
           </div>
         </div>

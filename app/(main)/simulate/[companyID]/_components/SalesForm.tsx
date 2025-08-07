@@ -8,16 +8,15 @@ import {
   Package,
   AlertTriangle,
   Check,
+  Users,
 } from "lucide-react";
 import {
   useProductForm,
   useSalesForm,
-  useCompanyForm,
   useCashBalance,
 } from "@/app/context/FormContext";
-import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
-import DashboardCard from "@/ui/Card";
+import InfoCard from "@/app/components/InfoCard";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -29,8 +28,6 @@ const Sales = () => {
     updateData: updateSalesData,
     setError,
   } = useSalesForm();
-  const { data: companyData } = useCompanyForm();
-  const { period } = useSimulation();
   const { projectedCashBalance, updateSalesBudgetImpact } = useCashBalance();
 
   const [validationAlerts, setValidationAlerts] = React.useState<
@@ -239,49 +236,54 @@ const Sales = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 min-h-screen p-6">
-      <div className="max-w-6xl mx-auto py-8">
-        {/* Header */}
-        <header className="mb-10 flex flex-col gap-2">
-          <h1 className="text-4xl font-extrabold text-blue-300">
-            Sales Dashboard
-          </h1>
-          <span className="text-lg text-slate-400 tracking-wide">
-            Period {period} • {companyData?.name}
-          </span>
-        </header>
+    <div className="bg-slate-800/50 shadow-md py-4 px-6">
+      <section className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <InfoCard
+          label="Total Revenue"
+          value={totalMetrics.totalRevenue}
+          isCurrency={true}
+          Icon={DollarSign}
+          width="w-full"
+          height="h-full"
+          iconColor="text-green-400"
+        />
+        <InfoCard
+          label="Total Volume"
+          value={totalMetrics.totalVolume}
+          Icon={Package}
+          width="w-full"
+          height="h-full"
+          iconColor="text-blue-400"
+        />
+        <InfoCard
+          label="Avg Market Share"
+          value={`${parseFloat(totalMetrics.avgMarketShare.toFixed(1))}%`}
+          Icon={TrendingUp}
+          width="w-full"
+          height="h-full"
+          iconColor="text-violet-400"
+        />
+        <InfoCard
+          label="Avg Customer Satisfaction"
+          value={parseFloat(totalMetrics.avgCustomerSatisfaction.toFixed(1))}
+          suffix="/10"
+          Icon={Users}
+          width="w-full"
+          height="h-full"
+          iconColor="text-yellow-300"
+        />
+        <InfoCard
+          label="Total Profit"
+          value={totalMetrics.totalProfit}
+          isCurrency={true}
+          Icon={Star}
+          width="w-full"
+          height="h-full"
+          iconColor="text-green-300"
+        />
+      </section>
 
-        {/* Dashboard Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-          <DashboardCard
-            title="Total Revenue"
-            value={`₹${formatNumber(Math.round(totalMetrics.totalRevenue))}`}
-            subtitle="Expected sales revenue"
-            icon={DollarSign}
-          />
-          <DashboardCard
-            title="Total Volume"
-            value={totalMetrics.totalVolume}
-            subtitle="Units to be sold"
-            icon={Package}
-          />
-          <DashboardCard
-            title="Avg Market Share"
-            value={`${totalMetrics.avgMarketShare.toFixed(1)}%`}
-            subtitle="Average across products"
-            icon={TrendingUp}
-            
-          />
-          
-          <DashboardCard
-            title="Total Profit"
-            value={`₹${formatNumber(Math.round(totalMetrics.totalProfit))}`}
-            subtitle="Revenue minus costs"
-            icon={Star}
-           
-          />
-        </section>
-
+      <div className="max-w-full mx-auto py-4">
         {/* Product Sales Config */}
         {products
           ?.filter((product) => product.id)
@@ -297,7 +299,7 @@ const Sales = () => {
             return (
               <div
                 key={productId}
-                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-8 border border-slate-700 flex justify-between items-center"
+                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 border border-slate-700 flex justify-between items-center"
               >
                 <div className="flex flex-col justify-center items-center">
                   <h2 className="text-2xl font-bold text-white mb-4">
@@ -415,11 +417,9 @@ const Sales = () => {
           })}
 
         {/* Total Revenue Summary */}
-        <div className="mt-6 p-4 bg-slate-800 rounded-lg border border-slate-700">
-          <h3 className="text-lg font-semibold text-blue-300 mb-3">
-            Sales Summary
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+        <h3 className="text-lg font-semibold text-white mb-1">Sales Summary</h3>
+        <div className="mt-2 p-4 bg-slate-800 rounded-lg border border-slate-700">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-m">
             <div>
               <span className="text-slate-400">Total Revenue:</span>
               <p className="text-white font-semibold">
@@ -448,7 +448,7 @@ const Sales = () => {
         </div>
 
         {/* Projected Cash Balance */}
-        <div className="mt-6 text-slate-300">
+        <div className="mt-6 ml-2 text-slate-300 text-m">
           Projected Cash Balance: ₹
           {formatNumber(Math.round(projectedCashBalance))}
         </div>

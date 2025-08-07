@@ -43,17 +43,17 @@ export const exportElementAsImage = async (
   // Set default font styles to prevent html-to-image font errors
   const prevFontFamily = element.style.fontFamily;
   const prevFont = element.style.font;
-  
+
   // Ensure font properties are properly set
   if (!element.style.fontFamily) {
     element.style.fontFamily = "Inter, Arial, sans-serif";
   }
-  
+
   // Remove any undefined font property to prevent html-to-image errors
-  if (!element.style.font || element.style.font === 'undefined') {
-    element.style.removeProperty('font');
+  if (!element.style.font || element.style.font === "undefined") {
+    element.style.removeProperty("font");
   }
-  
+
   // Add capture class for special styling
   element.classList.add("capturing-screenshot");
 
@@ -117,7 +117,6 @@ export const exportElementAsImage = async (
           throw new Error("Invalid PNG data URL generated");
         }
       } catch {
-
         // Fallback to JPEG
         const jpegOptions = {
           ...captureOptions,
@@ -157,7 +156,6 @@ export const exportElementAsImage = async (
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
   } catch (error) {
     console.error("Export failed:", error);
 
@@ -172,16 +170,16 @@ export const exportElementAsImage = async (
   } finally {
     // Remove capture class and restore font styles
     element.classList.remove("capturing-screenshot");
-    
+
     // Restore previous font family
     if (prevFontFamily) {
       element.style.fontFamily = prevFontFamily;
     } else {
       element.style.removeProperty("fontFamily");
     }
-    
+
     // Restore previous font property
-    if (prevFont && prevFont !== 'undefined') {
+    if (prevFont && prevFont !== "undefined") {
       element.style.font = prevFont;
     } else {
       element.style.removeProperty("font");

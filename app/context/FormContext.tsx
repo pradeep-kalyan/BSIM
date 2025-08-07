@@ -290,10 +290,10 @@ export const getDefaultProductData = (): ProductFormData => ({
   production_cost: 0,
   selling_price: 0,
   inventory_level: 0,
-  production_capacity: 2000,
+  production_capacity: 2000, 
   development_cost: 0,
   marketing_budget: 0,
-  status: "active",
+  status: "active", 
 });
 
 export const getDefaultCompanyData = (): CompanyFormData => ({
@@ -1479,11 +1479,6 @@ export function useHRForm() {
       if (newHeadCount > 0) {
         salary_budget += newHeadCount * role.salary_per_head;
       }
-
-      // Calculate recruitment cost (cost to hire new employees)
-
-      // Calculate firing cost (could be severance pay, typically a percentage of salary)
-      // Assuming firing cost is equivalent to one month's salary per fired employee
     });
 
     // Calculate from new roles
