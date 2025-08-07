@@ -5,6 +5,7 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { TooltipWrapper } from "@/components/ui/tooltip"; // adjust path as needed
 
 interface CustomSliderProps
   extends React.ComponentProps<typeof SliderPrimitive.Root> {
@@ -12,10 +13,12 @@ interface CustomSliderProps
   min?: number;
   max?: number;
   onValueChange?: (val: number[]) => void;
+  tooltipText?: string;
 }
 
 function Slider({
   className,
+  tooltipText,
   defaultValue,
   value,
   min: initialMin = 0,
@@ -56,7 +59,13 @@ function Slider({
 
   return (
     <div className="flex flex-col w-full gap-3 text-white">
-      {label && <Label>{label}</Label>}
+      {label && tooltipText && (
+        <TooltipWrapper label={label} text={tooltipText ?? ""} />
+      )}
+      {label && !tooltipText && <Label>{label}</Label>}
+      {!label && tooltipText && (
+        <TooltipWrapper label={label ?? ""} text={tooltipText} />
+      )}
 
       <div className="flex items-center gap-4 w-full">
         <div className="flex flex-col gap-1">

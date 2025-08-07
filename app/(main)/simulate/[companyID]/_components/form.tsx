@@ -80,7 +80,7 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ companyId }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isMobile, isTablet, isDesktop } = useBreakpoint();
+  const { isMobile } = useBreakpoint();
   const { state } = useForm();
   const { projectedCashBalance, budgetImpacts } = useCashBalance();
   const { getTotalSalesMetrics } = useSalesForm();
@@ -184,6 +184,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         projected_balance: projectedCashBalance,
         budget_impacts: budgetImpacts,
       };
+
 
       const result = await comprehensiveFormSubmission(companyId, formData);
       setIsSubmitting(false);

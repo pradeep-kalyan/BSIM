@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
 
 interface HRRole {
@@ -35,7 +35,6 @@ const HRDecisionForm = ({
     0
   );
   const totalBudget = totalSalary + trainingBudget;
-  const [invalidRoles, setInvalidRoles] = useState<boolean[]>([]);
 
   return (
     <div>

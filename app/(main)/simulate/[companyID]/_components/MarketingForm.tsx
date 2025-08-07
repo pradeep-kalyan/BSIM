@@ -1,23 +1,15 @@
 "use client";
 
-import {
-  IndianRupee,
-  Globe,
-  Store,
-  Check,
-  TriangleAlert,
-} from "lucide-react";
+import { IndianRupee, Globe, Store, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
 import {
   useMarketingForm,
   useCashBalance,
-  useCompanyForm,
 } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
-import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
-import InfoCard from "@/app/components/InfoCard"
-
+import InfoCard from "@/app/components/InfoCard";
+import { TooltipWrapper } from "@/components/ui/tooltip";
 
 const percent = (part: number, total: number) =>
   total > 0 ? ((part / total) * 100).toFixed(1) + "%" : "0%";
@@ -25,8 +17,6 @@ const percent = (part: number, total: number) =>
 const MarketingForm = () => {
   const { data: marketingData, updateData } = useMarketingForm();
   const { cashBalance, projectedCashBalance } = useCashBalance();
-  const { data: companyData } = useCompanyForm();
-  const { period } = useSimulation();
 
   const [budgetError, setBudgetError] = useState<string | null>(null);
 
@@ -81,7 +71,6 @@ const MarketingForm = () => {
   return (
     <div className="min-h-screen bg-slate-800/50 shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto">
-
         {/* Compact Metrics Dashboard */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <InfoCard
@@ -92,7 +81,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
           />
@@ -105,7 +93,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
             subtext="100%"
@@ -119,7 +106,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
             subtext={percent(marketingData.online, marketingData.budget)}
@@ -133,7 +119,6 @@ const MarketingForm = () => {
             labelColor="text-white"
             valueColor="text-white"
             isCurrency={true}
-            currencyCode="INR"
             width="w-full"
             height="h-30"
             subtext={percent(marketingData.offline, marketingData.budget)}
@@ -161,9 +146,10 @@ const MarketingForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Total Marketing Budget */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
-                <h4 className="text-sm font-bold text-white mb-3">
-                  Total Marketing Budget
-                </h4>
+                <TooltipWrapper
+                  label="Total Marketing(₹/per year)"
+                  text="Total marketing budget allocation"
+                />
                 <Slider
                   className="w-[200px]"
                   label={`${formatCurrency(marketingData.budget)}`}
@@ -178,9 +164,10 @@ const MarketingForm = () => {
 
               {/* Online Marketing */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
-                <h4 className="text-sm font-bold text-white mb-3">
-                  Online Marketing
-                </h4>
+                <TooltipWrapper
+                  label="Online Marketing(₹/per year)"
+                  text="Digital marketing channels budget"
+                />
                 <Slider
                   className="w-[200px]"
                   label={`${formatCurrency(marketingData.online)} (${percent(
@@ -198,9 +185,10 @@ const MarketingForm = () => {
 
               {/* Offline Marketing */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
-                <h4 className="text-sm font-bold text-white mb-3">
-                  Offline Marketing
-                </h4>
+                <TooltipWrapper
+                  label="Offline Marketing(₹/per year)"
+                  text="Traditional marketing channels budget"
+                />
                 <Slider
                   className="w-[200px]"
                   label={`${marketingData.offline.toLocaleString()} (${percent(
@@ -218,21 +206,6 @@ const MarketingForm = () => {
             </div>
 
             {/* Info Section */}
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-1 bg-blue-500/20 rounded">
-                  <Check className="h-3 w-3 text-blue-400" />
-                </div>
-                <div className="text-sm text-blue-200">
-                  <p className="font-medium mb-1">Dynamic Budget Allocation</p>
-                  <p className="text-blue-300/80">
-                    Adjust individual online/offline amounts to automatically
-                    update total budget, or set total budget to split evenly
-                    between channels.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Financial Impact Summary */}
             <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
@@ -257,10 +230,11 @@ const MarketingForm = () => {
                 <div className="bg-slate-600/40 rounded-lg p-3">
                   <p className="text-slate-300 text-xs mb-1">Remaining Cash</p>
                   <p
-                    className={`text-lg font-bold ${projectedCashBalance < 0
-                      ? "text-red-400"
-                      : "text-emerald-400"
-                      }`}
+                    className={`text-lg font-bold ${
+                      projectedCashBalance < 0
+                        ? "text-red-400"
+                        : "text-emerald-400"
+                    }`}
                   >
                     {formatCurrency(projectedCashBalance)}
                   </p>

@@ -10,7 +10,7 @@ import {
   Square,
   Edit,
 } from "lucide-react";
-import React, { useState ,useEffect } from "react";
+import React, { useState } from "react";
 import InfoCard from "@/app/components/InfoCard";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
@@ -187,7 +187,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
     }
   };
 
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "development":
@@ -258,7 +257,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
             label="Portfolio Value"
             value={totalProductValue}
             isCurrency={true}
-            currencyCode="INR"
             Icon={IndianRupee}
             width="w-full"
             height="h-full"
@@ -375,8 +373,9 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${(product.sustainability_rating / 10) * 100
-                              }%`,
+                            width: `${
+                              (product.sustainability_rating / 10) * 100
+                            }%`,
                           }}
                         />
                       </div>
@@ -456,7 +455,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
               <div className="absolute top-1 right-2">
                 <button
                   onClick={() => setShowProductForm(false)}
-                  className="text-slate-400 bg-slate-800 rounded-full p-1 hover:text-white p-2"
+                  className="text-slate-400 bg-slate-800 rounded-full p-1 hover:text-white"
                   title="Close"
                 >
                   ×
