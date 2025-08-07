@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { getSimulationscompare } from "@/app/_actions/createSim";
 import {
@@ -74,7 +75,7 @@ const ComparePage: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>("revenue");
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("financial");
   const [error, setError] = useState<string | null>(null);
-
+  const router = useRouter();
   // Memoized formatters for better performance
   const formatNumber = useMemo(
     () =>
@@ -85,6 +86,8 @@ const ComparePage: React.FC = () => {
       },
     []
   );
+
+  const { simId } = useSimulation();
 
   const formatCurrency = useMemo(
     () =>
@@ -174,21 +177,12 @@ const ComparePage: React.FC = () => {
     </div>
   );
 
-  // Load companies on mount
-  useEffect(() => {
-    console.log("ComparePage MOUNTED");
-    return () => {
-      console.log("ComparePage UNMOUNTED");
-    };
-  }, []);
-
-  const hasFetched = useRef(false); // survives remounts
+  const hasFetched = useRef(false); 
 
   useEffect(() => {
     if (!simulationId || hasFetched.current) return;
 
-    hasFetched.current = true; // set as soon as effect runs
-    console.log("ComparePage fetching companies");
+    hasFetched.current = true; 
 
     const loadCompanies = async () => {
       try {
@@ -244,6 +238,10 @@ const ComparePage: React.FC = () => {
     }
   };
 
+  const handleViewCompany = useCallback(() => {
+    router.push(`/simulations/${simId}`);
+  }, [router, simId]);
+
   if (!simulationId) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-slate-900">
@@ -263,22 +261,30 @@ const ComparePage: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold">Company Comparison Dashboard</h1>
-          {comparisonStarted && (
+          <div className="flex items-center gap-4">
             <button
-              onClick={handleRefresh}
-              disabled={loading || selectedCompanyIds.length < 2}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
+              onClick={handleViewCompany}
+              className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
             >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-              Refresh
+              Back to Companies
             </button>
-          )}
+            {comparisonStarted && (
+              <button
+                onClick={handleRefresh}
+                disabled={loading || selectedCompanyIds.length < 2}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </button>
+            )}
+          </div>
         </div>
 
         <p className="mb-6 text-gray-400">
-          Simulation N:{" "}
+          Simulation ID:{" "}
           <span className="text-white font-mono">{simulationId}</span>
         </p>
 
@@ -311,11 +317,10 @@ const ComparePage: React.FC = () => {
           <button
             onClick={handleCompareClick}
             disabled={selectedCompanyIds.length < 2 || loading}
-            className={`px-6 py-3 rounded-md font-medium transition-all flex items-center gap-2 ${
-              selectedCompanyIds.length >= 2 && !loading
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:brightness-110 shadow-lg"
-                : "bg-gray-700 text-gray-400 cursor-not-allowed"
-            }`}
+            className={`px-6 py-3 rounded-md font-medium transition-all flex items-center gap-2 ${selectedCompanyIds.length >= 2 && !loading
+              ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:brightness-110 shadow-lg"
+              : "bg-gray-700 text-gray-400 cursor-not-allowed"
+              }`}
           >
             {loading ? (
               <>
@@ -363,11 +368,10 @@ const ComparePage: React.FC = () => {
                     <button
                       key={metric}
                       onClick={() => setSelectedMetric(metric)}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        selectedMetric === metric
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      }`}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedMetric === metric
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        }`}
                     >
                       {metric.charAt(0).toUpperCase() + metric.slice(1)}
                     </button>
@@ -388,11 +392,10 @@ const ComparePage: React.FC = () => {
                   )}
 
                   <div
-                    className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border ${
-                      index === 0
-                        ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20"
-                        : "border-white/10"
-                    } transition-all hover:shadow-lg hover:border-white/20`}
+                    className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border ${index === 0
+                      ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20"
+                      : "border-white/10"
+                      } transition-all hover:shadow-lg hover:border-white/20`}
                   >
                     <div className="flex items-center gap-3 mb-4">
                       <div className="p-2 bg-blue-500/20 rounded-lg">

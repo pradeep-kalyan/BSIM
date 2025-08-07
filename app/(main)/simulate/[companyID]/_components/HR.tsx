@@ -138,12 +138,9 @@ const HRDashboard = () => {
       setBudgetAlert("⚠️ Employee satisfaction must be between 0 and 100");
       return;
     }
-
-    // Check if there's enough cash
-
     setSuccess(true);
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
       <ToastContainer position="top-right" />
@@ -576,11 +573,10 @@ const HRDashboard = () => {
                 <div className="bg-slate-600/40 rounded-lg p-3">
                   <p className="text-slate-300 text-xs mb-1">Cash After HR</p>
                   <p
-                    className={`text-lg font-bold ${
-                      (projectedCashBalance || 0) < 0
+                    className={`text-lg font-bold ${(projectedCashBalance || 0) < 0
                         ? "text-red-400"
                         : "text-emerald-400"
-                    }`}
+                      }`}
                   >
                     {formatCurrency(projectedCashBalance || 0)}
                   </p>
@@ -602,11 +598,10 @@ const HRDashboard = () => {
                   <div className="bg-green-500/10 rounded-lg p-2">
                     <p className="text-xs text-green-300">Net Change</p>
                     <p
-                      className={`text-lg font-bold ${
-                        totalHires - totalFires >= 0
+                      className={`text-lg font-bold ${totalHires - totalFires >= 0
                           ? "text-green-400"
                           : "text-red-400"
-                      }`}
+                        }`}
                     >
                       {totalHires - totalFires >= 0 ? "+" : ""}
                       {totalHires - totalFires}

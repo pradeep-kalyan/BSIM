@@ -694,7 +694,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   
   const handleViewCompany = useCallback(() => {
     router.push(`/simulations/${simId}`);
-  }, [router, comID]);
+  }, [router, simId]);
 
   // Simulate button
   const handleSimulate = useCallback(() => {
@@ -755,18 +755,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     0;
 
   const newHires = (() => {
-    // Debug logging
-    console.log("HR Data Debug:", {
-      selectedPeriod,
-      isCurrentPeriod,
-      thisHr,
-      prevHr,
-      totalEmployees,
-      prevTotalEmployees,
-      thisHrNewHires: thisHrTyped?.newHires,
-      thisHrNewHires2: thisHrTyped?.new_hires,
-    });
-
+    
     // First, check if newHires is already calculated in thisHr (for current period)
     if (thisHrTyped?.newHires !== undefined && thisHrTyped.newHires !== null) {
       return thisHrTyped.newHires;

@@ -94,7 +94,6 @@ export const productionSchema = z
 
     // Ensure units to produce doesn't exceed production capacity
     if (data.units_to_produce > data.production_capacity) {
-      console.log("Adding validation error for units exceeding capacity");
       ctx.addIssue({
         code: "custom",
         message: `Units to produce (${data.units_to_produce}) cannot exceed production capacity (${data.production_capacity})`,
