@@ -349,6 +349,7 @@ const Sales = () => {
                 <div className="flex flex-col justify-center items-center">
                   <Slider
                     label="Sales Volume (Units)"
+                    tooltipText="Number of units you plan to sell for this product. Consider available inventory and market demand when setting this value."
                     value={[pSales.sales_volume || 0]}
                     min={0}
                     max={product.inventory_level || 1000}
@@ -362,6 +363,7 @@ const Sales = () => {
                   />
                   <Slider
                     label="Market Share (%)"
+                    tooltipText="Target percentage of the total market you aim to capture for this product. Higher market share increases sales but may require more marketing investment."
                     value={[pSales.market_share || 0]}
                     min={0}
                     max={100}
@@ -375,6 +377,7 @@ const Sales = () => {
                   />
                   <Slider
                     label="Customer Satisfaction (1-10)"
+                    tooltipText="Target customer satisfaction rating from 1 to 10. Higher satisfaction leads to customer loyalty, repeat purchases, and positive word-of-mouth."
                     value={[pSales.customer_satisfaction || 1]}
                     min={1}
                     max={10}

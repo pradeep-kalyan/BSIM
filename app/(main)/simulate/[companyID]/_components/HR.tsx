@@ -19,6 +19,7 @@ import {
 
 import { useSimulation } from "@/app/context/SimulationContext";
 import { Users, Award, Building2, IndianRupee } from "lucide-react";
+import { TooltipWrapper } from "@/components/ui/tooltip";
 
 const HRDashboard = () => {
   const {
@@ -138,11 +139,9 @@ const HRDashboard = () => {
       setBudgetAlert("⚠️ Employee satisfaction must be between 0 and 100");
       return;
     }
-
-    // Check if there's enough cash
-
     setSuccess(true);
   };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2">
       <ToastContainer position="top-right" />
@@ -273,9 +272,10 @@ const HRDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Salary Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
-                      <h5 className="text-sm font-semibold text-white mb-2">
-                        Salary per Employee
-                      </h5>
+                      <TooltipWrapper
+                        label="Salary per employee"
+                        text="Annual salary per employee for this role. Higher salaries can improve employee satisfaction and retention but increase operating costs."
+                      />
                       <Slider
                         label={`₹${(
                           role.salary_per_head || 0
@@ -302,9 +302,10 @@ const HRDashboard = () => {
 
                     {/* Staffing Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
-                      <h5 className="text-sm font-semibold text-white mb-2">
-                        Staffing Changes
-                      </h5>
+                      <TooltipWrapper
+                        label="Staffing Changes"
+                        text="Net change in headcount for this role. Positive values mean hiring, negative values mean layoffs. Consider skills requirements and costs."
+                      />
                       <Slider
                         label={`Net: ${(role.hires || 0) - (role.fires || 0)}`}
                         value={[(role.hires || 0) - (role.fires || 0)]}
@@ -407,9 +408,10 @@ const HRDashboard = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm text-slate-300 mb-1 block">
-                        Monthly Salary
-                      </label>
+                      <TooltipWrapper
+                        label="Salary (₹/per year)"
+                        text="salary for this new role. Consider market rates, role requirements, and budget constraints when setting compensation."
+                      />
                       <Slider
                         className="w-[200px]"
                         label={`₹${(
@@ -431,9 +433,10 @@ const HRDashboard = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm text-slate-300 mb-1 block">
-                        Positions to Fill
-                      </label>
+                      <TooltipWrapper
+                        label="Headcount"
+                        text="Number of positions to create for this new role. Consider workload requirements and budget impact when deciding headcount."
+                      />
                       <Slider
                         className="w-[200px]"
                         label={`${role.hires || 1} positions`}
@@ -461,13 +464,12 @@ const HRDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Training Budget */}
               <div className="bg-slate-700/20 rounded-lg p-4 border border-yellow-500/30">
-                <h4 className="text-sm font-bold text-white mb-2">
-                  Training & Development
-                </h4>
+                <TooltipWrapper
+                  label="Training Budget (₹/per year)"
+                  text="Budget allocated for employee training and development programs. Higher training budgets improve skills, productivity, and employee retention."
+                />
                 <Slider
-                  label={`Training Budget: ₹${(
-                    data?.training_budget || 0
-                  ).toLocaleString()}`}
+                  label={`₹${(data?.training_budget || 0).toLocaleString()}`}
                   value={[
                     isNaN(data?.training_budget)
                       ? 0
@@ -485,13 +487,12 @@ const HRDashboard = () => {
 
               {/* Employee Satisfaction */}
               <div className="bg-slate-700/20 rounded-lg p-4 border border-purple-500/30">
-                <h4 className="text-sm font-bold text-white mb-2">
-                  Employee Satisfaction
-                </h4>
+                <TooltipWrapper
+                  label="Employee Satisfaction"
+                  text="Target employee satisfaction percentage. Higher satisfaction leads to better productivity, lower turnover, and improved company culture."
+                />
                 <Slider
-                  label={`Target: ${(data?.employee_satisfaction || 70).toFixed(
-                    0
-                  )}%`}
+                  label={`${(data?.employee_satisfaction || 70).toFixed(0)}%`}
                   value={[
                     isNaN(data?.employee_satisfaction)
                       ? 70

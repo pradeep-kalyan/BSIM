@@ -142,6 +142,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Amount (₹)"
+                  tooltipText="Amount of loan to take from financial institutions. Loans provide immediate cash but come with interest obligations and repayment schedules."
                   defaultValue={[data?.loan_amount ?? 0]}
                   value={[data?.loan_amount ?? 0]}
                   min={0}
@@ -154,6 +155,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Equity Issue (₹)"
+                  tooltipText="Amount of new shares to issue to raise capital. Equity funding doesn't require repayment but dilutes ownership percentage."
                   defaultValue={[data?.equity_issue ?? 0]}
                   value={[data?.equity_issue ?? 0]}
                   min={0}
@@ -174,6 +176,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Investment Amount (₹)"
+                  tooltipText="Amount to invest in financial instruments, fixed deposits, or other investment opportunities. Investments can generate returns but tie up cash."
                   defaultValue={[data?.investment_amount ?? 0]}
                   value={[data?.investment_amount ?? 0]}
                   min={0}
@@ -188,6 +191,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Repayment (₹)"
+                  tooltipText="Amount to repay towards existing loans. Regular repayments reduce debt burden and interest expenses but decrease available cash."
                   defaultValue={[data?.repay_loan ?? 0]}
                   value={[data?.repay_loan ?? 0]}
                   min={0}
@@ -200,6 +204,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Dividend Payout (₹)"
+                  tooltipText="Amount to distribute to shareholders as dividends. Dividends reward investors but reduce retained earnings available for business growth."
                   defaultValue={[data?.dividend_payout ?? 0]}
                   value={[data?.dividend_payout ?? 0]}
                   min={0}

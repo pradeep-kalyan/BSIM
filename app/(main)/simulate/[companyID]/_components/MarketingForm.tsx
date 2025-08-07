@@ -4,18 +4,18 @@ import {
   IndianRupee,
   Globe,
   Store,
-  Check,
   TriangleAlert,
   Building2,
 } from "lucide-react";
 import React, { useState } from "react";
-import { Slider } from "@/components/ui/slider";
 import {
   useMarketingForm,
   useCashBalance,
   useCompanyForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { Slider } from "@/components/ui/slider";
+import { TooltipWrapper } from "@/components/ui/tooltip";
 
 const formatCurrency = (val: number) =>
   `₹${val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
@@ -171,9 +171,10 @@ const MarketingForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Total Marketing Budget */}
               <div className="bg-slate-700/40 rounded-lg p-4 border border-slate-600">
-                <h4 className="text-sm font-bold text-white mb-3">
-                  Total Marketing Budget
-                </h4>
+                <TooltipWrapper
+                  label="Total Marketing(₹/per year)"
+                  text="Total marketing budget allocation for this period. Higher budgets can increase brand awareness, customer acquisition, and market share."
+                />
                 <Slider
                   className="w-[200px]"
                   label={`₹${marketingData.budget.toLocaleString()}`}
@@ -188,9 +189,10 @@ const MarketingForm = () => {
 
               {/* Online Marketing */}
               <div className="bg-slate-700/40 rounded-lg p-4 border border-green-500/30">
-                <h4 className="text-sm font-bold text-white mb-3">
-                  Online Marketing
-                </h4>
+                <TooltipWrapper
+                  label="Online Marketing(₹/per year)"
+                  text="Budget allocated to online marketing channels including social media, search ads, email campaigns, and digital advertising."
+                />
                 <Slider
                   className="w-[200px]"
                   label={`₹${marketingData.online.toLocaleString()} (${percent(
@@ -208,9 +210,10 @@ const MarketingForm = () => {
 
               {/* Offline Marketing */}
               <div className="bg-slate-700/40 rounded-lg p-4 border border-purple-500/30">
-                <h4 className="text-sm font-bold text-white mb-3">
-                  Offline Marketing
-                </h4>
+                <TooltipWrapper
+                  label="Offline Marketing(₹/per year)"
+                  text="Budget for traditional marketing channels including print ads, radio, TV commercials, billboards, and event sponsorships."
+                />
                 <Slider
                   className="w-[200px]"
                   label={`₹${marketingData.offline.toLocaleString()} (${percent(
@@ -228,21 +231,6 @@ const MarketingForm = () => {
             </div>
 
             {/* Info Section */}
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-1 bg-blue-500/20 rounded">
-                  <Check className="h-3 w-3 text-blue-400" />
-                </div>
-                <div className="text-sm text-blue-200">
-                  <p className="font-medium mb-1">Dynamic Budget Allocation</p>
-                  <p className="text-blue-300/80">
-                    Adjust individual online/offline amounts to automatically
-                    update total budget, or set total budget to split evenly
-                    between channels.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Financial Impact Summary */}
             <div className="bg-slate-700/80 rounded-lg p-4 border border-slate-500">

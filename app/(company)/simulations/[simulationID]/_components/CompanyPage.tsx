@@ -68,6 +68,10 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
 
   const didInit = useRef(false);
 
+  const handleViewSimulations = () => {
+    router.push(`/simulations/`);
+  };
+
   useEffect(() => {
     if (!simulationID || didInit.current) return;
 
@@ -161,31 +165,38 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
       )}
 
       {/* Company Counter */}
-      <div className="mb-6 flex  text-slate-400 text-sm">
-        Showing {visibleCompanies.length} of {allCompanies.length} total
-        companies.
-      </div>
-      {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
-        <div className="absolute top-4 right-4 flex gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowForm((prev) => !prev)}
-            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-          >
-            {showForm ? "View Companies" : "Create Company"}
-          </motion.button>
+      <div className="absolute top-4 right-4 flex gap-2">
+        <button
+          onClick={handleViewSimulations}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md hover:scale-105 transition-transform duration-200"
+        >
+          View Simulations
+        </button>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => router.push(`/simulations/${simulationID}/compare`)}
-            className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
-          >
-            Compare Companies
-          </motion.button>
-        </div>
-      )}
+        {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
+          <>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowForm((prev) => !prev)}
+              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+            >
+              {showForm ? "View Companies" : "Create Company"}
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() =>
+                router.push(`/simulations/${simulationID}/compare`)
+              }
+              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+            >
+              Compare Companies
+            </motion.button>
+          </>
+        )}
+      </div>
 
       {/* Main Section */}
       <AnimatePresence mode="wait">

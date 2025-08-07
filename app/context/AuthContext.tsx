@@ -1,4 +1,3 @@
-// app/context/AuthContext.tsx
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -67,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Logout failed:", error);
-      // Force logout on client side
       setUser(null);
       router.push("/login");
     }

@@ -11,6 +11,7 @@ import {
   useProductionForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import { TooltipWrapper } from "@/components/ui/tooltip";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -175,6 +176,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Units to Produce"
+                tooltipText="Number of product units to manufacture in this period. Higher production meets demand but increases costs and inventory."
                 defaultValue={[data?.units_to_produce ?? 0]}
                 value={[data?.units_to_produce ?? 0]}
                 min={0}
@@ -194,6 +196,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Cost per Unit (₹)"
+                tooltipText="Manufacturing cost per unit including materials, labor, and overheads. Lower costs increase margins but may affect quality."
                 defaultValue={[data?.cost_per_unit ?? 0]}
                 value={[data?.cost_per_unit ?? 0]}
                 min={0}
@@ -211,6 +214,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Expected Defect Rate (%)"
+                tooltipText="Percentage of products expected to have defects during manufacturing. Lower defect rates improve quality but may require better processes."
                 defaultValue={[data?.defect_rate ?? 0]}
                 value={[data?.defect_rate ?? 0]}
                 min={0}
@@ -228,6 +232,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Production Capacity (Units)"
+                tooltipText="Maximum number of units that can be produced in this period. Higher capacity allows meeting larger demand but increases fixed costs."
                 defaultValue={[data?.production_capacity ?? 0]}
                 value={[data?.production_capacity ?? 0]}
                 min={0}
@@ -247,6 +252,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Storage Capacity (Units)"
+                tooltipText="Maximum number of units that can be stored in inventory. Higher storage capacity prevents stockouts but increases warehousing costs."
                 defaultValue={[data?.storage_capacity ?? 0]}
                 value={[data?.storage_capacity ?? 0]}
                 min={0}
@@ -264,12 +270,11 @@ const ProductionForm = () => {
 
             {/* Read-only Inventory Value */}
             <div>
-              <label
-                htmlFor="inventory_value"
-                className="block text-slate-200 font-semibold mb-1"
-              >
-                Inventory Value (₹)
-              </label>
+              <TooltipWrapper
+                label="Inventory Value (₹)"
+                text="The value of the products currently in stock"
+              />
+
               <input
                 id="inventory_value"
                 name="inventory_value"

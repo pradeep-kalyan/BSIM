@@ -13,5 +13,6 @@ const Page = async ({ params }: { params: Promise<{ companyID: string }> }) => {
 
   return <HomePage data={data} comID={companyID} />;
 };
-
+ 
 export default Page;
+ 
