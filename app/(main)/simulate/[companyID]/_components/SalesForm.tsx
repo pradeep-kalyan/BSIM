@@ -4,19 +4,17 @@ import React from "react";
 import {
   TrendingUp,
   DollarSign,
-  Users,
   Star,
   Package,
   AlertTriangle,
   Check,
+  Users,
 } from "lucide-react";
 import {
   useProductForm,
   useSalesForm,
-  useCompanyForm,
   useCashBalance,
 } from "@/app/context/FormContext";
-import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
 import InfoCard from "@/app/components/InfoCard";
 
@@ -30,8 +28,6 @@ const Sales = () => {
     updateData: updateSalesData,
     setError,
   } = useSalesForm();
-  const { data: companyData } = useCompanyForm();
-  const { period } = useSimulation();
   const { projectedCashBalance, updateSalesBudgetImpact } = useCashBalance();
 
   const [validationAlerts, setValidationAlerts] = React.useState<
@@ -241,7 +237,7 @@ const Sales = () => {
 
   return (
     <div className="bg-slate-800/50 shadow-md py-4 px-6">
-      <section className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <InfoCard
           label="Total Revenue"
           value={totalMetrics.totalRevenue}
@@ -266,15 +262,6 @@ const Sales = () => {
           width="w-full"
           height="h-full"
           iconColor="text-violet-400"
-        />
-        <InfoCard
-          label="Avg Customer Satisfaction"
-          value={parseFloat(totalMetrics.avgCustomerSatisfaction.toFixed(1))}
-          suffix="/10"
-          Icon={Users}
-          width="w-full"
-          height="h-full"
-          iconColor="text-yellow-300"
         />
         <InfoCard
           label="Total Profit"
@@ -346,6 +333,7 @@ const Sales = () => {
                 <div className="flex flex-col justify-center items-center">
                   <Slider
                     label="Sales Volume (Units)"
+                    tooltipText="Units to sell"
                     value={[pSales.sales_volume || 0]}
                     min={0}
                     max={product.inventory_level || 1000}
@@ -359,6 +347,7 @@ const Sales = () => {
                   />
                   <Slider
                     label="Market Share (%)"
+                    tooltipText="Target market percentage"
                     value={[pSales.market_share || 0]}
                     min={0}
                     max={100}
@@ -372,6 +361,7 @@ const Sales = () => {
                   />
                   <Slider
                     label="Customer Satisfaction (1-10)"
+                    tooltipText="Customer satisfaction rating"
                     value={[pSales.customer_satisfaction || 1]}
                     min={1}
                     max={10}
@@ -416,9 +406,7 @@ const Sales = () => {
           })}
 
         {/* Total Revenue Summary */}
-        <h3 className="text-lg font-semibold text-white mb-1">
-          Sales Summary
-        </h3>
+        <h3 className="text-lg font-semibold text-white mb-1">Sales Summary</h3>
         <div className="mt-2 p-4 bg-slate-800 rounded-lg border border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-m">
             <div>

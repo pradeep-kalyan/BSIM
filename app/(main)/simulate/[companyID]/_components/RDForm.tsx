@@ -4,21 +4,12 @@ import React, { useState, useEffect } from "react";
 import { IndianRupee, FlaskConical, Timer, TriangleAlert } from "lucide-react";
 import InfoCard from "@/app/components/InfoCard";
 import { Slider } from "@/components/ui/slider";
-import {
-  useRDForm,
-  useCashBalance,
-  useCompanyForm,
-} from "@/app/context/FormContext";
-import { useSimulation } from "@/app/context/SimulationContext";
+import { useRDForm, useCashBalance } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
-
 
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();
   const { projectedCashBalance, cashBalance } = useCashBalance();
-  const { data: companyData } = useCompanyForm();
-  const { period } = useSimulation();
-
   const [budgetAlert, setBudgetAlert] = useState<string | null>(null);
 
   // Update R&D budget impact dynamically whenever budget or total_development changes
@@ -42,7 +33,6 @@ const RDForm = () => {
 
   return (
     <div className="bg-slate-800/50 shadow-md p-4">
-
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 mx-2">
         <InfoCard
           label="R&D Budget"
@@ -99,7 +89,8 @@ const RDForm = () => {
             {/* R&D Budget Slider */}
             <div>
               <Slider
-                label="R&D Budget (₹)"
+                label="R&D Budget (₹/year)"
+                tooltipText="Total R&D allocation"
                 defaultValue={[data.budget ?? 0]}
                 value={[data.budget ?? 0]}
                 min={0}
@@ -117,6 +108,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Products in Pipeline"
+                tooltipText="Products under development"
                 defaultValue={[data.pip ?? 0]}
                 value={[data.pip ?? 0]}
                 min={0}
@@ -131,7 +123,8 @@ const RDForm = () => {
             {/* Time to Market Slider */}
             <div>
               <Slider
-                label="Time to Market (months)"
+                label="Time to Market (in months)"
+                tooltipText="Development to launch time"
                 defaultValue={[data.time_to_market ?? 0]}
                 value={[data.time_to_market ?? 0]}
                 min={0}
@@ -149,6 +142,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Patents Expected"
+                tooltipText="Intellectual property protection"
                 defaultValue={[data.patented ?? 0]}
                 value={[data.patented ?? 0]}
                 min={0}
@@ -166,6 +160,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Quality Improvements (%)"
+                tooltipText="Product quality enhancement"
                 defaultValue={[data.quality_changes ?? 0]}
                 value={[data.quality_changes ?? 0]}
                 min={0}

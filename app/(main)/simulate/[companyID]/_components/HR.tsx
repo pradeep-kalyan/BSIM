@@ -19,9 +19,9 @@ import {
   useHRRoleManagement,
 } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
-import InfoCard from "@/app/components/InfoCard"
-import { useSimulation } from "@/app/context/SimulationContext";
-import { Users, Award, Building2, IndianRupee } from "lucide-react";
+import InfoCard from "@/app/components/InfoCard";
+import { Users, Award, IndianRupee } from "lucide-react";
+import { TooltipWrapper } from "@/components/ui/tooltip";
 
 const HRDashboard = () => {
   const {
@@ -38,7 +38,6 @@ const HRDashboard = () => {
 
   const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
     useCashBalance();
-  const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
 
   // State for validation and success feedback
@@ -47,7 +46,6 @@ const HRDashboard = () => {
 
   // Calculate total employee count
   const totalEmployeeCount = getTotalEmployees();
-
 
   const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => {
     const headCount = isNaN(role.current_head_count)
@@ -189,11 +187,11 @@ const HRDashboard = () => {
 
           <InfoCard
             label="Satisfaction"
-            value={
-              `${isNaN(data.employee_satisfaction)
+            value={`${
+              isNaN(data.employee_satisfaction)
                 ? 0
-                : parseFloat(data.employee_satisfaction.toFixed(0))}%`
-            }
+                : parseFloat(data.employee_satisfaction.toFixed(0))
+            }%`}
             Icon={Award}
             iconColor="text-purple-400"
             isCurrency={false}
@@ -205,7 +203,6 @@ const HRDashboard = () => {
 
         {/* Compact HR Decision Interface */}
         <div className="bg-slate-800/50 shadow-md rounded-xl py-4 px-4 border border-slate-600">
-
           {/* Existing Roles Section */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
@@ -246,9 +243,10 @@ const HRDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Salary Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
-                      <h5 className="text-sm font-semibold text-white mb-2">
-                        Salary per Employee
-                      </h5>
+                      <TooltipWrapper
+                        label="Salary per employee (₹/year)"
+                        text="Annual salary per employee"
+                      />
                       <Slider
                         label={`₹${(
                           role.salary_per_head || 0
@@ -275,9 +273,10 @@ const HRDashboard = () => {
 
                     {/* Staffing Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
-                      <h5 className="text-sm font-semibold text-white mb-2">
-                        Staffing Changes
-                      </h5>
+                      <TooltipWrapper
+                        label="Staffing Changes"
+                        text="Net headcount change"
+                      />
                       <Slider
                         label={`Net: ${(role.hires || 0) - (role.fires || 0)}`}
                         value={[(role.hires || 0) - (role.fires || 0)]}
@@ -380,9 +379,10 @@ const HRDashboard = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm text-slate-300 mb-1 block">
-                        Monthly Salary
-                      </label>
+                      <TooltipWrapper
+                        label="Salary (₹/per year)"
+                        text="Annual compensation package"
+                      />
                       <Slider
                         className="w-[200px]"
                         label={`${formatCurrency(
@@ -404,9 +404,10 @@ const HRDashboard = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm text-slate-300 mb-1 block">
-                        Positions to Fill
-                      </label>
+                      <TooltipWrapper
+                        label="Headcount"
+                        text="Number of new positions"
+                      />
                       <Slider
                         className="w-[200px]"
                         label={`${role.hires || 1} positions`}
@@ -433,12 +434,13 @@ const HRDashboard = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Training Budget */}
-              <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
-                <h4 className="text-sm font-bold text-white mb-2">
-                  Training & Development
-                </h4>
+              <div className="bg-slate-700/20 rounded-lg p-4 border border-yellow-500/30">
+                <TooltipWrapper
+                  label="Training Budget (₹/year)"
+                  text="Employee development budget allocation"
+                />
                 <Slider
-                  label={`Training Budget: ${formatCurrency(data?.training_budget || 0)}`}
+                  label={`${formatCurrency(data?.training_budget || 0)}`}
                   value={[
                     isNaN(data?.training_budget)
                       ? 0
@@ -455,14 +457,14 @@ const HRDashboard = () => {
               </div>
 
               {/* Employee Satisfaction */}
+
               <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
-                <h4 className="text-sm font-bold text-white mb-2">
-                  Employee Satisfaction
-                </h4>
+                <TooltipWrapper
+                  label="Employee Satisfaction"
+                  text="Target employee satisfaction percentage"
+                />
                 <Slider
-                  label={`Target: ${(data?.employee_satisfaction || 70).toFixed(
-                    0
-                  )}%`}
+                  label={`${(data?.employee_satisfaction || 70).toFixed(0)}%`}
                   value={[
                     isNaN(data?.employee_satisfaction)
                       ? 70
@@ -546,10 +548,11 @@ const HRDashboard = () => {
                 <div className="bg-slate-600/40 rounded-lg p-3">
                   <p className="text-slate-300 text-xs mb-1">Cash After HR</p>
                   <p
-                    className={`text-lg font-bold ${(projectedCashBalance || 0) < 0
-                      ? "text-red-400"
-                      : "text-emerald-400"
-                      }`}
+                    className={`text-lg font-bold ${
+                      (projectedCashBalance || 0) < 0
+                        ? "text-red-400"
+                        : "text-emerald-400"
+                    }`}
                   >
                     {formatCurrency(projectedCashBalance || 0)}
                   </p>
@@ -571,10 +574,11 @@ const HRDashboard = () => {
                   <div className="bg-green-500/10 rounded-lg p-2">
                     <p className="text-xs text-green-300">Net Change</p>
                     <p
-                      className={`text-lg font-bold ${totalHires - totalFires >= 0
-                        ? "text-green-400"
-                        : "text-red-400"
-                        }`}
+                      className={`text-lg font-bold ${
+                        totalHires - totalFires >= 0
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
                     >
                       {totalHires - totalFires >= 0 ? "+" : ""}
                       {totalHires - totalFires}

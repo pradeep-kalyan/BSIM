@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   CheckCircle,
   Users,
@@ -10,6 +10,7 @@ import {
   DollarSign,
   ShoppingCart,
   LoaderCircle,
+  Download,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ import {
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 import formatCurrency from "@/app/functions/formatCurrency";
-import { AlertDescription, Alert } from "@/components/ui/alert";
+import { useExport } from "@/hooks/useExport";
 interface PreviewDashboardProps {
   companyId: string;
   onEditSection?: (section: number) => void;
@@ -46,6 +47,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const { projectedCashBalance } = useCashBalance();
   const [sections, setSections] = useState<SectionSummary[]>([]);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const { exportDashboard, isExporting } = useExport();
 
   // Get form data from context
   const { period } = useSimulation();
@@ -503,6 +506,70 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
     calculateProfitMargin,
   ]);
 
+  const handleExportDashboard = useCallback(async () => {
+    if (!dashboardRef.current) return;
+
+    try {
+      // Temporarily modify styles for full content capture
+      const originalStyle = dashboardRef.current.style.cssText;
+      const originalClass = dashboardRef.current.className;
+
+      // Remove height restrictions and overflow for export
+      dashboardRef.current.style.height = "auto";
+      dashboardRef.current.style.overflow = "visible";
+      dashboardRef.current.style.maxHeight = "none";
+      dashboardRef.current.style.minHeight = "auto";
+      dashboardRef.current.className = originalClass.replace(
+        "h-full overflow-auto",
+        "min-h-full overflow-visible"
+      );
+
+      // Add export-specific styles
+      const exportStyle = document.createElement("style");
+      exportStyle.textContent = `
+        .capturing-screenshot {
+          height: auto !important;
+          overflow: visible !important;
+          max-height: none !important;
+          min-height: auto !important;
+        }
+        .capturing-screenshot * {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+      `;
+      document.head.appendChild(exportStyle);
+
+      // Wait for layout to adjust
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const filename = `business-simulation-dashboard-${period}-${
+        new Date().toISOString().split("T")[0]
+      }`;
+      await exportDashboard(dashboardRef.current, filename);
+
+      // Clean up
+      document.head.removeChild(exportStyle);
+
+      // Restore original styles
+      dashboardRef.current.style.cssText = originalStyle;
+      dashboardRef.current.className = originalClass;
+    } catch (error) {
+      console.error("Export failed:", error);
+      // Restore original styles in case of error
+      if (dashboardRef.current) {
+        dashboardRef.current.style.cssText = "";
+        dashboardRef.current.className =
+          "h-full bg-[rgba(18,20,24,0.95)] text-white overflow-auto p-3";
+      }
+      // Clean up style element if it exists
+      const exportStyle = document.querySelector("style[data-export]");
+      if (exportStyle) {
+        document.head.removeChild(exportStyle);
+      }
+    }
+  }, [exportDashboard, period]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -546,12 +613,37 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
       </div>
     );
   }
-  const allCompleted = sections.every((s) => s.status === "completed");
-  const completedCount = sections.filter(
-    (s) => s.status === "completed"
-  ).length;
+
   return (
-    <div className="h-full bg-[rgba(18,20,24,0.95)] text-white overflow-auto p-3">
+    <div
+      ref={dashboardRef}
+      className="h-full bg-[rgba(18,20,24,0.95)] text-white overflow-auto p-3"
+    >
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">
+            Dashboard Preview
+          </h1>
+          <p className="text-[#bbb] text-sm">
+            Period {period} - Strategic Overview
+          </p>
+        </div>
+
+        {/* Export Button */}
+        <button
+          onClick={handleExportDashboard}
+          disabled={isExporting}
+          className="flex items-center gap-2 bg-[rgba(33,150,243,0.1)] hover:bg-[rgba(33,150,243,0.2)] border border-[rgba(33,150,243,0.3)] hover:border-[rgba(33,150,243,0.5)] rounded-lg px-4 py-2 text-[#64b5f6] hover:text-[#42a5f5] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isExporting ? (
+            <LoaderCircle className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          {isExporting ? "Exporting..." : "Export Dashboard"}
+        </button>
+      </div>
 
       {/* Financial Overview */}
       <div className="mb-4">

@@ -189,24 +189,24 @@ export type FormAction =
   | { type: "UPDATE_PRODUCT"; payload: Partial<ProductFormData> } // For backward compatibility
   | { type: "ADD_PRODUCT"; payload: ProductFormData }
   | {
-    type: "UPDATE_PRODUCT_BY_INDEX";
-    payload: { index: number; product: Partial<ProductFormData> };
-  }
+      type: "UPDATE_PRODUCT_BY_INDEX";
+      payload: { index: number; product: Partial<ProductFormData> };
+    }
   | { type: "REMOVE_PRODUCT"; payload: number } // Remove by index
   | { type: "SET_PRODUCTS"; payload: ProductFormData[] } // Set entire products array
   | { type: "UPDATE_COMPANY"; payload: Partial<CompanyFormData> }
   | { type: "UPDATE_SIMULATION"; payload: Partial<SimulationFormData> }
   | { type: "ADD_EXISTING_ROLE"; payload: ExistingRole }
   | {
-    type: "UPDATE_EXISTING_ROLE";
-    payload: { index: number; role: Partial<ExistingRole> };
-  }
+      type: "UPDATE_EXISTING_ROLE";
+      payload: { index: number; role: Partial<ExistingRole> };
+    }
   | { type: "REMOVE_EXISTING_ROLE"; payload: number }
   | { type: "ADD_NEW_ROLE"; payload: NewRole }
   | {
-    type: "UPDATE_NEW_ROLE";
-    payload: { index: number; role: Partial<NewRole> };
-  }
+      type: "UPDATE_NEW_ROLE";
+      payload: { index: number; role: Partial<NewRole> };
+    }
   | { type: "REMOVE_NEW_ROLE"; payload: number }
   | { type: "CLEAR_ALL_ROLES" }
   | { type: "SET_ORIGINAL_CASH_BALANCE"; payload: number }
@@ -229,9 +229,9 @@ export type FormAction =
   | { type: "RESET_FORM"; payload?: keyof FormState }
   | { type: "RESET_ALL" }
   | {
-    type: "SET_FORM_COMPLETED";
-    payload: { section: string; completed: boolean };
-  }
+      type: "SET_FORM_COMPLETED";
+      payload: { section: string; completed: boolean };
+    }
   | { type: "INITIALIZE_FORMS"; payload: Partial<FormState> }
   | { type: "BULK_UPDATE_FORMS"; payload: Partial<FormState> };
 
@@ -245,7 +245,7 @@ const getDefaultFinanceData = (): FinanceFormData => ({
 });
 
 const getDefaultProductionData = (): ProductionFormData => ({
-  production_capacity: 2000, // matches Zod default
+  production_capacity: 2000,
   inventory_value: 0,
   storage_capacity: 0,
   defect_rate: 0,
@@ -522,8 +522,8 @@ function formReducer(state: FormState, action: FormAction): FormState {
           state.product.length === 0
             ? [{ ...getDefaultProductData(), ...action.payload }]
             : state.product.map((product, index) =>
-              index === 0 ? { ...product, ...action.payload } : product
-            ),
+                index === 0 ? { ...product, ...action.payload } : product
+              ),
         isDirty: true,
       };
 
@@ -2488,7 +2488,8 @@ export function useHRRoleManagement() {
       }
       if (role.fires > role.current_head_count) {
         errors.push(
-          `Existing role ${index + 1
+          `Existing role ${
+            index + 1
           }: Cannot fire more employees than current count`
         );
       }
