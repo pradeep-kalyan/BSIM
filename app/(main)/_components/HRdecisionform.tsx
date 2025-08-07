@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
 
 interface HRRole {
@@ -35,6 +35,7 @@ const HRDecisionForm = ({
     0
   );
   const totalBudget = totalSalary + trainingBudget;
+  const [invalidRoles, setInvalidRoles] = useState<boolean[]>([]);
 
   return (
     <div>
@@ -63,8 +64,13 @@ const HRDecisionForm = ({
               type="text"
               placeholder="Role Name"
               value={role.role_name}
-              onChange={(e) => onRoleChange(index, "role_name", e.target.value)}
-              className="w-full p-2 rounded bg-slate-800 text-white"
+              onChange={(e) => {
+                const input = e.target.value;
+                if (/^[A-Za-z\s]*$/.test(input)) {
+                  onRoleChange(index, "role_name", input);
+                }
+              }}
+              className={`w-full p-2 rounded bg-slate-800 text-white `}
             />
           </div>
 

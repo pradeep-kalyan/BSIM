@@ -11,11 +11,11 @@ import {
   Edit,
 } from "lucide-react";
 import React, { useState } from "react";
-import DashboardCard from "../../../homepage/Card";
+import DashboardCard from "@/ui/Card";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 // Data types
 interface Product {
   id: string;
@@ -187,14 +187,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
     }
   };
 
-  // UI ONLY HELPERS
-
-  const formatCurrency = (val: number): string => {
-    if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
-    if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
-    if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
-    return `₹${val}`;
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {

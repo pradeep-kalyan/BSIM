@@ -79,7 +79,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
   const [employeeSatisfaction, setEmployeeSatisfaction] = useState(0);
   const [accessEmail, setAccessEmail] = useState("");
   const [accessEmails, setAccessEmails] = useState<string[]>([]);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const totalSalary = hrRoles.reduce(
@@ -237,7 +236,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       case 0:
         return form.name.trim() !== "";
       case 1:
-        return hrRoles.some((role) => role.role_name.trim() !== "");
+        return true;
       case 2:
         return true;
       default:

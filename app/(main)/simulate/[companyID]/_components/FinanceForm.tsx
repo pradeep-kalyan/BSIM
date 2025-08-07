@@ -18,16 +18,9 @@ import {
   useCompanyForm,
   useFinanceForm,
 } from "@/app/context/FormContext";
-import DashboardCard from "../../../homepage/Card";
-
+import DashboardCard from "@/ui/Card";
+import formatCurrency from "@/app/functions/formatCurrency";
 const FinanceForm = () => {
-const formatCurrency = (val: number): string => {
-  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
-  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
-  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
-  return `₹${val}`;
-};
-
   const { period } = useSimulation();
   const { data: companyData } = useCompanyForm();
   const { data, updateData, setError, updateFinanceBudgetImpact } =

@@ -16,13 +16,7 @@ import {
   useCompanyForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-
-const formatCurrency = (val: number): string => {
-  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
-  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
-  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
-  return `₹${val}`;
-};
+import formatCurrency from "@/app/functions/formatCurrency";
 
 
 const percent = (part: number, total: number) =>

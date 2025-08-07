@@ -14,7 +14,7 @@ import EditCompanyForm from "../../_components/EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { useRouter } from "next/navigation";
 import { company } from "@prisma/client";
-
+import { getSimulationWithOwnership } from "@/app/_actions/createSim";
 interface ExtendedCompany extends company {
   canAccess?: boolean;
   canEdit?: boolean;
@@ -31,6 +31,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
   const [accessibleCompanies, setAccessibleCompanies] = useState<
     ExtendedCompany[]
   >([]);
+  const [isSimulationOwner, setIsSimulationOwner] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -73,11 +74,23 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
 
     didInit.current = true;
     console.log("rendering CompanyPage");
-    if (setSimId) {
-      setSimId(simulationID);
-    }
 
-    fetchCompanies();
+    const init = async () => {
+      const user = await getCurrentUser();
+      if (!user) return;
+
+      const simulation = await getSimulationWithOwnership(simulationID);
+      setIsSimulationOwner(simulation.isOwner);
+      setCurrentUserId(user.id);
+
+      if (setSimId) {
+        setSimId(simulationID);
+      }
+
+      await fetchCompanies();
+    };
+
+    init();
   }, [simulationID, fetchCompanies, setSimId]);
 
   const handleCreated = async () => {
@@ -167,8 +180,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
         Showing {visibleCompanies.length} of {allCompanies.length} total
         companies.
       </div>
+      <div className="absolute top-4 right-4 flex gap-2">
       {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
-        <div className="absolute top-4 right-4 flex gap-2">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -177,7 +190,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           >
             {showForm ? "View Companies" : "Create Company"}
           </motion.button>
-
+      )}
+        {isSimulationOwner && (
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -186,9 +200,8 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           >
             Compare Companies
           </motion.button>
-        </div>
-      )}
-
+        )}
+      </div>
       {/* Main Section */}
       <AnimatePresence mode="wait">
         {showForm ? (

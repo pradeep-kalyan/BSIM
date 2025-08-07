@@ -1,6 +1,6 @@
 "use client";
 
-import { IndianRupee, Factory, Package, AlertTriangle } from "lucide-react";
+import { IndianRupee, Factory, Package, AlertTriangle,Warehouse } from "lucide-react";
 import React, { useEffect } from "react";
 import DashboardCard from "@/ui/Card";
 import { TriangleAlert } from "lucide-react";
@@ -11,10 +11,9 @@ import {
   useProductionForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
 const ProductionForm = () => {
   const { data, setError, getError, updateData } = useProductionForm();
   const { cashBalance, projectedCashBalance, updateProductionBudgetImpact } =
@@ -145,7 +144,7 @@ const ProductionForm = () => {
             title="Storage Capacity"
             value={frozenData.storage_capacity}
             subtitle="Maximum storage capacity"
-            icon={Package}
+            icon={Warehouse}
             size="large"
           />
           <DashboardCard
@@ -295,8 +294,8 @@ const ProductionForm = () => {
               </div>
               <div className="text-sm space-y-1">
                 <div className="text-slate-300">
-                  Available Cash Balance: ₹
-                  {formatNumber(cashBalance.originalCashBalance ?? 0)}
+                  Available Cash Balance: 
+                  {" "+formatCurrency(cashBalance.originalCashBalance ?? 0)}
                 </div>
                 <div
                   className={`font-semibold ${
@@ -305,8 +304,8 @@ const ProductionForm = () => {
                       : "text-emerald-400"
                   }`}
                 >
-                  Projected Cash Balance: ₹
-                  {formatNumber(Math.round(projectedCashBalance))}
+                  Projected Cash Balance: 
+                  {" "+formatCurrency(Math.round(projectedCashBalance))}
                 </div>
               </div>
             </div>

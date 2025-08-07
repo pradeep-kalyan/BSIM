@@ -10,13 +10,8 @@ import {
   useCompanyForm,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
+import formatCurrency from "@/app/functions/formatCurrency";
 
-const formatCurrency = (val: number): string => {
-  if (val >= 1_00_00_000) return `₹${(val / 1_00_00_000).toFixed(1)}Cr`;
-  if (val >= 1_00_000) return `₹${(val / 1_00_000).toFixed(1)}L`;
-  if (val >= 1_000) return `₹${(val / 1_000).toFixed(1)}K`;
-  return `₹${val}`;
-};
 
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();

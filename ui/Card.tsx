@@ -49,9 +49,7 @@ const formatIndianNumber = (value: number): string => {
               {subtitle && <p className="text-xs opacity-70">{subtitle}</p>}
             </div>
             {Icon && (
-              <div className="p-3 rounded-lg ">
                 <Icon size={size === "large" ? 28 : 20} />
-              </div>
             )}
           </div>
 

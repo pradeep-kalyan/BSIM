@@ -34,7 +34,7 @@ import {
   useCashBalance,
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 interface PreviewDashboardProps {
   companyId: string;
   onEditSection?: (section: number) => void;
@@ -95,17 +95,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
     if (sellingPrice === 0) return 0;
     return ((sellingPrice - productionCost) / sellingPrice) * 100;
   }, [productData]);
-
-  // Helper function to format currency
-  const formatCurrency = (value: number) => {
-    if (value >= 10000000) {
-      return `₹${(value / 10000000).toFixed(2)} Cr`;
-    } else if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(2)} L`;
-    } else {
-      return `₹${value.toFixed(0)}`;
-    }
-  };
 
   // Helper function to determine section status
   const getSectionStatus = useCallback(

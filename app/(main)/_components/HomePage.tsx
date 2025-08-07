@@ -35,7 +35,7 @@ import ChartCard from "@/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import LogoutBtn from "@/app/(auth)/_components/Logout";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 // Tooltip and chart tooltip components (same as before)
 interface TooltipProps {
   active?: boolean;
@@ -248,6 +248,7 @@ interface DashboardData {
   company: {
     id: string;
     name: string;
+    logo_url: string;
     current_period: number;
     cash_balance: number;
     data?: string;
@@ -843,45 +844,66 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <div className="animate-slide-in-left">
-              <h1 className="text-4xl font-bold mb-2">{data?.company?.name}</h1>
-              <p className="text-blue-100 text-lg">
-                Business Simulation Dashboard
-              </p>
-              <div className="flex items-center mt-3 space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Calendar size={16} />
-                  <span className="text-sm">Period:</span>
-                  <select
-                    className="ml-2 px-2 py-1 rounded bg-slate-800 text-white border border-slate-600 focus:outline-none"
-                    value={selectedPeriod}
-                    onChange={handlePeriodChange}
-                  >
-                    {periods.map((p, index) => (
-                      <option key={`period-${p}-${index}`} value={p}>
-                        Period {p}{" "}
-                        {p === data?.company?.current_period ? "(Current)" : ""}
-                      </option>
-                    ))}
-                  </select>
-                  {isCurrentPeriod && (
-                    <span className="current-period-badge">LIVE</span>
-                  )}
+            {/* LEFT: Company name + logo + period */}
+            <div className="flex items-start gap-4 animate-slide-in-left">
+              {/* Logo */}
+              {data?.company?.logo_url && (
+                <div className="w-32 h-32 rounded-full overflow-hidden border border-slate-700 flex items-center justify-center bg-white">
+                  <img
+                    src={data.company.logo_url}
+                    alt="Company Logo"
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              )}
+
+              {/* Company name and description */}
+              <div>
+                <h1 className="text-4xl font-bold mb-2">
+                  {data?.company?.name}
+                </h1>
+                <p className="text-blue-100 text-lg">
+                  Business Simulation Dashboard
+                </p>
+
+                {/* Period selector */}
+                <div className="flex items-center mt-3 space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Calendar size={16} />
+                    <span className="text-sm">Period:</span>
+                    <select
+                      className="ml-2 px-2 py-1 rounded bg-slate-800 text-white border border-slate-600 focus:outline-none"
+                      value={selectedPeriod}
+                      onChange={handlePeriodChange}
+                    >
+                      {periods.map((p, index) => (
+                        <option key={`period-${p}-${index}`} value={p}>
+                          Period {p}{" "}
+                          {p === data?.company?.current_period
+                            ? "(Current)"
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                    {isCurrentPeriod && (
+                      <span className="current-period-badge">LIVE</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="flex justify-between items-center animate-fade-in-up">
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSimulate}
-                  disabled={isSimulating}
-                  className="bg-purple-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  {isSimulating ? "Simulating..." : "Simulate"}
-                  <Play size={20} />
-                </button>
-                <LogoutBtn />
-              </div>
+
+            {/* RIGHT: Buttons */}
+            <div className="flex gap-3 animate-fade-in-up">
+              <button
+                onClick={handleSimulate}
+                disabled={isSimulating}
+                className="bg-purple-600 text-white px-6 py-4 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                {isSimulating ? "Simulating..." : "Simulate"}
+                <Play size={20} />
+              </button>
+              <LogoutBtn />
             </div>
           </div>
         </div>
@@ -892,23 +914,25 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
           <DashboardCard
             title="Cash Balance"
-            value={`₹${(cash_balance / 10000000).toFixed(2)} Cr`}
+            value={formatCurrency(cash_balance)}
             subtitle="Available Funds"
             icon={DollarSign}
             change={cashChange}
             className="stagger-2"
           />
+
           <DashboardCard
             title="Net Worth"
-            value={`₹${(netWorthNow / 10000000).toFixed(2)} Cr`}
+            value={formatCurrency(netWorthNow)}
             subtitle="Assets - Liabilities"
             icon={TrendingUp}
             change={netWorthChange}
             className="stagger-2"
           />
+
           <DashboardCard
             title="Total Revenue"
-            value={`₹${((currentRevenue ?? 0) / 10000000).toFixed(2)} Cr`}
+            value={formatCurrency(currentRevenue ?? 0)}
             subtitle={`Period ${selectedPeriod}${
               isCurrentPeriod ? " (Current)" : ""
             }`}
@@ -916,6 +940,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             change={revenueChange}
             className="stagger-3"
           />
+
           <DashboardCard
             title="Active Products"
             value={activeProducts}

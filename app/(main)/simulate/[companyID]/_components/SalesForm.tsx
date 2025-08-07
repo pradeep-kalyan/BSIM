@@ -18,7 +18,7 @@ import {
 } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
-import DashboardCard from "../../../homepage/Card";
+import DashboardCard from "@/ui/Card";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");

@@ -21,7 +21,7 @@ import {
   FileText,
   Star,
 } from "lucide-react";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 interface Props {
   company: {
     id: string;
@@ -95,14 +95,7 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
     setAccessList((prev) => prev.filter((e) => e !== email));
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+
 
   return (
     <div className="max-w-4xl mx-auto h-[90vh] overflow-y-auto px-4">

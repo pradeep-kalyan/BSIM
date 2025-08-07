@@ -19,7 +19,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 interface ExistingRole {
   role_name: string;
   salary_per_head: number;
@@ -113,11 +113,6 @@ const HRComparisonModal: React.FC<HRComparisonModalProps> = ({
 }) => {
   if (!isOpen || !previousDecision) return null;
 
-  const formatCurrency = (value: number) => {
-    if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
-    if (value >= 100000) return `₹${(value / 100000).toFixed(2)} L`;
-    return `₹${value.toLocaleString()}`;
-  };
 
   const formatChange = (current: number, previous: number) => {
     const change = current - previous;

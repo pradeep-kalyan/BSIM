@@ -2,23 +2,35 @@
 
 import React, { useState } from "react";
 import Inputbox from "@/ui/Input-Box";
-import createSim from "@/app/_actions/createSim"; // import with named import
+import createSim from "@/app/_actions/createSim";
 import DynamicConfigFields from "./DynamicConfigFields";
 import { FlaskConical, Rocket } from "lucide-react";
 
 const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
   const [loading, setLoading] = useState(false);
-  const [newConfigFields, setNewConfigFields] = useState([
-    { key: "", value: "" },
-  ]);
+  const [newConfigFields, setNewConfigFields] = useState([{ key: "", value: "" }]);
+  const [accessEmail, setAccessEmail] = useState("");
+  const [accessEmails, setAccessEmails] = useState<string[]>([]);
+
+  const handleAddEmail = () => {
+    if (accessEmail && !accessEmails.includes(accessEmail)) {
+      setAccessEmails((prev) => [...prev, accessEmail]);
+      setAccessEmail("");
+    }
+  };
+
+  const handleRemoveEmail = (email: string) => {
+    setAccessEmails((prev) => prev.filter((e) => e !== email));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    formData.append("accessEmails", accessEmails.join(","));
 
     setLoading(true);
     await createSim(formData);
     setLoading(false);
-
     onCreated();
   };
 
@@ -46,18 +58,52 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
           name="description"
         />
 
-        <Inputbox
-          label="Grant Access (Email IDs)"
-          type="text"
-          placeholder_text="Enter comma-separated email addresses"
-          id="accessEmails"
-          name="accessEmails"
-        />
+        {/* Access Management */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-300">Grant Access (Email IDs)</label>
+          <div className="flex gap-3">
+            <input
+              type="email"
+              value={accessEmail}
+              onChange={(e) => setAccessEmail(e.target.value)}
+              className="flex-1 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="Enter email to grant access"
+            />
+            <button
+              type="button"
+              onClick={handleAddEmail}
+              disabled={!accessEmail || accessEmails.includes(accessEmail)}
+              className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium rounded-xl transition"
+            >
+              Add
+            </button>
+          </div>
 
-        <DynamicConfigFields
-          fields={newConfigFields}
-          setFields={setNewConfigFields}
-        />
+          {accessEmails.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Access Granted</label>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {accessEmails.map((email, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-xl"
+                  >
+                    <span className="text-white text-sm">{email}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveEmail(email)}
+                      className="text-red-400 hover:text-red-300 text-sm font-medium"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DynamicConfigFields fields={newConfigFields} setFields={setNewConfigFields} />
 
         <div className="flex justify-end pt-4">
           <button
