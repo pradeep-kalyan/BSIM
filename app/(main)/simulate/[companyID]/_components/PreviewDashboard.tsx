@@ -3,7 +3,11 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   CheckCircle,
   Users,
+  Wallet,
   TrendingUp,
+  Activity,
+  BarChart2,
+  Briefcase,
   Beaker,
   Factory,
   Package,
@@ -28,6 +32,7 @@ import {
 import { useSimulation } from "@/app/context/SimulationContext";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/hooks/useExport";
+import InfoCard from "@/app/components/InfoCard";
 interface PreviewDashboardProps {
   companyId: string;
   onEditSection?: (section: number) => void;
@@ -195,19 +200,17 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             )}`,
             `Offline Marketing: ${formatCurrency(marketingData.offline || 0)}`,
             `Online Marketing: ${formatCurrency(marketingData.online || 0)}`,
-            `Budget Allocation: Offline ${
-              marketingData.budget > 0
-                ? (
-                    (marketingData.offline / marketingData.budget) *
-                    100
-                  ).toFixed(1)
-                : 0
-            }% / Online ${
-              marketingData.budget > 0
-                ? ((marketingData.online / marketingData.budget) * 100).toFixed(
-                    1
-                  )
-                : 0
+            `Budget Allocation: Offline ${marketingData.budget > 0
+              ? (
+                (marketingData.offline / marketingData.budget) *
+                100
+              ).toFixed(1)
+              : 0
+            }% / Online ${marketingData.budget > 0
+              ? ((marketingData.online / marketingData.budget) * 100).toFixed(
+                1
+              )
+              : 0
             }%`,
             `Total Marketing Budget vs Company Budget: ${(
               (marketingData.budget /
@@ -225,24 +228,23 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               value:
                 marketingData.budget > 0
                   ? `${(
-                      (marketingData.offline / marketingData.budget) *
-                      100
-                    ).toFixed(0)}/${(
-                      (marketingData.online / marketingData.budget) *
-                      100
-                    ).toFixed(0)}`
+                    (marketingData.offline / marketingData.budget) *
+                    100
+                  ).toFixed(0)}/${(
+                    (marketingData.online / marketingData.budget) *
+                    100
+                  ).toFixed(0)}`
                   : "0/0",
             },
             {
               label: "Budget Utilization",
-              value: `${
-                companyData.marketing_budget > 0
-                  ? (
-                      (marketingData.budget / companyData.marketing_budget) *
-                      100
-                    ).toFixed(1)
-                  : 0
-              }%`,
+              value: `${companyData.marketing_budget > 0
+                ? (
+                  (marketingData.budget / companyData.marketing_budget) *
+                  100
+                ).toFixed(1)
+                : 0
+                }%`,
             },
           ],
         },
@@ -265,9 +267,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             },
             {
               label: "Innovation Index",
-              value: `${
-                (rdData.patented || 0) + (rdData.quality_changes || 0)
-              }`,
+              value: `${(rdData.patented || 0) + (rdData.quality_changes || 0)
+                }`,
             },
             {
               label: "Development ROI",
@@ -283,8 +284,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
           icon: Factory,
           status: getSectionStatus("production"),
           summary: [
-            `Production Capacity: ${
-              productionData.production_capacity || 0
+            `Production Capacity: ${productionData.production_capacity || 0
             } units`,
             `Units to Produce: ${productionData.units_to_produce || 0}`,
             `Cost per Unit: ${formatCurrency(
@@ -309,15 +309,14 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
           keyMetrics: [
             {
               label: "Production Efficiency",
-              value: `${
-                productionData.production_capacity > 0
-                  ? (
-                      (productionData.units_to_produce /
-                        productionData.production_capacity) *
-                      100
-                    ).toFixed(1)
-                  : 0
-              }%`,
+              value: `${productionData.production_capacity > 0
+                ? (
+                  (productionData.units_to_produce /
+                    productionData.production_capacity) *
+                  100
+                ).toFixed(1)
+                : 0
+                }%`,
             },
             {
               label: "Automation Level",
@@ -327,10 +326,10 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               label: "Total Investment",
               value: formatCurrency(
                 (productionData.quality_improvement_investment || 0) +
-                  (productionData.efficiency_upgrade_cost || 0) +
-                  (productionData.maintenance_budget || 0) +
-                  (productionData.safety_investment || 0) +
-                  (productionData.environmental_compliance_cost || 0)
+                (productionData.efficiency_upgrade_cost || 0) +
+                (productionData.maintenance_budget || 0) +
+                (productionData.safety_investment || 0) +
+                (productionData.environmental_compliance_cost || 0)
               ),
             },
           ],
@@ -343,34 +342,31 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Products Count: ${productData.length}`,
             ...(productData.length > 0
               ? [
-                  `Product: ${productData[0].name || "Not specified"}`,
-                  `Category: ${productData[0].category || "Not specified"}`,
-                  `Description: ${productData[0].description || "None"}`,
-                  `Selling Price: ${formatCurrency(
-                    productData[0].selling_price || 0
-                  )}`,
-                  `Production Cost: ${formatCurrency(
-                    productData[0].production_cost || 0
-                  )}`,
-                  `Profit Margin: ${calculateProfitMargin().toFixed(1)}%`,
-                  `Development Cost: ${formatCurrency(
-                    productData[0].development_cost || 0
-                  )}`,
-                  `Marketing Budget: ${formatCurrency(
-                    productData[0].marketing_budget || 0
-                  )}`,
-                  `Quality Rating: ${productData[0].quality_rating || 0}/10`,
-                  `Innovation Rating: ${
-                    productData[0].innovation_rating || 0
-                  }/10`,
-                  `Sustainability Rating: ${
-                    productData[0].sustainability_rating || 0
-                  }/10`,
-                  `Inventory Level: ${
-                    productData[0].inventory_level || 0
-                  } units`,
-                  `Status: ${productData[0].status || "development"}`,
-                ]
+                `Product: ${productData[0].name || "Not specified"}`,
+                `Category: ${productData[0].category || "Not specified"}`,
+                `Description: ${productData[0].description || "None"}`,
+                `Selling Price: ${formatCurrency(
+                  productData[0].selling_price || 0
+                )}`,
+                `Production Cost: ${formatCurrency(
+                  productData[0].production_cost || 0
+                )}`,
+                `Profit Margin: ${calculateProfitMargin().toFixed(1)}%`,
+                `Development Cost: ${formatCurrency(
+                  productData[0].development_cost || 0
+                )}`,
+                `Marketing Budget: ${formatCurrency(
+                  productData[0].marketing_budget || 0
+                )}`,
+                `Quality Rating: ${productData[0].quality_rating || 0}/10`,
+                `Innovation Rating: ${productData[0].innovation_rating || 0
+                }/10`,
+                `Sustainability Rating: ${productData[0].sustainability_rating || 0
+                }/10`,
+                `Inventory Level: ${productData[0].inventory_level || 0
+                } units`,
+                `Status: ${productData[0].status || "development"}`,
+              ]
               : ["No products configured"]),
           ],
           keyMetrics: [
@@ -380,23 +376,23 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             },
             ...(productData.length > 0
               ? [
-                  {
-                    label: "Selling Price",
-                    value: formatCurrency(productData[0].selling_price || 0),
-                  },
-                  {
-                    label: "Production Cost",
-                    value: formatCurrency(productData[0].production_cost || 0),
-                  },
-                  {
-                    label: "Quality Rating",
-                    value: `${productData[0].quality_rating || 0}/10`,
-                  },
-                  {
-                    label: "Profit Margin",
-                    value: `${calculateProfitMargin().toFixed(1)}%`,
-                  },
-                ]
+                {
+                  label: "Selling Price",
+                  value: formatCurrency(productData[0].selling_price || 0),
+                },
+                {
+                  label: "Production Cost",
+                  value: formatCurrency(productData[0].production_cost || 0),
+                },
+                {
+                  label: "Quality Rating",
+                  value: `${productData[0].quality_rating || 0}/10`,
+                },
+                {
+                  label: "Profit Margin",
+                  value: `${calculateProfitMargin().toFixed(1)}%`,
+                },
+              ]
               : []),
           ],
         },
@@ -435,7 +431,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               label: "Net Worth",
               value: formatCurrency(
                 (companyData.total_assets || 0) -
-                  (companyData.total_liabilities || 0)
+                (companyData.total_liabilities || 0)
               ),
             },
           ],
@@ -455,14 +451,13 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Average Customer Satisfaction: ${totalSalesMetrics.averageCustomerSatisfaction.toFixed(
               1
             )}/10`,
-            `Profit Margin: ${
-              totalSalesMetrics.totalRevenue > 0
-                ? (
-                    (totalSalesMetrics.totalProfit /
-                      totalSalesMetrics.totalRevenue) *
-                    100
-                  ).toFixed(1)
-                : 0
+            `Profit Margin: ${totalSalesMetrics.totalRevenue > 0
+              ? (
+                (totalSalesMetrics.totalProfit /
+                  totalSalesMetrics.totalRevenue) *
+                100
+              ).toFixed(1)
+              : 0
             }%`,
             `Products Selling: ${totalSalesMetrics.productCount}`,
           ],
@@ -489,7 +484,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
       setSections(sectionsData);
       setLoading(false);
-    }, 1000); // Reduced loading time
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [
@@ -543,9 +538,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
       // Wait for layout to adjust
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const filename = `business-simulation-dashboard-${period}-${
-        new Date().toISOString().split("T")[0]
-      }`;
+      const filename = `business-simulation-dashboard-${period}-${new Date().toISOString().split("T")[0]
+        }`;
       await exportDashboard(dashboardRef.current, filename);
 
       // Clean up
@@ -600,7 +594,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-[rgba(18,20,24,0.95)] text-white">
+      <div className="h-full flex items-center justify-center bg-slate-800/50 shadow-md text-white">
         <div className="text-center">
           <LoaderCircle className="w-15 h-15 text-blue-400 animate-spin mb-3 mx-auto" />
           <h2 className="text-lg font-semibold text-white mb-1">
@@ -617,7 +611,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
   return (
     <div
       ref={dashboardRef}
-      className="h-full bg-[rgba(18,20,24,0.95)] text-white overflow-auto p-3"
+      className="h-full bg-slate-800/50 shadow-md text-white overflow-auto p-3"
     >
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
@@ -625,9 +619,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
           <h1 className="text-2xl font-bold text-white mb-1">
             Dashboard Preview
           </h1>
-          <p className="text-[#bbb] text-sm">
-            Period {period} - Strategic Overview
-          </p>
         </div>
 
         {/* Export Button */}
@@ -647,89 +638,86 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
       {/* Financial Overview */}
       <div className="mb-4">
-        <div className="relative overflow-hidden bg-[rgba(8,10,15,0.8)] border border-[rgba(255,255,255,0.1)] rounded-xl p-4 before:absolute before:inset-0 before:content-[''] before:bg-[linear-gradient(135deg,rgba(76,175,80,0.05)_0%,rgba(33,150,243,0.02)_100%)] before:pointer-events-none">
+
+        <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+          <DollarSign size={24} color="#4caf50" />
+          Financial Overview
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4 mx-4">
+          <InfoCard
+            label={`Cash Balance`}
+            value={companyData.cash_balance || 0}
+            isCurrency={true}
+            Icon={Wallet}
+            width="w-full"
+            height="h-full"
+            iconColor="text-green-400"
+          // subtext={`period : ${(period ?? 0)}`}
+          />
+
+          <InfoCard
+            label={`Projected Cash Balance`}
+            value={projectedCashBalance || 0}
+            isCurrency={true}
+            Icon={TrendingUp}
+            width="w-full"
+            height="h-full"
+            iconColor="text-purple-400"
+          // subtext={`period : ${(period ?? 0) + 1}`}
+          />
+
+          <InfoCard
+            label="Total Budget"
+            value={
+              (hrData.total_budget || 0) +
+              (marketingData.budget || 0) +
+              (rdData.budget || 0) +
+              (financeData.investment_amount || 0) +
+              (financeData.loan_amount || 0)
+            }
+            isCurrency={true}
+            Icon={Activity}
+            width="w-full"
+            height="h-full"
+            iconColor="text-orange-400"
+          />
+
+          <InfoCard
+            label="Projected Profit"
+            value={totalSalesMetrics.totalProfit}
+            isCurrency={true}
+            Icon={BarChart2}
+            width="w-full"
+            height="h-full"
+            iconColor="text-blue-400"
+          />
+
+          <InfoCard
+            label="Net Worth"
+            value={
+              (companyData.total_assets || 0) -
+              (companyData.total_liabilities || 0)
+            }
+            isCurrency={true}
+            Icon={Briefcase}
+            width="w-full"
+            height="h-full"
+            iconColor="text-purple-400"
+          />
+        </div>
+
+        <div className="relative overflow-hidden bg-slate-800/50 shadow-md border border-slate-600 rounded-xl p-4 before:pointer-events-none m-4">
           <div className="relative z-[1]">
-            <h3 className="text-white font-bold mb-3 flex items-center gap-2">
-              <DollarSign size={24} color="#4caf50" />
-              Financial Overview
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {/* Current Cash Balance */}
-              <div className="bg-[rgba(76,175,80,0.1)] border border-[rgba(76,175,80,0.3)] rounded-lg p-3 text-center">
-                <p className="text-[#81c784] text-xs mt-3 font-semibold">
-                  CURRENT CASH BALANCE (period : {period})
-                </p>
-                <h2 className="text-[#4caf50] font-bold mt-7 text-[1.5rem] md:text-[1.5rem]">
-                  {formatCurrency(companyData.cash_balance || 0)}
-                </h2>
-              </div>
-
-              <div className="bg-[rgba(76,175,80,0.1)] border border-[rgba(76,175,80,0.3)] rounded-lg p-3 text-center">
-                <p className="text-[#81c784] text-xs mt-3 font-semibold">
-                  PROJECTED CASH BALANCE (period : {(period ?? 0) + 1})
-                </p>
-                <h2 className="text-[#4caf50] font-bold mt-7 text-[1.5rem] md:text-[1.5rem]">
-                  {formatCurrency(projectedCashBalance || 0)}
-                </h2>
-              </div>
-
-              {/* Total Budgets Impact */}
-              <div className="bg-[rgba(255,152,0,0.1)] border border-[rgba(255,152,0,0.3)] rounded-lg p-3 text-center">
-                <p className="text-[#ffb74d] text-xs mt-3 font-semibold">
-                  TOTAL BUDGET ALLOCATION
-                </p>
-                <h2 className="text-[#ff9800] font-bold mt-7 text-[1.5rem] md:text-[1.5rem]">
-                  {formatCurrency(
-                    (hrData.total_budget || 0) +
-                      (marketingData.budget || 0) +
-                      (rdData.budget || 0) +
-                      (financeData.investment_amount || 0) +
-                      (financeData.loan_amount || 0)
-                  )}
-                </h2>
-              </div>
-
-              {/* Projected Profit */}
-              <div className="bg-[rgba(33,150,243,0.1)] border border-[rgba(33,150,243,0.3)] rounded-lg p-3 text-center">
-                <p className="text-[#64b5f6] text-xs mt-3 font-semibold">
-                  PROJECTED PROFIT
-                </p>
-                <h2
-                  className={`font-bold mt-9 text-[1.5rem] md:text-[1.5rem] ${
-                    totalSalesMetrics.totalProfit >= 0
-                      ? "text-blue-500"
-                      : "text-red-500"
-                  }`}
-                >
-                  {formatCurrency(totalSalesMetrics.totalProfit)}
-                </h2>
-              </div>
-
-              {/* Net Worth */}
-              <div className="bg-[rgba(156,39,176,0.1)] border border-[rgba(156,39,176,0.3)] rounded-lg p-3 text-center">
-                <p className="text-[#ba68c8] text-xs mt-3 font-semibold">
-                  NET WORTH
-                </p>
-
-                <p className="text-purple-600 font-bold mt-9 text-[1.5rem] md:text-[1.5rem]">
-                  {formatCurrency(
-                    (companyData.total_assets || 0) -
-                      (companyData.total_liabilities || 0)
-                  )}
-                </p>
-              </div>
-            </div>
-
             {/* Detailed Financial Breakdown */}
-            <div className="mt-4">
+            <div>
               <h2 className="text-white font-semibold text-lg mb-2">
                 Financial Position Details
               </h2>
 
-              <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+              <div className="grid gap-3 grid-cols-1 md:grid-cols-2 mx-8">
                 {/* Assets & Liabilities */}
-                <div className="bg-[rgba(255,255,255,0.03)] border border-white/10 rounded-lg p-3">
+                <div className="bg-slate-800/50 shadow-md border border-slate-600 rounded-lg py-3 px-8">
                   <h3 className="text-[#64b5f6] font-semibold text-base mb-2">
                     Balance Sheet
                   </h3>
@@ -766,7 +754,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                 </div>
 
                 {/* Cash Flow Impact */}
-                <div className="bg-[rgba(255,255,255,0.03)] border border-white/10 rounded-lg p-3">
+                <div className=" border border-slate-600 rounded-lg py-3 px-8">
                   <h3 className="text-[#64b5f6] font-semibold text-base mb-2">
                     Cash Flow Impact
                   </h3>
@@ -806,16 +794,15 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                       </p>
 
                       <p
-                        className={`font-semibold text-sm ${
-                          (companyData.cash_balance || 0) +
-                            totalSalesMetrics.totalProfit -
-                            (hrData.total_budget || 0) -
-                            (marketingData.budget || 0) -
-                            (rdData.budget || 0) >=
+                        className={`font-semibold text-sm ${(companyData.cash_balance || 0) +
+                          totalSalesMetrics.totalProfit -
+                          (hrData.total_budget || 0) -
+                          (marketingData.budget || 0) -
+                          (rdData.budget || 0) >=
                           0
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
+                          ? "text-green-500"
+                          : "text-red-500"
+                          }`}
                       >
                         {formatCurrency(projectedCashBalance)}
                       </p>
@@ -829,7 +816,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
       </div>
 
       {/* Summary Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-4 m-4">
         {sections.map((section, index) => {
           const IconComponent = section.icon;
           return (
@@ -837,18 +824,11 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               key={section.title}
               onClick={() => onEditSection?.(index)}
               className={cn(
-                "relative h-full cursor-pointer overflow-hidden border border-white/10 bg-[#080a0fcc] transition-all duration-300",
-                "hover:-translate-y-1.5 hover:border-[#64b5f680] hover:shadow-[0_12px_40px_rgba(33,150,243,0.15)]"
+                "relative h-full cursor-pointer overflow-hidden border border-slate-600 bg-slate-800/50 shadow-md transition-all duration-300",
+                "hover:-translate-y-1.5]"
               )}
-              style={{
-                // Gradient overlay on top of card
-                backgroundImage: `linear-gradient(135deg, ${getStatusColor(
-                  section.status
-                )}08 0%, transparent 100%)`,
-                backgroundBlendMode: "overlay",
-              }}
             >
-              <div className="relative z-[1] p-4">
+              <div className="relative z-[1]">
                 {/* Header */}
                 <div className="mb-3 flex items-center">
                   <div
@@ -892,57 +872,59 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
                 <hr className="mb-3 border-0 h-px bg-white/10" />
 
-                {/* Key Metrics */}
-                {section.keyMetrics && (
-                  <div className="mb-3">
+                <div className="flex justify-between gap-6">
+                  {/* Key Metrics */}
+                  {section.keyMetrics && (
+                    <div className="w-1/2">
+                      <p className="text-[#64b5f6] mb-2 font-semibold text-[0.85rem] uppercase tracking-[0.5px]">
+                        Key Metrics
+                      </p>
+
+                      <div className="flex flex-col gap-3">
+                        {section.keyMetrics.map((metric, idx) => (
+                          <div
+                            key={idx}
+                            className="flex justify-between items-center py-1 px-2 rounded-xl bg-white/5 border border-white/10"
+                          >
+                            <span className="text-[#bbb] font-medium text-[0.8rem]">
+                              {metric.label}
+                            </span>
+                            <span className="text-white font-semibold text-[0.85rem]">
+                              {metric.value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Summary Points */}
+                  <div className="w-1/2">
                     <p className="text-[#64b5f6] mb-2 font-semibold text-[0.85rem] uppercase tracking-[0.5px]">
-                      Key Metrics
+                      Strategic Summary
                     </p>
 
-                    <div className="flex flex-col gap-3">
-                      {section.keyMetrics.map((metric, idx) => (
-                        <div
-                          key={idx}
-                          className="flex justify-between items-center py-1 px-2 rounded-xl bg-white/5 border border-white/10"
-                        >
-                          <span className="text-[#bbb] font-medium text-[0.8rem]">
-                            {metric.label}
-                          </span>
-                          <span className="text-white font-semibold text-[0.85rem]">
-                            {metric.value}
-                          </span>
+                    <div>
+                      {section.summary.slice(0, 4).map((point, idx) => (
+                        <div key={idx} className="flex items-start mb-1.5 py-0.5">
+                          <div
+                            className="w-[6px] h-[6px] rounded-full mt-1 mr-1.5 flex-shrink-0"
+                            style={{
+                              backgroundColor: getStatusColor(section.status),
+                            }}
+                          />
+                          <p className="text-[#ccc] text-[0.8rem] font-normal leading-snug">
+                            {point}
+                          </p>
                         </div>
                       ))}
-                    </div>
-                  </div>
-                )}
 
-                {/* Summary Points */}
-                <div>
-                  <p className="text-[#64b5f6] mb-2 font-semibold text-[0.85rem] uppercase tracking-[0.5px]">
-                    Strategic Summary
-                  </p>
-
-                  <div className="max-h-[140px] overflow-auto pr-1">
-                    {section.summary.slice(0, 4).map((point, idx) => (
-                      <div key={idx} className="flex items-start mb-1.5 py-0.5">
-                        <div
-                          className="w-[6px] h-[6px] rounded-full mt-1 mr-1.5 flex-shrink-0"
-                          style={{
-                            backgroundColor: getStatusColor(section.status),
-                          }}
-                        />
-                        <p className="text-[#ccc] text-[0.8rem] font-normal leading-snug">
-                          {point}
+                      {section.summary.length > 4 && (
+                        <p className="text-[#64b5f6] italic text-[0.75rem] ml-6">
+                          +{section.summary.length - 4} more items...
                         </p>
-                      </div>
-                    ))}
-
-                    {section.summary.length > 4 && (
-                      <p className="text-[#64b5f6] italic text-[0.75rem] ml-6">
-                        +{section.summary.length - 4} more items...
-                      </p>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
