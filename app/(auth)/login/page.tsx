@@ -2,8 +2,8 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import Inputbox from "../../../ui/Input-Box";
-import PasswordInput from "../../../ui/PasswordInput";
+import Inputbox from "@/app/ui/Input-Box";
+import PasswordInput from "@/app/ui/PasswordInput";
 import { loginUser } from "@/app/_actions/auth";
 import { toast, ToastContainer } from "react-toastify";
 import Link from "next/link";
@@ -22,9 +22,7 @@ const Page = () => {
       const result = await loginUser(formData);
       if (result.success) {
         toast.success("Login successful");
-        // Check auth status to update the context
         await checkAuth();
-        // Use router.push instead of window.location for better Next.js integration
         router.push("/simulations");
       } else {
         toast.error(
@@ -109,7 +107,9 @@ const Page = () => {
                       ></path>
                     </svg>
                   )}
-                  {disabled ? "Signing in..." : (
+                  {disabled ? (
+                    "Signing in..."
+                  ) : (
                     <>
                       <LogIn className="w-4 h-4" />
                       Sign In

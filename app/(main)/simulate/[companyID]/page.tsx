@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/app/_actions/auth";
 import React from "react";
-import Form from "./_components/form";
+import Form from "../../../components/simulate/form";
 
 interface PageProps {
   params: Promise<{
