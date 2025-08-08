@@ -69,7 +69,7 @@ const MarketingForm = () => {
     return { budget, online, offline };
   }, [marketingData]);
   return (
-    <div className="min-h-screen bg-slate-800/50 shadow-md py-4 px-6">
+    <div className="h-full bg-slate-800/50 shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Compact Metrics Dashboard */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
