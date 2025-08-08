@@ -57,7 +57,7 @@ const steps = [
     description: "Manage product portfolio and pricing",
   },
   {
-    label: "sales",
+    label: "Sales",
     icon: ShoppingCart,
     description: "Manage Sales and customer relationships",
   },
@@ -161,7 +161,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           net_profit: salesmetrices.totalProfit,
           operating_costs: salesmetrices.totalCosts,
         },
-        sales: state.sales, // Pass the full per-product sales data object
+        sales: state.sales,
         product: state.product
           .filter((product) => product && product.name)
           .map((product) => ({
@@ -389,7 +389,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       )}
 
       {/* Sidebar with Steps */}
-      <div className="w-full md:w-[240px] lg:w-[280px] h-auto md:h-screen bg-[#080a0f]/95 backdrop-blur-2xl border-r border-white/10 overflow-hidden flex flex-col relative">
+      <div className="w-full md:w-[240px] lg:w-[280px] h-auto md:h-screen bg-slate-900 shadow-md backdrop-blur-2xl border-r border-white/10 overflow-hidden flex flex-col relative">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-blue-500/5 to-black/10" />
         {/* Header */}
         <div className="p-4 border-b border-white/10 relative z-10">
@@ -416,7 +416,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           </p>
         </div>
 
-        <div className="flex-1 overflow-auto relative z-10">
+        <div className="flex-1 overflow-auto overflow-x-hidden relative z-10">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === activeStep;
@@ -535,7 +535,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-blue-500/5 to-black/5" />
 
           {/* Content Header */}
-          <div className="px-6 py-2 border-b border-white/10 bg-[#080a0f]/80 relative z-10 flex items-center gap-4">
+          <div className="px-6 py-2 border-b border-white/10 bg-slate-900 shadow-md relative z-10 flex items-center gap-4">
             <div className="flex items-center">
               {React.createElement(steps[activeStep].icon, {
                 size: 24,
@@ -577,7 +577,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           </div>
 
           {/* Navigation Controls */}
-          <div className="px-6 py-2 border-t border-white/10 bg-[#080a0f]/80 flex justify-between items-center gap-4 relative z-10">
+          <div className="px-6 py-2 border-t border-white/10 bg-slate-900 shadow-md flex justify-between items-center gap-4 relative z-10">
             {/* Previous Button */}
             <button
               onClick={handleBack}
@@ -606,14 +606,14 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               className={`min-w-[100px] h-10 rounded-xl text-white font-bold text-sm transition-all ${
                 isSubmitting
                   ? "bg-gray-600 cursor-not-allowed"
-                  : " hover:-translate-y-[1px]"
+                  : "bg-blue-500 shadow-md hover:-translate-y-[1px]"
               }`}
             >
-              {isSubmitting 
+              {isSubmitting
                 ? "Submitting..."
                 : activeStep === steps.length - 1
-                ? "save & submit"
-                : "Next Step"}
+                ? "Submit"
+                : "Next"}
             </button>
           </div>
         </div>
