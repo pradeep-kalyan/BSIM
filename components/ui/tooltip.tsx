@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/app/lib/utils/utils";
 import { Label } from "./label";
 
 interface TooltipWrapperProps {

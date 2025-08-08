@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import Inputbox from "../../../ui/Input-Box";
-import PasswordInput from "../../../ui/PasswordInput";
+import Inputbox from "@/app/ui/Input-Box";
+import PasswordInput from "@/app/ui/PasswordInput";
 import { toast, ToastContainer } from "react-toastify";
 import { registerUser } from "../../_actions/auth";
 import Link from "next/link";

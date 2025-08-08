@@ -7,7 +7,8 @@ export default function notFound() {
         <h1 className="text-6xl font-bold text-red-400 mb-4">404</h1>
         <h2 className="text-2xl font-semibold mb-4">Simulation Not Found</h2>
         <p className="text-gray-300 mb-8">
-          The simulation you&apos;re looking for doesn&apos;t exist or has been deleted.
+          The simulation you&apos;re looking for doesn&apos;t exist or has been
+          deleted.
         </p>
         <Link
           href="/simulations"
