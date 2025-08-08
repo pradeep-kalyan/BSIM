@@ -2,7 +2,6 @@
 
 import { IndianRupee, Factory, Package,Warehouse } from "lucide-react";
 import React, { useEffect } from "react";
-import DashboardCard from "@/ui/Card";
 import { TriangleAlert } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -11,6 +10,8 @@ import {
 } from "@/app/context/FormContext";
 import InfoCard from "@/app/components/InfoCard";
 import formatCurrency from "@/app/functions/formatCurrency";
+import { TooltipWrapper } from "@/components/ui/tooltip";
+
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 const ProductionForm = () => {
@@ -141,7 +142,6 @@ const ProductionForm = () => {
           label="Inventory Value"
           value={formatCurrency(Math.round(frozenData.units_to_produce * frozenData.cost_per_unit))}
           isCurrency={true}
-          currencyCode="INR"
           Icon={IndianRupee}
           iconColor="text-yellow-400"
           labelColor="text-white"
@@ -159,6 +159,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Units to Produce"
+                tooltipText="Manufacturing volume per period"
                 defaultValue={[data?.units_to_produce ?? 0]}
                 value={[data?.units_to_produce ?? 0]}
                 min={0}
@@ -178,6 +179,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Cost per Unit (₹)"
+                tooltipText="Manufacturing cost per unit"
                 defaultValue={[data?.cost_per_unit ?? 0]}
                 value={[data?.cost_per_unit ?? 0]}
                 min={0}
@@ -195,6 +197,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Expected Defect Rate (%)"
+                tooltipText="Manufacturing defect percentage"
                 defaultValue={[data?.defect_rate ?? 0]}
                 value={[data?.defect_rate ?? 0]}
                 min={0}
@@ -212,6 +215,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Production Capacity (Units)"
+                tooltipText="Maximum production capability"
                 defaultValue={[data?.production_capacity ?? 0]}
                 value={[data?.production_capacity ?? 0]}
                 min={0}
@@ -231,6 +235,7 @@ const ProductionForm = () => {
             <div>
               <Slider
                 label="Storage Capacity (Units)"
+                tooltipText="Maximum inventory storage"
                 defaultValue={[data?.storage_capacity ?? 0]}
                 value={[data?.storage_capacity ?? 0]}
                 min={0}
@@ -248,12 +253,11 @@ const ProductionForm = () => {
 
             {/* Read-only Inventory Value */}
             <div>
-              <label
-                htmlFor="inventory_value"
-                className="block text-slate-200 font-semibold mb-1"
-              >
-                Inventory Value (₹)
-              </label>
+              <TooltipWrapper
+                label="Inventory Value (₹)"
+                text="Value of current stock"
+              />
+
               <input
                 id="inventory_value"
                 name="inventory_value"
@@ -279,8 +283,8 @@ const ProductionForm = () => {
               </div>
               <div className="text-sm space-y-1">
                 <div className="text-slate-300">
-                  Available Cash Balance: 
-                  {" "+formatCurrency(cashBalance.originalCashBalance ?? 0)}
+                  Available Cash Balance:
+                  {" " + formatCurrency(cashBalance.originalCashBalance ?? 0)}
                 </div>
                 <div
                   className={`font-semibold ${totalCost > projectedCashBalance
@@ -288,8 +292,8 @@ const ProductionForm = () => {
                     : "text-emerald-400"
                     }`}
                 >
-                  Projected Cash Balance: 
-                  {" "+formatCurrency(Math.round(projectedCashBalance))}
+                  Projected Cash Balance:
+                  {" " + formatCurrency(Math.round(projectedCashBalance))}
                 </div>
               </div>
             </div>

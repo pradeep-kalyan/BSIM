@@ -7,7 +7,6 @@ import { Building2, Rocket } from "lucide-react";
 import HRDecisionForm from "@/app/(main)/_components/HRdecisionform";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 import ProductForm from "./ProductForm";
-import Image from "next/image";
 // import { createCompanyWithProducts } from "@/app/_actions/createCompanyWithProducts";
 
 interface Props {
@@ -80,6 +79,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
   const [accessEmail, setAccessEmail] = useState("");
   const [accessEmails, setAccessEmails] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
   const totalSalary = hrRoles.reduce(
     (acc, r) => acc + r.salary_per_head * r.head_count,
@@ -360,32 +360,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                   className="w-full p-2 rounded bg-slate-800/50 border border-slate-700 text-white placeholder-slate-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 resize-none"
                   placeholder="Brief description of your company..."
                 />
-              </div>
-
-              <div className="lg:col-span-1 flex flex-col items-center justify-center">
-                <p className="text-xs text-slate-400 mt-1 mb-1">Logo Preview</p>
-                <div className="w-24 h-24 border-2 border-dashed border-slate-600 rounded bg-slate-800/30 flex items-center justify-center overflow-hidden">
-                  {form.logo_url ? (
-                    <Image
-                      src={form.logo_url}
-                      alt="Logo Preview"
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        const fallbackElement = e.currentTarget
-                          .nextElementSibling as HTMLElement | null;
-                        if (fallbackElement) {
-                          fallbackElement.style.display = "flex";
-                        }
-                      }}
-                      width={24}
-                      height={24}
-                    />
-                  ) : null}
-                  <div className="hidden flex-col items-center text-slate-500 text-xs">
-                    <span>Invalid URL</span>
-                  </div>
-                </div>
               </div>
             </div>
 

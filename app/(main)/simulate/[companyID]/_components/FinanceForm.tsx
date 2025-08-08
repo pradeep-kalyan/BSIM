@@ -11,7 +11,6 @@ import {
   IndianRupee,
   AlertTriangle,
 } from "lucide-react";
-import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
@@ -75,13 +74,11 @@ const FinanceForm = () => {
   return (
     <div className="bg-slate-800/50 shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto ">
-
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <InfoCard
             label="Original Cash Balance"
             value={formatCurrency(parseFloat(cashBalance.originalCashBalance.toFixed(0)))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={Factory}
             width="w-full"
             height="h-full"
@@ -91,7 +88,6 @@ const FinanceForm = () => {
             label="Projected Cash Balance"
             value={formatCurrency(parseFloat(projectedCashBalance.toFixed(0)))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={PiggyBank}
             width="w-full"
             height="h-full"
@@ -101,7 +97,6 @@ const FinanceForm = () => {
             label="Total Liabilities"
             value={formatCurrency(parseFloat(companyData?.total_liabilities.toFixed(0)))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={Package}
             width="w-full"
             height="h-full"
@@ -111,7 +106,6 @@ const FinanceForm = () => {
             label="Total Assets"
             value={formatCurrency(parseFloat(companyData?.total_assets.toFixed(0)))}
             isCurrency={true}
-            currencyCode="INR"
             Icon={IndianRupee}
             width="w-full"
             height="h-full"
@@ -138,6 +132,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Amount (₹)"
+                  tooltipText="Borrow cash from banks"
                   defaultValue={[data?.loan_amount ?? 0]}
                   value={[data?.loan_amount ?? 0]}
                   min={0}
@@ -150,6 +145,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Equity Issue (₹)"
+                  tooltipText="Issue new shares"
                   defaultValue={[data?.equity_issue ?? 0]}
                   value={[data?.equity_issue ?? 0]}
                   min={0}
@@ -170,6 +166,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Investment Amount (₹)"
+                  tooltipText="Invest in financial instruments"
                   defaultValue={[data?.investment_amount ?? 0]}
                   value={[data?.investment_amount ?? 0]}
                   min={0}
@@ -184,6 +181,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Repayment (₹)"
+                  tooltipText="Repay existing loans"
                   defaultValue={[data?.repay_loan ?? 0]}
                   value={[data?.repay_loan ?? 0]}
                   min={0}
@@ -196,6 +194,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Dividend Payout (₹)"
+                  tooltipText="Distribute to shareholders"
                   defaultValue={[data?.dividend_payout ?? 0]}
                   value={[data?.dividend_payout ?? 0]}
                   min={0}
@@ -219,10 +218,11 @@ const FinanceForm = () => {
                   {formatCurrency(cashBalance.originalCashBalance)}
                 </div>
                 <div
-                  className={`font-semibold ${projectedCashBalance < 0
-                    ? "text-rose-400"
-                    : "text-emerald-400"
-                    }`}
+                  className={`font-semibold ${
+                    projectedCashBalance < 0
+                      ? "text-rose-400"
+                      : "text-emerald-400"
+                  }`}
                 >
                   Projected Cash Balance: {formatCurrency(projectedCashBalance)}
                 </div>

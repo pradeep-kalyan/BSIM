@@ -223,7 +223,6 @@ export const getAuthenticatedUserWithRefresh =
 
     // Check if token needs refresh and refresh if necessary
     if (await isTokenNearExpiry(payload)) {
-      console.log("Token near expiry, refreshing session...");
       const refreshed = await refreshSession({
         id: payload.id,
         name: payload.name,
@@ -232,7 +231,6 @@ export const getAuthenticatedUserWithRefresh =
       });
 
       if (!refreshed) {
-        console.error("Failed to refresh session");
         return null;
       }
     }
