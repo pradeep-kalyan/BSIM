@@ -606,10 +606,10 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               className={`min-w-[100px] h-10 rounded-xl text-white font-bold text-sm transition-all ${
                 isSubmitting
                   ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-500 via-cyan-400 to-green-400 shadow-md hover:from-blue-700 hover:to-cyan-500 hover:-translate-y-[1px]"
+                  : " hover:-translate-y-[1px]"
               }`}
             >
-              {isSubmitting
+              {isSubmitting 
                 ? "Submitting..."
                 : activeStep === steps.length - 1
                 ? "save & submit"
