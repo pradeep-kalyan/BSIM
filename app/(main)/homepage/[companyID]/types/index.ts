@@ -7,18 +7,19 @@ import {
   rd,
 } from "@prisma/client";
 import { ReactNode, ComponentType } from "react";
-
+import { LucideIcon } from "lucide-react";
 export interface DashboardCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon?: ComponentType<{ size: number }>;
+   icon?: LucideIcon;
   change?: number;
   loading?: boolean;
   onClick?: () => void;
   gradient?: boolean;
   size?: "small" | "normal" | "large";
   className?: string;
+  iconColor?: string;
 }
 
 export interface ChartCardProps {

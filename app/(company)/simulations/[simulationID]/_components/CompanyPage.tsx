@@ -143,18 +143,39 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     <div className="min-h-screen px-3 py-5 bg-slate-900 text-white relative">
       {/* Tab Filters */}
       <div className="mb-3 mt-9 flex justify-between items-center">
-        <div className="flex gap-2">
-          {["owned", "shared", "all"].map((tab) => (
+        <div className="flex gap-3">
+          {[
+            { key: "owned", label: "Owned", count: ownedCompanies.length },
+            {
+              key: "shared",
+              label: "Shared",
+              count: accessibleCompanies.length,
+            },
+            { key: "all", label: "All", count: allCompanies.length },
+          ].map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab as "owned" | "shared" | "all")}
-              className={`px-4 py-2 rounded-md ${
-                activeTab === tab
-                  ? "bg-blue-600"
-                  : "bg-slate-700 hover:bg-slate-600"
+              key={tab.key}
+              onClick={() =>
+                setActiveTab(tab.key as "owned" | "shared" | "all")
+              }
+              className={`relative px-8 py-5 rounded-xl font-medium transition-colors ${
+                activeTab === tab.key
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-800 text-slate-200 hover:bg-slate-700"
               }`}
             >
-              {tab === "owned" ? "Owned" : tab === "all" ? "All" : "Shared"}
+              {tab.label}
+
+              {/* Count badge inside */}
+              <span
+                className={`absolute top-1 right-2 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-semibold ${
+                  activeTab === tab.key
+                    ? "bg-white text-blue-600"
+                    : "bg-slate-600 text-white"
+                }`}
+              >
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>

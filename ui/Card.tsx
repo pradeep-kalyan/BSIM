@@ -14,17 +14,18 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   gradient = false,
   size = "normal",
   className = "",
+  iconColor,
 }) => {
   const isPositive = typeof change === "number" && change > 0;
   const isNegative = typeof change === "number" && change < 0;
   const cardHeight =
     size === "large" ? "h-48" : size === "small" ? "h-32" : "h-40";
-const formatIndianNumber = (value: number): string => {
-  if (value >= 1_00_00_000) return (value / 1_00_00_000).toFixed(1) + "Cr";
-  if (value >= 1_00_000) return (value / 1_00_000).toFixed(1) + "L";
-  if (value >= 1_000) return (value / 1_000).toFixed(1) + "K";
-  return value.toString();
-};
+  const formatIndianNumber = (value: number): string => {
+    if (value >= 1_00_00_000) return (value / 1_00_00_000).toFixed(1) + "Cr";
+    if (value >= 1_00_000) return (value / 1_00_000).toFixed(1) + "L";
+    if (value >= 1_000) return (value / 1_000).toFixed(1) + "K";
+    return value.toString();
+  };
 
   return (
     <div
@@ -49,7 +50,10 @@ const formatIndianNumber = (value: number): string => {
               {subtitle && <p className="text-xs opacity-70">{subtitle}</p>}
             </div>
             {Icon && (
-                <Icon size={size === "large" ? 28 : 20} />
+              <Icon
+                size={size === "large" ? 28 : 20}
+                className={iconColor ?? "text-white"} // fallback to white
+              />
             )}
           </div>
 

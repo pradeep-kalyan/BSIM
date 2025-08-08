@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { createSwapy } from "swapy";
 import {
   DollarSign,
   TrendingUp,
@@ -294,17 +295,17 @@ interface DashboardData {
   finance_decision: FinanceDecisionType | null;
   activeProductsCount: number;
 }
-
 const getPercentChange = (current: number, prev: number) => {
   if (prev === 0 || prev === undefined || prev === null) return undefined;
   return +(((current - prev) / prev) * 100).toFixed(1);
 };
 
 const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
-  const { setComId, setPeriod } = useSimulation();
+  const { setComId, setPeriod, simId } = useSimulation();
   const router = useRouter();
   const { exportDashboard, isExporting } = useExport();
-
+  const swapyRef = useRef<HTMLDivElement | null>(null);
+  const swapyInstanceRef = useRef<any>(null);
   // Helper function to create current period data from company object
   const createCurrentPeriodData = () => {
     const currentPeriod = data?.company?.current_period || 1;
@@ -349,7 +350,25 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     setComId(comID || "");
     setPeriod(selectedPeriod);
   }, [comID, selectedPeriod, setComId, setPeriod]);
+  useEffect(() => {
+    const el =
+      swapyRef.current ?? document.querySelector("[data-swapy-container]");
+    if (!(el instanceof HTMLElement)) return;
+    // create and store instance
+    swapyInstanceRef.current = createSwapy(el, {
+      animation: "dynamic",
+      autoScrollOnDrag: true,
+      // other options if you want
+    });
 
+    return () => {
+      swapyInstanceRef.current?.destroy?.();
+      swapyInstanceRef.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    swapyInstanceRef.current?.update?.();
+  }, [selectedPeriod, data]);
   // Get current period data
   const { currentCompanyData } = createCurrentPeriodData();
   const isCurrentPeriod = selectedPeriod === data?.company?.current_period;
@@ -738,7 +757,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     productPerformance.length || data?.activeProductsCount || 0;
   const activeProductsPrev = productPerformancePrev.length || 0;
   const prodChange = getPercentChange(activeProducts, activeProductsPrev);
-
+  const handleViewCompany = useCallback(() => {
+    router.push(`/simulations/${simId}`);
+  }, [router, simId]);
   // Change event: update selected period
   const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedPeriod(Number(e.target.value));
@@ -878,7 +899,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
   return (
     <div ref={container}>
-      <div className="min-h-screen bg-slate-900 text-white">
+      <div className="min-h-screen bg-slate-800 text-white">
         <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -930,17 +951,17 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       `}</style>
         {/* Enhanced Header */}
         <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex justify-between items-center">
+          <div className="container mx-auto py-4">
+            <div className="flex items-center gap-34">
               {/* LEFT: Company name + logo + period */}
-              <div className="flex items-start gap-4 animate-slide-in-left">
+              <div className="flex items-start gap-4 animate-slide-in-left -ml-22">
                 {/* Logo */}
                 {data?.company?.logo_url && (
                   <div className="w-32 h-32 rounded-full overflow-hidden border border-slate-700">
                     <Image
                       src={data.company.logo_url}
                       alt="Company Logo"
-                      className="object-cover w-full h-full"
+                      className="object-contain w-full h-full"
                       width={128}
                       height={128}
                     />
@@ -982,19 +1003,18 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   </div>
                 </div>
               </div>
-
               {/* Right side: buttons */}
               <div className="flex gap-3 items-center animate-fade-in-up">
                 <button
                   onClick={capture}
                   disabled={isExporting}
-                  className="bg-green-400 text-white px-4 py-3 cursor-pointer rounded-xl font-semibold hover:bg-green-500 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 cursor-pointer rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
                 >
                   {isExporting ? "Exporting..." : "Export Dashboard"}
                 </button>
                 <button
                   onClick={handleViewCompany}
-                  className="bg-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
                 >
                   Back to Companies
                 </button>
@@ -1002,7 +1022,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   <button
                     onClick={handleSimulate}
                     disabled={isSimulating}
-                    className="bg-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     {isSimulating ? "Simulating..." : "Simulate"}
                     <Play size={20} />
@@ -1014,423 +1034,503 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           </div>
         </div>
 
-        <div className="container mx-auto px-6 py-8 space-y-8">
+        <div
+          className="container mx-auto px-6 py-8 space-y-8"
+          data-swapy-container
+          ref={swapyRef}
+        >
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
-            <DashboardCard
-              title="Cash Balance"
-              value={formatCurrency(cash_balance)}
-              subtitle="Available Funds"
-              icon={DollarSign}
-              change={cashChange}
-              className="stagger-2"
-            />
+            <div data-swapy-slot="slot-1">
+              <div data-swapy-item="item-cash">
+                <DashboardCard
+                  title="Cash Balance"
+                  value={formatCurrency(cash_balance)}
+                  subtitle="Available Funds"
+                  icon={DollarSign}
+                  iconColor="text-green-400"
+                  change={cashChange}
+                  className="stagger-2"
+                />
+              </div>
+            </div>
 
-            <DashboardCard
-              title="Net Worth"
-              value={formatCurrency(netWorthNow)}
-              subtitle="Assets - Liabilities"
-              icon={TrendingUp}
-              change={netWorthChange}
-              className="stagger-2"
-            />
-
-            <DashboardCard
-              title="Total Revenue"
-              value={formatCurrency(currentRevenue ?? 0)}
-              subtitle={`Period ${selectedPeriod}${
-                isCurrentPeriod ? " (Current)" : ""
-              }`}
-              icon={BarChart3}
-              change={revenueChange}
-              className="stagger-3"
-            />
-
-            <DashboardCard
-              title="Active Products"
-              value={activeProducts}
-              subtitle="In Market"
-              icon={Package}
-              change={prodChange}
-              className="stagger-4"
-            />
+            <div data-swapy-slot="slot-2">
+              <div data-swapy-item="item-networth">
+                <DashboardCard
+                  title="Net Worth"
+                  value={formatCurrency(netWorthNow)}
+                  subtitle="Assets - Liabilities"
+                  icon={TrendingUp}
+                  iconColor="text-emerald-400"
+                  change={netWorthChange}
+                  className="stagger-2"
+                />
+              </div>
+            </div>
+            <div data-swapy-slot="slot-3">
+              <div data-swapy-item="currentRevenue">
+                <DashboardCard
+                  title="Total Revenue"
+                  value={formatCurrency(currentRevenue ?? 0)}
+                  subtitle={`Period ${selectedPeriod}${
+                    isCurrentPeriod ? " (Current)" : ""
+                  }`}
+                  icon={BarChart3}
+                  iconColor="text-blue-400"
+                  change={revenueChange}
+                  className="stagger-3"
+                />
+              </div>
+            </div>
+            <div data-swapy-slot="slot-4">
+              <div data-swapy-item="activeProducts">
+                <DashboardCard
+                  title="Active Products"
+                  value={activeProducts}
+                  subtitle="In Market"
+                  icon={Package}
+                  iconColor="text-yellow-400"
+                  change={prodChange}
+                  className="stagger-4"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Revenue & Financial Performance */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <ChartCard
-              title="Revenue & Profit Trend"
-              subtitle={`Last ${
-                periods.length
-              } periods (up to Period ${Math.max(...periods)})`}
-              className="lg:col-span-2"
-            >
-              <ResponsiveContainer width="100%" height={450}>
-                <AreaChart data={chartData.revenue}>
-                  <defs>
-                    <linearGradient
-                      id="revenueGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#3B82F6"
-                        stopOpacity={0.1}
+            <div data-swapy-slot="slot-revenue" className="lg:col-span-2">
+              <div data-swapy-item="item-revenue">
+                <ChartCard
+                  title="Revenue & Profit Trend"
+                  subtitle={`Last ${
+                    periods.length
+                  } periods (up to Period ${Math.max(...periods)})`}
+                  className="lg:col-span-2"
+                >
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={chartData.revenue}>
+                      <defs>
+                        <linearGradient
+                          id="revenueGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#3B82F6"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#3B82F6"
+                            stopOpacity={0.1}
+                          />
+                        </linearGradient>
+                        <linearGradient
+                          id="profitGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#10B981"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#10B981"
+                            stopOpacity={0.1}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="period" stroke="#9CA3AF" />
+                      <YAxis
+                        stroke="#9CA3AF"
+                        tickFormatter={(value) =>
+                          `₹${(value / 10000000).toFixed(1)} Cr`
+                        }
                       />
-                    </linearGradient>
-                    <linearGradient
-                      id="profitGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#10B981"
-                        stopOpacity={0.1}
+                      <Tooltip
+                        content={<FinancialTooltip />}
+                        isAnimationActive={false}
                       />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="period" stroke="#9CA3AF" />
-                  <YAxis
-                    stroke="#9CA3AF"
-                    tickFormatter={(value) =>
-                      `₹${(value / 10000000).toFixed(1)} Cr`
-                    }
-                  />
-                  <Tooltip
-                    content={<FinancialTooltip />}
-                    isAnimationActive={false}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#3B82F6"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#revenueGradient)"
-                    name="Revenue"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="profit"
-                    stroke="#10B981"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#profitGradient)"
-                    name="Profit"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard
-              title="Department Budgets"
-              subtitle={`${
-                isCurrentPeriod ? "Current" : `Period ${selectedPeriod}`
-              } allocation`}
-            >
-              <ResponsiveContainer width="100%" height={300}>
-                <RechartsPieChart>
-                  <Pie
-                    data={chartData.departmentBudgets}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={120}
-                    dataKey="value"
-                  >
-                    {chartData.departmentBudgets.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} isAnimationActive={false} />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-              <div className="grid grid-cols-1 gap-2 mt-4">
-                {chartData.departmentBudgets.map((dept) => (
-                  <div
-                    key={dept.name}
-                    className="flex items-center justify-between p-2 rounded bg-white/5"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: dept.color }}
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="#3B82F6"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#revenueGradient)"
+                        name="Revenue"
                       />
-                      <span className="text-sm text-gray-300">{dept.name}</span>
-                    </div>
-                    <span className="text-sm font-medium text-white">
-                      {dept.percentage}%
-                    </span>
-                  </div>
-                ))}
+                      <Area
+                        type="monotone"
+                        dataKey="profit"
+                        stroke="#10B981"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#profitGradient)"
+                        name="Profit"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartCard>
               </div>
-            </ChartCard>
+            </div>
+
+            <div data-swapy-slot="slot-department-budgets">
+              <div data-swapy-item="item-department-budgets">
+                <ChartCard
+                  title="Department Budgets"
+                  subtitle={`${
+                    isCurrentPeriod ? "Current" : `Period ${selectedPeriod}`
+                  } allocation`}
+                >
+                  <ResponsiveContainer width="100%" height={120}>
+                    <RechartsPieChart>
+                      <Pie
+                        data={chartData.departmentBudgets}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={60}
+                        dataKey="value"
+                      >
+                        {chartData.departmentBudgets.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={<PieTooltip />}
+                        isAnimationActive={false}
+                      />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                  <div className="grid grid-cols-1 gap-2 mt-4">
+                    {chartData.departmentBudgets.map((dept) => (
+                      <div
+                        key={dept.name}
+                        className="flex items-center justify-between p-2 rounded bg-white/5"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: dept.color }}
+                          />
+                          <span className="text-sm text-gray-300">
+                            {dept.name}
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-white">
+                          {dept.percentage}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </ChartCard>
+              </div>
+            </div>
           </div>
 
           {/* Department Overview */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <ChartCard title="HR Overview" className="lg:col-span-1">
-              <div className="space-y-4">
-                <QuickStat
-                  label="Total Employees"
-                  value={totalEmployees.toString()}
-                  icon={Users}
-                  color="blue"
-                  trend={totalEmployeesChange}
-                />
-                <QuickStat
-                  label="New Hires"
-                  value={newHires.toString()}
-                  icon={Plus}
-                  color="green"
-                  trend={newHiresChange}
-                />
-                <QuickStat
-                  label="Avg Satisfaction"
-                  value={avgSatisfaction.toFixed(1)}
-                  icon={Award}
-                  color="yellow"
-                  trend={avgSatisfactionChange}
-                />
-                <QuickStat
-                  label="HR Budget"
-                  value={`₹${(hrBudget / 10000000).toFixed(2)} Cr`}
-                  icon={Briefcase}
-                  color="purple"
-                  trend={hrBudgetChange}
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div data-swapy-slot="slot-hr-overview" className="lg:col-span-1">
+              <div data-swapy-item="item-hr-overview">
+                <ChartCard title="HR Overview">
+                  <div className="space-y-3">
+                    <QuickStat
+                      label="Total Employees"
+                      value={totalEmployees.toString()}
+                      icon={Users}
+                      color="blue"
+                      trend={totalEmployeesChange}
+                    />
+                    <QuickStat
+                      label="New Hires"
+                      value={newHires.toString()}
+                      icon={Plus}
+                      color="green"
+                      trend={newHiresChange}
+                    />
+                    <QuickStat
+                      label="Avg Satisfaction"
+                      value={avgSatisfaction.toFixed(1)}
+                      icon={Award}
+                      color="yellow"
+                      trend={avgSatisfactionChange}
+                    />
+                    <QuickStat
+                      label="HR Budget"
+                      value={`${formatCurrency(hrBudget)}`}
+                      icon={Briefcase}
+                      color="purple"
+                      trend={hrBudgetChange}
+                    />
+                  </div>
+                </ChartCard>
               </div>
-            </ChartCard>
+            </div>
 
-            <ChartCard title="Production Metrics" className="lg:col-span-2">
-              <ResponsiveContainer width="100%" height={450}>
-                <BarChart data={chartData.productionData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="month" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: "transparent" }}
-                    isAnimationActive={false}
-                  />
-                  <Bar
-                    dataKey="produced"
-                    fill="#3B82F6"
-                    name="Units Produced"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="defects"
-                    fill="#EF4444"
-                    name="Defects"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard title="R&D Pipeline" className="lg:col-span-1">
-              <div className="space-y-4">
-                <QuickStat
-                  label="Active Projects"
-                  value={activeProducts || "0"}
-                  icon={Lightbulb}
-                  color="yellow"
-                  trend={selectedPeriod > 1 ? 12 : undefined}
-                />
-                <QuickStat
-                  label="Patents Filed"
-                  value={rd_decision?.patented || "0"}
-                  icon={Award}
-                  color="purple"
-                  trend={selectedPeriod > 1 ? 50 : undefined}
-                />
-                <QuickStat
-                  label="R&D Budget"
-                  value={`₹${(rd_budget / 10000000).toFixed(2)} Cr`}
-                  icon={Factory}
-                  color="blue"
-                  trend={selectedPeriod > 1 ? -5 : undefined}
-                />
-                <QuickStat
-                  label="Time to Market"
-                  value={`${rd_decision?.time_to_market || 0} mo`}
-                  icon={Target}
-                  color="green"
-                  trend={selectedPeriod > 1 ? -15 : undefined}
-                />
+            <div
+              data-swapy-slot="slot-production-metrics"
+              className="lg:col-span-1"
+            >
+              <div data-swapy-item="item-production-metrics">
+                <ChartCard title="Production Metrics">
+                  <ResponsiveContainer width="100%" height={455}>
+                    <BarChart data={chartData.productionData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="month" stroke="#9CA3AF" />
+                      <YAxis stroke="#9CA3AF" />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "transparent" }}
+                        isAnimationActive={false}
+                      />
+                      <Bar
+                        dataKey="produced"
+                        fill="#3B82F6"
+                        name="Units Produced"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="defects"
+                        fill="#EF4444"
+                        name="Defects"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
               </div>
-            </ChartCard>
+            </div>
+
+            <div data-swapy-slot="slot-rd-pipeline" className="lg:col-span-1">
+              <div data-swapy-item="item-rd-pipeline">
+                <ChartCard title="R&D Pipeline">
+                  <div className="space-y-3">
+                    <QuickStat
+                      label="Active Projects"
+                      value={activeProducts || "0"}
+                      icon={Lightbulb}
+                      color="yellow"
+                      trend={selectedPeriod > 1 ? 12 : undefined}
+                    />
+                    <QuickStat
+                      label="Patents Filed"
+                      value={rd_decision?.patented || "0"}
+                      icon={Award}
+                      color="purple"
+                      trend={selectedPeriod > 1 ? 50 : undefined}
+                    />
+                    <QuickStat
+                      label="R&D Budget"
+                      value={`₹${(rd_budget / 10000000).toFixed(2)} Cr`}
+                      icon={Factory}
+                      color="blue"
+                      trend={selectedPeriod > 1 ? -5 : undefined}
+                    />
+                    <QuickStat
+                      label="Time to Market"
+                      value={`${rd_decision?.time_to_market || 0} mo`}
+                      icon={Target}
+                      color="green"
+                      trend={selectedPeriod > 1 ? -15 : undefined}
+                    />
+                  </div>
+                </ChartCard>
+              </div>
+            </div>
           </div>
 
           {/* Sales Performance & Product Portfolio */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <ChartCard
-              title="Total Sales Trend"
-              subtitle={`Sales volume over last ${periods.length} periods`}
+            <div
+              data-swapy-slot="slot-total-sales-trend"
               className="lg:col-span-2"
             >
-              <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={chartData.sales}>
-                  <defs>
-                    <linearGradient
-                      id="salesGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#8B5CF6"
-                        stopOpacity={0.1}
+              <div data-swapy-item="item-total-sales-trend">
+                <ChartCard
+                  title="Total Sales Trend"
+                  subtitle={`Sales volume over last ${periods.length} periods`}
+                >
+                  <ResponsiveContainer width="100%" height={350}>
+                    <AreaChart data={chartData.sales}>
+                      <defs>
+                        <linearGradient
+                          id="salesGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#8B5CF6"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#8B5CF6"
+                            stopOpacity={0.1}
+                          />
+                        </linearGradient>
+                        <linearGradient
+                          id="salesRevenueGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#F59E0B"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#F59E0B"
+                            stopOpacity={0.1}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="period" stroke="#9CA3AF" />
+                      <YAxis
+                        stroke="#9CA3AF"
+                        yAxisId="left"
+                        tickFormatter={(value) => `${value} units`}
                       />
-                    </linearGradient>
-                    <linearGradient
-                      id="salesRevenueGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#F59E0B"
-                        stopOpacity={0.1}
+                      <YAxis
+                        stroke="#9CA3AF"
+                        yAxisId="right"
+                        orientation="right"
+                        tickFormatter={(value) =>
+                          `₹${(value / 1000).toFixed(0)}K`
+                        }
                       />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="period" stroke="#9CA3AF" />
-                  <YAxis
-                    stroke="#9CA3AF"
-                    yAxisId="left"
-                    tickFormatter={(value) => `${value} units`}
-                  />
-                  <YAxis
-                    stroke="#9CA3AF"
-                    yAxisId="right"
-                    orientation="right"
-                    tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}K`}
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload || !payload.length) return null;
-                      return (
-                        <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
-                          {label && (
-                            <p className="font-medium mb-1 text-gray-200">
-                              Period {label}
-                            </p>
-                          )}
-                          {payload.map((entry, index) => (
-                            <p key={index} className="text-gray-100">
-                              <span
-                                className="font-medium"
-                                style={{ color: entry.color }}
-                              >
-                                {entry.name}:
-                              </span>{" "}
-                              {entry.dataKey === "totalSales"
-                                ? `${entry.value} units`
-                                : `₹${((entry.value as number) / 1000).toFixed(
-                                    0
-                                  )}K`}
-                            </p>
-                          ))}
-                        </div>
-                      );
-                    }}
-                    isAnimationActive={false}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="totalSales"
-                    stroke="#8B5CF6"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#salesGradient)"
-                    name="Sales Volume"
-                    yAxisId="left"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="salesRevenue"
-                    stroke="#F59E0B"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#salesRevenueGradient)"
-                    name="Sales Revenue"
-                    yAxisId="right"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard
-              title="Product Performance"
-              subtitle={`Period ${selectedPeriod} overview`}
-            >
-              <div className="space-y-3">
-                {chartData.productPerformance.length > 0 ? (
-                  chartData.productPerformance
-                    .slice(0, 4)
-                    .map((product, index) => (
-                      <div
-                        key={`${
-                          product.product?.name || product.name
-                        }-${index}`}
-                        className="p-3 rounded-lg bg-white/5"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-white text-sm">
-                            {product.product?.name ||
-                              product.name ||
-                              `Product ${index + 1}`}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {product.market_share || 0}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-1.5 mb-2">
-                          <div
-                            className="bg-gradient-to-r from-blue-500 to-green-500 h-1.5 rounded-full"
-                            style={{
-                              width: `${Math.min(
-                                (product.market_share || 0) * 2,
-                                100
-                              )}%`,
-                            }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-400">
-                          <span>{product.sales_volume || 0} units</span>
-                          <span>
-                            ₹{((product.revenue || 0) / 1000).toFixed(0)}K
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                ) : (
-                  <div className="p-4 rounded-lg bg-white/5 text-center">
-                    <span className="text-gray-400 text-sm">
-                      No products for Period {selectedPeriod}
-                    </span>
-                  </div>
-                )}
+                      <Tooltip
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload || !payload.length)
+                            return null;
+                          return (
+                            <div className="bg-gray-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-gray-600">
+                              {label && (
+                                <p className="font-medium mb-1 text-gray-200">
+                                  Period {label}
+                                </p>
+                              )}
+                              {payload.map((entry, index) => (
+                                <p key={index} className="text-gray-100">
+                                  <span
+                                    className="font-medium"
+                                    style={{ color: entry.color }}
+                                  >
+                                    {entry.name}:
+                                  </span>{" "}
+                                  {entry.dataKey === "totalSales"
+                                    ? `${entry.value} units`
+                                    : `₹${(
+                                        (entry.value as number) / 1000
+                                      ).toFixed(0)}K`}
+                                </p>
+                              ))}
+                            </div>
+                          );
+                        }}
+                        isAnimationActive={false}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="totalSales"
+                        stroke="#8B5CF6"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#salesGradient)"
+                        name="Sales Volume"
+                        yAxisId="left"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="salesRevenue"
+                        stroke="#F59E0B"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#salesRevenueGradient)"
+                        name="Sales Revenue"
+                        yAxisId="right"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartCard>
               </div>
-            </ChartCard>
+            </div>
+
+            <div
+              data-swapy-slot="slot-product-performance"
+              className="lg:col-span-1"
+            >
+              <div data-swapy-item="item-product-performance">
+                <ChartCard
+                  title="Product Performance"
+                  subtitle={`Period ${selectedPeriod} overview`}
+                >
+                  <div className="space-y-3">
+                    {chartData.productPerformance.length > 0 ? (
+                      chartData.productPerformance
+                        .slice(0, 4)
+                        .map((product, index) => (
+                          <div
+                            key={`${
+                              product.product?.name || product.name
+                            }-${index}`}
+                            className="p-3 rounded-lg bg-white/5"
+                          >
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-medium text-white text-sm">
+                                {product.product?.name ||
+                                  product.name ||
+                                  `Product ${index + 1}`}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {product.market_share || 0}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-1.5 mb-2">
+                              <div
+                                className="bg-gradient-to-r from-blue-500 to-green-500 h-1.5 rounded-full"
+                                style={{
+                                  width: `${Math.min(
+                                    (product.market_share || 0) * 2,
+                                    100
+                                  )}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-400">
+                              <span>{product.sales_volume || 0} units</span>
+                              <span>
+                                ₹{((product.revenue || 0) / 1000).toFixed(0)}K
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="p-4 rounded-lg bg-white/5 text-center">
+                        <span className="text-gray-400 text-sm">
+                          No products for Period {selectedPeriod}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </ChartCard>
+              </div>
+            </div>
           </div>
         </div>
       </div>
