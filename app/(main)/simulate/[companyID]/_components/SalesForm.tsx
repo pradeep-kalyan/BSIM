@@ -8,7 +8,6 @@ import {
   Package,
   AlertTriangle,
   Check,
-  Users,
 } from "lucide-react";
 import {
   useProductForm,
@@ -167,7 +166,7 @@ const Sales = () => {
     if ((pSales.sales_volume || 0) <= 0) {
       setValidationAlerts((prev) => ({
         ...prev,
-        [productId]: "⚠️ Sales volume must be greater than 0",
+        [productId]: " Sales volume must be greater than 0",
       }));
       return;
     }
@@ -177,7 +176,7 @@ const Sales = () => {
     ) {
       setValidationAlerts((prev) => ({
         ...prev,
-        [productId]: `⚠️ Sales volume exceeds inventory (${product.inventory_level})`,
+        [productId]: ` Sales volume exceeds inventory (${product.inventory_level})`,
       }));
       return;
     }
@@ -223,10 +222,9 @@ const Sales = () => {
     // Show inventory reduction message
     setValidationAlerts((prev) => ({
       ...prev,
-      [productId]: `✅ Validated! Inventory will be reduced to ${newInventoryLevel} units`,
+      [productId]: ` Validated! Inventory will be reduced to ${newInventoryLevel} units`,
     }));
 
-    // Clear the alert after 3 seconds
     setTimeout(() => {
       setValidationAlerts((prev) => ({
         ...prev,
@@ -237,7 +235,7 @@ const Sales = () => {
 
   return (
     <div className="bg-slate-800/50 shadow-md py-4 px-6">
-      <section className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <InfoCard
           label="Total Revenue"
           value={totalMetrics.totalRevenue}
@@ -264,15 +262,6 @@ const Sales = () => {
           iconColor="text-violet-400"
         />
         <InfoCard
-          label="Avg Customer Satisfaction"
-          value={parseFloat(totalMetrics.avgCustomerSatisfaction.toFixed(1))}
-          suffix="/10"
-          Icon={Users}
-          width="w-full"
-          height="h-full"
-          iconColor="text-yellow-300"
-        />
-        <InfoCard
           label="Total Profit"
           value={totalMetrics.totalProfit}
           isCurrency={true}
@@ -288,7 +277,7 @@ const Sales = () => {
         {products
           ?.filter((product) => product.id)
           .map((product) => {
-            const productId = product.id!; // We know it exists due to filter
+            const productId = product.id!; 
             const pSales = salesData?.[productId] || {};
             const calc = calculatedValues[productId] || {
               revenue: 0,
@@ -299,46 +288,71 @@ const Sales = () => {
             return (
               <div
                 key={productId}
-                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 border border-slate-700 flex justify-between items-center"
+                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 grid grid-cols-2 border border-slate-700 flex justify-between items-center"
               >
-                <div className="flex flex-col justify-center items-center">
-                  <h2 className="text-2xl font-bold text-white mb-4">
-                    {product.name}
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
+                <div className="flex flex-col items-center justify-center p-6">
+                  <h2 className="text-2xl font-bold text-white mb-6">{product.name}</h2>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm mb-8 w-full max-w-4xl">
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">
-                        Category:
-                      </span>{" "}
+                      <span className="font-medium text-blue-300">Category:</span>
                       <p className="text-white">{product.category}</p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Price:</span>{" "}
+                      <span className="font-medium text-blue-300">Price:</span>
                       <p className="text-white">₹{product.selling_price}</p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">
-                        Inventory:
-                      </span>{" "}
-                      <p className="text-white">
-                        {product.inventory_level} units
-                      </p>
+                      <span className="font-medium text-blue-300">Inventory:</span>
+                      <p className="text-white">{product.inventory_level} units</p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">
-                        Cost/unit:
-                      </span>{" "}
+                      <span className="font-medium text-blue-300">Cost/unit:</span>
                       <p className="text-white">₹{product.production_cost}</p>
                     </div>
                   </div>
-                  <div className=" text-slate-300">
-                    <div>
-                      Revenue: ₹{formatNumber(Math.round(calc.revenue))}
+
+                  <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="text-slate-300 text-sm space-y-1">
+                      <div>Revenue: ₹{formatNumber(Math.round(calc.revenue))}</div>
+                      <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
+                      <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
                     </div>
-                    <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
-                    <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
+
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={() => handleValidateProduct(productId)}
+                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow"
+                      >
+                        Validate
+                      </button>
+
+                      <div className="h-6 flex items-center">
+                        {validationAlerts[productId] &&
+                          !validationAlerts[productId].startsWith("✅") && (
+                            <div className="flex items-center gap-2 text-rose-400">
+                              <AlertTriangle size={18} />
+                              {validationAlerts[productId]}
+                            </div>
+                          )}
+
+                        {successProducts[productId] &&
+                          !validationAlerts[productId] && (
+                            <div className="flex items-center gap-2 text-green-400">
+                              <Check size={18} /> Validated!
+                            </div>
+                          )}
+
+                        {validationAlerts[productId]?.startsWith("✅") && (
+                          <div className="flex items-center gap-2 text-green-400">
+                            <Check size={18} /> {validationAlerts[productId]}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+
                 <div className="flex flex-col justify-center items-center">
                   <Slider
                     label="Sales Volume (Units)"
@@ -384,34 +398,8 @@ const Sales = () => {
                   />
                 </div>
 
-                {/* Calculated fields */}
-
                 {/* Actions */}
-                <div className="mt-4 flex items-center gap-4">
-                  <button
-                    onClick={() => handleValidateProduct(productId)}
-                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow"
-                  >
-                    Validate
-                  </button>
-                  {validationAlerts[productId] && (
-                    <div className="flex items-center gap-2 text-rose-400">
-                      <AlertTriangle size={18} /> {validationAlerts[productId]}
-                    </div>
-                  )}
-                  {successProducts[productId] &&
-                    !validationAlerts[productId] && (
-                      <div className="flex items-center gap-2 text-green-400">
-                        <Check size={18} /> Validated!
-                      </div>
-                    )}
-                  {validationAlerts[productId] &&
-                    validationAlerts[productId]?.startsWith("✅") && (
-                      <div className="flex items-center gap-2 text-green-400">
-                        <Check size={18} /> {validationAlerts[productId]}
-                      </div>
-                    )}
-                </div>
+
               </div>
             );
           })}
