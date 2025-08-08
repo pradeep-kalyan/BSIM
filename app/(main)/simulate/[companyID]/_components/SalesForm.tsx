@@ -8,6 +8,7 @@ import {
   Package,
   AlertTriangle,
   Check,
+  Users,
 } from "lucide-react";
 import {
   useProductForm,
@@ -18,7 +19,7 @@ import {
 import { useSimulation } from "@/app/context/SimulationContext";
 import { Slider } from "@/components/ui/slider";
 import InfoCard from "@/app/components/InfoCard";
-
+import formatCurrency from "@/app/functions/formatCurrency";
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
@@ -29,8 +30,6 @@ const Sales = () => {
     updateData: updateSalesData,
     setError,
   } = useSalesForm();
-  const { data: companyData } = useCompanyForm();
-  const { period } = useSimulation();
   const { projectedCashBalance, updateSalesBudgetImpact } = useCashBalance();
 
   const [validationAlerts, setValidationAlerts] = React.useState<
@@ -243,7 +242,7 @@ const Sales = () => {
       <section className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <InfoCard
           label="Total Revenue"
-          value={totalMetrics.totalRevenue}
+          value={formatCurrency(totalMetrics.totalRevenue)}
           isCurrency={true}
           currencyCode="INR"
           Icon={DollarSign}
@@ -338,10 +337,10 @@ const Sales = () => {
                   </div>
                   <div className=" text-slate-300">
                     <div>
-                      Revenue: ₹{formatNumber(Math.round(calc.revenue))}
+                      Revenue: {formatCurrency(Math.round(calc.revenue))}
                     </div>
-                    <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
-                    <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
+                    <div>Costs: {formatCurrency(Math.round(calc.costs))}</div>
+                    <div>Profit: {formatCurrency(Math.round(calc.profit))}</div>
                   </div>
                 </div>
                 <div className="flex flex-col justify-center items-center">
@@ -427,19 +426,19 @@ const Sales = () => {
             <div>
               <span className="text-slate-400">Total Revenue:</span>
               <p className="text-white font-semibold">
-                ₹{formatNumber(Math.round(totalMetrics.totalRevenue))}
+                {formatCurrency(Math.round(totalMetrics.totalRevenue))}
               </p>
             </div>
             <div>
               <span className="text-slate-400">Total Costs:</span>
               <p className="text-white font-semibold">
-                ₹{formatNumber(Math.round(totalMetrics.totalCosts))}
+                {formatCurrency(Math.round(totalMetrics.totalCosts))}
               </p>
             </div>
             <div>
               <span className="text-slate-400">Total Profit:</span>
               <p className="text-white font-semibold">
-                ₹{formatNumber(Math.round(totalMetrics.totalProfit))}
+                {formatCurrency(Math.round(totalMetrics.totalProfit))}
               </p>
             </div>
             <div>
@@ -453,8 +452,8 @@ const Sales = () => {
 
         {/* Projected Cash Balance */}
         <div className="mt-6 ml-2 text-slate-300 text-m">
-          Projected Cash Balance: ₹
-          {formatNumber(Math.round(projectedCashBalance))}
+          Projected Cash Balance: 
+          {formatCurrency(Math.round(projectedCashBalance))}
         </div>
       </div>
     </div>

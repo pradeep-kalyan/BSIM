@@ -256,7 +256,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
           />
           <InfoCard
             label="Portfolio Value"
-            value={totalProductValue}
+            value={formatCurrency(totalProductValue)}
             isCurrency={true}
             currencyCode="INR"
             Icon={IndianRupee}

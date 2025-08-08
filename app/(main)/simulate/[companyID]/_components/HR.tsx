@@ -21,7 +21,7 @@ import {
 import formatCurrency from "@/app/functions/formatCurrency";
 import InfoCard from "@/app/components/InfoCard"
 import { useSimulation } from "@/app/context/SimulationContext";
-import { Users, Award, Building2, IndianRupee } from "lucide-react";
+import { Users, Award,  IndianRupee } from "lucide-react";
 
 const HRDashboard = () => {
   const {
@@ -179,7 +179,7 @@ const HRDashboard = () => {
 
           <InfoCard
             label="HR Budget"
-            value={totalHRBudget}
+            value={formatCurrency(totalHRBudget)}
             Icon={IndianRupee}
             iconColor="text-yellow-400"
             isCurrency={true}
@@ -251,9 +251,9 @@ const HRDashboard = () => {
                         Salary per Employee
                       </h5>
                       <Slider
-                        label={`₹${(
+                        label={`${formatCurrency(
                           role.salary_per_head || 0
-                        ).toLocaleString()}`}
+                        )}`}
                         value={[
                           isNaN(role.salary_per_head)
                             ? 0

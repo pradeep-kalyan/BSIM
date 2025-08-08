@@ -139,7 +139,7 @@ const ProductionForm = () => {
         />
         <InfoCard
           label="Inventory Value"
-          value={Math.round(frozenData.units_to_produce * frozenData.cost_per_unit)}
+          value={formatCurrency(Math.round(frozenData.units_to_produce * frozenData.cost_per_unit))}
           isCurrency={true}
           currencyCode="INR"
           Icon={IndianRupee}
