@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { z } from "zod";
-import { createProductSchema } from "@/app/lib/utils/validator";
+import { createProductSchema } from "@/app/lib/validator/validator";
 
 interface ProductInput {
   name: string;
@@ -54,9 +54,8 @@ export default function ProductForm({
     const result = z.array(createProductSchema).safeParse(productsToValidate);
 
     if (!result.success) {
-      const errorArray: Array<Partial<
-        Record<ProductField, string>
-      >> = productsToValidate.map(() => ({}));
+      const errorArray: Array<Partial<Record<ProductField, string>>> =
+        productsToValidate.map(() => ({}));
 
       for (const issue of result.error.issues) {
         if (issue.path.length >= 2) {
@@ -184,11 +183,13 @@ export default function ProductForm({
               )}
             </div>
 
-            {([
-              ["Quality Rating", "quality_rating"],
-              ["Innovation Rating", "innovation_rating"],
-              ["Sustainability Rating", "sustainability_rating"],
-            ] as const).map(([label, field]) => (
+            {(
+              [
+                ["Quality Rating", "quality_rating"],
+                ["Innovation Rating", "innovation_rating"],
+                ["Sustainability Rating", "sustainability_rating"],
+              ] as const
+            ).map(([label, field]) => (
               <div key={field}>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
                   {label} (1–10)
@@ -216,14 +217,16 @@ export default function ProductForm({
               </div>
             ))}
 
-            {([
-              ["Production Cost", "production_cost"],
-              ["Selling Price", "selling_price"],
-              ["Inventory Level", "inventory_level", "int"],
-              ["Production Capacity", "production_capacity", "int"],
-              ["Development Cost", "development_cost"],
-              ["Marketing Budget", "marketing_budget"],
-            ] as const).map(([label, field, type]) => (
+            {(
+              [
+                ["Production Cost", "production_cost"],
+                ["Selling Price", "selling_price"],
+                ["Inventory Level", "inventory_level", "int"],
+                ["Production Capacity", "production_capacity", "int"],
+                ["Development Cost", "development_cost"],
+                ["Marketing Budget", "marketing_budget"],
+              ] as const
+            ).map(([label, field, type]) => (
               <div key={field}>
                 <label className="block text-sm font-medium text-slate-300 mb-1">
                   {label}

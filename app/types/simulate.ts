@@ -232,7 +232,6 @@ export interface FormContextType {
 
   // Comprehensive submission methods
   setFormCompleted: (section: string, completed: boolean) => void;
-  submitAllForms: (companyId: string, period: number) => Promise<boolean>;
   bulkUpdateForms: (data: Partial<FormState>) => void;
   getAllFormData: () => FormState;
   validateAllForms: () => { valid: boolean; errors: Record<string, string> };

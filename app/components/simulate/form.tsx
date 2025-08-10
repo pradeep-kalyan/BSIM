@@ -37,14 +37,14 @@ const steps = [
     description: "Handle HR decisions and workforce management",
   },
   {
-    label: "Marketing",
-    icon: TrendingUp,
-    description: "Plan marketing strategies and campaigns",
-  },
-  {
     label: "Research & Development",
     icon: Beaker,
     description: "Invest in innovation and product development",
+  },
+  {
+    label: "Products",
+    icon: Package,
+    description: "Manage product portfolio and pricing",
   },
   {
     label: "Production",
@@ -52,9 +52,9 @@ const steps = [
     description: "Optimize production processes and capacity",
   },
   {
-    label: "Products",
-    icon: Package,
-    description: "Manage product portfolio and pricing",
+    label: "Marketing",
+    icon: TrendingUp,
+    description: "Plan marketing strategies and campaigns",
   },
   {
     label: "Sales",
@@ -340,13 +340,13 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       case 0:
         return <HRDashboard />;
       case 1:
-        return <MarketingForm />;
-      case 2:
         return <RDForm />;
+      case 2:
+        return <ProductsForm companyId={companyId} />;
       case 3:
         return <ProductionForm />;
       case 4:
-        return <ProductsForm companyId={companyId} />;
+        return <MarketingForm />;
       case 5:
         return <Sales />;
       case 6:

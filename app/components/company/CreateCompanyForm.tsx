@@ -146,22 +146,9 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     setLoading(true);
     setError("");
 
-    if (!form.name.trim()) {
-      setError("Company name is required.");
-      setLoading(false);
-      return;
-    }
+    
 
-    if (
-      form.cash_balance < 0 ||
-      form.total_assets < 0 ||
-      form.total_liabilities < 0 ||
-      form.brand_value < 0
-    ) {
-      setError("Financial values cannot be negative.");
-      setLoading(false);
-      return;
-    }
+    
 
     try {
       const user = await getCurrentUser();
@@ -170,6 +157,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         setLoading(false);
         return;
       }
+      form
 
       // Create company with products
       const { companyId } = await createCompany({

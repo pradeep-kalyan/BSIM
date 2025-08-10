@@ -7,7 +7,6 @@ import React, {
   ReactNode,
   useCallback,
   useMemo,
-  useState,
 } from "react";
 import {
   CashBalanceState,
@@ -848,116 +847,7 @@ export function FormProvider({
     return { valid, errors };
   }, [state, validateField]);
 
-  const submitAllForms = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (companyId: string, _period: number): Promise<boolean> => {
-      try {
-        setSubmitting(true);
-
-        const validation = validateAllForms();
-        if (!validation.valid) {
-          setErrors(validation.errors);
-          return false;
-        }
-
-        // Calculate aggregated sales metrics directly
-        let totalSalesRevenue = 0;
-        let totalSalesCosts = 0;
-        let totalSalesProfit = 0;
-        let totalSalesVolume = 0;
-        let averageMarketShare = 0;
-        let averageCustomerSatisfaction = 0;
-        let productCount = 0;
-
-        Object.values(state.sales).forEach((productSales) => {
-          totalSalesRevenue += productSales.revenue || 0;
-          totalSalesCosts += productSales.costs || 0;
-          totalSalesProfit += productSales.profit || 0;
-          totalSalesVolume += productSales.sales_volume || 0;
-
-          if (productSales.market_share && productSales.market_share > 0) {
-            averageMarketShare += productSales.market_share;
-            productCount++;
-          }
-
-          if (
-            productSales.customer_satisfaction &&
-            productSales.customer_satisfaction > 0
-          ) {
-            averageCustomerSatisfaction += productSales.customer_satisfaction;
-          }
-        });
-
-        // Calculate averages
-        averageMarketShare =
-          productCount > 0 ? averageMarketShare / productCount : 0;
-        averageCustomerSatisfaction =
-          productCount > 0 ? averageCustomerSatisfaction / productCount : 0;
-
-        const comprehensiveData = {
-          hr: state.hr,
-          marketing: state.marketing,
-          rd: state.rd,
-          production: state.production,
-          finance: {
-            ...state.finance,
-            net_profit: totalSalesProfit,
-            operating_costs: totalSalesCosts,
-            total_revenue: totalSalesRevenue,
-          },
-          product: state.product, // Pass the array of products
-          sales: state.sales, // Pass the full per-product sales data
-          projected_balance: getProjectedCashBalance(),
-          budget_impacts: {
-            hr: state.cashBalance.hrBudgetImpact,
-            finance: state.cashBalance.financeBudgetImpact,
-            marketing: state.cashBalance.marketingBudgetImpact,
-            production: state.cashBalance.productionBudgetImpact,
-            rd: state.cashBalance.rdBudgetImpact,
-            sales: state.cashBalance.salesBudgetImpact,
-            product: state.cashBalance.productBudgetImpact,
-          },
-          // Add aggregated sales totals for easy access
-          salesTotals: {
-            totalRevenue: totalSalesRevenue,
-            totalCosts: totalSalesCosts,
-            totalProfit: totalSalesProfit,
-            totalVolume: totalSalesVolume,
-            averageMarketShare: averageMarketShare,
-            averageCustomerSatisfaction: averageCustomerSatisfaction,
-            productCount: productCount,
-          },
-        };
-
-        // Call the comprehensive form submission action
-        const { comprehensiveFormSubmission } = await import(
-          "@/app/_actions/comprehensiveFormSubmission"
-        );
-        const result = await comprehensiveFormSubmission(
-          companyId,
-          comprehensiveData
-        );
-
-        if (result.success) {
-          // Clear form state after successful submission
-          dispatch({ type: "RESET_ALL" });
-          return true;
-        } else {
-          setErrors({ submission: result.message || "Submission failed" });
-          return false;
-        }
-      } catch (error) {
-        setErrors({
-          submission:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        });
-        return false;
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [state, validateAllForms, setErrors, setSubmitting, getProjectedCashBalance]
-  );
+  
 
   const getCompletionStatus = useCallback(() => {
     const sections = [
@@ -1029,7 +919,6 @@ export function FormProvider({
     setFormCompleted,
     bulkUpdateForms,
     getAllFormData,
-    submitAllForms,
     validateAllForms,
     getCompletionStatus,
   };
@@ -1480,150 +1369,6 @@ export function useHRForm() {
   };
 }
 
-// Direct HR role management hook using context functions
-export function useHRRoleContext() {
-  const {
-    state,
-    addExistingRole,
-    updateExistingRole,
-    removeExistingRole,
-    addNewRole,
-    updateNewRole,
-    removeNewRole,
-    clearAllRoles,
-    updateHRBudgetImpact,
-    updateHR,
-  } = useForm();
-
-  // Auto-calculate budget impact whenever roles change
-  const autoCalculateAndUpdateBudget = useCallback(() => {
-    let salary_budget = 0;
-
-    // Calculate from existing roles
-    state.hr.existingRoles.forEach((role) => {
-      const newHeadCount = role.current_head_count + role.hires - role.fires;
-      if (newHeadCount > 0) {
-        salary_budget += newHeadCount * role.salary_per_head;
-      }
-    });
-
-    // Calculate from new roles
-    state.hr.newRoles.forEach((role) => {
-      salary_budget += role.hires * role.salary_per_head;
-    });
-
-    const total_budget = salary_budget + state.hr.training_budget;
-    // Calculate total employee count
-    const existingEmployees = state.hr.existingRoles.reduce((total, role) => {
-      return (
-        total + Math.max(0, role.current_head_count + role.hires - role.fires)
-      );
-    }, 0);
-
-    const newEmployees = state.hr.newRoles.reduce((total, role) => {
-      return total + role.hires;
-    }, 0);
-
-    const total_employee_count = existingEmployees + newEmployees;
-
-    // Update HR data with calculated values
-    updateHR({
-      salary_budget,
-      total_budget,
-      total_employee_count,
-    });
-
-    // Update budget impact
-    updateHRBudgetImpact(total_budget);
-  }, [state.hr, updateHR, updateHRBudgetImpact]);
-
-  return {
-    // Direct access to HR data
-    hrData: state.hr,
-    existingRoles: state.hr.existingRoles,
-    newRoles: state.hr.newRoles,
-
-    // Context-based role management functions
-    addExistingRole,
-    updateExistingRole,
-    removeExistingRole,
-    addNewRole,
-    updateNewRole,
-    removeNewRole,
-    clearAllRoles,
-
-    // Auto budget calculation
-    autoCalculateAndUpdateBudget,
-  };
-}
-
-// Comprehensive HR initialization hook
-export function useHRInitialization() {
-  const { initializeForms, state } = useForm();
-  const { autoCalculateAndUpdateBudget } = useHRRoleContext();
-
-  // Initialize HR data with existing roles from server
-  const initializeHRWithRoles = useCallback(
-    (
-      hrData: Partial<HRFormData> & {
-        existingRoles?: ExistingRole[];
-        newRoles?: NewRole[];
-      }
-    ) => {
-      const completeHRData = {
-        ...getDefaultHRData(),
-        ...hrData,
-        existingRoles: hrData.existingRoles || [],
-        newRoles: hrData.newRoles || [],
-      };
-
-      initializeForms({
-        hr: completeHRData,
-      });
-
-      // Auto-calculate budget after initialization
-      setTimeout(autoCalculateAndUpdateBudget, 0);
-    },
-    [initializeForms, autoCalculateAndUpdateBudget]
-  );
-
-  // Initialize with company's current roles
-  const initializeWithCompanyRoles = useCallback(
-    (
-      companyRoles: Array<{
-        role_name: string;
-        salary_per_head: number;
-        head_count: number;
-      }>
-    ) => {
-      const existingRoles: ExistingRole[] = companyRoles.map((role) => ({
-        role_name: role.role_name,
-        salary_per_head: role.salary_per_head,
-        current_head_count: role.head_count,
-        hires: role.head_count,
-        fires: 0,
-      }));
-
-      initializeHRWithRoles({ existingRoles });
-    },
-    [initializeHRWithRoles]
-  );
-
-  // Reset HR to default state
-  const resetHRToDefaults = useCallback(() => {
-    initializeForms({
-      hr: getDefaultHRData(),
-    });
-  }, [initializeForms]);
-
-  return {
-    initializeHRWithRoles,
-    initializeWithCompanyRoles,
-    resetHRToDefaults,
-    isInitialized: state.isInitialized,
-    currentHRData: state.hr,
-  };
-}
 
 export function useRDForm() {
   const { state, updateRD, setError, getError, updateRDBudgetImpact } =
@@ -1776,117 +1521,7 @@ export function useProductForm() {
   };
 }
 
-export function useProductActions(companyId: string) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Placeholder API calls — replace with your actual API call logic
-  async function apiCreateProduct(data: Partial<ProductFormData>) {
-    // Example: POST to your API endpoint
-    const res = await fetch(`/api/companies/${companyId}/products`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Failed to create product");
-    return res.json();
-  }
-
-  async function apiUpdateProduct(id: string, data: Partial<ProductFormData>) {
-    const res = await fetch(`/api/products/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Failed to update product");
-    return res.json();
-  }
-
-  async function apiLaunchProduct(productId: string, period: number) {
-    const res = await fetch(`/api/products/${productId}/launch`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ period }),
-    });
-    if (!res.ok) throw new Error("Failed to launch product");
-    return res.json();
-  }
-
-  async function apiDiscontinueProduct(productId: string, period: number) {
-    const res = await fetch(`/api/products/${productId}/discontinue`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ period }),
-    });
-    if (!res.ok) throw new Error("Failed to discontinue product");
-    return res.json();
-  }
-
-  // Wrappers with loading/errors
-  const createProduct = async (data: Partial<ProductFormData>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiCreateProduct(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProductAction = async (
-    id: string,
-    data: Partial<ProductFormData>
-  ) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiUpdateProduct(id, data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const launchProduct = async (productId: string, period: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiLaunchProduct(productId, period);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const discontinueProduct = async (productId: string, period: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiDiscontinueProduct(productId, period);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    loading,
-    error,
-    createProduct,
-    updateProduct: updateProductAction,
-    launchProduct,
-    discontinueProduct,
-  };
-}
 
 export function useCompanyForm() {
   const { state, updateCompany, setError, getError } = useForm();
@@ -1898,15 +1533,6 @@ export function useCompanyForm() {
   };
 }
 
-export function useSimulationForm() {
-  const { state, updateSimulation, setError, getError } = useForm();
-  return {
-    data: state.simulation,
-    updateData: updateSimulation,
-    setError,
-    getError,
-  };
-}
 
 // Cash balance hook
 export function useCashBalance() {
@@ -1953,71 +1579,7 @@ export function useCashBalance() {
 }
 
 // Comprehensive form submission hook
-export function useFormSubmission() {
-  const {
-    state,
-    submitAllForms,
-    validateAllForms,
-    getCompletionStatus,
-    getAllFormData,
-    setFormCompleted,
-    resetAll,
-    clearErrors,
-  } = useForm();
 
-  const submitAllSections = useCallback(
-    async (companyId: string, period: number) => {
-      return await submitAllForms(companyId, period);
-    },
-    [submitAllForms]
-  );
-
-  const validateAll = useCallback(() => {
-    return validateAllForms();
-  }, [validateAllForms]);
-
-  const getProgress = useCallback(() => {
-    return getCompletionStatus();
-  }, [getCompletionStatus]);
-
-  const exportFormData = useCallback(() => {
-    return getAllFormData();
-  }, [getAllFormData]);
-
-  const markSectionComplete = useCallback(
-    (section: string, completed: boolean = true) => {
-      setFormCompleted(section, completed);
-    },
-    [setFormCompleted]
-  );
-
-  return {
-    // State
-    isSubmitting: state.isSubmitting,
-    submissionStatus: state.submissionStatus,
-    submissionResults: state.submissionResults,
-    completedSections: state.completedSections,
-
-    // Actions
-    submitAllSections,
-    validateAll,
-    getProgress,
-    exportFormData,
-    markSectionComplete,
-    resetAll,
-    clearErrors,
-
-    // Computed values
-    hasData: Object.values(state).some(
-      (section) =>
-        typeof section === "object" &&
-        section !== null &&
-        !(section instanceof Array) &&
-        Object.keys(section).length > 0
-    ),
-    canSubmit: validateAllForms().valid,
-  };
-}
 
 // HR-specific hooks for advanced functionality
 export function useHRRoleManagement() {
@@ -2118,13 +1680,14 @@ export function useHRRoleManagement() {
 
   // Get total employee count
   const getTotalEmployees = useCallback(() => {
-    const existingEmployees = hrData.existingRoles.reduce((total, role) => {
+    const existingData = hrData.existingRoles || [];
+    const existingEmployees = existingData.reduce((total, role) => {
       return (
         total + Math.max(0, role.current_head_count + role.hires - role.fires)
       );
     }, 0);
 
-    const newEmployees = hrData.newRoles.reduce((total, role) => {
+    const newEmployees = hrData.newRoles?.reduce((total, role) => {
       return total + role.hires;
     }, 0);
 
@@ -2134,8 +1697,8 @@ export function useHRRoleManagement() {
   // Get hiring and firing statistics
   const getHiringFireStatistics = useCallback(() => {
     const totalHires =
-      hrData.existingRoles.reduce((total, role) => total + role.hires, 0) +
-      hrData.newRoles.reduce((total, role) => total + role.hires, 0);
+      hrData.existingRoles?.reduce((total, role) => total + role.hires, 0) +
+      hrData.newRoles?.reduce((total, role) => total + role.hires, 0);
 
     const totalFires = hrData.existingRoles.reduce(
       (total, role) => total + role.fires,
@@ -2293,145 +1856,4 @@ export function useHRRoleManagement() {
 }
 
 // Specialized hook for hire and fire operations
-export function useHireFireOperations() {
-  const {
-    existingRoles,
-    hireEmployeesForRole,
-    fireEmployeesForRole,
-    setHireCountForRole,
-    setFireCountForRole,
-    setHireCountForNewRole,
-    getNetEmployeeChanges,
-    getHiringFireStatistics,
-    autoCalculateBudget,
-  } = useHRRoleManagement();
 
-  // Bulk hire operations
-  const bulkHireForRoles = useCallback(
-    (hireOperations: Array<{ roleIndex: number; count: number }>) => {
-      hireOperations.forEach(({ roleIndex, count }) => {
-        hireEmployeesForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [hireEmployeesForRole, autoCalculateBudget]
-  );
-
-  // Bulk fire operations
-  const bulkFireFromRoles = useCallback(
-    (fireOperations: Array<{ roleIndex: number; count: number }>) => {
-      fireOperations.forEach(({ roleIndex, count }) => {
-        fireEmployeesForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [fireEmployeesForRole, autoCalculateBudget]
-  );
-
-  // Set hire/fire counts for multiple roles at once
-  const setMultipleHireCounts = useCallback(
-    (hireCounts: Array<{ roleIndex: number; count: number }>) => {
-      hireCounts.forEach(({ roleIndex, count }) => {
-        setHireCountForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [setHireCountForRole, autoCalculateBudget]
-  );
-
-  const setMultipleFireCounts = useCallback(
-    (fireCounts: Array<{ roleIndex: number; count: number }>) => {
-      fireCounts.forEach(({ roleIndex, count }) => {
-        setFireCountForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [setFireCountForRole, autoCalculateBudget]
-  );
-
-  // Clear all hires and fires
-  const clearAllHires = useCallback(() => {
-    existingRoles.forEach((_, index) => {
-      setHireCountForRole(index, 0);
-    });
-    autoCalculateBudget();
-  }, [existingRoles, setHireCountForRole, autoCalculateBudget]);
-
-  const clearAllFires = useCallback(() => {
-    existingRoles.forEach((_, index) => {
-      setFireCountForRole(index, 0);
-    });
-    autoCalculateBudget();
-  }, [existingRoles, setFireCountForRole, autoCalculateBudget]);
-
-  // Get roles that can be fired from (have current employees)
-  const getFireableRoles = useCallback(() => {
-    return existingRoles.filter((role) => role.current_head_count > 0);
-  }, [existingRoles]);
-
-  // Get maximum fire count for each role
-  const getMaxFireCounts = useCallback(() => {
-    return existingRoles.map((role) => ({
-      role_name: role.role_name,
-      max_fires: role.current_head_count,
-      current_fires: role.fires,
-    }));
-  }, [existingRoles]);
-
-  // Validate hire/fire operations
-  const validateHireFireOperations = useCallback(() => {
-    const errors: string[] = [];
-
-    existingRoles.forEach((role) => {
-      if (role.fires > role.current_head_count) {
-        errors.push(
-          `${role.role_name}: Cannot fire ${role.fires} employees when only ${role.current_head_count} are currently employed`
-        );
-      }
-
-      const finalCount = role.current_head_count + role.hires - role.fires;
-      if (finalCount < 0) {
-        errors.push(
-          `${role.role_name}: Final employee count would be negative (${finalCount})`
-        );
-      }
-    });
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }, [existingRoles]);
-
-  return {
-    // Individual operations
-    hireEmployeesForRole,
-    fireEmployeesForRole,
-    setHireCountForRole,
-    setFireCountForRole,
-    setHireCountForNewRole,
-
-    // Bulk operations
-    bulkHireForRoles,
-    bulkFireFromRoles,
-    setMultipleHireCounts,
-    setMultipleFireCounts,
-
-    // Clear operations
-    clearAllHires,
-    clearAllFires,
-
-    // Analysis and validation
-    getNetEmployeeChanges,
-    getHiringFireStatistics,
-    getFireableRoles,
-    getMaxFireCounts,
-    validateHireFireOperations,
-
-    // Auto budget calculation
-    autoCalculateBudget,
-
-    // Data access
-    existingRoles,
-  };
-}

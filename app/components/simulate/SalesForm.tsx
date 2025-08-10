@@ -277,7 +277,7 @@ const Sales = () => {
         {products
           ?.filter((product) => product.id)
           .map((product) => {
-            const productId = product.id!; 
+            const productId = product.id!;
             const pSales = salesData?.[productId] || {};
             const calc = calculatedValues[productId] || {
               revenue: 0,
@@ -291,11 +291,15 @@ const Sales = () => {
                 className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 grid grid-cols-2 border border-slate-700 flex justify-between items-center"
               >
                 <div className="flex flex-col items-center justify-center p-6">
-                  <h2 className="text-2xl font-bold text-white mb-6">{product.name}</h2>
+                  <h2 className="text-2xl font-bold text-white mb-6">
+                    {product.name}
+                  </h2>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm mb-8 w-full max-w-4xl">
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Category:</span>
+                      <span className="font-medium text-blue-300">
+                        Category:
+                      </span>
                       <p className="text-white">{product.category}</p>
                     </div>
                     <div className="text-slate-300">
@@ -303,20 +307,30 @@ const Sales = () => {
                       <p className="text-white">₹{product.selling_price}</p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Inventory:</span>
-                      <p className="text-white">{product.inventory_level} units</p>
+                      <span className="font-medium text-blue-300">
+                        Inventory:
+                      </span>
+                      <p className="text-white">
+                        {product.inventory_level} units
+                      </p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Cost/unit:</span>
+                      <span className="font-medium text-blue-300">
+                        Cost/unit:
+                      </span>
                       <p className="text-white">₹{product.production_cost}</p>
                     </div>
                   </div>
 
                   <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="text-slate-300 text-sm space-y-1">
-                      <div>Revenue: ₹{formatNumber(Math.round(calc.revenue))}</div>
+                      <div>
+                        Revenue: ₹{formatNumber(Math.round(calc.revenue))}
+                      </div>
                       <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
-                      <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
+                      <div>
+                        Profit: ₹{formatNumber(Math.round(calc.profit))}
+                      </div>
                     </div>
 
                     <div className="flex flex-col items-center gap-2">
@@ -358,8 +372,9 @@ const Sales = () => {
                     label="Sales Volume (Units)"
                     tooltipText="Units to sell"
                     value={[pSales.sales_volume || 0]}
-                    min={0}
-                    max={product.inventory_level || 1000}
+                    isFixed={true}
+                    fixedMax={product.inventory_level || 1000000}
+                    fixedMin={0}
                     onValueChange={(val) =>
                       handleProductInputChange(
                         productId,
@@ -371,6 +386,7 @@ const Sales = () => {
                   <Slider
                     label="Market Share (%)"
                     tooltipText="Target market percentage"
+                    isPercentage={true}
                     value={[pSales.market_share || 0]}
                     min={0}
                     max={100}
@@ -388,6 +404,7 @@ const Sales = () => {
                     value={[pSales.customer_satisfaction || 1]}
                     min={1}
                     max={10}
+                    isRating={true}
                     onValueChange={(val) =>
                       handleProductInputChange(
                         productId,
@@ -397,9 +414,6 @@ const Sales = () => {
                     }
                   />
                 </div>
-
-                {/* Actions */}
-
               </div>
             );
           })}

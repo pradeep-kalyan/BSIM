@@ -200,6 +200,7 @@ const ProductionForm = () => {
                 tooltipText="Manufacturing defect percentage"
                 defaultValue={[data?.defect_rate ?? 0]}
                 value={[data?.defect_rate ?? 0]}
+                isPercentage={true}
                 min={0}
                 max={100}
                 onValueChange={(val) => handleChange("defect_rate", val[0])}

@@ -163,6 +163,7 @@ const RDForm = () => {
                 tooltipText="Product quality enhancement"
                 defaultValue={[data.quality_changes ?? 0]}
                 value={[data.quality_changes ?? 0]}
+                isPercentage={true}
                 min={0}
                 max={100}
                 onValueChange={(val) => handleChange("quality_changes", val[0])}
