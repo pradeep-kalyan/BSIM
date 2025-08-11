@@ -37,14 +37,14 @@ const steps = [
     description: "Handle HR decisions and workforce management",
   },
   {
-    label: "Marketing",
-    icon: TrendingUp,
-    description: "Plan marketing strategies and campaigns",
-  },
-  {
     label: "Research & Development",
     icon: Beaker,
     description: "Invest in innovation and product development",
+  },
+  {
+    label: "Products",
+    icon: Package,
+    description: "Manage product portfolio and pricing",
   },
   {
     label: "Production",
@@ -52,9 +52,9 @@ const steps = [
     description: "Optimize production processes and capacity",
   },
   {
-    label: "Products",
-    icon: Package,
-    description: "Manage product portfolio and pricing",
+    label: "Marketing",
+    icon: TrendingUp,
+    description: "Plan marketing strategies and campaigns",
   },
   {
     label: "Sales",
@@ -136,20 +136,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           quality_changes: state.rd.quality_changes,
         },
         production: {
-          production_capacity: state.production.production_capacity,
-          inventory_value: state.production.inventory_value,
-          storage_capacity: state.production.storage_capacity,
-          defect_rate: state.production.defect_rate,
-          quality_improvement_investment:
-            state.production.quality_improvement_investment,
-          efficiency_upgrade_cost: state.production.efficiency_upgrade_cost,
-          maintenance_budget: state.production.maintenance_budget,
-          automation_level: state.production.automation_level,
-          safety_investment: state.production.safety_investment,
-          environmental_compliance_cost:
-            state.production.environmental_compliance_cost,
-          units_to_produce: state.production.units_to_produce,
-          cost_per_unit: state.production.cost_per_unit,
+          products: state.production.products,
         },
         finance: {
           investment_amount: state.finance.investment_amount,
@@ -171,12 +158,11 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             quality_rating: product.quality_rating,
             innovation_rating: product.innovation_rating,
             sustainability_rating: product.sustainability_rating,
-            production_cost: product.production_cost,
-            selling_price: product.selling_price,
-            inventory_level: product.inventory_level,
-            production_capacity: product.production_capacity,
-            development_cost: product.development_cost,
-            marketing_budget: product.marketing_budget,
+            selling_price: product.selling_price || 0,
+            inventory_level: product.inventory_level || 0,
+            production_capacity: product.production_capacity || 0,
+            development_cost: product.development_cost || 0,
+            marketing_budget: product.marketing_budget || 0,
             status: product.status,
             launch_period: product.launch_period,
             discontinue_period: product.discontinue_period,
@@ -340,13 +326,13 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       case 0:
         return <HRDashboard />;
       case 1:
-        return <MarketingForm />;
-      case 2:
         return <RDForm />;
+      case 2:
+        return <ProductsForm companyId={companyId} />;
       case 3:
         return <ProductionForm />;
       case 4:
-        return <ProductsForm companyId={companyId} />;
+        return <MarketingForm />;
       case 5:
         return <Sales />;
       case 6:

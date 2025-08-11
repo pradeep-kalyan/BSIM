@@ -12,7 +12,7 @@ export async function getProduct(id: string) {
       where: { id },
       include: {
         company: true,
-        product_performances: {
+        performances: {
           orderBy: { period: "asc" },
         },
       },
@@ -24,12 +24,8 @@ export async function getProduct(id: string) {
   }
 }
 
-
-
 export async function createProduct(formData: FormData) {
   try {
-    const inventory_level =
-      parseInt(formData.get("inventory_level") as string) || 0;
     const marketing_budget =
       parseFloat(formData.get("marketing_budget") as string) || 0;
     const company = await prisma.company.findUnique({
@@ -59,22 +55,6 @@ export async function createProduct(formData: FormData) {
           : 0,
         sustainability_rating: formData.get("sustainability_rating")
           ? parseFloat(formData.get("sustainability_rating") as string)
-          : 0,
-        production_cost: formData.get("production_cost")
-          ? parseFloat(formData.get("production_cost") as string)
-          : 0,
-        selling_price: formData.get("selling_price")
-          ? parseFloat(formData.get("selling_price") as string)
-          : 0,
-        inventory_level: inventory_level,
-        production_capacity: formData.get("production_capacity")
-          ? parseInt(formData.get("production_capacity") as string)
-          : 2000,
-        development_cost: formData.get("development_cost")
-          ? parseFloat(formData.get("development_cost") as string)
-          : 0,
-        marketing_budget: formData.get("marketing_budget")
-          ? parseFloat(formData.get("marketing_budget") as string)
           : 0,
         status: (formData.get("status") as string) || "development",
         launch_period: formData.get("launch_period")
@@ -131,8 +111,82 @@ export async function updateProduct(
   }
 }
 
+// Product performance operations
+export async function getProductPerformance(productId: string, period: number) {
+  try {
+    const performance = await prisma.product_performance.findUnique({
+      where: {
+        product_id_period: {
+          product_id: productId,
+          period,
+        },
+      },
+      include: {
+        product: true,
+      },
+    });
+    return performance;
+  } catch (error) {
+    console.error("Error fetching product performance:", error);
+    throw new Error("Failed to fetch product performance");
+  }
+}
 
+export async function getProductPerformanceHistory(productId: string) {
+  try {
+    const performance = await prisma.product_performance.findMany({
+      where: { product_id: productId },
+      orderBy: { period: "asc" },
+      include: {
+        product: true,
+      },
+    });
+    return performance;
+  } catch (error) {
+    console.error("Error fetching product performance history:", error);
+    throw new Error("Failed to fetch product performance history");
+  }
+}
 
+export async function createProductPerformance(formData: FormData) {
+  const product = await getProduct(formData.get("productID") as string);
+  try {
+    const sales_volume = parseInt(formData.get("sales") as string) || 0;
+    const revenue = parseFloat(formData.get("revenue") as string) || 0;
 
+    // Get production cost from the latest production decision
+    const production = await prisma.production.findFirst({
+      where: {
+        product_id: product?.id,
+        company_id: product?.company_id,
+      },
+      orderBy: { period: "desc" },
+    });
 
-
+    const costs = (production?.cost_per_unit ?? 0) * sales_volume || 0;
+    const profit = revenue - costs;
+    const cashBalance = product?.company?.cash_balance || 0;
+    const NewCashBalance = cashBalance + profit;
+    await updateCompany(product?.company_id as string, {
+      cash_balance: NewCashBalance,
+    });
+    const performance = await prisma.product_performance.create({
+      data: {
+        product_id: product?.id as string,
+        period: parseInt(formData.get("period") as string) || 1,
+        sales_volume: sales_volume,
+        revenue: parseFloat(formData.get("revenue") as string) || 0,
+        costs: costs,
+        profit: profit,
+        market_share: parseFloat(formData.get("market_share") as string) || 0,
+        customer_satisfaction:
+          parseFloat(formData.get("customer_satisfaction") as string) || 0,
+      },
+    });
+    revalidatePath(`/products/catalog?tab=performance`);
+    return performance.id;
+  } catch (error) {
+    console.error("Error creating product performance:", error);
+    throw new Error("Failed to create product performance");
+  }
+}

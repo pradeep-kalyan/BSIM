@@ -97,12 +97,6 @@ CREATE TABLE "products" (
     "quality_rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "innovation_rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "sustainability_rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "production_cost" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "selling_price" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "inventory_level" INTEGER NOT NULL DEFAULT 0,
-    "production_capacity" INTEGER NOT NULL DEFAULT 2000,
-    "development_cost" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "marketing_budget" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "status" TEXT NOT NULL DEFAULT 'development',
     "launch_period" INTEGER,
     "discontinue_period" INTEGER,
@@ -144,14 +138,15 @@ CREATE TABLE "finance" (
 CREATE TABLE "production" (
     "id" TEXT NOT NULL,
     "company_id" TEXT NOT NULL,
+    "product_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
     "units_to_produce" INTEGER NOT NULL,
-    "cost_per_unit" INTEGER NOT NULL,
-    "budget" INTEGER NOT NULL DEFAULT 0,
+    "cost_per_unit" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "total_cost" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "production_capacity" INTEGER NOT NULL DEFAULT 0,
     "storage_capacity" INTEGER DEFAULT 0,
-    "inventory_value" INTEGER NOT NULL,
-    "defect_rate" INTEGER NOT NULL,
+    "inventory_value" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "defect_rate" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "finalised" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -226,13 +221,14 @@ CREATE TABLE "product_performances" (
     "id" TEXT NOT NULL,
     "product_id" TEXT NOT NULL,
     "period" INTEGER NOT NULL,
-    "data" TEXT NOT NULL DEFAULT '{}',
     "sales_volume" INTEGER NOT NULL DEFAULT 0,
+    "selling_price" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "revenue" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "costs" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "profit" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "market_share" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "customer_satisfaction" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "costs" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "data" TEXT NOT NULL DEFAULT '{}',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "product_performances_pkey" PRIMARY KEY ("id")
@@ -275,10 +271,10 @@ CREATE INDEX "company_access_user_id_idx" ON "company_access"("user_id");
 CREATE UNIQUE INDEX "company_access_company_id_user_id_key" ON "company_access"("company_id", "user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "products_name_key" ON "products"("name");
+CREATE INDEX "products_company_id_idx" ON "products"("company_id");
 
 -- CreateIndex
-CREATE INDEX "products_company_id_idx" ON "products"("company_id");
+CREATE UNIQUE INDEX "products_company_id_name_key" ON "products"("company_id", "name");
 
 -- CreateIndex
 CREATE INDEX "finance_company_id_idx" ON "finance"("company_id");
@@ -293,7 +289,10 @@ CREATE UNIQUE INDEX "finance_company_id_period_key" ON "finance"("company_id", "
 CREATE INDEX "production_company_id_idx" ON "production"("company_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "production_company_id_period_key" ON "production"("company_id", "period");
+CREATE INDEX "production_product_id_idx" ON "production"("product_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "production_company_id_product_id_period_key" ON "production"("company_id", "product_id", "period");
 
 -- CreateIndex
 CREATE INDEX "hr_decisions_company_id_idx" ON "hr_decisions"("company_id");
@@ -321,3 +320,57 @@ CREATE INDEX "product_performances_product_id_idx" ON "product_performances"("pr
 
 -- CreateIndex
 CREATE UNIQUE INDEX "product_performances_product_id_period_key" ON "product_performances"("product_id", "period");
+
+-- AddForeignKey
+ALTER TABLE "simulations" ADD CONSTRAINT "simulations_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "companies" ADD CONSTRAINT "companies_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "simulations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "companies" ADD CONSTRAINT "companies_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "company_histories" ADD CONSTRAINT "company_histories_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "simulation_access" ADD CONSTRAINT "simulation_access_simulation_id_fkey" FOREIGN KEY ("simulation_id") REFERENCES "simulations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "simulation_access" ADD CONSTRAINT "simulation_access_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "company_access" ADD CONSTRAINT "company_access_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "company_access" ADD CONSTRAINT "company_access_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "products" ADD CONSTRAINT "products_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "finance" ADD CONSTRAINT "finance_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "finance" ADD CONSTRAINT "finance_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "production" ADD CONSTRAINT "production_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "production" ADD CONSTRAINT "production_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "hr_decisions" ADD CONSTRAINT "hr_decisions_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "hr_role_decisions" ADD CONSTRAINT "hr_role_decisions_hr_decision_id_fkey" FOREIGN KEY ("hr_decision_id") REFERENCES "hr_decisions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "rd" ADD CONSTRAINT "rd_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "marketing" ADD CONSTRAINT "marketing_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "product_performances" ADD CONSTRAINT "product_performances_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;

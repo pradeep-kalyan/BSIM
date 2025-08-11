@@ -63,7 +63,6 @@ export interface ProductionDataType {
   period: number;
   units_to_produce: number;
   cost_per_unit: number;
-  budget: number;
   production_capacity: number;
   storage_capacity: number | null;
   inventory_value: number;

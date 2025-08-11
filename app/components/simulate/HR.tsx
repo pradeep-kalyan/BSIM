@@ -47,7 +47,7 @@ const HRDashboard = () => {
   // Calculate total employee count
   const totalEmployeeCount = getTotalEmployees();
   const totalHires =
-    data.existingRoles.reduce((sum, role) => {
+    data.existingRoles?.reduce((sum, role) => {
       const hires = isNaN(role.hires) ? 0 : role.hires || 0;
       return sum + hires;
     }, 0) +
@@ -56,13 +56,13 @@ const HRDashboard = () => {
       return sum + hires;
     }, 0) || 0);
 
-  const totalFires = data.existingRoles.reduce((sum, role) => {
+  const totalFires = data.existingRoles?.reduce((sum, role) => {
     const fires = isNaN(role.fires) ? 0 : role.fires || 0;
     return sum + fires;
   }, 0);
 
   const projectedSalaryBudget =
-    data.existingRoles.reduce((sum, role) => {
+    data.existingRoles?.reduce((sum, role) => {
       const headCount = isNaN(role.current_head_count)
         ? 0
         : role.current_head_count || 0;
@@ -180,10 +180,11 @@ const HRDashboard = () => {
 
           <InfoCard
             label="Satisfaction"
-            value={`${isNaN(data.employee_satisfaction)
+            value={`${
+              isNaN(data.employee_satisfaction)
                 ? 0
                 : parseFloat(data.employee_satisfaction.toFixed(0))
-              }%`}
+            }%`}
             Icon={Award}
             iconColor="text-purple-400"
             isCurrency={false}
@@ -205,12 +206,12 @@ const HRDashboard = () => {
                 </h3>
               </div>
               <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
-                {data.existingRoles.length} Roles
+                {data.existingRoles?.length} Roles
               </span>
             </div>
 
             <div className="space-y-3">
-              {data.existingRoles.map((role, index) => (
+              {data.existingRoles?.map((role, index) => (
                 <div
                   key={index}
                   className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600"
@@ -456,10 +457,11 @@ const HRDashboard = () => {
                   text="Target employee satisfaction percentage"
                 />
                 <Slider
-                  label={`${(data?.employee_satisfaction).toFixed(0)}%`}
+                  label={`${data?.employee_satisfaction?.toFixed(0)}%`}
                   value={[data?.employee_satisfaction]}
                   min={0}
                   max={100}
+                  isPercentage={true}
                   onValueChange={(val) => {
                     updateData({ employee_satisfaction: val[0] });
                     setSuccess(false);
@@ -536,10 +538,11 @@ const HRDashboard = () => {
                 <div className="bg-slate-600/40 rounded-lg p-3">
                   <p className="text-slate-300 text-xs mb-1">Cash After HR</p>
                   <p
-                    className={`text-lg font-bold ${(projectedCashBalance || 0) < 0
+                    className={`text-lg font-bold ${
+                      (projectedCashBalance || 0) < 0
                         ? "text-red-400"
                         : "text-emerald-400"
-                      }`}
+                    }`}
                   >
                     {formatCurrency(projectedCashBalance || 0)}
                   </p>

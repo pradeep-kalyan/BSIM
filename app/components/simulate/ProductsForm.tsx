@@ -15,7 +15,6 @@ import InfoCard from "@/app/components/InfoCard";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-import formatCurrency from "@/app/functions/formatCurrency";
 // Data types
 interface Product {
   id: string;
@@ -25,12 +24,6 @@ interface Product {
   quality_rating: number;
   innovation_rating: number;
   sustainability_rating: number;
-  production_cost: number;
-  selling_price: number;
-  inventory_level: number;
-  production_capacity: number;
-  development_cost: number;
-  marketing_budget: number;
   status: string;
   launch_period?: number | null;
   discontinue_period?: number | null;
@@ -78,12 +71,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
         quality_rating: productData.quality_rating || 0,
         innovation_rating: productData.innovation_rating || 0,
         sustainability_rating: productData.sustainability_rating || 0,
-        production_cost: productData.production_cost || 0,
-        selling_price: productData.selling_price || 0,
-        inventory_level: productData.inventory_level || 0,
-        production_capacity: productData.production_capacity || 2000,
-        development_cost: productData.development_cost || 0,
-        marketing_budget: productData.marketing_budget || 0,
         status: "active",
         launch_period: undefined,
         discontinue_period: undefined,
@@ -122,17 +109,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
         sustainability_rating:
           productData.sustainability_rating ??
           editProduct.sustainability_rating,
-        production_cost:
-          productData.production_cost ?? editProduct.production_cost,
-        selling_price: productData.selling_price ?? editProduct.selling_price,
-        inventory_level:
-          productData.inventory_level ?? editProduct.inventory_level,
-        production_capacity:
-          productData.production_capacity ?? editProduct.production_capacity,
-        development_cost:
-          productData.development_cost ?? editProduct.development_cost,
-        marketing_budget:
-          productData.marketing_budget ?? editProduct.marketing_budget,
         status: editProduct.status,
         launch_period: editProduct.launch_period || undefined,
         discontinue_period: editProduct.discontinue_period || undefined,
@@ -204,10 +180,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
   const developmentProducts = products.filter(
     (p) => p.status === "development"
   ).length;
-  const totalProductValue = products.reduce(
-    (acc, p) => acc + p.selling_price * p.inventory_level,
-    0
-  );
   const avgQualityRating =
     products.length > 0
       ? products.reduce((acc, p) => acc + p.quality_rating, 0) / products.length
@@ -255,7 +227,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
           />
           <InfoCard
             label="Portfolio Value"
-            value={formatCurrency(totalProductValue)}
+            value={""}
             isCurrency={true}
             Icon={IndianRupee}
             width="w-full"
@@ -325,21 +297,9 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                       <span className="text-white">{product.category}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Price:</span>
-                      <span className="text-white">
-                        {formatCurrency(product.selling_price)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
                       <span className="text-slate-400">Quality:</span>
                       <span className="text-white">
                         {product.quality_rating}/10
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Inventory:</span>
-                      <span className="text-white">
-                        {product.inventory_level}
                       </span>
                     </div>
                   </div>
@@ -420,12 +380,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                             innovation_rating: product.innovation_rating,
                             sustainability_rating:
                               product.sustainability_rating,
-                            production_cost: product.production_cost,
-                            selling_price: product.selling_price,
-                            inventory_level: product.inventory_level,
-                            production_capacity: product.production_capacity,
-                            development_cost: product.development_cost,
-                            marketing_budget: product.marketing_budget,
                             status: product.status,
                             launch_period: product.launch_period || null,
                             discontinue_period:

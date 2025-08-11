@@ -13,10 +13,23 @@ import {
   useProductForm,
   useSalesForm,
   useCashBalance,
+  useProductionForm,
 } from "@/app/context/FormContext";
 import { Slider } from "@/components/ui/slider";
 import InfoCard from "@/app/components/InfoCard";
 import formatCurrency from "@/app/functions/formatCurrency";
+// Type for production data per product
+type ProductProductionData = {
+  product_id: string;
+  units_to_produce: number;
+  cost_per_unit: number;
+  total_cost: number;
+  production_capacity: number;
+  storage_capacity: number;
+  inventory_value: number;
+  defect_rate: number;
+};
+
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
@@ -27,7 +40,28 @@ const Sales = () => {
     updateData: updateSalesData,
     setError,
   } = useSalesForm();
+  const { data: productionData } = useProductionForm();
   const { projectedCashBalance, updateSalesBudgetImpact } = useCashBalance();
+
+  // Helper function to get available inventory based on production data
+  const getAvailableInventory = React.useCallback(
+    (productId: string) => {
+      // Check if there's production data for this product
+      const productionEntry = productionData.products?.find(
+        (prod) => prod.product_id === productId
+      );
+
+      if (productionEntry) {
+        // Use production output as available inventory
+        return productionEntry.units_to_produce;
+      }
+
+      // Fallback to product's existing inventory level
+      const product = products?.find((p) => p.id === productId);
+      return product?.inventory_level || 0;
+    },
+    [productionData.products, products]
+  );
 
   const [validationAlerts, setValidationAlerts] = React.useState<
     Record<string, string | null>
@@ -46,7 +80,8 @@ const Sales = () => {
       if (!product.id) return; // Skip products without IDs
       const pSales = salesData?.[product.id] || {};
       const salesVolume = pSales.sales_volume || 0;
-      const revenue = salesVolume * (product.selling_price || 0);
+      const sellingPrice = pSales.selling_price || product.selling_price || 0;
+      const revenue = salesVolume * sellingPrice;
       const costs = salesVolume * (product.production_cost || 0);
       const profit = revenue - costs;
       values[product.id] = { revenue, costs, profit };
@@ -112,6 +147,7 @@ const Sales = () => {
         if (product.id && !updatedSalesData[product.id]) {
           updatedSalesData[product.id] = {
             sales_volume: 0,
+            selling_price: product.selling_price || 1000, // Initialize with product's default selling price
             revenue: 0,
             costs: 0,
             profit: 0,
@@ -136,6 +172,8 @@ const Sales = () => {
   ) => {
     const currentProductSales = salesData[productId] || {
       sales_volume: 0,
+      selling_price:
+        products?.find((p) => p.id === productId)?.selling_price || 0,
       revenue: 0,
       costs: 0,
       profit: 0,
@@ -163,20 +201,27 @@ const Sales = () => {
     const pSales = salesData?.[productId] || {};
     if (!product) return;
 
+    // Get available inventory from production data
+    const availableInventory = getAvailableInventory(productId);
+
     if ((pSales.sales_volume || 0) <= 0) {
       setValidationAlerts((prev) => ({
         ...prev,
-        [productId]: " Sales volume must be greater than 0",
+        [productId]: "⚠️ Sales volume must be greater than 0",
       }));
       return;
     }
-    if (
-      pSales.sales_volume &&
-      pSales.sales_volume > (product.inventory_level || 0)
-    ) {
+    if ((pSales.selling_price || 0) <= 0) {
       setValidationAlerts((prev) => ({
         ...prev,
-        [productId]: ` Sales volume exceeds inventory (${product.inventory_level})`,
+        [productId]: "⚠️ Selling price must be greater than 0",
+      }));
+      return;
+    }
+    if (pSales.sales_volume && pSales.sales_volume > availableInventory) {
+      setValidationAlerts((prev) => ({
+        ...prev,
+        [productId]: `⚠️ Sales volume (${pSales.sales_volume}) exceeds available inventory (${availableInventory}). Check production output.`,
       }));
       return;
     }
@@ -199,8 +244,7 @@ const Sales = () => {
     }
 
     // Calculate inventory reduction
-    const newInventoryLevel =
-      (product.inventory_level || 0) - (pSales.sales_volume || 0);
+    const newInventoryLevel = availableInventory - (pSales.sales_volume || 0);
 
     // Update the specific product's sales data with calculated values
     const updatedSalesData = {
@@ -222,7 +266,7 @@ const Sales = () => {
     // Show inventory reduction message
     setValidationAlerts((prev) => ({
       ...prev,
-      [productId]: ` Validated! Inventory will be reduced to ${newInventoryLevel} units`,
+      [productId]: `✅ Validated! Inventory will be reduced to ${newInventoryLevel} units`,
     }));
 
     setTimeout(() => {
@@ -277,7 +321,7 @@ const Sales = () => {
         {products
           ?.filter((product) => product.id)
           .map((product) => {
-            const productId = product.id!; 
+            const productId = product.id!;
             const pSales = salesData?.[productId] || {};
             const calc = calculatedValues[productId] || {
               revenue: 0,
@@ -288,35 +332,64 @@ const Sales = () => {
             return (
               <div
                 key={productId}
-                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 grid-cols-2 border border-slate-700 flex justify-between items-center"
+                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 border border-slate-700 flex justify-between items-center"
               >
                 <div className="flex flex-col items-center justify-center p-6">
-                  <h2 className="text-2xl font-bold text-white mb-6">{product.name}</h2>
+                  <h2 className="text-2xl font-bold text-white mb-6">
+                    {product.name}
+                  </h2>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm mb-8 w-full max-w-4xl">
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Category:</span>
+                      <span className="font-medium text-blue-300">
+                        Category:
+                      </span>
                       <p className="text-white">{product.category}</p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Price:</span>
-                      <p className="text-white">₹{product.selling_price}</p>
+                      <span className="font-medium text-blue-300">
+                        Current Price/unit:
+                      </span>
+                      <p className="text-white">
+                        ₹{pSales.selling_price || product.selling_price || 0}
+                      </p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Inventory:</span>
-                      <p className="text-white">{product.inventory_level} units</p>
+                      <span className="font-medium text-blue-300">
+                        Available Inventory:
+                      </span>
+                      <p className="text-white">
+                        {getAvailableInventory(productId)} units
+                        {getAvailableInventory(productId) !==
+                          (product.inventory_level || 0) && (
+                          <span className="text-green-400 ml-1">
+                            (from production:{" "}
+                            {productionData.products?.find(
+                              (prod: ProductProductionData) =>
+                                prod.product_id === productId
+                            )?.units_to_produce || 0}
+                            )
+                          </span>
+                        )}
+                      </p>
                     </div>
                     <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Cost/unit:</span>
+                      <span className="font-medium text-blue-300">
+                        Cost/unit:
+                      </span>
                       <p className="text-white">₹{product.production_cost}</p>
                     </div>
                   </div>
 
                   <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="text-slate-300 text-sm space-y-1">
-                      <div>Revenue: ₹{formatNumber(Math.round(calc.revenue))}</div>
+                      <div>
+                        Revenue: ₹{formatNumber(Math.round(calc.revenue))}
+                      </div>
                       <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
-                      <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
+                      <div>
+                        Profit: ₹{formatNumber(Math.round(calc.profit))}
+                      </div>
                     </div>
 
                     <div className="flex flex-col items-center gap-2">
@@ -356,10 +429,11 @@ const Sales = () => {
                 <div className="flex flex-col justify-center items-center">
                   <Slider
                     label="Sales Volume (Units)"
-                    tooltipText="Units to sell"
+                    tooltipText="Number of units to sell"
                     value={[pSales.sales_volume || 0]}
-                    min={0}
-                    max={product.inventory_level || 1000}
+                    isFixed={true}
+                    fixedMax={getAvailableInventory(productId) || 1000000}
+                    fixedMin={0}
                     onValueChange={(val) =>
                       handleProductInputChange(
                         productId,
@@ -369,8 +443,24 @@ const Sales = () => {
                     }
                   />
                   <Slider
+                    label="Selling Price per Unit (₹)"
+                    tooltipText="Price per unit for this product"
+                    value={[pSales.selling_price || product.selling_price || 0]}
+                    isFixed={true}
+                    fixedMax={10000} // Maximum selling price limit
+                    fixedMin={0}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "selling_price",
+                        val[0]
+                      )
+                    }
+                  />
+                  <Slider
                     label="Market Share (%)"
                     tooltipText="Target market percentage"
+                    isPercentage={true}
                     value={[pSales.market_share || 0]}
                     min={0}
                     max={100}
@@ -388,6 +478,7 @@ const Sales = () => {
                     value={[pSales.customer_satisfaction || 1]}
                     min={1}
                     max={10}
+                    isRating={true}
                     onValueChange={(val) =>
                       handleProductInputChange(
                         productId,
@@ -397,9 +488,6 @@ const Sales = () => {
                     }
                   />
                 </div>
-
-                {/* Actions */}
-
               </div>
             );
           })}
