@@ -65,7 +65,7 @@ const Sales = () => {
       productCount = 0;
 
     products?.forEach((p) => {
-      if (!p.id) return; // Skip products without IDs
+      if (!p.id) return;
       const vals = calculatedValues[p.id] || {
         revenue: 0,
         costs: 0,
@@ -219,10 +219,9 @@ const Sales = () => {
       [productId]: true,
     }));
 
-    // Show inventory reduction message
     setValidationAlerts((prev) => ({
       ...prev,
-      [productId]: ` Validated! Inventory will be reduced to ${newInventoryLevel} units`,
+      [productId]: `✅ Validated! Inventory will be reduced to ${newInventoryLevel} units`,
     }));
 
     setTimeout(() => {
@@ -277,7 +276,7 @@ const Sales = () => {
         {products
           ?.filter((product) => product.id)
           .map((product) => {
-            const productId = product.id!; 
+            const productId = product.id!;
             const pSales = salesData?.[productId] || {};
             const calc = calculatedValues[productId] || {
               revenue: 0,
@@ -288,118 +287,124 @@ const Sales = () => {
             return (
               <div
                 key={productId}
-                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 grid grid-cols-2 border border-slate-700 flex justify-between items-center"
+                className="bg-slate-800/50 shadow-md rounded-2xl px-6 py-3 border border-slate-700 mb-4"
               >
-                <div className="flex flex-col items-center justify-center p-6">
-                  <h2 className="text-2xl font-bold text-white mb-6">{product.name}</h2>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm mb-8 w-full max-w-4xl">
-                    <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Category:</span>
-                      <p className="text-white">{product.category}</p>
-                    </div>
-                    <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Price:</span>
-                      <p className="text-white">₹{product.selling_price}</p>
-                    </div>
-                    <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Inventory:</span>
-                      <p className="text-white">{product.inventory_level} units</p>
-                    </div>
-                    <div className="text-slate-300">
-                      <span className="font-medium text-blue-300">Cost/unit:</span>
-                      <p className="text-white">₹{product.production_cost}</p>
+                <h2 className="text-2xl font-bold text-white mb-2">{product.name}</h2>
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Left Section */}
+                  <div className="flex flex-col justify-between ">
+                    <div className="flex flex-col gap-4">
+                      <Slider
+                        label="Sales Volume (Units)"
+                        tooltipText="Units to sell"
+                        value={[pSales.sales_volume || 0]}
+                        min={0}
+                        max={product.inventory_level || 1000}
+                        onValueChange={(val) =>
+                          handleProductInputChange(productId, "sales_volume", val[0])
+                        }
+                      />
+                      <Slider
+                        label="Market Share (%)"
+                        tooltipText="Target market percentage"
+                        value={[pSales.market_share || 0]}
+                        min={0}
+                        max={100}
+                        onValueChange={(val) =>
+                          handleProductInputChange(productId, "market_share", val[0])
+                        }
+                      />
                     </div>
                   </div>
 
-                  <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="text-slate-300 text-sm space-y-1">
-                      <div>Revenue: ₹{formatNumber(Math.round(calc.revenue))}</div>
-                      <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
-                      <div>Profit: ₹{formatNumber(Math.round(calc.profit))}</div>
-                    </div>
+                  <div className=" flex flex-col items-center gap-10">
+                    <Slider
+                      label="Customer Satisfaction (1-10)"
+                      tooltipText="Customer satisfaction rating"
+                      value={[pSales.customer_satisfaction || 1]}
+                      min={1}
+                      max={10}
+                      onValueChange={(val) =>
+                        handleProductInputChange(productId, "customer_satisfaction", val[0])
+                      }
+                    />
 
-                    <div className="flex flex-col items-center gap-2">
-                      <button
-                        onClick={() => handleValidateProduct(productId)}
-                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow"
-                      >
-                        Validate
-                      </button>
+                    <div className="w-full p-2 rounded-md text-lg text-white flex justify-center gap-8">
+                      <div className="flex flex-col items-center min-w-[120px]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                          <span>Revenue:</span>
+                        </div>
+                        <span className="font-medium">₹{formatNumber(Math.round(calc.revenue))}</span>
+                      </div>
 
-                      <div className="h-6 flex items-center">
-                        {validationAlerts[productId] &&
-                          !validationAlerts[productId].startsWith("✅") && (
-                            <div className="flex items-center gap-2 text-rose-400">
-                              <AlertTriangle size={18} />
-                              {validationAlerts[productId]}
-                            </div>
-                          )}
+                      <div className="flex flex-col items-center min-w-[120px]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                          <span>Costs:</span>
+                        </div>
+                        <span className="font-medium">₹{formatNumber(Math.round(calc.costs))}</span>
+                      </div>
 
-                        {successProducts[productId] &&
-                          !validationAlerts[productId] && (
-                            <div className="flex items-center gap-2 text-green-400">
-                              <Check size={18} /> Validated!
-                            </div>
-                          )}
-
-                        {validationAlerts[productId]?.startsWith("✅") && (
-                          <div className="flex items-center gap-2 text-green-400">
-                            <Check size={18} /> {validationAlerts[productId]}
-                          </div>
-                        )}
+                      <div className="flex flex-col items-center min-w-[120px]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                          <span>Profit:</span>
+                        </div>
+                        <span className="font-medium">₹{formatNumber(Math.round(calc.profit))}</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Right Section */}
+                  <div className=" flex flex-col items-center gap-4">
+                    <div className=" w-full p-4 rounded-lg text-sm space-y-2 text-white">
+                      <div>
+                        <span className="text-blue-300 font-medium">Category: </span>
+                        {product.category}
+                      </div>
+                      <div>
+                        <span className="text-blue-300 font-medium">Price: </span>
+                        ₹{product.selling_price}
+                      </div>
+                      <div>
+                        <span className="text-blue-300 font-medium">Inventory: </span>
+                        {product.inventory_level} units
+                      </div>
+                      <div>
+                        <span className="text-blue-300 font-medium">Cost/unit: </span>
+                        ₹{product.production_cost}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleValidateProduct(productId)}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow text-sm"
+                    >
+                      Validate
+                    </button>
+                  </div>
                 </div>
+                <div className="h-6 flex items-center">
+                  {validationAlerts[productId] &&
+                    !validationAlerts[productId].startsWith("✅") && (
+                      <div className="flex items-center gap-2 text-rose-400">
+                        <AlertTriangle size={18} />
+                        {validationAlerts[productId]}
+                      </div>
+                    )}
 
-                <div className="flex flex-col justify-center items-center">
-                  <Slider
-                    label="Sales Volume (Units)"
-                    tooltipText="Units to sell"
-                    value={[pSales.sales_volume || 0]}
-                    min={0}
-                    max={product.inventory_level || 1000}
-                    onValueChange={(val) =>
-                      handleProductInputChange(
-                        productId,
-                        "sales_volume",
-                        val[0]
-                      )
-                    }
-                  />
-                  <Slider
-                    label="Market Share (%)"
-                    tooltipText="Target market percentage"
-                    value={[pSales.market_share || 0]}
-                    min={0}
-                    max={100}
-                    onValueChange={(val) =>
-                      handleProductInputChange(
-                        productId,
-                        "market_share",
-                        val[0]
-                      )
-                    }
-                  />
-                  <Slider
-                    label="Customer Satisfaction (1-10)"
-                    tooltipText="Customer satisfaction rating"
-                    value={[pSales.customer_satisfaction || 1]}
-                    min={1}
-                    max={10}
-                    onValueChange={(val) =>
-                      handleProductInputChange(
-                        productId,
-                        "customer_satisfaction",
-                        val[0]
-                      )
-                    }
-                  />
+                  {successProducts[productId] && !validationAlerts[productId] && (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <Check size={18} /> Validated!
+                    </div>
+                  )}
+
+                  {validationAlerts[productId]?.startsWith("✅") && (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <Check size={18} /> {validationAlerts[productId]}
+                    </div>
+                  )}
                 </div>
-
-                {/* Actions */}
-
               </div>
             );
           })}

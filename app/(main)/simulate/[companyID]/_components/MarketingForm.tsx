@@ -126,7 +126,7 @@ const MarketingForm = () => {
         </div>
 
         {/* Marketing Strategy Form */}
-        <div className="bg-slate-800/90 rounded-xl p-6 border border-slate-600">
+        <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-600">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-500/20 rounded-lg">
               <Globe className="h-5 w-5 text-blue-400" />

@@ -35,9 +35,8 @@ const HRDashboard = () => {
 
   // Get total employee count from the HR role management hook
   const { getTotalEmployees } = useHRRoleManagement();
-
-  const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
-    useCashBalance();
+  const [selectedRoleIndex, setSelectedRoleIndex] = React.useState(0);
+  const { cashBalance, projectedCashBalance, updateHRBudgetImpact } = useCashBalance();
   const { data: companyData } = useCompanyForm();
 
   // State for validation and success feedback
@@ -47,12 +46,6 @@ const HRDashboard = () => {
   // Calculate total employee count
   const totalEmployeeCount = getTotalEmployees();
 
-  const totalExistingHeadCount = data.existingRoles.reduce((sum, role) => {
-    const headCount = isNaN(role.current_head_count)
-      ? 0
-      : role.current_head_count || 0;
-    return sum + headCount;
-  }, 0);
   const totalHires =
     data.existingRoles.reduce((sum, role) => {
       const hires = isNaN(role.hires) ? 0 : role.hires || 0;
@@ -188,8 +181,8 @@ const HRDashboard = () => {
           <InfoCard
             label="Satisfaction"
             value={`${isNaN(data.employee_satisfaction)
-                ? 0
-                : parseFloat(data.employee_satisfaction.toFixed(0))
+              ? 0
+              : parseFloat(data.employee_satisfaction.toFixed(0))
               }%`}
             Icon={Award}
             iconColor="text-purple-400"
@@ -211,36 +204,44 @@ const HRDashboard = () => {
                   Current Workforce
                 </h3>
               </div>
-              <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
-                {data.existingRoles.length} Roles
-              </span>
+              <div className="flex items-center gap-2">
+                <label className="text-white text-lg font-bold">Select Role:</label>
+                <select
+                  value={selectedRoleIndex}
+                  onChange={(e) => setSelectedRoleIndex(Number(e.target.value))}
+                  className="p-2 rounded bg-slate-700 text-white border border-slate-500"
+                >
+                  {data.existingRoles.map((role, idx) => (
+                    <option key={idx} value={idx}>
+                      {role.role_name}
+                    </option>
+                  ))}
+                </select>
+                <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
+                  {data.existingRoles.length} Roles
+                </span>
+              </div>
             </div>
 
             <div className="space-y-3">
-              {data.existingRoles.map((role, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600"
-                >
-                  {/* Role Header */}
+              {data.existingRoles[selectedRoleIndex] && (
+                <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <UserPlus className="h-4 w-4 text-blue-400" />
                       <h4 className="text-lg font-bold text-white">
-                        {role.role_name}
+                        {data.existingRoles[selectedRoleIndex].role_name}
                       </h4>
                     </div>
                     <div className="text-sm text-slate-300">
-                      Current: {role.current_head_count} • Projected:{" "}
-                      {role.current_head_count +
-                        (role.hires || 0) -
-                        (role.fires || 0)}
+                      Current: {data.existingRoles[selectedRoleIndex].current_head_count} • Projected:{" "}
+                      {data.existingRoles[selectedRoleIndex].current_head_count +
+                        (data.existingRoles[selectedRoleIndex].hires || 0) -
+                        (data.existingRoles[selectedRoleIndex].fires || 0)}
                     </div>
                   </div>
 
-                  {/* Controls */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Salary Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Salary per employee (₹/year)"
@@ -248,20 +249,20 @@ const HRDashboard = () => {
                       />
                       <Slider
                         label={`₹${(
-                          role.salary_per_head || 0
+                          data.existingRoles[selectedRoleIndex].salary_per_head || 0
                         ).toLocaleString()}`}
                         value={[
-                          isNaN(role.salary_per_head)
+                          isNaN(data.existingRoles[selectedRoleIndex].salary_per_head)
                             ? 0
-                            : role.salary_per_head,
+                            : data.existingRoles[selectedRoleIndex].salary_per_head,
                         ]}
                         min={0}
                         max={Math.max(
                           500000,
-                          (role.salary_per_head || 0) * 1.5
+                          (data.existingRoles[selectedRoleIndex].salary_per_head || 0) * 1.5
                         )}
                         onValueChange={(val) => {
-                          updateExistingRole(index, {
+                          updateExistingRole(selectedRoleIndex, {
                             salary_per_head: val[0],
                           });
                           setSuccess(false);
@@ -270,26 +271,30 @@ const HRDashboard = () => {
                       />
                     </div>
 
-                    {/* Staffing Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Staffing Changes"
                         text="Net headcount change"
                       />
                       <Slider
-                        label={`Net: ${(role.hires || 0) - (role.fires || 0)}`}
-                        value={[(role.hires || 0) - (role.fires || 0)]}
-                        min={-role.current_head_count}
+                        label={`Net: ${(data.existingRoles[selectedRoleIndex].hires || 0) -
+                          (data.existingRoles[selectedRoleIndex].fires || 0)
+                          }`}
+                        value={[
+                          (data.existingRoles[selectedRoleIndex].hires || 0) -
+                          (data.existingRoles[selectedRoleIndex].fires || 0),
+                        ]}
+                        min={-data.existingRoles[selectedRoleIndex].current_head_count}
                         max={50}
                         onValueChange={(val) => {
                           const netChange = Math.round(val[0]);
                           if (netChange >= 0) {
-                            updateExistingRole(index, {
+                            updateExistingRole(selectedRoleIndex, {
                               hires: netChange,
                               fires: 0,
                             });
                           } else {
-                            updateExistingRole(index, {
+                            updateExistingRole(selectedRoleIndex, {
                               hires: 0,
                               fires: Math.abs(netChange),
                             });
@@ -301,7 +306,7 @@ const HRDashboard = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -312,9 +317,6 @@ const HRDashboard = () => {
                 Create New Positions
               </h3>
               <div className="flex items-center gap-2">
-                <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-sm">
-                  {data?.newRoles?.length || 0} New
-                </span>
                 <button
                   type="button"
                   onClick={() =>
@@ -329,6 +331,9 @@ const HRDashboard = () => {
                   <PlusCircle size={14} className="inline mr-1" />
                   Add Role
                 </button>
+                <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-sm">
+                  {data?.newRoles?.length || 0} New
+                </span>
               </div>
             </div>
 
@@ -344,9 +349,9 @@ const HRDashboard = () => {
               {data?.newRoles?.map((role, index) => (
                 <div
                   key={index}
-                  className="bg-green-700/20 rounded-lg p-4 border border-green-500/30"
+                  className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600"
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-2">
                     <h4 className="text-lg font-bold text-white">
                       {role.role_name || "New Position"}
                     </h4>
@@ -361,7 +366,7 @@ const HRDashboard = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-sm text-slate-300 mb-1 block">
+                      <label className="text-m text-slate-300 mb-1 block">
                         Position Title
                       </label>
                       <input
@@ -373,7 +378,7 @@ const HRDashboard = () => {
                           setSuccess(false);
                           setBudgetAlert(null);
                         }}
-                        className="w-full p-3 rounded bg-slate-800 text-white border border-slate-500 focus:border-green-400 focus:outline-none text-sm placeholder-slate-400 hover:bg-slate-700 transition-colors"
+                        className="w-full p-3 rounded bg-slate-800 text-white border border-slate-500 focus:border-slate-300 focus:outline-none text-sm placeholder-slate-400 hover:bg-slate-700 transition-colors"
                       />
                     </div>
 
@@ -548,8 +553,8 @@ const HRDashboard = () => {
                   <p className="text-slate-300 text-xs mb-1">Cash After HR</p>
                   <p
                     className={`text-lg font-bold ${(projectedCashBalance || 0) < 0
-                        ? "text-red-400"
-                        : "text-emerald-400"
+                      ? "text-red-400"
+                      : "text-emerald-400"
                       }`}
                   >
                     {formatCurrency(projectedCashBalance || 0)}

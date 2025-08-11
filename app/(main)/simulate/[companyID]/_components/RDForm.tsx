@@ -156,6 +156,42 @@ const RDForm = () => {
               )}
             </div>
 
+            <div className="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="space-y-2">
+                <div className="text-slate-300">
+                  Available Cash:{" "}
+                  {formatCurrency(cashBalance.originalCashBalance)}
+                </div>
+                <div className="text-xl text-blue-400 font-semibold">
+                  R&D budget:{" "}
+                  <span
+                    className={
+                      projectedCashBalance - (data.budget ?? 0) < 0
+                        ? "text-rose-400"
+                        : "text-emerald-400"
+                    }
+                  >
+                    {formatCurrency(
+                      cashBalance.financeBudgetImpact - (data.budget ?? 0)
+                    )}
+                  </span>
+                </div>
+
+                <div className="text-xl text-blue-400 font-semibold">
+                  Projected Balance:{" "}
+                  <span
+                    className={
+                      projectedCashBalance - (data.budget ?? 0) < 0
+                        ? "text-rose-400"
+                        : "text-emerald-400"
+                    }
+                  >
+                    {formatCurrency(projectedCashBalance ?? 0)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Quality Improvements Slider */}
             <div>
               <Slider
@@ -172,42 +208,6 @@ const RDForm = () => {
                   {getError("quality_changes")}
                 </p>
               )}
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <div className="text-slate-300">
-                Available Cash:{" "}
-                {formatCurrency(cashBalance.originalCashBalance)}
-              </div>
-              <div className="text-xl text-blue-400 font-semibold">
-                R&D budget:{" "}
-                <span
-                  className={
-                    projectedCashBalance - (data.budget ?? 0) < 0
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }
-                >
-                  {formatCurrency(
-                    cashBalance.financeBudgetImpact - (data.budget ?? 0)
-                  )}
-                </span>
-              </div>
-
-              <div className="text-xl text-blue-400 font-semibold">
-                Projected Balance:{" "}
-                <span
-                  className={
-                    projectedCashBalance - (data.budget ?? 0) < 0
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }
-                >
-                  {formatCurrency(projectedCashBalance ?? 0)}
-                </span>
-              </div>
             </div>
           </div>
 
