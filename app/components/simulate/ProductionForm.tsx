@@ -133,7 +133,7 @@ const ProductionForm = () => {
         <InfoCard
           label="Storage Capacity"
           value={frozenData.storage_capacity}
-          Icon={Package}
+          Icon={Warehouse}
           iconColor="text-indigo-400"
           labelColor="text-white"
           valueColor="text-white"

@@ -125,149 +125,6 @@ const PieTooltip = ({ active, payload }: PieTooltipProps) => {
 };
 
 
-<<<<<<< HEAD:app/(main)/_components/HomePage.tsx
-interface FinancialHistoryType {
-  period: number;
-  total_revenue?: number;
-  revenue?: number;
-  net_profit?: number;
-  profit?: number;
-  cash_balance?: number;
-  operating_costs?: number;
-  roi?: number;
-  burn_rate?: number;
-}
-
-interface ProductPerformanceType {
-  period: number;
-  name?: string;
-  product?: {
-    name: string;
-  };
-  sales_volume?: number;
-  market_share?: number;
-  revenue?: number;
-  profit?: number;
-  customer_satisfaction?: number;
-}
-
-interface HRRole {
-  role_name: string;
-  salary_per_head: number;
-  head_count: number;
-}
-
-interface HRMetricsType {
-  period: number;
-  department?: string;
-  employees?: number;
-  satisfaction?: number;
-  newHires?: number;
-  totalBudget?: number;
-  total_budget?: number;
-  employeeSatisfaction?: number;
-  employee_satisfaction?: number;
-  totalEmployees?: number;
-  total_employee_count?: number;
-  roles?: HRRole[];
-}
-
-interface ProductionDataType {
-  id: string;
-  company_id: string;
-  period: number;
-  units_to_produce: number;
-  cost_per_unit: number;
-  budget: number;
-  production_capacity: number;
-  storage_capacity: number | null;
-  inventory_value: number;
-  defect_rate: number;
-  finalised: boolean;
-  created_at: Date;
-  updated_at: Date;
-}
-
-interface RDDataType {
-  period: number;
-  budget?: number;
-  pip?: number;
-  patented?: number;
-  time_to_market?: number;
-}
-
-interface MarketingDataType {
-  period: number;
-  budget?: number;
-}
-
-interface HRDecisionType {
-  total_budget?: number;
-  totalBudget?: number;
-  employee_satisfaction?: number;
-  employeeSatisfaction?: number;
-  total_employee_count?: number | null;
-  roles?: HRRole[];
-}
-
-interface RDDecisionType {
-  budget?: number;
-  pip?: number;
-  patented?: number;
-  time_to_market?: number;
-}
-
-interface ProductionDecisionType {
-  budget?: number;
-  units_to_produce?: number;
-  defect_rate?: number;
-  production_capacity?: number;
-}
-
-interface MarketingDecisionType {
-  budget?: number;
-}
-
-interface FinanceDecisionType {
-  total_revenue?: number;
-  net_profit?: number;
-  cash_balance?: number;
-  operating_costs?: number;
-  roi?: number;
-  burn_rate?: number;
-}
-
-interface DashboardData {
-  company: {
-    id: string;
-    name: string;
-    logo_url: string | null;
-    current_period: number;
-    cash_balance: number;
-    data?: string;
-    total_assets: number;
-    total_liabilities: number;
-    marketing_budget: number;
-    credit_rating?: string | null;
-    brand_value: number;
-  };
-  history: CompanyHistoryType[];
-  financialHistory: FinancialHistoryType[];
-  productPerformance: ProductPerformanceType[];
-  hrMetrics: HRMetricsType[];
-  productionData: ProductionDataType[];
-  rdData: RDDataType[]; // Array of all R&D decisions
-  marketingData: MarketingDataType[]; // Array of all marketing decisions
-  hr_decision: HRDecisionType | null;
-  rd_decision: RDDecisionType | null;
-  production_decision: ProductionDecisionType | null;
-  marketing_decision: MarketingDecisionType | null;
-  finance_decision: FinanceDecisionType | null;
-  activeProductsCount: number;
-}
-=======
-
->>>>>>> 80aa64c21c46daf78583ab8768c6059b108da38e:app/components/homepage/HomePage.tsx
 const getPercentChange = (current: number, prev: number) => {
   if (prev === 0 || prev === undefined || prev === null) return undefined;
   return +(((current - prev) / prev) * 100).toFixed(1);
@@ -277,11 +134,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const { setComId, setPeriod, simId } = useSimulation();
   const router = useRouter();
   const { exportDashboard, isExporting } = useExport();
-<<<<<<< HEAD:app/(main)/_components/HomePage.tsx
   const swapyRef = useRef<HTMLDivElement | null>(null);
   const swapyInstanceRef = useRef<any>(null);
-=======
-
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
     try {
@@ -291,8 +145,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       return false;
     }
   };
-
-  const CompanyLogo = ({
+   const CompanyLogo = ({
     logoUrl,
     companyName,
   }: {
@@ -327,8 +180,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       </div>
     );
   };
-
->>>>>>> 80aa64c21c46daf78583ab8768c6059b108da38e:app/components/homepage/HomePage.tsx
   // Helper function to create current period data from company object
   const createCurrentPeriodData = () => {
     const currentPeriod = data?.company?.current_period || 1;
@@ -981,25 +832,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               {/* LEFT: Company name + logo + period */}
               <div className="flex items-start gap-4 animate-slide-in-left -ml-22">
                 {/* Logo */}
-<<<<<<< HEAD:app/(main)/_components/HomePage.tsx
-                {data?.company?.logo_url && (
-                  <div className="w-32 h-32 rounded-full overflow-hidden border border-slate-700 bg-white">
-                    <Image
-                      src={data.company.logo_url}
-                      alt="Company Logo"
-                      className="object-contain w-full h-full mix-blend-multiply"
-                      width={128}
-                      height={128}
-                    />
-                  </div>
-                )}
-
-=======
                 <CompanyLogo
                   logoUrl={data?.company?.logo_url ?? undefined}
                   companyName={data?.company?.name || "Company"}
                 />
->>>>>>> 80aa64c21c46daf78583ab8768c6059b108da38e:app/components/homepage/HomePage.tsx
                 {/* Company name and description */}
                 <div>
                   <h1 className="text-4xl font-bold mt-4">

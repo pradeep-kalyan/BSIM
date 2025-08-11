@@ -14,7 +14,6 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   gradient = false,
   size = "normal",
   className = "",
-  iconColor,
 }) => {
   const isPositive = typeof change === "number" && change > 0;
   const isNegative = typeof change === "number" && change < 0;
@@ -49,16 +48,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
               <h3 className="text-sm font-semibold opacity-90 mb-1">{title}</h3>
               {subtitle && <p className="text-xs opacity-70">{subtitle}</p>}
             </div>
-<<<<<<< HEAD:ui/Card.tsx
-            {Icon && (
-              <Icon
-                size={size === "large" ? 28 : 20}
-                className={iconColor ?? "text-white"} // fallback to white
-              />
-            )}
-=======
             {Icon && <Icon size={size === "large" ? 28 : 20} />}
->>>>>>> 80aa64c21c46daf78583ab8768c6059b108da38e:app/ui/Card.tsx
           </div>
 
           <div className="flex-1 flex flex-col justify-center">
