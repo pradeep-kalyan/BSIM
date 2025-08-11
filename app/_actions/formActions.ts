@@ -6,6 +6,7 @@ export async function getInitialFormData(companyId: string, period: number) {
   try {
     // Use Promise.allSettled to handle cases where some data might not exist
     const results = await Promise.allSettled([
+      // Finance - get latest period data
       prisma.finance.findFirst({
         where: { company_id: companyId },
         orderBy: { period: "desc" },
@@ -17,6 +18,7 @@ export async function getInitialFormData(companyId: string, period: number) {
           equity_issue: true,
         },
       }),
+      // Marketing - get data for specific period
       prisma.marketing.findFirst({
         where: { company_id: companyId, period: period },
         select: {
@@ -25,17 +27,29 @@ export async function getInitialFormData(companyId: string, period: number) {
           online: true,
         },
       }),
-      prisma.production.findFirst({
-        where: { company_id: companyId, period: period },
+      // Production - get all products for specific period
+      prisma.production.findMany({
+        where: {
+          company_id: companyId,
+          period: period,
+        },
         select: {
+          product_id: true,
           production_capacity: true,
           storage_capacity: true,
           inventory_value: true,
           cost_per_unit: true,
           units_to_produce: true,
           defect_rate: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       }),
+      // HR Decision - get latest period data
       prisma.hr_decision.findFirst({
         where: { company_id: companyId },
         orderBy: { period: "desc" },
@@ -49,6 +63,7 @@ export async function getInitialFormData(companyId: string, period: number) {
           total_employee_count: true,
         },
       }),
+      // HR Roles - get roles for specific period
       prisma.hr_decision.findFirst({
         where: { company_id: companyId, period: period },
         select: {
@@ -61,9 +76,9 @@ export async function getInitialFormData(companyId: string, period: number) {
           },
         },
       }),
+      // R&D - get data for specific period
       prisma.rd.findFirst({
         where: { company_id: companyId, period: period },
-
         select: {
           budget: true,
           pip: true,
@@ -73,7 +88,9 @@ export async function getInitialFormData(companyId: string, period: number) {
           quality_changes: true,
         },
       }),
-      prisma.product_performance.findFirst({
+      // Product Performance - get data for specific period
+      // Fixed: Need to join through product table to filter by company
+      prisma.product_performance.findMany({
         where: {
           product: { company_id: companyId },
           period: period,
@@ -83,10 +100,18 @@ export async function getInitialFormData(companyId: string, period: number) {
           revenue: true,
           costs: true,
           profit: true,
+          selling_price: true,
           market_share: true,
           customer_satisfaction: true,
+          product: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       }),
+      // Products - get all products for company
       prisma.product.findMany({
         where: { company_id: companyId },
         select: {
@@ -102,6 +127,7 @@ export async function getInitialFormData(companyId: string, period: number) {
           discontinue_period: true,
         },
       }),
+      // Company - get company details
       prisma.company.findUnique({
         where: { id: companyId },
         select: {
@@ -116,8 +142,13 @@ export async function getInitialFormData(companyId: string, period: number) {
           brand_value: true,
         },
       }),
+      // Simulation - get simulation details for the company
       prisma.simulation.findFirst({
-        where: { companies: { some: { id: companyId } } },
+        where: {
+          companies: {
+            some: { id: companyId },
+          },
+        },
         select: {
           name: true,
           description: true,
@@ -147,12 +178,12 @@ export async function getInitialFormData(companyId: string, period: number) {
     const marketing =
       marketingResult.status === "fulfilled" ? marketingResult.value : null;
     const production =
-      productionResult.status === "fulfilled" ? productionResult.value : null;
+      productionResult.status === "fulfilled" ? productionResult.value : [];
     const hr = hrResult.status === "fulfilled" ? hrResult.value : null;
     const hrRole =
       hrRoleResult.status === "fulfilled" ? hrRoleResult.value : null;
     const rd = rdResult.status === "fulfilled" ? rdResult.value : null;
-    const sales = salesResult.status === "fulfilled" ? salesResult.value : null;
+    const sales = salesResult.status === "fulfilled" ? salesResult.value : [];
     const products =
       productResult.status === "fulfilled" ? productResult.value : [];
     const company =
@@ -161,11 +192,38 @@ export async function getInitialFormData(companyId: string, period: number) {
       simulationResult.status === "fulfilled" ? simulationResult.value : null;
 
     // Log any failed queries for debugging
-    results.forEach((result) => {
+    results.forEach((result, index) => {
+      const queryNames = [
+        "finance",
+        "marketing",
+        "production",
+        "hr",
+        "hrRole",
+        "rd",
+        "sales",
+        "products",
+        "company",
+        "simulation",
+      ];
       if (result.status === "rejected") {
-        // Silently handle failed fetch
+        console.error(`Query ${queryNames[index]} failed:`, result.reason);
+      } else {
+        console.log(`Query ${queryNames[index]} success:`, result.value);
       }
     });
+
+    console.log("=== Raw Database Results ===");
+    console.log("Finance:", finance);
+    console.log("Marketing:", marketing);
+    console.log("Production (all):", production);
+    console.log("HR:", hr);
+    console.log("HR Roles:", hrRole);
+    console.log("R&D:", rd);
+    console.log("Sales:", sales);
+    console.log("Products:", products);
+    console.log("Company:", company);
+    console.log("Simulation:", simulation);
+    console.log("=============================");
 
     return {
       finance,
@@ -182,16 +240,17 @@ export async function getInitialFormData(companyId: string, period: number) {
         originalCashBalance: company?.cash_balance || 100000,
       },
     };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_error) {
+  } catch (error) {
+    console.error("Error in getInitialFormData:", error);
     // Return a safe default structure
     return {
       finance: null,
       marketing: null,
-      production: null,
+      production: [],
       hr: null,
+      hrRole: null,
       rd: null,
-      sales: null,
+      sales: [],
       products: [],
       company: null,
       simulation: null,

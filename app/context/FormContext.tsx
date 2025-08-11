@@ -37,18 +37,7 @@ const getDefaultFinanceData = (): FinanceFormData => ({
 });
 
 const getDefaultProductionData = (): ProductionFormData => ({
-  production_capacity: 2000,
-  inventory_value: 0,
-  storage_capacity: 0,
-  defect_rate: 0,
-  quality_improvement_investment: 0,
-  efficiency_upgrade_cost: 0,
-  maintenance_budget: 0,
-  automation_level: 0,
-  safety_investment: 0,
-  environmental_compliance_cost: 0,
-  units_to_produce: 0,
-  cost_per_unit: 0,
+  products: [], // Array of ProductProductionData matching DB schema
 });
 
 const getDefaultHRData = (): HRFormData => ({
@@ -847,8 +836,6 @@ export function FormProvider({
     return { valid, errors };
   }, [state, validateField]);
 
-  
-
   const getCompletionStatus = useCallback(() => {
     const sections = [
       "finance",
@@ -1010,33 +997,33 @@ export function useProductionForm() {
 
   const updateDataWithCashImpact = useCallback(
     (data: Partial<ProductionFormData>) => {
-      // Calculate budget impact based on production form schema
-      const quality_improvement_investment =
-        data.quality_improvement_investment ??
-        state.production.quality_improvement_investment ??
-        0;
-      const efficiency_upgrade_cost =
-        data.efficiency_upgrade_cost ??
-        state.production.efficiency_upgrade_cost ??
-        0;
-      const maintenance_budget =
-        data.maintenance_budget ?? state.production.maintenance_budget ?? 0;
-      const safety_investment =
-        data.safety_investment ?? state.production.safety_investment ?? 0;
-      const environmental_compliance_cost =
-        data.environmental_compliance_cost ??
-        state.production.environmental_compliance_cost ??
-        0;
+      // Calculate budget impact based on total production cost across all products
+      let totalCost = 0;
 
-      const budgetImpact =
-        quality_improvement_investment +
-        efficiency_upgrade_cost +
-        maintenance_budget +
-        safety_investment +
-        environmental_compliance_cost;
+      if (data.products) {
+        totalCost = data.products.reduce(
+          (sum, prod) =>
+            sum +
+            (prod.total_cost ||
+              prod.units_to_produce *
+                prod.cost_per_unit *
+                (1 + prod.defect_rate / 100)),
+          0
+        );
+      } else if (state.production.products) {
+        totalCost = state.production.products.reduce(
+          (sum, prod) =>
+            sum +
+            (prod.total_cost ||
+              prod.units_to_produce *
+                prod.cost_per_unit *
+                (1 + prod.defect_rate / 100)),
+          0
+        );
+      }
 
       updateProduction(data);
-      updateProductionBudgetImpact(budgetImpact);
+      updateProductionBudgetImpact(totalCost);
     },
     [updateProduction, updateProductionBudgetImpact, state.production]
   );
@@ -1369,7 +1356,6 @@ export function useHRForm() {
   };
 }
 
-
 export function useRDForm() {
   const { state, updateRD, setError, getError, updateRDBudgetImpact } =
     useForm();
@@ -1521,8 +1507,6 @@ export function useProductForm() {
   };
 }
 
-
-
 export function useCompanyForm() {
   const { state, updateCompany, setError, getError } = useForm();
   return {
@@ -1532,7 +1516,6 @@ export function useCompanyForm() {
     getError,
   };
 }
-
 
 // Cash balance hook
 export function useCashBalance() {
@@ -1579,7 +1562,6 @@ export function useCashBalance() {
 }
 
 // Comprehensive form submission hook
-
 
 // HR-specific hooks for advanced functionality
 export function useHRRoleManagement() {
@@ -1856,4 +1838,3 @@ export function useHRRoleManagement() {
 }
 
 // Specialized hook for hire and fire operations
-

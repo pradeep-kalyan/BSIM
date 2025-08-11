@@ -44,9 +44,13 @@ import LogoutBtn from "@/app/components/auth/Logout";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
-import { CompanyHistoryType, DashboardData, PieTooltipProps, TooltipProps , HRRole } from "@/app/types/homepage";
-
-
+import {
+  CompanyHistoryType,
+  DashboardData,
+  PieTooltipProps,
+  TooltipProps,
+  HRRole,
+} from "@/app/types/homepage";
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (
@@ -122,8 +126,6 @@ const PieTooltip = ({ active, payload }: PieTooltipProps) => {
   }
   return null;
 };
-
-
 
 const getPercentChange = (current: number, prev: number) => {
   if (prev === 0 || prev === undefined || prev === null) return undefined;
@@ -423,7 +425,25 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   // Budgets, prevent undefined
   const hr_budget = hr_decision?.total_budget || hr_decision?.totalBudget || 0;
   const rd_budget = rd_decision?.budget || 0;
-  const production_budget = production_decision?.budget || 0;
+  // Production budget - handle both ProductionDecisionType and ProductionDataType
+  const production_budget = (() => {
+    if (!production_decision) return 0;
+    // If it has a budget field, it's a ProductionDecisionType
+    if ("budget" in production_decision && production_decision.budget) {
+      return production_decision.budget;
+    }
+    // If it has units_to_produce and cost_per_unit, calculate from ProductionDataType
+    if (
+      "units_to_produce" in production_decision &&
+      "cost_per_unit" in production_decision
+    ) {
+      return (
+        (production_decision.units_to_produce || 0) *
+        (production_decision.cost_per_unit || 0)
+      );
+    }
+    return 0;
+  })();
   const marketing_budget = marketing_decision?.budget || 0;
 
   // Pie chart: adjust percentages dynamically

@@ -12,20 +12,21 @@ export interface MarketingFormData {
   online: number;
 }
 
-export interface ProductionFormData {
-  production_capacity: number;
-  inventory_value: number;
-  storage_capacity: number;
-  defect_rate: number;
-  quality_improvement_investment: number;
-  efficiency_upgrade_cost: number;
-  maintenance_budget: number;
-  automation_level: number;
-  safety_investment: number;
-  environmental_compliance_cost: number;
+// Production data per product - matches DB schema
+type ProductProductionData = {
+  product_id: string;
   units_to_produce: number;
   cost_per_unit: number;
-}
+  total_cost: number;
+  production_capacity: number;
+  storage_capacity: number;
+  inventory_value: number;
+  defect_rate: number;
+};
+
+export type ProductionFormData = {
+  products: ProductProductionData[];
+};
 
 export interface HRRole {
   role_name: string;
@@ -75,6 +76,7 @@ export interface RDFormData {
 
 export interface SalesFormData {
   sales_volume: number;
+  selling_price: number;
   revenue: number;
   costs: number;
   profit: number;
@@ -95,15 +97,16 @@ export interface ProductFormData {
   quality_rating: number;
   innovation_rating: number;
   sustainability_rating: number;
-  production_cost: number;
-  selling_price: number;
-  inventory_level: number;
-  production_capacity: number;
-  development_cost: number;
-  marketing_budget: number;
   status: string;
   launch_period?: number | null;
   discontinue_period?: number | null;
+  // Additional fields for product management
+  production_cost?: number;
+  selling_price?: number;
+  inventory_level?: number;
+  production_capacity?: number;
+  development_cost?: number;
+  marketing_budget?: number;
 }
 
 export interface CompanyFormData {
