@@ -91,7 +91,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="R&D Budget (₹/year)"
-                tooltipText="Total R&D allocation"
+                tooltipText="Total research allocation"
                 defaultValue={[data.budget ?? 0]}
                 value={[data.budget ?? 0]}
                 min={0}
@@ -109,7 +109,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Products in Pipeline"
-                tooltipText="Products under development"
+                tooltipText="Products in development"
                 defaultValue={[data.pip ?? 0]}
                 value={[data.pip ?? 0]}
                 min={0}
@@ -125,7 +125,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Time to Market (in months)"
-                tooltipText="Development to launch time"
+                tooltipText="Development launch time"
                 defaultValue={[data.time_to_market ?? 0]}
                 value={[data.time_to_market ?? 0]}
                 min={0}

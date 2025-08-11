@@ -2,10 +2,7 @@
 
 import { IndianRupee, Globe, Store, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
-import {
-  useMarketingForm,
-  useCashBalance,
-} from "@/app/context/FormContext";
+import { useMarketingForm, useCashBalance } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { Slider } from "@/components/ui/slider";
 import InfoCard from "@/app/components/InfoCard";
@@ -148,7 +145,7 @@ const MarketingForm = () => {
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Total Marketing(₹/per year)"
-                  text="Total marketing budget allocation"
+                  text="Total marketing budget"
                 />
                 <Slider
                   className="w-[200px]"
@@ -166,7 +163,7 @@ const MarketingForm = () => {
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Online Marketing(₹/per year)"
-                  text="Digital marketing channels budget"
+                  text="Digital channels budget"
                 />
                 <Slider
                   className="w-[200px]"
@@ -187,7 +184,7 @@ const MarketingForm = () => {
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Offline Marketing(₹/per year)"
-                  text="Traditional marketing channels budget"
+                  text="Traditional channels budget"
                 />
                 <Slider
                   className="w-[200px]"

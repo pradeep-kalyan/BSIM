@@ -77,7 +77,9 @@ const FinanceForm = () => {
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <InfoCard
             label="Original Cash Balance"
-            value={formatCurrency(parseFloat(cashBalance.originalCashBalance.toFixed(0)))}
+            value={formatCurrency(
+              parseFloat(cashBalance.originalCashBalance.toFixed(0))
+            )}
             isCurrency={true}
             Icon={Factory}
             width="w-full"
@@ -95,7 +97,9 @@ const FinanceForm = () => {
           />
           <InfoCard
             label="Total Liabilities"
-            value={formatCurrency(parseFloat(companyData?.total_liabilities.toFixed(0)))}
+            value={formatCurrency(
+              parseFloat(companyData?.total_liabilities.toFixed(0))
+            )}
             isCurrency={true}
             Icon={Package}
             width="w-full"
@@ -104,7 +108,9 @@ const FinanceForm = () => {
           />
           <InfoCard
             label="Total Assets"
-            value={formatCurrency(parseFloat(companyData?.total_assets.toFixed(0)))}
+            value={formatCurrency(
+              parseFloat(companyData?.total_assets.toFixed(0))
+            )}
             isCurrency={true}
             Icon={IndianRupee}
             width="w-full"
@@ -166,7 +172,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Investment Amount (₹)"
-                  tooltipText="Invest in financial instruments"
+                  tooltipText="Invest in instruments"
                   defaultValue={[data?.investment_amount ?? 0]}
                   value={[data?.investment_amount ?? 0]}
                   min={0}
