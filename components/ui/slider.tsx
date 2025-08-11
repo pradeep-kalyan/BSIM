@@ -1,10 +1,9 @@
-"use client";
-
-import * as React from "react";
+import React from "react";
+import { Input } from "./input";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { TooltipWrapper } from "./tooltip";
+import { Label } from "recharts";
+import { cn } from "@/app/lib/utils/utils";
 
 interface CustomSliderProps
   extends React.ComponentProps<typeof SliderPrimitive.Root> {
@@ -12,20 +11,49 @@ interface CustomSliderProps
   min?: number;
   max?: number;
   onValueChange?: (val: number[]) => void;
+  tooltipText?: string;
+  isPercentage?: boolean;
+  isRating?: boolean;
+  isFixed?: boolean;
+  fixedMin?: number;
+  fixedMax?: number;
 }
 
 function Slider({
   className,
+  tooltipText,
   defaultValue,
   value,
   min: initialMin = 0,
   max: initialMax = 100,
   onValueChange,
   label,
+  isPercentage = false,
+  isRating = false,
+  isFixed = false,
+  fixedMin,
+  fixedMax,
   ...props
 }: CustomSliderProps) {
-  const [min, setMin] = React.useState(initialMin);
-  const [max, setMax] = React.useState(initialMax);
+  const [min, setMin] = React.useState(
+    isFixed
+      ? fixedMin ?? (isRating ? 1 : isPercentage ? 0 : initialMin)
+      : isRating
+      ? 1
+      : isPercentage
+      ? 0
+      : initialMin
+  );
+
+  const [max, setMax] = React.useState(
+    isFixed
+      ? fixedMax ?? (isRating ? 10 : isPercentage ? 100 : initialMax)
+      : isRating
+      ? 10
+      : isPercentage
+      ? 100
+      : initialMax
+  );
 
   const [_value, setValue] = React.useState<number[]>(
     Array.isArray(value)
@@ -45,27 +73,65 @@ function Slider({
     index: number
   ) => {
     const newVal = [..._value];
-    const num = Number(e.target.value);
+    let num = Number(e.target.value);
+
+    if (isFixed) {
+      num = Math.max(displayMin, Math.min(displayMax, num));
+    } else if (isPercentage) {
+      num = Math.max(0, Math.min(100, num));
+    } else if (isRating) {
+      num = Math.max(1, Math.min(10, num));
+    } else {
+      if (num > max) setMax(num * 2);
+      if (num < min) setMin(num);
+    }
+
     newVal[index] = num;
-
-    if (num > max) setMax(num * 2);
-    if (num < min) setMin(num);
-
     handleChange(newVal);
   };
 
+  const displayMin = isFixed
+    ? fixedMin ?? (isRating ? 1 : isPercentage ? 0 : min)
+    : isRating
+    ? 1
+    : isPercentage
+    ? 0
+    : min;
+
+  const displayMax = isFixed
+    ? fixedMax ?? (isRating ? 10 : isPercentage ? 100 : max)
+    : isRating
+    ? 10
+    : isPercentage
+    ? 100
+    : max;
+
   return (
     <div className="flex flex-col w-full gap-3 text-white">
-      {label && <Label>{label}</Label>}
+      {label && tooltipText && (
+        <TooltipWrapper label={label} text={tooltipText ?? ""} />
+      )}
+      {label && !tooltipText && <Label>{label}</Label>}
+      {!label && tooltipText && (
+        <TooltipWrapper label={label ?? ""} text={tooltipText} />
+      )}
 
       <div className="flex items-center gap-4 w-full">
         <div className="flex flex-col gap-1">
           <SliderPrimitive.Root
             value={value ?? _value}
             defaultValue={defaultValue}
-            min={min}
-            max={max}
-            onValueChange={handleChange}
+            min={displayMin}
+            max={displayMax}
+            onValueChange={(val) => {
+              if (isFixed) {
+                // ✅ clamp slider movement too
+                val = val.map((v) =>
+                  Math.max(displayMin, Math.min(displayMax, v))
+                );
+              }
+              handleChange(val);
+            }}
             className={cn(
               "relative flex w-[300px] touch-none select-none items-center",
               className
@@ -92,8 +158,8 @@ function Slider({
           </SliderPrimitive.Root>
 
           <div className="flex justify-between text-xs text-gray-400 px-1 w-full">
-            <span>{min}</span>
-            <span>{max}</span>
+            <span>{displayMin}</span>
+            <span>{displayMax}</span>
           </div>
         </div>
 
@@ -101,11 +167,11 @@ function Slider({
           {_value.map((val, index) => (
             <Input
               key={index}
-              type="text"
+              type="number"
               value={val}
               onChange={(e) => handleInputChange(e, index)}
-              min={min}
-              max={max}
+              min={displayMin}
+              max={displayMax}
               className="h-8 text-white bg-gray-900 border-gray-700 focus-visible:ring-blue-500"
             />
           ))}

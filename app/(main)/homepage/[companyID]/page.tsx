@@ -1,5 +1,5 @@
 import React from "react";
-import HomePage from "../../_components/HomePage";
+import HomePage from "../../../components/homepage/HomePage";
 import { notFound } from "next/navigation";
 import { getCompanyDashboardData } from "@/app/_actions/getCompanyData";
 
@@ -13,5 +13,6 @@ const Page = async ({ params }: { params: Promise<{ companyID: string }> }) => {
 
   return <HomePage data={data} comID={companyID} />;
 };
-
+ 
 export default Page;
+ 

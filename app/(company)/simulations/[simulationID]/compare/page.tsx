@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
+import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { getSimulationscompare } from "@/app/_actions/createSim";
 import {
@@ -17,10 +24,13 @@ import {
   RefreshCw,
   Trophy,
   PieChart,
+  Download,
+  LoaderCircle,
 } from "lucide-react";
-import Checkboxdropdown from "@/ui/checkboxdropdown";
-import { getCompanyComparisonData } from "@/app/_actions/companyData";
-
+import Checkboxdropdown from "@/app/ui/checkboxdropdown";
+import { getCompanyComparisonData } from "@/app/_actions/company";
+import formatCurrency from "@/app/functions/formatCurrency";
+import { useExport } from "@/app/hooks/useExport";
 // Types for better type safety
 interface Company {
   id: string;
@@ -74,27 +84,21 @@ const ComparePage: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>("revenue");
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("financial");
   const [error, setError] = useState<string | null>(null);
-
+  const router = useRouter();
+  const comparePageRef = useRef<HTMLDivElement>(null);
+  const { exportDashboard, isExporting } = useExport();
   // Memoized formatters for better performance
   const formatNumber = useMemo(
     () =>
       (value: number): string => {
         if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
         if (value >= 1000) return `${(value / 1000).toFixed(2)}K`;
-        return value.toLocaleString();
+        return value?.toLocaleString();
       },
     []
   );
 
-  const formatCurrency = useMemo(
-    () =>
-      (value: number): string => {
-        if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-        if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
-        return `$${value.toLocaleString()}`;
-      },
-    []
-  );
+  const { simId } = useSimulation();
 
   // Extract metric value for sorting with better type safety
   const getMetricValue = (company: Company, metric: SortOption): number => {
@@ -174,15 +178,13 @@ const ComparePage: React.FC = () => {
     </div>
   );
 
-  // Load companies on mount
- 
-
-  const hasFetched = useRef(false); // survives remounts
+  const hasFetched = useRef(false);
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!simulationId || hasFetched.current) return;
 
-    hasFetched.current = true; // set as soon as effect runs
+    hasFetched.current = true;
 
     const loadCompanies = async () => {
       try {
@@ -202,9 +204,8 @@ const ComparePage: React.FC = () => {
         } else {
           setError("Simulation not found");
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load companies");
-        console.error("Error loading companies:", err);
       }
     };
 
@@ -238,6 +239,74 @@ const ComparePage: React.FC = () => {
     }
   };
 
+  const handleViewCompany = useCallback(() => {
+    router.push(`/simulations/${simId}`);
+  }, [router, simId]);
+
+  const handleExportComparison = useCallback(async () => {
+    if (!comparePageRef.current) return;
+
+    try {
+      // Temporarily modify styles for full content capture
+      const originalStyle = comparePageRef.current.style.cssText;
+      const originalClass = comparePageRef.current.className;
+
+      // Remove height restrictions and overflow for export
+      comparePageRef.current.style.height = "auto";
+      comparePageRef.current.style.overflow = "visible";
+      comparePageRef.current.style.maxHeight = "none";
+      comparePageRef.current.style.minHeight = "auto";
+      comparePageRef.current.className = originalClass.replace(
+        "min-h-screen",
+        "min-h-full"
+      );
+
+      // Add export-specific styles
+      const exportStyle = document.createElement("style");
+      exportStyle.textContent = `
+        .capturing-screenshot {
+          height: auto !important;
+          overflow: visible !important;
+          max-height: none !important;
+          min-height: auto !important;
+        }
+        .capturing-screenshot * {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+      `;
+      document.head.appendChild(exportStyle);
+
+      // Wait for layout to adjust
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const filename = `company-comparison-${simulationId}-${
+        new Date().toISOString().split("T")[0]
+      }`;
+      await exportDashboard(comparePageRef.current, filename);
+
+      // Clean up
+      document.head.removeChild(exportStyle);
+
+      // Restore original styles
+      comparePageRef.current.style.cssText = originalStyle;
+      comparePageRef.current.className = originalClass;
+    } catch (error) {
+      console.error("Export failed:", error);
+      // Restore original styles in case of error
+      if (comparePageRef.current) {
+        comparePageRef.current.style.cssText = "";
+        comparePageRef.current.className =
+          "min-h-screen bg-slate-900 text-white p-6";
+      }
+      // Clean up style element if it exists
+      const exportStyle = document.querySelector("style[data-export]");
+      if (exportStyle) {
+        document.head.removeChild(exportStyle);
+      }
+    }
+  }, [exportDashboard, simulationId]);
+
   if (!simulationId) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-slate-900">
@@ -253,26 +322,51 @@ const ComparePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
+    <div
+      ref={comparePageRef}
+      className="min-h-screen bg-slate-900 text-white p-6"
+    >
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4" ref={container}>
           <h1 className="text-3xl font-bold">Company Comparison Dashboard</h1>
-          {comparisonStarted && (
+          <div className="flex items-center gap-4">
+            {comparisonStarted && companiesData.length > 0 && (
+              <button
+                onClick={handleExportComparison}
+                disabled={isExporting}
+                className="flex items-center gap-2 bg-[rgba(33,150,243,0.1)] hover:bg-[rgba(33,150,243,0.2)] border border-[rgba(33,150,243,0.3)] hover:border-[rgba(33,150,243,0.5)] rounded-lg px-4 py-2 text-[#64b5f6] hover:text-[#42a5f5] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExporting ? (
+                  <LoaderCircle className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {isExporting ? "Exporting..." : "Export Comparison"}
+              </button>
+            )}
             <button
-              onClick={handleRefresh}
-              disabled={loading || selectedCompanyIds.length < 2}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
+              onClick={handleViewCompany}
+              className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
             >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-              Refresh
+              Back to Companies
             </button>
-          )}
+            {comparisonStarted && (
+              <button
+                onClick={handleRefresh}
+                disabled={loading || selectedCompanyIds.length < 2}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </button>
+            )}
+          </div>
         </div>
 
         <p className="mb-6 text-gray-400">
-          Simulation N:{" "}
+          Simulation ID:{" "}
           <span className="text-white font-mono">{simulationId}</span>
         </p>
 
@@ -290,7 +384,7 @@ const ComparePage: React.FC = () => {
             selected={allCompanies
               .filter((c) => selectedCompanyIds.includes(c.id))
               .map((c) => c.name)}
-            onChange={(selectedNames) => {
+            onChange={(selectedNames: string[]) => {
               const selectedIds = allCompanies
                 .filter((c) => selectedNames.includes(c.name))
                 .map((c) => c.id);
@@ -323,11 +417,14 @@ const ComparePage: React.FC = () => {
               </>
             )}
           </button>
+
           {selectedCompanyIds.length > 0 && (
             <span className="text-sm text-gray-400">
               {selectedCompanyIds.length} of 3 selected
             </span>
           )}
+
+          {/* Additional Export Button in Company Selection Area */}
         </div>
 
         {/* Comparison Results */}

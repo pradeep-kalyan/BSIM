@@ -1,4 +1,3 @@
-// app/context/AuthContext.tsx
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -35,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-
       // Use server action instead of fetch request
       const userData = await getCurrentUser();
 
@@ -65,9 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Use router.push for better UX
         router.push("/login");
       }
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // Force logout on client side
+    } catch {
       setUser(null);
       router.push("/login");
     }

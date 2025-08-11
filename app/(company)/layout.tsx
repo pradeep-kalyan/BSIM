@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { checkAuthStatus } from "@/app/_actions/auth";
 import { JWTPayload } from "@/app/functions/jwt";
-import LogoutBtn from "../(auth)/_components/Logout";
+import LogoutBtn from "../components/auth/Logout";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface MainLayoutProps {
@@ -26,8 +26,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           return;
         }
         setUser(userData);
-      } catch (error) {
-        console.error("Authentication error:", error);
+      } catch {
         router.push("/login");
       } finally {
         setIsLoading(false);
@@ -97,7 +96,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
               damping: 25,
               stiffness: 100,
             }}
-            className="w-full max-w-7xl mx-auto px-4 py-8"
           >
             {children}
           </motion.div>
