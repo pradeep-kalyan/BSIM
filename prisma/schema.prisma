@@ -1,43 +1,54 @@
+// =======================================================
+// PRISMA SCHEMA - Business Simulation Platform
+// Database: PostgreSQL
+// =======================================================
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+// =======================================================
+// USER MODEL
+// =======================================================
 model user {
   id            String   @id @default(cuid())
   name          String
   email         String   @unique
   password_hash String
-  role          String   @default("user")
+  role          String   @default("user") // user / admin
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
+  // Relations
   simulations       simulation[]        @relation("user_created_simulations")
   simulation_access simulation_access[] @relation("simulation_access_user")
   companies         company[]
   company_access    company_access[]
-
   finance_decisions finance[]
 
   @@map("users")
 }
 
+// =======================================================
+// SIMULATION MODEL
+// =======================================================
 model simulation {
   id             String   @id @default(cuid())
   name           String
   description    String?
-  config         String   @default("{}")
+  config         String   @default("{}") // JSON config for simulation rules
   current_period Int      @default(1)
-  status         String   @default("active")
+  status         String   @default("active") // active / paused / completed
   created_by     String
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
+  // Relations
   creator           user                @relation("user_created_simulations", fields: [created_by], references: [id], onDelete: Cascade)
   companies         company[]
   simulation_access simulation_access[] @relation("simulation_access_sim")
@@ -46,6 +57,9 @@ model simulation {
   @@map("simulations")
 }
 
+// =======================================================
+// COMPANY MODEL
+// =======================================================
 model company {
   id                String   @id @default(cuid())
   simulation_id     String
@@ -55,7 +69,7 @@ model company {
   logo_url          String?
   cash_balance      Float    @default(0)
   current_period    Int      @default(1)
-  data              String   @default("{}")
+  data              String   @default("{}") // extra JSON info
   total_assets      Float    @default(0)
   total_liabilities Float    @default(0)
   marketing_budget  Float    @default(0)
@@ -64,6 +78,7 @@ model company {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
+  // Relations
   simulation simulation @relation(fields: [simulation_id], references: [id], onDelete: Cascade)
   user       user       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -81,6 +96,9 @@ model company {
   @@map("companies")
 }
 
+// =======================================================
+// COMPANY HISTORY (Snapshot per period)
+// =======================================================
 model company_history {
   id                String   @id @default(cuid())
   company_id        String
@@ -101,11 +119,14 @@ model company_history {
   @@map("company_histories")
 }
 
+// =======================================================
+// SIMULATION ACCESS
+// =======================================================
 model simulation_access {
   id            String   @id @default(cuid())
   simulation_id String
   user_id       String
-  access_level  String   @default("viewer")
+  access_level  String   @default("viewer") // viewer / editor / owner
   granted_at    DateTime @default(now())
 
   simulation simulation @relation("simulation_access_sim", fields: [simulation_id], references: [id], onDelete: Cascade)
@@ -117,11 +138,14 @@ model simulation_access {
   @@map("simulation_access")
 }
 
+// =======================================================
+// COMPANY ACCESS
+// =======================================================
 model company_access {
   id           String   @id @default(cuid())
   company_id   String
   user_id      String
-  access_level String   @default("viewer")
+  access_level String   @default("viewer") // viewer / editor / owner
   granted_at   DateTime @default(now())
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
@@ -133,34 +157,36 @@ model company_access {
   @@map("company_access")
 }
 
+// =======================================================
+// PRODUCT
+// =======================================================
 model product {
   id                    String   @id @default(cuid())
   company_id            String
-  name                  String   @unique
+  name                  String
   description           String?
   category              String
   quality_rating        Float    @default(0)
   innovation_rating     Float    @default(0)
   sustainability_rating Float    @default(0)
-  production_cost       Float    @default(0)
-  selling_price         Float    @default(0)
-  inventory_level       Int      @default(0)
-  production_capacity   Int      @default(2000)
-  development_cost      Float    @default(0)
-  marketing_budget      Float    @default(0)
-  status                String   @default("development")
+  status                String   @default("development") // development / active / discontinued
   launch_period         Int?
   discontinue_period    Int?
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
 
-  product_performances product_performance[]
-  company              company               @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  company      company               @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  productions  production[]
+  performances product_performance[]
 
+  @@unique([company_id, name])
   @@index([company_id])
   @@map("products")
 }
 
+// =======================================================
+// FINANCE DECISIONS
+// =======================================================
 model finance {
   id                String    @id @default(cuid())
   company_id        String
@@ -194,27 +220,36 @@ model finance {
   @@map("finance")
 }
 
+// =======================================================
+// PRODUCTION (Manufacturing Data Only)
+// =======================================================
 model production {
   id                  String   @id @default(cuid())
   company_id          String
+  product_id          String
   period              Int
   units_to_produce    Int
-  cost_per_unit       Int
-  budget              Int      @default(0)
+  cost_per_unit       Float    @default(0)
+  total_cost          Float    @default(0)
   production_capacity Int      @default(0)
   storage_capacity    Int?     @default(0)
-  inventory_value     Int
-  defect_rate         Int
+  inventory_value     Float    @default(0)
+  defect_rate         Float    @default(0)
   finalised           Boolean  @default(false)
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 
   company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  product product @relation(fields: [product_id], references: [id], onDelete: Cascade)
 
-  @@unique([company_id, period])
+  @@unique([company_id, product_id, period])
   @@index([company_id])
+  @@index([product_id])
 }
 
+// =======================================================
+// HR DECISIONS
+// =======================================================
 model hr_decision {
   id           String   @id @default(cuid())
   company_id   String
@@ -251,6 +286,9 @@ model hr_role_decision {
   @@map("hr_role_decisions")
 }
 
+// =======================================================
+// R&D DECISIONS
+// =======================================================
 model rd {
   id                String   @id @default(cuid())
   company_id        String
@@ -271,6 +309,9 @@ model rd {
   @@index([company_id])
 }
 
+// =======================================================
+// MARKETING DECISIONS
+// =======================================================
 model marketing {
   id         String   @id @default(cuid())
   company_id String
@@ -288,17 +329,21 @@ model marketing {
   @@index([company_id])
 }
 
+// =======================================================
+// PRODUCT PERFORMANCE (Sales & Market Data Only)
+// =======================================================
 model product_performance {
   id                    String   @id @default(cuid())
   product_id            String
   period                Int
-  data                  String   @default("{}")
-  sales_volume          Int      @default(0)
-  revenue               Float    @default(0)
-  costs                 Float    @default(0)
-  profit                Float    @default(0)
-  market_share          Float    @default(0)
-  customer_satisfaction Float    @default(0)
+  sales_volume          Int      @default(0) // units sold
+  selling_price         Float    @default(0) // per unit price for that period
+  revenue               Float    @default(0) // sales_volume * selling_price
+  profit                Float    @default(0) // revenue - costs
+  market_share          Float    @default(0) // percentage
+  customer_satisfaction Float    @default(0) // rating 0-100
+  costs                 Float    @default(0) // total sales/distribution costs
+  data                  String   @default("{}") // extra metrics JSON
   created_at            DateTime @default(now())
 
   product product @relation(fields: [product_id], references: [id], onDelete: Cascade)

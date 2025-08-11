@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { useForm } from "@/app/context/FormContext";
+// import { useForm } from "@/app/context/FormContext";
 import { type ProductFormData } from "@/app/types/simulate";
 
 interface ProductFormPageProps {
@@ -20,12 +20,6 @@ const emptyProduct: Product = {
   quality_rating: 1,
   innovation_rating: 1,
   sustainability_rating: 1,
-  production_cost: 0,
-  selling_price: 0,
-  inventory_level: 0,
-  production_capacity: 1000,
-  development_cost: 0,
-  marketing_budget: 0,
   status: "development",
 };
 
@@ -36,7 +30,7 @@ export default function ProductFormPage({
   onCancel,
   submitting,
 }: ProductFormPageProps) {
-  const { updateProductBudgetImpact } = useForm();
+  // const { updateProductBudgetImpact } = useForm();
   const [product, setProduct] = useState<Product>(
     mode === "edit" && initialProduct
       ? {
@@ -80,13 +74,6 @@ export default function ProductFormPage({
     });
 
     // Update budget impact when development_cost or marketing_budget changes
-    if (field === "development_cost" || field === "marketing_budget") {
-      const updatedProduct = { ...product, [field]: newValue };
-      const budgetImpact =
-        (updatedProduct.development_cost || 0) +
-        (updatedProduct.marketing_budget || 0);
-      updateProductBudgetImpact(budgetImpact);
-    }
   };
 
   const validate = (data: Product): Partial<Record<keyof Product, string>> => {
@@ -239,108 +226,6 @@ export default function ProductFormPage({
             )}
           </div>
         </div>
-
-        {/* Financial & Production fields in 3 columns */}
-        <div className="grid grid-cols-3 gap-2">
-          {/* Production Cost */}
-          <div>
-            <label className="block text-xs text-slate-300 mb-1">
-              Production Cost (₹)
-            </label>
-            <Input
-              type="number"
-              min="0"
-              value={product.production_cost}
-              onChange={(e) =>
-                handleFieldChange("production_cost", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-          </div>
-
-          {/* Selling Price */}
-          <div>
-            <label className="block text-xs text-slate-300 mb-1">
-              Selling Price (₹)
-            </label>
-            <Input
-              type="number"
-              min="0"
-              value={product.selling_price}
-              onChange={(e) =>
-                handleFieldChange("selling_price", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-          </div>
-
-          {/* Inventory Level */}
-          <div>
-            <label className="block text-xs text-slate-300 mb-1">
-              Inventory Capacity
-            </label>
-            <Input
-              type="number"
-              min="0"
-              value={product.inventory_level}
-              onChange={(e) =>
-                handleFieldChange("inventory_level", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          {/* Production Capacity */}
-          <div>
-            <label className="block text-xs text-slate-300 mb-1">
-              Production Capacity
-            </label>
-            <Input
-              type="number"
-              min="0"
-              value={product.production_capacity}
-              onChange={(e) =>
-                handleFieldChange("production_capacity", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-          </div>
-
-          {/* Development Cost */}
-          <div>
-            <label className="block text-xs text-slate-300 mb-1">
-              Development Cost (₹)
-            </label>
-            <Input
-              type="number"
-              min="0"
-              value={product.development_cost}
-              onChange={(e) =>
-                handleFieldChange("development_cost", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-          </div>
-
-          {/* Marketing Budget */}
-          <div>
-            <label className="block text-xs text-slate-300 mb-1">
-              Marketing Budget (₹)
-            </label>
-            <Input
-              type="number"
-              min="0"
-              value={product.marketing_budget}
-              onChange={(e) =>
-                handleFieldChange("marketing_budget", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-          </div>
-        </div>
-
         <div className="flex gap-2 mt-3">
           <button
             type="submit"

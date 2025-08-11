@@ -12,7 +12,7 @@ export async function getProduct(id: string) {
       where: { id },
       include: {
         company: true,
-        product_performances: {
+        performances: {
           orderBy: { period: "asc" },
         },
       },
@@ -24,12 +24,8 @@ export async function getProduct(id: string) {
   }
 }
 
-
-
 export async function createProduct(formData: FormData) {
   try {
-    const inventory_level =
-      parseInt(formData.get("inventory_level") as string) || 0;
     const marketing_budget =
       parseFloat(formData.get("marketing_budget") as string) || 0;
     const company = await prisma.company.findUnique({
@@ -59,22 +55,6 @@ export async function createProduct(formData: FormData) {
           : 0,
         sustainability_rating: formData.get("sustainability_rating")
           ? parseFloat(formData.get("sustainability_rating") as string)
-          : 0,
-        production_cost: formData.get("production_cost")
-          ? parseFloat(formData.get("production_cost") as string)
-          : 0,
-        selling_price: formData.get("selling_price")
-          ? parseFloat(formData.get("selling_price") as string)
-          : 0,
-        inventory_level: inventory_level,
-        production_capacity: formData.get("production_capacity")
-          ? parseInt(formData.get("production_capacity") as string)
-          : 2000,
-        development_cost: formData.get("development_cost")
-          ? parseFloat(formData.get("development_cost") as string)
-          : 0,
-        marketing_budget: formData.get("marketing_budget")
-          ? parseFloat(formData.get("marketing_budget") as string)
           : 0,
         status: (formData.get("status") as string) || "development",
         launch_period: formData.get("launch_period")
@@ -173,7 +153,17 @@ export async function createProductPerformance(formData: FormData) {
   try {
     const sales_volume = parseInt(formData.get("sales") as string) || 0;
     const revenue = parseFloat(formData.get("revenue") as string) || 0;
-    const costs = (product?.production_cost ?? 0) * sales_volume || 0;
+
+    // Get production cost from the latest production decision
+    const production = await prisma.production.findFirst({
+      where: {
+        product_id: product?.id,
+        company_id: product?.company_id,
+      },
+      orderBy: { period: "desc" },
+    });
+
+    const costs = (production?.cost_per_unit ?? 0) * sales_volume || 0;
     const profit = revenue - costs;
     const cashBalance = product?.company?.cash_balance || 0;
     const NewCashBalance = cashBalance + profit;

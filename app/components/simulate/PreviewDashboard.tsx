@@ -9,7 +9,6 @@ import {
   BarChart2,
   Briefcase,
   Beaker,
-  Factory,
   Package,
   DollarSign,
   ShoppingCart,
@@ -118,11 +117,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             rdData.total_development > 0
             ? "completed"
             : "pending";
-        case "production":
-          return productionData.production_capacity > 0 ||
-            productionData.units_to_produce > 0
-            ? "completed"
-            : "pending";
         case "product":
           return productData.length > 0 && productData[0]?.name?.trim()
             ? "completed"
@@ -147,7 +141,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
       hrData,
       marketingData,
       rdData,
-      productionData,
       productData,
       financeData,
       totalSalesMetrics,
@@ -200,17 +193,19 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             )}`,
             `Offline Marketing: ${formatCurrency(marketingData.offline || 0)}`,
             `Online Marketing: ${formatCurrency(marketingData.online || 0)}`,
-            `Budget Allocation: Offline ${marketingData.budget > 0
-              ? (
-                (marketingData.offline / marketingData.budget) *
-                100
-              ).toFixed(1)
-              : 0
-            }% / Online ${marketingData.budget > 0
-              ? ((marketingData.online / marketingData.budget) * 100).toFixed(
-                1
-              )
-              : 0
+            `Budget Allocation: Offline ${
+              marketingData.budget > 0
+                ? (
+                    (marketingData.offline / marketingData.budget) *
+                    100
+                  ).toFixed(1)
+                : 0
+            }% / Online ${
+              marketingData.budget > 0
+                ? ((marketingData.online / marketingData.budget) * 100).toFixed(
+                    1
+                  )
+                : 0
             }%`,
             `Total Marketing Budget vs Company Budget: ${(
               (marketingData.budget /
@@ -228,23 +223,24 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               value:
                 marketingData.budget > 0
                   ? `${(
-                    (marketingData.offline / marketingData.budget) *
-                    100
-                  ).toFixed(0)}/${(
-                    (marketingData.online / marketingData.budget) *
-                    100
-                  ).toFixed(0)}`
+                      (marketingData.offline / marketingData.budget) *
+                      100
+                    ).toFixed(0)}/${(
+                      (marketingData.online / marketingData.budget) *
+                      100
+                    ).toFixed(0)}`
                   : "0/0",
             },
             {
               label: "Budget Utilization",
-              value: `${companyData.marketing_budget > 0
-                ? (
-                  (marketingData.budget / companyData.marketing_budget) *
-                  100
-                ).toFixed(1)
-                : 0
-                }%`,
+              value: `${
+                companyData.marketing_budget > 0
+                  ? (
+                      (marketingData.budget / companyData.marketing_budget) *
+                      100
+                    ).toFixed(1)
+                  : 0
+              }%`,
             },
           ],
         },
@@ -267,8 +263,9 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             },
             {
               label: "Innovation Index",
-              value: `${(rdData.patented || 0) + (rdData.quality_changes || 0)
-                }`,
+              value: `${
+                (rdData.patented || 0) + (rdData.quality_changes || 0)
+              }`,
             },
             {
               label: "Development ROI",
@@ -279,61 +276,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             },
           ],
         },
-        {
-          title: "Production",
-          icon: Factory,
-          status: getSectionStatus("production"),
-          summary: [
-            `Production Capacity: ${productionData.production_capacity || 0
-            } units`,
-            `Units to Produce: ${productionData.units_to_produce || 0}`,
-            `Cost per Unit: ${formatCurrency(
-              productionData.cost_per_unit || 0
-            )}`,
-            `Inventory Value: ${formatCurrency(
-              productionData.inventory_value || 0
-            )}`,
-            `Storage Capacity: ${productionData.storage_capacity || 0} units`,
-            `Quality Investment: ${formatCurrency(
-              productionData.quality_improvement_investment || 0
-            )}`,
-            `Automation Level: ${productionData.automation_level || 0}%`,
-            `Defect Rate: ${productionData.defect_rate || 0}%`,
-            `Maintenance Budget: ${formatCurrency(
-              productionData.maintenance_budget || 0
-            )}`,
-            `Safety Investment: ${formatCurrency(
-              productionData.safety_investment || 0
-            )}`,
-          ],
-          keyMetrics: [
-            {
-              label: "Production Efficiency",
-              value: `${productionData.production_capacity > 0
-                ? (
-                  (productionData.units_to_produce /
-                    productionData.production_capacity) *
-                  100
-                ).toFixed(1)
-                : 0
-                }%`,
-            },
-            {
-              label: "Automation Level",
-              value: `${productionData.automation_level || 0}%`,
-            },
-            {
-              label: "Total Investment",
-              value: formatCurrency(
-                (productionData.quality_improvement_investment || 0) +
-                (productionData.efficiency_upgrade_cost || 0) +
-                (productionData.maintenance_budget || 0) +
-                (productionData.safety_investment || 0) +
-                (productionData.environmental_compliance_cost || 0)
-              ),
-            },
-          ],
-        },
+
         {
           title: "Products",
           icon: Package,
@@ -342,31 +285,34 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Products Count: ${productData.length}`,
             ...(productData.length > 0
               ? [
-                `Product: ${productData[0].name || "Not specified"}`,
-                `Category: ${productData[0].category || "Not specified"}`,
-                `Description: ${productData[0].description || "None"}`,
-                `Selling Price: ${formatCurrency(
-                  productData[0].selling_price || 0
-                )}`,
-                `Production Cost: ${formatCurrency(
-                  productData[0].production_cost || 0
-                )}`,
-                `Profit Margin: ${calculateProfitMargin().toFixed(1)}%`,
-                `Development Cost: ${formatCurrency(
-                  productData[0].development_cost || 0
-                )}`,
-                `Marketing Budget: ${formatCurrency(
-                  productData[0].marketing_budget || 0
-                )}`,
-                `Quality Rating: ${productData[0].quality_rating || 0}/10`,
-                `Innovation Rating: ${productData[0].innovation_rating || 0
-                }/10`,
-                `Sustainability Rating: ${productData[0].sustainability_rating || 0
-                }/10`,
-                `Inventory Level: ${productData[0].inventory_level || 0
-                } units`,
-                `Status: ${productData[0].status || "development"}`,
-              ]
+                  `Product: ${productData[0].name || "Not specified"}`,
+                  `Category: ${productData[0].category || "Not specified"}`,
+                  `Description: ${productData[0].description || "None"}`,
+                  `Selling Price: ${formatCurrency(
+                    productData[0].selling_price || 0
+                  )}`,
+                  `Production Cost: ${formatCurrency(
+                    productData[0].production_cost || 0
+                  )}`,
+                  `Profit Margin: ${calculateProfitMargin().toFixed(1)}%`,
+                  `Development Cost: ${formatCurrency(
+                    productData[0].development_cost || 0
+                  )}`,
+                  `Marketing Budget: ${formatCurrency(
+                    productData[0].marketing_budget || 0
+                  )}`,
+                  `Quality Rating: ${productData[0].quality_rating || 0}/10`,
+                  `Innovation Rating: ${
+                    productData[0].innovation_rating || 0
+                  }/10`,
+                  `Sustainability Rating: ${
+                    productData[0].sustainability_rating || 0
+                  }/10`,
+                  `Inventory Level: ${
+                    productData[0].inventory_level || 0
+                  } units`,
+                  `Status: ${productData[0].status || "development"}`,
+                ]
               : ["No products configured"]),
           ],
           keyMetrics: [
@@ -376,23 +322,23 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             },
             ...(productData.length > 0
               ? [
-                {
-                  label: "Selling Price",
-                  value: formatCurrency(productData[0].selling_price || 0),
-                },
-                {
-                  label: "Production Cost",
-                  value: formatCurrency(productData[0].production_cost || 0),
-                },
-                {
-                  label: "Quality Rating",
-                  value: `${productData[0].quality_rating || 0}/10`,
-                },
-                {
-                  label: "Profit Margin",
-                  value: `${calculateProfitMargin().toFixed(1)}%`,
-                },
-              ]
+                  {
+                    label: "Selling Price",
+                    value: formatCurrency(productData[0].selling_price || 0),
+                  },
+                  {
+                    label: "Production Cost",
+                    value: formatCurrency(productData[0].production_cost || 0),
+                  },
+                  {
+                    label: "Quality Rating",
+                    value: `${productData[0].quality_rating || 0}/10`,
+                  },
+                  {
+                    label: "Profit Margin",
+                    value: `${calculateProfitMargin().toFixed(1)}%`,
+                  },
+                ]
               : []),
           ],
         },
@@ -431,7 +377,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               label: "Net Worth",
               value: formatCurrency(
                 (companyData.total_assets || 0) -
-                (companyData.total_liabilities || 0)
+                  (companyData.total_liabilities || 0)
               ),
             },
           ],
@@ -451,13 +397,14 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Average Customer Satisfaction: ${totalSalesMetrics.averageCustomerSatisfaction.toFixed(
               1
             )}/10`,
-            `Profit Margin: ${totalSalesMetrics.totalRevenue > 0
-              ? (
-                (totalSalesMetrics.totalProfit /
-                  totalSalesMetrics.totalRevenue) *
-                100
-              ).toFixed(1)
-              : 0
+            `Profit Margin: ${
+              totalSalesMetrics.totalRevenue > 0
+                ? (
+                    (totalSalesMetrics.totalProfit /
+                      totalSalesMetrics.totalRevenue) *
+                    100
+                  ).toFixed(1)
+                : 0
             }%`,
             `Products Selling: ${totalSalesMetrics.productCount}`,
           ],
@@ -538,8 +485,9 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
       // Wait for layout to adjust
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const filename = `business-simulation-dashboard-${period}-${new Date().toISOString().split("T")[0]
-        }`;
+      const filename = `business-simulation-dashboard-${period}-${
+        new Date().toISOString().split("T")[0]
+      }`;
       await exportDashboard(dashboardRef.current, filename);
 
       // Clean up
@@ -638,7 +586,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
       {/* Financial Overview */}
       <div className="mb-4">
-
         <h3 className="text-white font-bold mb-3 flex items-center gap-2">
           <DollarSign size={24} color="#4caf50" />
           Financial Overview
@@ -653,7 +600,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             width="w-full"
             height="h-full"
             iconColor="text-green-400"
-          // subtext={`period : ${(period ?? 0)}`}
+            // subtext={`period : ${(period ?? 0)}`}
           />
 
           <InfoCard
@@ -664,7 +611,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             width="w-full"
             height="h-full"
             iconColor="text-purple-400"
-          // subtext={`period : ${(period ?? 0) + 1}`}
+            // subtext={`period : ${(period ?? 0) + 1}`}
           />
 
           <InfoCard
@@ -794,15 +741,16 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                       </p>
 
                       <p
-                        className={`font-semibold text-sm ${(companyData.cash_balance || 0) +
-                          totalSalesMetrics.totalProfit -
-                          (hrData.total_budget || 0) -
-                          (marketingData.budget || 0) -
-                          (rdData.budget || 0) >=
+                        className={`font-semibold text-sm ${
+                          (companyData.cash_balance || 0) +
+                            totalSalesMetrics.totalProfit -
+                            (hrData.total_budget || 0) -
+                            (marketingData.budget || 0) -
+                            (rdData.budget || 0) >=
                           0
-                          ? "text-green-500"
-                          : "text-red-500"
-                          }`}
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
                       >
                         {formatCurrency(projectedCashBalance)}
                       </p>
@@ -906,7 +854,10 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
                     <div>
                       {section.summary.slice(0, 4).map((point, idx) => (
-                        <div key={idx} className="flex items-start mb-1.5 py-0.5">
+                        <div
+                          key={idx}
+                          className="flex items-start mb-1.5 py-0.5"
+                        >
                           <div
                             className="w-[6px] h-[6px] rounded-full mt-1 mr-1.5 flex-shrink-0"
                             style={{

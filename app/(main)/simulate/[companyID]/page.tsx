@@ -15,7 +15,6 @@ const Page = async ({ params }: PageProps) => {
 
   return (
     <div className="min-h-screen w-screen relative overflow-hidden bg-gradient-to-br from-[#0c0c0c] via-[#1a1a2e] to-[#16213e]">
-      {/* Background radial overlays */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute w-full h-full">
           <div

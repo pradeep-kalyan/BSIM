@@ -231,6 +231,50 @@ export const createProductPerformanceSchema = productPerformanceSchema.omit({
   created_at: true,
 });
 
+export const productInputSchema = z.object({
+  name: z.string().min(1, "Product name is required"),
+  description: z.string().optional(),
+  category: z.string().min(1, "Category is required"),
+  quality_rating: z.number().min(0).max(10).optional(),
+  innovation_rating: z.number().min(0).max(10).optional(),
+  sustainability_rating: z.number().min(0).max(10).optional(),
+  production_cost: z.number().min(0).optional(),
+  selling_price: z.number().min(0).optional(),
+  inventory_level: z.number().min(0).optional(),
+  production_capacity: z.number().min(0).optional(),
+  development_cost: z.number().min(0).optional(),
+  marketing_budget: z.number().min(0).optional(),
+  status: z.enum(["active", "inactive", "discontinued"]).optional(),
+  launch_period: z.number().min(1).optional(),
+  discontinue_period: z.number().optional(),
+});
+
+export const hrRoleSchema = z.object({
+  role_name: z.string().min(1, "Role name is required"),
+  salary_per_head: z.number().min(0, "Salary must be non-negative"),
+  head_count: z.number().min(0, "Head count must be non-negative"),
+});
+
+export const createCompanySchema = z.object({
+  simulation_id: z.string().min(1, "Simulation ID is required"),
+  user_id: z.string().min(1, "User ID is required"),
+  name: z.string().min(1, "Company name is required"),
+  description: z.string().optional(),
+  logo_url: z.string().url("Invalid logo URL").optional().or(z.literal("")),
+  cash_balance: z.number().min(0),
+  total_assets: z.number().min(0),
+  total_liabilities: z.number().min(0),
+  marketing_budget: z.number().min(0),
+  brand_value: z.number().min(0),
+  products: z.array(productInputSchema).optional(),
+  accessEmails: z.array(z.string().email("Invalid email")).optional(),
+
+  // HR Decision Data
+  hrRoles: z.array(hrRoleSchema),
+  trainingBudget: z.number().min(0),
+  employeeSatisfaction: z.number().min(0).max(100),
+});
+
 /* ---------------------- Inferred Types ---------------------- */
 export type Product = z.infer<typeof productSchema>;
 export type Finance = z.infer<typeof financeSchema>;
@@ -250,3 +294,4 @@ export type CreateMarketing = z.infer<typeof createMarketingSchema>;
 export type CreateProductPerformance = z.infer<
   typeof createProductPerformanceSchema
 >;
+export type createCompany = z.infer<typeof createCompanySchema>;
