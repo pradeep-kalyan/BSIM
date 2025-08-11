@@ -27,10 +27,10 @@ import {
   Download,
   LoaderCircle,
 } from "lucide-react";
-import Checkboxdropdown from "@/ui/checkboxdropdown";
+import Checkboxdropdown from "@/app/ui/checkboxdropdown";
 import { getCompanyComparisonData } from "@/app/_actions/companyData";
 import formatCurrency from "@/app/functions/formatCurrency";
-import { useExport } from "@/hooks/useExport";
+import { useExport } from "@/app/hooks/useExport";
 // Types for better type safety
 interface Company {
   id: string;
@@ -385,7 +385,7 @@ const ComparePage: React.FC = () => {
             selected={allCompanies
               .filter((c) => selectedCompanyIds.includes(c.id))
               .map((c) => c.name)}
-            onChange={(selectedNames) => {
+            onChange={(selectedNames: string[]) => {
               const selectedIds = allCompanies
                 .filter((c) => selectedNames.includes(c.name))
                 .map((c) => c.id);

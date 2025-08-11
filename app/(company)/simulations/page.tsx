@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 
-import { getSimulations,deleteSimulation,} from "@/app/_actions/createSim";
+import { getSimulations, deleteSimulation } from "@/app/_actions/createSim";
 
 import { getCurrentUser } from "@/app/functions/jwt";
-import CreateSim from "./_components/CreateSim";
+import CreateSim from "../../components/company/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, PlusCircle, LayoutDashboard, Rocket } from "lucide-react";
-import Card from "./_components/SimCard";
-import EditSimulationForm from "./_components/EditSimulationForm";
-import { ExtendedSimulation } from "./simulation";
+import Card from "../../components/company/SimCard";
+import EditSimulationForm from "../../components/company/EditSimulationForm";
+import { ExtendedSimulation } from "@/app/types/simulation";
 
 const Page = () => {
   const [simulations, setSimulations] = useState<ExtendedSimulation[]>([]);

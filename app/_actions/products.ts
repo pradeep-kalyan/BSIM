@@ -24,23 +24,7 @@ export async function getProduct(id: string) {
   }
 }
 
-export async function getProductsByCompany(companyId: string) {
-  try {
-    const products = await prisma.product.findMany({
-      where: { company_id: companyId },
-      include: {
-        product_performances: {
-          orderBy: { period: "desc" },
-          take: 1,
-        },
-      },
-    });
-    return products;
-  } catch (error) {
-    console.error("Error fetching products by company:", error);
-    throw new Error("Failed to fetch products");
-  }
-}
+
 
 export async function createProduct(formData: FormData) {
   try {
