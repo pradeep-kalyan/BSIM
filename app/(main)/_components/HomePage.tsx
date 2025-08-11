@@ -354,11 +354,11 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     const el =
       swapyRef.current ?? document.querySelector("[data-swapy-container]");
     if (!(el instanceof HTMLElement)) return;
-    // create and store instance
+
+    // create and store instance with drag events in config
     swapyInstanceRef.current = createSwapy(el, {
       animation: "dynamic",
       autoScrollOnDrag: true,
-      // other options if you want
     });
 
     return () => {
@@ -366,9 +366,11 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       swapyInstanceRef.current = null;
     };
   }, []);
+
   useEffect(() => {
     swapyInstanceRef.current?.update?.();
   }, [selectedPeriod, data]);
+
   // Get current period data
   const { currentCompanyData } = createCurrentPeriodData();
   const isCurrentPeriod = selectedPeriod === data?.company?.current_period;
@@ -957,11 +959,11 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               <div className="flex items-start gap-4 animate-slide-in-left -ml-22">
                 {/* Logo */}
                 {data?.company?.logo_url && (
-                  <div className="w-32 h-32 rounded-full overflow-hidden border border-slate-700">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border border-slate-700 bg-white">
                     <Image
                       src={data.company.logo_url}
                       alt="Company Logo"
-                      className="object-contain w-full h-full"
+                      className="object-contain w-full h-full mix-blend-multiply"
                       width={128}
                       height={128}
                     />
@@ -970,12 +972,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
                 {/* Company name and description */}
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">
+                  <h1 className="text-4xl font-bold mt-4">
                     {data?.company?.name}
                   </h1>
-                  <p className="text-blue-100 text-lg">
-                    Business Simulation Dashboard
-                  </p>
 
                   {/* Period selector */}
                   <div className="flex items-center mt-3 space-x-4">
@@ -1198,6 +1197,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                         data={chartData.departmentBudgets}
                         cx="50%"
                         cy="50%"
+                        innerRadius={30}
                         outerRadius={60}
                         dataKey="value"
                       >

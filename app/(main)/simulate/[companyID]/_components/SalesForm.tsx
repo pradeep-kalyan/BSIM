@@ -288,7 +288,7 @@ const Sales = () => {
             return (
               <div
                 key={productId}
-                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 grid grid-cols-2 border border-slate-700 flex justify-between items-center"
+                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 grid-cols-2 border border-slate-700 flex justify-between items-center"
               >
                 <div className="flex flex-col items-center justify-center p-6">
                   <h2 className="text-2xl font-bold text-white mb-6">{product.name}</h2>

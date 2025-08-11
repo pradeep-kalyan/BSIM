@@ -158,7 +158,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
               onClick={() =>
                 setActiveTab(tab.key as "owned" | "shared" | "all")
               }
-              className={`relative px-8 py-5 rounded-xl font-medium transition-colors ${
+              className={`relative px-5 py-3 rounded-xl font-medium transition-colors ${
                 activeTab === tab.key
                   ? "bg-blue-600 text-white"
                   : "bg-slate-800 text-slate-200 hover:bg-slate-700"
@@ -166,9 +166,9 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
             >
               {tab.label}
 
-              {/* Count badge inside */}
+              {/* Count badge */}
               <span
-                className={`absolute top-1 right-2 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-semibold ${
+                className={`absolute -top-1.5 -right-1.5 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-semibold ${
                   activeTab === tab.key
                     ? "bg-white text-blue-600"
                     : "bg-slate-600 text-white"
