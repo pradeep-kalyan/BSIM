@@ -10,6 +10,7 @@ import formatCurrency from "@/app/functions/formatCurrency";
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();
   const { projectedCashBalance, cashBalance } = useCashBalance();
+
   const [budgetAlert, setBudgetAlert] = useState<string | null>(null);
 
   // Update R&D budget impact dynamically whenever budget or total_development changes
@@ -36,7 +37,7 @@ const RDForm = () => {
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 mx-2">
         <InfoCard
           label="R&D Budget"
-          value={data.budget ?? 0}
+          value={formatCurrency(data.budget ?? 0)}
           isCurrency={true}
           Icon={IndianRupee}
           iconColor="text-yellow-400"

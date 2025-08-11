@@ -170,7 +170,7 @@ const HRDashboard = () => {
 
           <InfoCard
             label="HR Budget"
-            value={totalHRBudget}
+            value={formatCurrency(totalHRBudget)}
             Icon={IndianRupee}
             iconColor="text-yellow-400"
             isCurrency={true}
@@ -241,9 +241,9 @@ const HRDashboard = () => {
                         text="Annual salary per employee"
                       />
                       <Slider
-                        label={`₹${(
+                        label={`${formatCurrency(
                           role.salary_per_head || 0
-                        ).toLocaleString()}`}
+                        )}`}
                         value={[
                           isNaN(role.salary_per_head)
                             ? 0

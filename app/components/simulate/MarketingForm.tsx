@@ -75,7 +75,7 @@ const MarketingForm = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <InfoCard
             label="Available Cash"
-            value={cashBalance.originalCashBalance || 0}
+            value={formatCurrency(cashBalance.originalCashBalance || 0)}
             Icon={IndianRupee}
             iconColor="text-yellow-400"
             labelColor="text-white"
@@ -87,7 +87,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Total Budget"
-            value={frozenData.budget}
+            value={formatCurrency(frozenData.budget)}
             Icon={IndianRupee}
             iconColor="text-blue-400"
             labelColor="text-white"
@@ -100,7 +100,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Online"
-            value={frozenData.online}
+            value={formatCurrency(frozenData.online)}
             Icon={Globe}
             iconColor="text-green-400"
             labelColor="text-white"
@@ -113,7 +113,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Offline"
-            value={frozenData.offline}
+            value={formatCurrency(frozenData.offline)}
             Icon={Store}
             iconColor="text-purple-400"
             labelColor="text-white"
@@ -191,7 +191,7 @@ const MarketingForm = () => {
                 />
                 <Slider
                   className="w-[200px]"
-                  label={`${marketingData.offline.toLocaleString()} (${percent(
+                  label={`${formatCurrency(marketingData.offline)} (${percent(
                     marketingData.offline,
                     marketingData.budget
                   )})`}
