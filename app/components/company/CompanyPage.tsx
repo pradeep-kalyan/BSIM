@@ -104,8 +104,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     try {
       await deleteCompany(companyId);
       await fetchCompanies();
-    } catch (err) {
-      console.error("Failed to delete company:", err);
+    } catch {
     }
   };
 

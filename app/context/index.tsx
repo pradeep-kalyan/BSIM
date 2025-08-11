@@ -20,17 +20,6 @@ function FormDataInitializer() {
       try {
         const initialData = await getInitialFormData(comId, period - 1);
 
-        // Debug logging to see what data we get from the database
-        console.log("=== Form Initializer Debug ===");
-        console.log("Company ID:", comId);
-        console.log("Period:", period - 1);
-        console.log("Raw initial data:", initialData);
-        console.log("Products from DB:", initialData.products);
-        console.log("Sales from DB:", initialData.sales);
-        console.log("Production from DB:", initialData.production);
-        console.log("HR Role from DB:", initialData.hrRole);
-        console.log("==============================");
-
         // Create production data map by product_id
         const productionByProductId = new Map();
         (initialData.production ?? []).forEach((prod) => {
@@ -175,18 +164,8 @@ function FormDataInitializer() {
           },
         };
 
-        // Debug the final form data structure
-        console.log("=== Final Form Data Being Initialized ===");
-        console.log("Products mapped:", formInitialData.product);
-        console.log("Sales mapped:", formInitialData.sales);
-        console.log("Production aggregated:", formInitialData.production);
-        console.log("HR data:", formInitialData.hr);
-        console.log("Cash balance:", formInitialData.cashBalance);
-        console.log("==========================================");
-
         initializeForms(formInitialData);
-      } catch (error) {
-        console.error("Error initializing forms:", error);
+      } catch {
         // Provide proper fallback structure with proper mapping and types
         initializeForms({
           finance: {

@@ -1,7 +1,6 @@
-
 // app/_actions/auth.ts
 "use server";
- 
+
 import { comparePassword, hashPassword } from "../functions/Hash";
 import crypto from "crypto";
 import axios from "axios";
@@ -18,14 +17,14 @@ export interface RegisterFormData {
   password: string;
   confirmPassword: string;
 }
- 
+
 // Type for response format
 export interface AuthResponse {
   status: number;
   message: string;
   success?: boolean;
 }
- 
+
 /**
  * Registers a new user with password security validation
  * @param formData - User registration data
@@ -35,7 +34,7 @@ export const registerUser = async (
   formData: RegisterFormData
 ): Promise<AuthResponse> => {
   const { name, email, password } = formData;
- 
+
   // Basic field validation
   if (!name || !email || !password) {
     return {
@@ -44,7 +43,7 @@ export const registerUser = async (
       success: false,
     };
   }
- 
+
   try {
     // Step 1: Generate SHA-1 hash of the password (for Have I Been Pwned API)
     const sha1HashedPassword = crypto
@@ -52,21 +51,21 @@ export const registerUser = async (
       .update(password)
       .digest("hex")
       .toUpperCase();
- 
+
     const hashPrefix = sha1HashedPassword.slice(0, 5);
     const hashSuffix = sha1HashedPassword.slice(5);
- 
+
     try {
       // Step 2: Query Have I Been Pwned API using k-Anonymity model
       const hibpResponse = await axios.get<string>(
         `https://api.pwnedpasswords.com/range/${hashPrefix}`
       );
- 
+
       const passwordBreached = hibpResponse.data.split("\n").some((line) => {
         const [suffix] = line.split(":");
         return suffix === hashSuffix;
       });
- 
+
       if (passwordBreached) {
         return {
           status: 400,
@@ -75,14 +74,13 @@ export const registerUser = async (
           success: false,
         };
       }
-    } catch (error) {
-      console.error("Error checking password security:", error);
+    } catch {
       // Continue with registration even if password check fails
     }
- 
+
     // Step 3: Securely hash the password before saving
     const securelyHashedPassword = await hashPassword(password);
- 
+
     // Check if user already exists
     const userCount = await prisma.user.count();
     if (userCount > 0) {
@@ -97,7 +95,7 @@ export const registerUser = async (
         };
       }
     }
- 
+
     // Create new user if email doesn't exist
     await prisma.user.create({
       data: {
@@ -107,7 +105,7 @@ export const registerUser = async (
         role: "user",
       },
     });
- 
+
     return {
       status: 200,
       message: "User registered successfully.",
@@ -122,7 +120,7 @@ export const registerUser = async (
     };
   }
 };
- 
+
 /**
  * Authenticates a user and creates a session
  * @param formData - Form data containing email and password
@@ -131,7 +129,7 @@ export const registerUser = async (
 export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
   const email = formData.get("mail") as string;
   const password = formData.get("password") as string;
- 
+
   if (!email || !password) {
     return {
       status: 400,
@@ -139,12 +137,12 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
       success: false,
     };
   }
- 
+
   try {
     const user = await prisma.user.findUnique({
       where: { email: email },
     });
- 
+
     if (!user) {
       return {
         status: 404,
@@ -152,9 +150,9 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
         success: false,
       };
     }
- 
+
     const isPasswordValid = await comparePassword(password, user.password_hash);
- 
+
     if (!isPasswordValid) {
       return {
         status: 401,
@@ -162,7 +160,7 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
         success: false,
       };
     }
- 
+
     // Generate JWT token
     const token = await generateToken({
       id: user.id,
@@ -170,10 +168,10 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
       role: user.role,
       email: user.email,
     });
- 
+
     // Set the token in a cookie
     await setCookie(token);
- 
+
     return {
       status: 200,
       message: "Login successful",

@@ -62,9 +62,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             brand_value: firstCompany.brand_value || 0,
           }));
         }
-      } catch (err) {
-        console.error("Failed to fetch initial data:", err);
-      }
+      } catch {}
     };
 
     loadFirstCompany();
@@ -146,10 +144,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     setLoading(true);
     setError("");
 
-    
-
-    
-
     try {
       const user = await getCurrentUser();
       if (!user) {
@@ -157,7 +151,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         setLoading(false);
         return;
       }
-      form
 
       // Create company with products
       const { companyId } = await createCompany({
@@ -202,7 +195,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
       setEmployeeSatisfaction(0);
       onCreated();
     } catch (err) {
-      console.error("Failed to create company", err);
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);

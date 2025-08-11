@@ -82,12 +82,19 @@ const Sales = () => {
       const salesVolume = pSales.sales_volume || 0;
       const sellingPrice = pSales.selling_price || product.selling_price || 0;
       const revenue = salesVolume * sellingPrice;
-      const costs = salesVolume * (product.production_cost || 0);
+
+      // Get actual cost per unit from production data
+      const productionEntry = productionData.products?.find(
+        (prod) => prod.product_id === product.id
+      );
+      const actualCostPerUnit =
+        productionEntry?.cost_per_unit || product.production_cost || 0;
+      const costs = salesVolume * actualCostPerUnit;
       const profit = revenue - costs;
       values[product.id] = { revenue, costs, profit };
     });
     return values;
-  }, [products, salesData]);
+  }, [products, salesData, productionData]);
 
   // Aggregate totals for dashboard
   const totalMetrics = React.useMemo(() => {
@@ -329,6 +336,12 @@ const Sales = () => {
               profit: 0,
             };
 
+            const productionEntry = productionData.products?.find(
+              (prod) => prod.product_id === product.id
+            );
+            const actualCostPerUnit =
+              productionEntry?.cost_per_unit || product.production_cost || 0;
+
             return (
               <div
                 key={productId}
@@ -377,7 +390,19 @@ const Sales = () => {
                       <span className="font-medium text-blue-300">
                         Cost/unit:
                       </span>
-                      <p className="text-white">₹{product.production_cost}</p>
+                      <p className="text-white">
+                        ₹{actualCostPerUnit}
+                        {productionEntry && (
+                          <span className="text-green-400 ml-1 text-xs">
+                            (from production)
+                          </span>
+                        )}
+                        {!productionEntry && (
+                          <span className="text-yellow-400 ml-1 text-xs">
+                            (default - set in production form)
+                          </span>
+                        )}
+                      </p>
                     </div>
                   </div>
 
@@ -386,7 +411,12 @@ const Sales = () => {
                       <div>
                         Revenue: ₹{formatNumber(Math.round(calc.revenue))}
                       </div>
-                      <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
+                      <div>
+                        Costs: ₹{formatNumber(Math.round(calc.costs))}
+                        <span className="text-xs text-blue-400 ml-1">
+                          (@ ₹{actualCostPerUnit}/unit from production)
+                        </span>
+                      </div>
                       <div>
                         Profit: ₹{formatNumber(Math.round(calc.profit))}
                       </div>
@@ -494,6 +524,10 @@ const Sales = () => {
 
         {/* Total Revenue Summary */}
         <h3 className="text-lg font-semibold text-white mb-1">Sales Summary</h3>
+        <p className="text-sm text-slate-400 mb-3">
+          💡 Costs are calculated using actual production costs from the
+          Production form
+        </p>
         <div className="mt-2 p-4 bg-slate-800 rounded-lg border border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-m">
             <div>
@@ -525,7 +559,7 @@ const Sales = () => {
 
         {/* Projected Cash Balance */}
         <div className="mt-6 ml-2 text-slate-300 text-m">
-          Projected Cash Balance: 
+          Projected Cash Balance:
           {formatCurrency(Math.round(projectedCashBalance))}
         </div>
       </div>

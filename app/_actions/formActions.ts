@@ -191,40 +191,6 @@ export async function getInitialFormData(companyId: string, period: number) {
     const simulation =
       simulationResult.status === "fulfilled" ? simulationResult.value : null;
 
-    // Log any failed queries for debugging
-    results.forEach((result, index) => {
-      const queryNames = [
-        "finance",
-        "marketing",
-        "production",
-        "hr",
-        "hrRole",
-        "rd",
-        "sales",
-        "products",
-        "company",
-        "simulation",
-      ];
-      if (result.status === "rejected") {
-        console.error(`Query ${queryNames[index]} failed:`, result.reason);
-      } else {
-        console.log(`Query ${queryNames[index]} success:`, result.value);
-      }
-    });
-
-    console.log("=== Raw Database Results ===");
-    console.log("Finance:", finance);
-    console.log("Marketing:", marketing);
-    console.log("Production (all):", production);
-    console.log("HR:", hr);
-    console.log("HR Roles:", hrRole);
-    console.log("R&D:", rd);
-    console.log("Sales:", sales);
-    console.log("Products:", products);
-    console.log("Company:", company);
-    console.log("Simulation:", simulation);
-    console.log("=============================");
-
     return {
       finance,
       marketing,
@@ -240,8 +206,7 @@ export async function getInitialFormData(companyId: string, period: number) {
         originalCashBalance: company?.cash_balance || 100000,
       },
     };
-  } catch (error) {
-    console.error("Error in getInitialFormData:", error);
+  } catch {
     // Return a safe default structure
     return {
       finance: null,

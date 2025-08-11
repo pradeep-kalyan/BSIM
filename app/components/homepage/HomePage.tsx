@@ -148,7 +148,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       return false;
     }
   };
-   const CompanyLogo = ({
+  const CompanyLogo = ({
     logoUrl,
     companyName,
   }: {
@@ -774,14 +774,14 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const capture = async () => {
     try {
       if (!container.current) {
-        console.error("Container ref is not available");
+
         alert("Unable to capture: Dashboard container is not available");
         return;
       }
 
       await exportDashboard(container.current);
     } catch (error) {
-      console.error("Export failed:", error);
+
 
       let errorMessage = "Dashboard export failed. ";
       if (error instanceof Error) {
@@ -851,7 +851,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           <div className="container mx-auto py-4">
             <div className="flex items-center gap-34">
               {/* LEFT: Company name + logo + period */}
-              <div className="flex items-start gap-4 animate-slide-in-left -ml-22">
+              <div className="flex items-start gap-4 animate-slide-in-left ml-22">
                 {/* Logo */}
                 <CompanyLogo
                   logoUrl={data?.company?.logo_url ?? undefined}
@@ -890,7 +890,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 </div>
               </div>
               {/* Right side: buttons */}
-              <div className="flex gap-3 items-center animate-fade-in-up">
+              <div className="flex gap-3 items-center animate-fade-in-up ml-22">
                 <button
                   onClick={capture}
                   disabled={isExporting}

@@ -461,7 +461,7 @@ export async function getCompanyComparisonData(
         orderBy: { name: "asc" }, // You can sort by 'created_at' or 'id' if needed
         take: 3,
         include: {
-          product_performances: {
+          performances: {
             orderBy: { period: "desc" },
             take: 1,
           },
@@ -505,7 +505,7 @@ export async function getCompanyComparisonData(
         defect_rate: production?.defect_rate ?? 0,
       },
       products: company.products.map((product) => {
-        const performance = product.product_performances[0];
+        const performance = product.performances[0];
         return {
           name: product.name,
           market_share: performance?.market_share ?? 0,

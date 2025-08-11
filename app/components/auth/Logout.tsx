@@ -27,9 +27,8 @@ const Logout = () => {
       setTimeout(() => {
         router.push("/login");
       }, 300);
-    } catch (error) {
+    } catch {
       toast.error("Logout failed. Please try again.");
-      console.error("Logout error:", error);
     }
   };
 
