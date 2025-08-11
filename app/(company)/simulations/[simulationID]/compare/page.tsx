@@ -28,7 +28,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import Checkboxdropdown from "@/app/ui/checkboxdropdown";
-import { getCompanyComparisonData } from "@/app/_actions/companyData";
+import { getCompanyComparisonData } from "@/app/_actions/company";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 // Types for better type safety

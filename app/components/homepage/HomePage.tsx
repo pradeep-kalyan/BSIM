@@ -135,7 +135,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const router = useRouter();
   const { exportDashboard, isExporting } = useExport();
   const swapyRef = useRef<HTMLDivElement | null>(null);
-  const swapyInstanceRef = useRef<any>(null);
+  const swapyInstanceRef = useRef<ReturnType<typeof createSwapy> | null>(null);
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
     try {
