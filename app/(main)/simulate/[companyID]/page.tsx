@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/app/_actions/auth";
 import React from "react";
-import Form from "./_components/form";
+import Form from "../../../components/simulate/form";
 
 interface PageProps {
   params: Promise<{
@@ -15,7 +15,6 @@ const Page = async ({ params }: PageProps) => {
 
   return (
     <div className="min-h-screen w-screen relative overflow-hidden bg-gradient-to-br from-[#0c0c0c] via-[#1a1a2e] to-[#16213e]">
-      {/* Background radial overlays */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute w-full h-full">
           <div

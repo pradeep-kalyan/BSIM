@@ -1,0 +1,536 @@
+"use client";
+ 
+import React from "react";
+import {
+  TrendingUp,
+  DollarSign,
+  Star,
+  Package,
+  AlertTriangle,
+  Check,
+} from "lucide-react";
+import {
+  useProductForm,
+  useSalesForm,
+  useCashBalance,
+  useProductionForm,
+} from "@/app/context/FormContext";
+import { Slider } from "@/components/ui/slider";
+import InfoCard from "@/app/components/InfoCard";
+ 
+// Type for production data per product
+type ProductProductionData = {
+  product_id: string;
+  units_to_produce: number;
+  cost_per_unit: number;
+  total_cost: number;
+  production_capacity: number;
+  storage_capacity: number;
+  inventory_value: number;
+  defect_rate: number;
+};
+ 
+const formatNumber = (num: number) =>
+  num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+ 
+const Sales = () => {
+  const { products } = useProductForm();
+  const {
+    data: salesData,
+    updateData: updateSalesData,
+    setError,
+  } = useSalesForm();
+  const { data: productionData } = useProductionForm();
+  const { projectedCashBalance, updateSalesBudgetImpact } = useCashBalance();
+ 
+  // Helper function to get available inventory based on production data
+  const getAvailableInventory = React.useCallback(
+    (productId: string) => {
+      // Check if there's production data for this product
+      const productionEntry = productionData.products?.find(
+        (prod) => prod.product_id === productId
+      );
+ 
+      if (productionEntry) {
+        // Use production output as available inventory
+        return productionEntry.units_to_produce;
+      }
+ 
+      // Fallback to product's existing inventory level
+      const product = products?.find((p) => p.id === productId);
+      return product?.inventory_level || 0;
+    },
+    [productionData.products, products]
+  );
+ 
+  const [validationAlerts, setValidationAlerts] = React.useState<
+    Record<string, string | null>
+  >({});
+  const [successProducts, setSuccessProducts] = React.useState<
+    Record<string, boolean>
+  >({});
+ 
+  // Calculate per-product values
+  const calculatedValues = React.useMemo(() => {
+    const values: Record<
+      string,
+      { revenue: number; costs: number; profit: number }
+    > = {};
+    products?.forEach((product) => {
+      if (!product.id) return; // Skip products without IDs
+      const pSales = salesData?.[product.id] || {};
+      const salesVolume = pSales.sales_volume || 0;
+      const sellingPrice = pSales.selling_price || product.selling_price || 0;
+      const revenue = salesVolume * sellingPrice;
+      const costs = salesVolume * (product.production_cost || 0);
+      const profit = revenue - costs;
+      values[product.id] = { revenue, costs, profit };
+    });
+    return values;
+  }, [products, salesData]);
+ 
+  // Aggregate totals for dashboard
+  const totalMetrics = React.useMemo(() => {
+    let totalRevenue = 0,
+      totalCosts = 0,
+      totalProfit = 0,
+      totalVolume = 0,
+      totalMarketShare = 0,
+      totalCustomerSatisfaction = 0,
+      productCount = 0;
+ 
+    products?.forEach((p) => {
+      if (!p.id) return; // Skip products without IDs
+      const vals = calculatedValues[p.id] || {
+        revenue: 0,
+        costs: 0,
+        profit: 0,
+      };
+      const pSales = salesData?.[p.id] || {};
+ 
+      totalRevenue += vals.revenue;
+      totalCosts += vals.costs;
+      totalProfit += vals.profit;
+      totalVolume += pSales.sales_volume || 0;
+      totalMarketShare += pSales.market_share || 0;
+      totalCustomerSatisfaction += pSales.customer_satisfaction || 0;
+      productCount++;
+    });
+ 
+    const avgMarketShare =
+      productCount > 0 ? totalMarketShare / productCount : 0;
+    const avgCustomerSatisfaction =
+      productCount > 0 ? totalCustomerSatisfaction / productCount : 0;
+ 
+    return {
+      totalRevenue,
+      totalCosts,
+      totalProfit,
+      totalVolume,
+      avgMarketShare,
+      avgCustomerSatisfaction,
+    };
+  }, [products, calculatedValues, salesData]);
+ 
+  // Update cash balance impact whenever total revenue changes
+  React.useEffect(() => {
+    updateSalesBudgetImpact(totalMetrics.totalRevenue);
+  }, [totalMetrics.totalRevenue, updateSalesBudgetImpact]);
+ 
+  // Ensure all products have sales data entries
+  React.useEffect(() => {
+    if (products && products.length > 0) {
+      const updatedSalesData = { ...salesData };
+      let hasUpdates = false;
+ 
+      products.forEach((product) => {
+        if (product.id && !updatedSalesData[product.id]) {
+          updatedSalesData[product.id] = {
+            sales_volume: 0,
+            selling_price: product.selling_price || 1000, // Initialize with product's default selling price
+            revenue: 0,
+            costs: 0,
+            profit: 0,
+            market_share: 0,
+            customer_satisfaction: 1,
+          };
+          hasUpdates = true;
+        }
+      });
+ 
+      if (hasUpdates) {
+        updateSalesData(updatedSalesData);
+      }
+    }
+  }, [products, salesData, updateSalesData]);
+ 
+  // Handle slider/input change per product
+  const handleProductInputChange = (
+    productId: string,
+    field: string,
+    value: number
+  ) => {
+    const currentProductSales = salesData[productId] || {
+      sales_volume: 0,
+      selling_price:
+        products?.find((p) => p.id === productId)?.selling_price || 0,
+      revenue: 0,
+      costs: 0,
+      profit: 0,
+      market_share: 0,
+      customer_satisfaction: 1,
+    };
+ 
+    const updatedSalesData = {
+      ...salesData,
+      [productId]: {
+        ...currentProductSales,
+        [field]: value,
+      },
+    };
+ 
+    updateSalesData(updatedSalesData);
+    setError(field, "");
+    setSuccessProducts((prev) => ({ ...prev, [productId]: false }));
+    setValidationAlerts((prev) => ({ ...prev, [productId]: null }));
+  };
+ 
+  // Validation per product
+  const handleValidateProduct = (productId: string) => {
+    const product = products?.find((p) => p.id === productId);
+    const pSales = salesData?.[productId] || {};
+    if (!product) return;
+ 
+    // Get available inventory from production data
+    const availableInventory = getAvailableInventory(productId);
+ 
+    if ((pSales.sales_volume || 0) <= 0) {
+      setValidationAlerts((prev) => ({
+        ...prev,
+        [productId]: "⚠️ Sales volume must be greater than 0",
+      }));
+      return;
+    }
+    if ((pSales.selling_price || 0) <= 0) {
+      setValidationAlerts((prev) => ({
+        ...prev,
+        [productId]: "⚠️ Selling price must be greater than 0",
+      }));
+      return;
+    }
+    if (pSales.sales_volume && pSales.sales_volume > availableInventory) {
+      setValidationAlerts((prev) => ({
+        ...prev,
+        [productId]: `⚠️ Sales volume (${pSales.sales_volume}) exceeds available inventory (${availableInventory}). Check production output.`,
+      }));
+      return;
+    }
+    if ((pSales.market_share || 0) < 0 || (pSales.market_share || 0) > 100) {
+      setValidationAlerts((prev) => ({
+        ...prev,
+        [productId]: "⚠️ Market share must be between 0 and 100%",
+      }));
+      return;
+    }
+    if (
+      (pSales.customer_satisfaction || 0) < 1 ||
+      (pSales.customer_satisfaction || 0) > 10
+    ) {
+      setValidationAlerts((prev) => ({
+        ...prev,
+        [productId]: "⚠️ Customer satisfaction must be between 1 and 10",
+      }));
+      return;
+    }
+ 
+    // Calculate inventory reduction
+    const newInventoryLevel = availableInventory - (pSales.sales_volume || 0);
+ 
+    // Update the specific product's sales data with calculated values
+    const updatedSalesData = {
+      ...salesData,
+      [productId]: {
+        ...pSales,
+        revenue: calculatedValues[productId]?.revenue || 0,
+        costs: calculatedValues[productId]?.costs || 0,
+        profit: calculatedValues[productId]?.profit || 0,
+      },
+    };
+ 
+    updateSalesData(updatedSalesData);
+    setSuccessProducts((prev) => ({
+      ...prev,
+      [productId]: true,
+    }));
+ 
+    // Show inventory reduction message
+    setValidationAlerts((prev) => ({
+      ...prev,
+      [productId]: `✅ Validated! Inventory will be reduced to ${newInventoryLevel} units`,
+    }));
+ 
+    setTimeout(() => {
+      setValidationAlerts((prev) => ({
+        ...prev,
+        [productId]: null,
+      }));
+    }, 3000);
+  };
+ 
+  return (
+    <div className="bg-slate-800/50 shadow-md py-4 px-6">
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <InfoCard
+          label="Total Revenue"
+          value={totalMetrics.totalRevenue}
+          isCurrency={true}
+          Icon={DollarSign}
+          width="w-full"
+          height="h-full"
+          iconColor="text-green-400"
+        />
+        <InfoCard
+          label="Total Volume"
+          value={totalMetrics.totalVolume}
+          Icon={Package}
+          width="w-full"
+          height="h-full"
+          iconColor="text-blue-400"
+        />
+        <InfoCard
+          label="Avg Market Share"
+          value={`${parseFloat(totalMetrics.avgMarketShare.toFixed(1))}%`}
+          Icon={TrendingUp}
+          width="w-full"
+          height="h-full"
+          iconColor="text-violet-400"
+        />
+        <InfoCard
+          label="Total Profit"
+          value={totalMetrics.totalProfit}
+          isCurrency={true}
+          Icon={Star}
+          width="w-full"
+          height="h-full"
+          iconColor="text-green-300"
+        />
+      </section>
+ 
+      <div className="max-w-full mx-auto py-4">
+        {/* Product Sales Config */}
+        {products
+          ?.filter((product) => product.id)
+          .map((product) => {
+            const productId = product.id!;
+            const pSales = salesData?.[productId] || {};
+            const calc = calculatedValues[productId] || {
+              revenue: 0,
+              costs: 0,
+              profit: 0,
+            };
+ 
+            return (
+              <div
+                key={productId}
+                className="bg-slate-800/50 shadow-md rounded-2xl p-6 mb-6 border border-slate-700 flex justify-between items-center"
+              >
+                <div className="flex flex-col items-center justify-center p-6">
+                  <h2 className="text-2xl font-bold text-white mb-6">
+                    {product.name}
+                  </h2>
+ 
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm mb-8 w-full max-w-4xl">
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">
+                        Category:
+                      </span>
+                      <p className="text-white">{product.category}</p>
+                    </div>
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">
+                        Current Price/unit:
+                      </span>
+                      <p className="text-white">
+                        ₹{pSales.selling_price || product.selling_price || 0}
+                      </p>
+                    </div>
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">
+                        Available Inventory:
+                      </span>
+                      <p className="text-white">
+                        {getAvailableInventory(productId)} units
+                        {getAvailableInventory(productId) !==
+                          (product.inventory_level || 0) && (
+                          <span className="text-green-400 ml-1">
+                            (from production:{" "}
+                            {productionData.products?.find(
+                              (prod: ProductProductionData) =>
+                                prod.product_id === productId
+                            )?.units_to_produce || 0}
+                            )
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="text-slate-300">
+                      <span className="font-medium text-blue-300">
+                        Cost/unit:
+                      </span>
+                      <p className="text-white">₹{product.production_cost}</p>
+                    </div>
+                  </div>
+ 
+                  <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="text-slate-300 text-sm space-y-1">
+                      <div>
+                        Revenue: ₹{formatNumber(Math.round(calc.revenue))}
+                      </div>
+                      <div>Costs: ₹{formatNumber(Math.round(calc.costs))}</div>
+                      <div>
+                        Profit: ₹{formatNumber(Math.round(calc.profit))}
+                      </div>
+                    </div>
+ 
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={() => handleValidateProduct(productId)}
+                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow"
+                      >
+                        Validate
+                      </button>
+ 
+                      <div className="h-6 flex items-center">
+                        {validationAlerts[productId] &&
+                          !validationAlerts[productId].startsWith("✅") && (
+                            <div className="flex items-center gap-2 text-rose-400">
+                              <AlertTriangle size={18} />
+                              {validationAlerts[productId]}
+                            </div>
+                          )}
+ 
+                        {successProducts[productId] &&
+                          !validationAlerts[productId] && (
+                            <div className="flex items-center gap-2 text-green-400">
+                              <Check size={18} /> Validated!
+                            </div>
+                          )}
+ 
+                        {validationAlerts[productId]?.startsWith("✅") && (
+                          <div className="flex items-center gap-2 text-green-400">
+                            <Check size={18} /> {validationAlerts[productId]}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+ 
+                <div className="flex flex-col justify-center items-center">
+                  <Slider
+                    label="Sales Volume (Units)"
+                    tooltipText="Number of units to sell"
+                    value={[pSales.sales_volume || 0]}
+                    isFixed={true}
+                    fixedMax={getAvailableInventory(productId) || 1000000}
+                    fixedMin={0}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "sales_volume",
+                        val[0]
+                      )
+                    }
+                  />
+                  <Slider
+                    label="Selling Price per Unit (₹)"
+                    tooltipText="Price per unit for this product"
+                    value={[pSales.selling_price || product.selling_price || 0]}
+                    isFixed={true}
+                    fixedMax={10000} // Maximum selling price limit
+                    fixedMin={0}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "selling_price",
+                        val[0]
+                      )
+                    }
+                  />
+                  <Slider
+                    label="Market Share (%)"
+                    tooltipText="Target market percentage"
+                    isPercentage={true}
+                    value={[pSales.market_share || 0]}
+                    min={0}
+                    max={100}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "market_share",
+                        val[0]
+                      )
+                    }
+                  />
+                  <Slider
+                    label="Customer Satisfaction (1-10)"
+                    tooltipText="Customer satisfaction rating"
+                    value={[pSales.customer_satisfaction || 1]}
+                    min={1}
+                    max={10}
+                    isRating={true}
+                    onValueChange={(val) =>
+                      handleProductInputChange(
+                        productId,
+                        "customer_satisfaction",
+                        val[0]
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            );
+          })}
+ 
+        {/* Total Revenue Summary */}
+        <h3 className="text-lg font-semibold text-white mb-1">Sales Summary</h3>
+        <div className="mt-2 p-4 bg-slate-800 rounded-lg border border-slate-700">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-m">
+            <div>
+              <span className="text-slate-400">Total Revenue:</span>
+              <p className="text-white font-semibold">
+                ₹{formatNumber(Math.round(totalMetrics.totalRevenue))}
+              </p>
+            </div>
+            <div>
+              <span className="text-slate-400">Total Costs:</span>
+              <p className="text-white font-semibold">
+                ₹{formatNumber(Math.round(totalMetrics.totalCosts))}
+              </p>
+            </div>
+            <div>
+              <span className="text-slate-400">Total Profit:</span>
+              <p className="text-white font-semibold">
+                ₹{formatNumber(Math.round(totalMetrics.totalProfit))}
+              </p>
+            </div>
+            <div>
+              <span className="text-slate-400">Total Volume:</span>
+              <p className="text-white font-semibold">
+                {totalMetrics.totalVolume} units
+              </p>
+            </div>
+          </div>
+        </div>
+ 
+        {/* Projected Cash Balance */}
+        <div className="mt-6 ml-2 text-slate-300 text-m">
+          Projected Cash Balance: ₹
+          {formatNumber(Math.round(projectedCashBalance))}
+        </div>
+      </div>
+    </div>
+  );
+};
+ 
+export default Sales;

@@ -7,233 +7,25 @@ import React, {
   ReactNode,
   useCallback,
   useMemo,
-  useState,
 } from "react";
-
-// Types matching the Zod schema and database structure
-export interface FinanceFormData {
-  investment_amount: number;
-  loan_amount: number;
-  repay_loan: number;
-  dividend_payout: number;
-  equity_issue: number;
-}
-
-export interface MarketingFormData {
-  budget: number;
-  offline: number;
-  online: number;
-}
-
-export interface ProductionFormData {
-  production_capacity: number;
-  inventory_value: number;
-  storage_capacity: number;
-  defect_rate: number;
-  quality_improvement_investment: number;
-  efficiency_upgrade_cost: number;
-  maintenance_budget: number;
-  automation_level: number;
-  safety_investment: number;
-  environmental_compliance_cost: number;
-  units_to_produce: number;
-  cost_per_unit: number;
-}
-
-export interface HRRole {
-  role_name: string;
-  salary_per_head: number;
-  head_count: number;
-}
-
-export interface ExistingRole {
-  role_name: string;
-  salary_per_head: number;
-  current_head_count: number;
-  hires: number;
-  fires: number;
-}
-
-export interface NewRole {
-  role_name: string;
-  salary_per_head: number;
-  hires: number;
-}
-
-export interface RoleInput {
-  role_name: string;
-  salary_per_head: number;
-  hires: number;
-  fires: number;
-}
-
-export interface HRFormData {
-  existingRoles: ExistingRole[];
-  newRoles: NewRole[];
-  salary_budget: number;
-  training_budget: number;
-  total_budget: number;
-  employee_satisfaction: number;
-  total_employee_count: number;
-}
-
-export interface RDFormData {
-  budget: number;
-  pip: number;
-  time_to_market: number;
-  total_development: number;
-  patented: number;
-  quality_changes: number;
-}
-
-export interface SalesFormData {
-  sales_volume: number;
-  revenue: number;
-  costs: number;
-  profit: number;
-  market_share: number;
-  customer_satisfaction: number;
-}
-
-// Per-product sales data structure
-export interface ProductSalesData {
-  [productId: string]: SalesFormData;
-}
-
-export interface ProductFormData {
-  id?: string; // Optional ID for tracking existing products
-  name: string;
-  description?: string | null;
-  category: string;
-  quality_rating: number;
-  innovation_rating: number;
-  sustainability_rating: number;
-  production_cost: number;
-  selling_price: number;
-  inventory_level: number;
-  production_capacity: number;
-  development_cost: number;
-  marketing_budget: number;
-  status: string;
-  launch_period?: number | null;
-  discontinue_period?: number | null;
-}
-
-export interface CompanyFormData {
-  name: string;
-  description?: string;
-  logo_url?: string;
-  cash_balance: number;
-  total_assets: number;
-  total_liabilities: number;
-  marketing_budget: number;
-  credit_rating?: string;
-  brand_value: number;
-}
-
-export interface SimulationFormData {
-  name: string;
-  description?: string;
-  config: string;
-  current_period: number;
-  status: string;
-}
-
-// Cash balance tracking interface
-export interface CashBalanceState {
-  originalCashBalance: number;
-  hrBudgetImpact: number;
-  financeBudgetImpact: number;
-  marketingBudgetImpact: number;
-  productionBudgetImpact: number;
-  rdBudgetImpact: number;
-  salesBudgetImpact: number;
-  productBudgetImpact: number;
-}
-
-// Form state interface with proper initialization tracking
-export interface FormState {
-  finance: FinanceFormData;
-  marketing: MarketingFormData;
-  production: ProductionFormData;
-  hr: HRFormData;
-  rd: RDFormData;
-  sales: ProductSalesData; // Changed to handle multiple products
-  product: ProductFormData[];
-  company: CompanyFormData;
-  simulation: SimulationFormData;
-  cashBalance: CashBalanceState;
-  projected_balance: number;
-  isSubmitting: boolean;
-  errors: Record<string, string>;
-  isDirty: boolean;
-  currentStep: number;
-  totalSteps: number;
-  completedSections: Record<string, boolean>;
-  submissionStatus: "idle" | "submitting" | "success" | "error";
-  submissionResults: Record<
-    string,
-    { success: boolean; error?: string; id?: string }
-  >;
-  isInitialized: boolean;
-}
-
-// Action types
-export type FormAction =
-  | { type: "UPDATE_FINANCE"; payload: Partial<FinanceFormData> }
-  | { type: "UPDATE_MARKETING"; payload: Partial<MarketingFormData> }
-  | { type: "UPDATE_PRODUCTION"; payload: Partial<ProductionFormData> }
-  | { type: "UPDATE_HR"; payload: Partial<HRFormData> }
-  | { type: "UPDATE_RD"; payload: Partial<RDFormData> }
-  | { type: "UPDATE_SALES"; payload: ProductSalesData } // Changed to ProductSalesData
-  | { type: "UPDATE_PRODUCT"; payload: Partial<ProductFormData> } // For backward compatibility
-  | { type: "ADD_PRODUCT"; payload: ProductFormData }
-  | {
-      type: "UPDATE_PRODUCT_BY_INDEX";
-      payload: { index: number; product: Partial<ProductFormData> };
-    }
-  | { type: "REMOVE_PRODUCT"; payload: number } // Remove by index
-  | { type: "SET_PRODUCTS"; payload: ProductFormData[] } // Set entire products array
-  | { type: "UPDATE_COMPANY"; payload: Partial<CompanyFormData> }
-  | { type: "UPDATE_SIMULATION"; payload: Partial<SimulationFormData> }
-  | { type: "ADD_EXISTING_ROLE"; payload: ExistingRole }
-  | {
-      type: "UPDATE_EXISTING_ROLE";
-      payload: { index: number; role: Partial<ExistingRole> };
-    }
-  | { type: "REMOVE_EXISTING_ROLE"; payload: number }
-  | { type: "ADD_NEW_ROLE"; payload: NewRole }
-  | {
-      type: "UPDATE_NEW_ROLE";
-      payload: { index: number; role: Partial<NewRole> };
-    }
-  | { type: "REMOVE_NEW_ROLE"; payload: number }
-  | { type: "CLEAR_ALL_ROLES" }
-  | { type: "SET_ORIGINAL_CASH_BALANCE"; payload: number }
-  | { type: "UPDATE_HR_BUDGET_IMPACT"; payload: number }
-  | { type: "UPDATE_FINANCE_BUDGET_IMPACT"; payload: number }
-  | { type: "UPDATE_MARKETING_BUDGET_IMPACT"; payload: number }
-  | { type: "UPDATE_PRODUCTION_BUDGET_IMPACT"; payload: number }
-  | { type: "UPDATE_RD_BUDGET_IMPACT"; payload: number }
-  | { type: "UPDATE_SALES_BUDGET_IMPACT"; payload: number }
-  | { type: "UPDATE_PRODUCT_BUDGET_IMPACT"; payload: number }
-  | { type: "SET_SUBMITTING"; payload: boolean }
-  | { type: "SET_ERRORS"; payload: Record<string, string> }
-  | { type: "SET_ERROR"; payload: { field: string; error: string } }
-  | { type: "CLEAR_ERRORS" }
-  | { type: "SET_DIRTY"; payload: boolean }
-  | { type: "SET_STEP"; payload: number }
-  | { type: "SET_TOTAL_STEPS"; payload: number }
-  | { type: "NEXT_STEP" }
-  | { type: "PREV_STEP" }
-  | { type: "RESET_FORM"; payload?: keyof FormState }
-  | { type: "RESET_ALL" }
-  | {
-      type: "SET_FORM_COMPLETED";
-      payload: { section: string; completed: boolean };
-    }
-  | { type: "INITIALIZE_FORMS"; payload: Partial<FormState> }
-  | { type: "BULK_UPDATE_FORMS"; payload: Partial<FormState> };
+import {
+  CashBalanceState,
+  CompanyFormData,
+  ExistingRole,
+  FinanceFormData,
+  FormState,
+  HRFormData,
+  MarketingFormData,
+  NewRole,
+  ProductFormData,
+  ProductionFormData,
+  ProductSalesData,
+  RDFormData,
+  RoleInput,
+  SimulationFormData,
+  FormContextType,
+  FormAction,
+} from "../types/simulate";
 
 // Default values matching Zod schema defaults
 const getDefaultFinanceData = (): FinanceFormData => ({
@@ -245,18 +37,7 @@ const getDefaultFinanceData = (): FinanceFormData => ({
 });
 
 const getDefaultProductionData = (): ProductionFormData => ({
-  production_capacity: 2000,
-  inventory_value: 0,
-  storage_capacity: 0,
-  defect_rate: 0,
-  quality_improvement_investment: 0,
-  efficiency_upgrade_cost: 0,
-  maintenance_budget: 0,
-  automation_level: 0,
-  safety_investment: 0,
-  environmental_compliance_cost: 0,
-  units_to_produce: 0,
-  cost_per_unit: 0,
+  products: [], // Array of ProductProductionData matching DB schema
 });
 
 const getDefaultHRData = (): HRFormData => ({
@@ -290,10 +71,10 @@ export const getDefaultProductData = (): ProductFormData => ({
   production_cost: 0,
   selling_price: 0,
   inventory_level: 0,
-  production_capacity: 2000, 
+  production_capacity: 2000,
   development_cost: 0,
   marketing_budget: 0,
-  status: "active", 
+  status: "active",
 });
 
 export const getDefaultCompanyData = (): CompanyFormData => ({
@@ -333,18 +114,27 @@ const getDefaultMarketingData = () => ({
   online: 0,
 });
 
-// Initial state with proper defaults
+// Initial state with minimal defaults - real data comes from DB via initializeForms()
 const initialState: FormState = {
-  finance: getDefaultFinanceData(),
-  marketing: getDefaultMarketingData(),
-  production: getDefaultProductionData(),
-  hr: getDefaultHRData(),
-  rd: getDefaultRDData(),
-  sales: getDefaultSalesData(),
+  finance: {} as FinanceFormData,
+  marketing: {} as MarketingFormData,
+  production: {} as ProductionFormData,
+  hr: {} as HRFormData,
+  rd: {} as RDFormData,
+  sales: {} as ProductSalesData,
   product: [], // Initialize as empty array
-  company: getDefaultCompanyData(),
-  simulation: getDefaultSimulationData(),
-  cashBalance: getDefaultCashBalance(),
+  company: {} as CompanyFormData,
+  simulation: {} as SimulationFormData,
+  cashBalance: {
+    originalCashBalance: 0,
+    hrBudgetImpact: 0,
+    financeBudgetImpact: 0,
+    marketingBudgetImpact: 0,
+    productionBudgetImpact: 0,
+    rdBudgetImpact: 0,
+    salesBudgetImpact: 0,
+    productBudgetImpact: 0,
+  },
   projected_balance: 0,
   isSubmitting: false,
   errors: {},
@@ -749,83 +539,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
 }
 
 // Context interface
-interface FormContextType {
-  state: FormState;
-  dispatch: React.Dispatch<FormAction>;
-
-  // Initialization
-  initializeForms: (data: Partial<FormState>) => void;
-
-  // Helper functions
-  updateFinance: (data: Partial<FinanceFormData>) => void;
-  updateMarketing: (data: Partial<MarketingFormData>) => void;
-  updateProduction: (data: Partial<ProductionFormData>) => void;
-  updateHR: (data: Partial<HRFormData>) => void;
-  updateRD: (data: Partial<RDFormData>) => void;
-  updateSales: (data: ProductSalesData) => void;
-  updateProduct: (data: Partial<ProductFormData>) => void;
-  // New product array management functions
-  addProduct: (product: ProductFormData) => void;
-  updateProductByIndex: (
-    index: number,
-    product: Partial<ProductFormData>
-  ) => void;
-  removeProduct: (index: number) => void;
-  setProducts: (products: ProductFormData[]) => void;
-
-  updateCompany: (data: Partial<CompanyFormData>) => void;
-  updateSimulation: (data: Partial<SimulationFormData>) => void;
-
-  // HR Role management functions
-  addExistingRole: (role: ExistingRole) => void;
-  updateExistingRole: (index: number, role: Partial<ExistingRole>) => void;
-  removeExistingRole: (index: number) => void;
-  addNewRole: (role: NewRole) => void;
-  updateNewRole: (index: number, role: Partial<NewRole>) => void;
-  removeNewRole: (index: number) => void;
-  clearAllRoles: () => void;
-
-  // Cash balance management
-  setOriginalCashBalance: (amount: number) => void;
-  updateHRBudgetImpact: (impact: number) => void;
-  updateFinanceBudgetImpact: (impact: number) => void;
-  updateMarketingBudgetImpact: (impact: number) => void;
-  updateProductionBudgetImpact: (impact: number) => void;
-  updateRDBudgetImpact: (impact: number) => void;
-  updateSalesBudgetImpact: (impact: number) => void;
-  updateProductBudgetImpact: (impact: number) => void;
-  getProjectedCashBalance: () => number;
-
-  setSubmitting: (submitting: boolean) => void;
-  setError: (field: string, error: string) => void;
-  setErrors: (errors: Record<string, string>) => void;
-  clearErrors: () => void;
-
-  nextStep: () => void;
-  prevStep: () => void;
-  setStep: (step: number) => void;
-  setTotalSteps: (total: number) => void;
-
-  resetForm: (formType?: keyof FormState) => void;
-  resetAll: () => void;
-
-  // Validation helpers
-  hasErrors: () => boolean;
-  getError: (field: string) => string | undefined;
-  validateField: (field: string, value: unknown) => string | undefined;
-
-  // Comprehensive submission methods
-  setFormCompleted: (section: string, completed: boolean) => void;
-  submitAllForms: (companyId: string, period: number) => Promise<boolean>;
-  bulkUpdateForms: (data: Partial<FormState>) => void;
-  getAllFormData: () => FormState;
-  validateAllForms: () => { valid: boolean; errors: Record<string, string> };
-  getCompletionStatus: () => {
-    completed: number;
-    total: number;
-    sections: string[];
-  };
-}
 
 // Create context
 const FormContext = createContext<FormContextType | undefined>(undefined);
@@ -1123,117 +836,6 @@ export function FormProvider({
     return { valid, errors };
   }, [state, validateField]);
 
-  const submitAllForms = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async (companyId: string, _period: number): Promise<boolean> => {
-      try {
-        setSubmitting(true);
-
-        const validation = validateAllForms();
-        if (!validation.valid) {
-          setErrors(validation.errors);
-          return false;
-        }
-
-        // Calculate aggregated sales metrics directly
-        let totalSalesRevenue = 0;
-        let totalSalesCosts = 0;
-        let totalSalesProfit = 0;
-        let totalSalesVolume = 0;
-        let averageMarketShare = 0;
-        let averageCustomerSatisfaction = 0;
-        let productCount = 0;
-
-        Object.values(state.sales).forEach((productSales) => {
-          totalSalesRevenue += productSales.revenue || 0;
-          totalSalesCosts += productSales.costs || 0;
-          totalSalesProfit += productSales.profit || 0;
-          totalSalesVolume += productSales.sales_volume || 0;
-
-          if (productSales.market_share && productSales.market_share > 0) {
-            averageMarketShare += productSales.market_share;
-            productCount++;
-          }
-
-          if (
-            productSales.customer_satisfaction &&
-            productSales.customer_satisfaction > 0
-          ) {
-            averageCustomerSatisfaction += productSales.customer_satisfaction;
-          }
-        });
-
-        // Calculate averages
-        averageMarketShare =
-          productCount > 0 ? averageMarketShare / productCount : 0;
-        averageCustomerSatisfaction =
-          productCount > 0 ? averageCustomerSatisfaction / productCount : 0;
-
-        const comprehensiveData = {
-          hr: state.hr,
-          marketing: state.marketing,
-          rd: state.rd,
-          production: state.production,
-          finance: {
-            ...state.finance,
-            net_profit: totalSalesProfit,
-            operating_costs: totalSalesCosts,
-            total_revenue: totalSalesRevenue,
-          },
-          product: state.product, // Pass the array of products
-          sales: state.sales, // Pass the full per-product sales data
-          projected_balance: getProjectedCashBalance(),
-          budget_impacts: {
-            hr: state.cashBalance.hrBudgetImpact,
-            finance: state.cashBalance.financeBudgetImpact,
-            marketing: state.cashBalance.marketingBudgetImpact,
-            production: state.cashBalance.productionBudgetImpact,
-            rd: state.cashBalance.rdBudgetImpact,
-            sales: state.cashBalance.salesBudgetImpact,
-            product: state.cashBalance.productBudgetImpact,
-          },
-          // Add aggregated sales totals for easy access
-          salesTotals: {
-            totalRevenue: totalSalesRevenue,
-            totalCosts: totalSalesCosts,
-            totalProfit: totalSalesProfit,
-            totalVolume: totalSalesVolume,
-            averageMarketShare: averageMarketShare,
-            averageCustomerSatisfaction: averageCustomerSatisfaction,
-            productCount: productCount,
-          },
-        };
-
-        // Call the comprehensive form submission action
-        const { comprehensiveFormSubmission } = await import(
-          "@/app/_actions/comprehensiveFormSubmission"
-        );
-        const result = await comprehensiveFormSubmission(
-          companyId,
-          comprehensiveData
-        );
-
-        if (result.success) {
-          // Clear form state after successful submission
-          dispatch({ type: "RESET_ALL" });
-          return true;
-        } else {
-          setErrors({ submission: result.message || "Submission failed" });
-          return false;
-        }
-      } catch (error) {
-        setErrors({
-          submission:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        });
-        return false;
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [state, validateAllForms, setErrors, setSubmitting, getProjectedCashBalance]
-  );
-
   const getCompletionStatus = useCallback(() => {
     const sections = [
       "finance",
@@ -1304,7 +906,6 @@ export function FormProvider({
     setFormCompleted,
     bulkUpdateForms,
     getAllFormData,
-    submitAllForms,
     validateAllForms,
     getCompletionStatus,
   };
@@ -1396,33 +997,33 @@ export function useProductionForm() {
 
   const updateDataWithCashImpact = useCallback(
     (data: Partial<ProductionFormData>) => {
-      // Calculate budget impact based on production form schema
-      const quality_improvement_investment =
-        data.quality_improvement_investment ??
-        state.production.quality_improvement_investment ??
-        0;
-      const efficiency_upgrade_cost =
-        data.efficiency_upgrade_cost ??
-        state.production.efficiency_upgrade_cost ??
-        0;
-      const maintenance_budget =
-        data.maintenance_budget ?? state.production.maintenance_budget ?? 0;
-      const safety_investment =
-        data.safety_investment ?? state.production.safety_investment ?? 0;
-      const environmental_compliance_cost =
-        data.environmental_compliance_cost ??
-        state.production.environmental_compliance_cost ??
-        0;
+      // Calculate budget impact based on total production cost across all products
+      let totalCost = 0;
 
-      const budgetImpact =
-        quality_improvement_investment +
-        efficiency_upgrade_cost +
-        maintenance_budget +
-        safety_investment +
-        environmental_compliance_cost;
+      if (data.products) {
+        totalCost = data.products.reduce(
+          (sum, prod) =>
+            sum +
+            (prod.total_cost ||
+              prod.units_to_produce *
+                prod.cost_per_unit *
+                (1 + prod.defect_rate / 100)),
+          0
+        );
+      } else if (state.production.products) {
+        totalCost = state.production.products.reduce(
+          (sum, prod) =>
+            sum +
+            (prod.total_cost ||
+              prod.units_to_produce *
+                prod.cost_per_unit *
+                (1 + prod.defect_rate / 100)),
+          0
+        );
+      }
 
       updateProduction(data);
-      updateProductionBudgetImpact(budgetImpact);
+      updateProductionBudgetImpact(totalCost);
     },
     [updateProduction, updateProductionBudgetImpact, state.production]
   );
@@ -1755,151 +1356,6 @@ export function useHRForm() {
   };
 }
 
-// Direct HR role management hook using context functions
-export function useHRRoleContext() {
-  const {
-    state,
-    addExistingRole,
-    updateExistingRole,
-    removeExistingRole,
-    addNewRole,
-    updateNewRole,
-    removeNewRole,
-    clearAllRoles,
-    updateHRBudgetImpact,
-    updateHR,
-  } = useForm();
-
-  // Auto-calculate budget impact whenever roles change
-  const autoCalculateAndUpdateBudget = useCallback(() => {
-    let salary_budget = 0;
-
-    // Calculate from existing roles
-    state.hr.existingRoles.forEach((role) => {
-      const newHeadCount = role.current_head_count + role.hires - role.fires;
-      if (newHeadCount > 0) {
-        salary_budget += newHeadCount * role.salary_per_head;
-      }
-    });
-
-    // Calculate from new roles
-    state.hr.newRoles.forEach((role) => {
-      salary_budget += role.hires * role.salary_per_head;
-    });
-
-    const total_budget = salary_budget + state.hr.training_budget;
-    // Calculate total employee count
-    const existingEmployees = state.hr.existingRoles.reduce((total, role) => {
-      return (
-        total + Math.max(0, role.current_head_count + role.hires - role.fires)
-      );
-    }, 0);
-
-    const newEmployees = state.hr.newRoles.reduce((total, role) => {
-      return total + role.hires;
-    }, 0);
-
-    const total_employee_count = existingEmployees + newEmployees;
-
-    // Update HR data with calculated values
-    updateHR({
-      salary_budget,
-      total_budget,
-      total_employee_count,
-    });
-
-    // Update budget impact
-    updateHRBudgetImpact(total_budget);
-  }, [state.hr, updateHR, updateHRBudgetImpact]);
-
-  return {
-    // Direct access to HR data
-    hrData: state.hr,
-    existingRoles: state.hr.existingRoles,
-    newRoles: state.hr.newRoles,
-
-    // Context-based role management functions
-    addExistingRole,
-    updateExistingRole,
-    removeExistingRole,
-    addNewRole,
-    updateNewRole,
-    removeNewRole,
-    clearAllRoles,
-
-    // Auto budget calculation
-    autoCalculateAndUpdateBudget,
-  };
-}
-
-// Comprehensive HR initialization hook
-export function useHRInitialization() {
-  const { initializeForms, state } = useForm();
-  const { autoCalculateAndUpdateBudget } = useHRRoleContext();
-
-  // Initialize HR data with existing roles from server
-  const initializeHRWithRoles = useCallback(
-    (
-      hrData: Partial<HRFormData> & {
-        existingRoles?: ExistingRole[];
-        newRoles?: NewRole[];
-      }
-    ) => {
-      const completeHRData = {
-        ...getDefaultHRData(),
-        ...hrData,
-        existingRoles: hrData.existingRoles || [],
-        newRoles: hrData.newRoles || [],
-      };
-
-      initializeForms({
-        hr: completeHRData,
-      });
-
-      // Auto-calculate budget after initialization
-      setTimeout(autoCalculateAndUpdateBudget, 0);
-    },
-    [initializeForms, autoCalculateAndUpdateBudget]
-  );
-
-  // Initialize with company's current roles
-  const initializeWithCompanyRoles = useCallback(
-    (
-      companyRoles: Array<{
-        role_name: string;
-        salary_per_head: number;
-        head_count: number;
-      }>
-    ) => {
-      const existingRoles: ExistingRole[] = companyRoles.map((role) => ({
-        role_name: role.role_name,
-        salary_per_head: role.salary_per_head,
-        current_head_count: role.head_count,
-        hires: role.head_count,
-        fires: 0,
-      }));
-
-      initializeHRWithRoles({ existingRoles });
-    },
-    [initializeHRWithRoles]
-  );
-
-  // Reset HR to default state
-  const resetHRToDefaults = useCallback(() => {
-    initializeForms({
-      hr: getDefaultHRData(),
-    });
-  }, [initializeForms]);
-
-  return {
-    initializeHRWithRoles,
-    initializeWithCompanyRoles,
-    resetHRToDefaults,
-    isInitialized: state.isInitialized,
-    currentHRData: state.hr,
-  };
-}
-
 export function useRDForm() {
   const { state, updateRD, setError, getError, updateRDBudgetImpact } =
     useForm();
@@ -2051,133 +1507,11 @@ export function useProductForm() {
   };
 }
 
-export function useProductActions(companyId: string) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Placeholder API calls — replace with your actual API call logic
-  async function apiCreateProduct(data: Partial<ProductFormData>) {
-    // Example: POST to your API endpoint
-    const res = await fetch(`/api/companies/${companyId}/products`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Failed to create product");
-    return res.json();
-  }
-
-  async function apiUpdateProduct(id: string, data: Partial<ProductFormData>) {
-    const res = await fetch(`/api/products/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("Failed to update product");
-    return res.json();
-  }
-
-  async function apiLaunchProduct(productId: string, period: number) {
-    const res = await fetch(`/api/products/${productId}/launch`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ period }),
-    });
-    if (!res.ok) throw new Error("Failed to launch product");
-    return res.json();
-  }
-
-  async function apiDiscontinueProduct(productId: string, period: number) {
-    const res = await fetch(`/api/products/${productId}/discontinue`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ period }),
-    });
-    if (!res.ok) throw new Error("Failed to discontinue product");
-    return res.json();
-  }
-
-  // Wrappers with loading/errors
-  const createProduct = async (data: Partial<ProductFormData>) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiCreateProduct(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProductAction = async (
-    id: string,
-    data: Partial<ProductFormData>
-  ) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiUpdateProduct(id, data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const launchProduct = async (productId: string, period: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiLaunchProduct(productId, period);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const discontinueProduct = async (productId: string, period: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-      return await apiDiscontinueProduct(productId, period);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return {
-    loading,
-    error,
-    createProduct,
-    updateProduct: updateProductAction,
-    launchProduct,
-    discontinueProduct,
-  };
-}
-
 export function useCompanyForm() {
   const { state, updateCompany, setError, getError } = useForm();
   return {
     data: state.company,
     updateData: updateCompany,
-    setError,
-    getError,
-  };
-}
-
-export function useSimulationForm() {
-  const { state, updateSimulation, setError, getError } = useForm();
-  return {
-    data: state.simulation,
-    updateData: updateSimulation,
     setError,
     getError,
   };
@@ -2228,71 +1562,6 @@ export function useCashBalance() {
 }
 
 // Comprehensive form submission hook
-export function useFormSubmission() {
-  const {
-    state,
-    submitAllForms,
-    validateAllForms,
-    getCompletionStatus,
-    getAllFormData,
-    setFormCompleted,
-    resetAll,
-    clearErrors,
-  } = useForm();
-
-  const submitAllSections = useCallback(
-    async (companyId: string, period: number) => {
-      return await submitAllForms(companyId, period);
-    },
-    [submitAllForms]
-  );
-
-  const validateAll = useCallback(() => {
-    return validateAllForms();
-  }, [validateAllForms]);
-
-  const getProgress = useCallback(() => {
-    return getCompletionStatus();
-  }, [getCompletionStatus]);
-
-  const exportFormData = useCallback(() => {
-    return getAllFormData();
-  }, [getAllFormData]);
-
-  const markSectionComplete = useCallback(
-    (section: string, completed: boolean = true) => {
-      setFormCompleted(section, completed);
-    },
-    [setFormCompleted]
-  );
-
-  return {
-    // State
-    isSubmitting: state.isSubmitting,
-    submissionStatus: state.submissionStatus,
-    submissionResults: state.submissionResults,
-    completedSections: state.completedSections,
-
-    // Actions
-    submitAllSections,
-    validateAll,
-    getProgress,
-    exportFormData,
-    markSectionComplete,
-    resetAll,
-    clearErrors,
-
-    // Computed values
-    hasData: Object.values(state).some(
-      (section) =>
-        typeof section === "object" &&
-        section !== null &&
-        !(section instanceof Array) &&
-        Object.keys(section).length > 0
-    ),
-    canSubmit: validateAllForms().valid,
-  };
-}
 
 // HR-specific hooks for advanced functionality
 export function useHRRoleManagement() {
@@ -2393,13 +1662,14 @@ export function useHRRoleManagement() {
 
   // Get total employee count
   const getTotalEmployees = useCallback(() => {
-    const existingEmployees = hrData.existingRoles.reduce((total, role) => {
+    const existingData = hrData.existingRoles || [];
+    const existingEmployees = existingData.reduce((total, role) => {
       return (
         total + Math.max(0, role.current_head_count + role.hires - role.fires)
       );
     }, 0);
 
-    const newEmployees = hrData.newRoles.reduce((total, role) => {
+    const newEmployees = hrData.newRoles?.reduce((total, role) => {
       return total + role.hires;
     }, 0);
 
@@ -2409,8 +1679,8 @@ export function useHRRoleManagement() {
   // Get hiring and firing statistics
   const getHiringFireStatistics = useCallback(() => {
     const totalHires =
-      hrData.existingRoles.reduce((total, role) => total + role.hires, 0) +
-      hrData.newRoles.reduce((total, role) => total + role.hires, 0);
+      hrData.existingRoles?.reduce((total, role) => total + role.hires, 0) +
+      hrData.newRoles?.reduce((total, role) => total + role.hires, 0);
 
     const totalFires = hrData.existingRoles.reduce(
       (total, role) => total + role.fires,
@@ -2568,145 +1838,3 @@ export function useHRRoleManagement() {
 }
 
 // Specialized hook for hire and fire operations
-export function useHireFireOperations() {
-  const {
-    existingRoles,
-    hireEmployeesForRole,
-    fireEmployeesForRole,
-    setHireCountForRole,
-    setFireCountForRole,
-    setHireCountForNewRole,
-    getNetEmployeeChanges,
-    getHiringFireStatistics,
-    autoCalculateBudget,
-  } = useHRRoleManagement();
-
-  // Bulk hire operations
-  const bulkHireForRoles = useCallback(
-    (hireOperations: Array<{ roleIndex: number; count: number }>) => {
-      hireOperations.forEach(({ roleIndex, count }) => {
-        hireEmployeesForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [hireEmployeesForRole, autoCalculateBudget]
-  );
-
-  // Bulk fire operations
-  const bulkFireFromRoles = useCallback(
-    (fireOperations: Array<{ roleIndex: number; count: number }>) => {
-      fireOperations.forEach(({ roleIndex, count }) => {
-        fireEmployeesForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [fireEmployeesForRole, autoCalculateBudget]
-  );
-
-  // Set hire/fire counts for multiple roles at once
-  const setMultipleHireCounts = useCallback(
-    (hireCounts: Array<{ roleIndex: number; count: number }>) => {
-      hireCounts.forEach(({ roleIndex, count }) => {
-        setHireCountForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [setHireCountForRole, autoCalculateBudget]
-  );
-
-  const setMultipleFireCounts = useCallback(
-    (fireCounts: Array<{ roleIndex: number; count: number }>) => {
-      fireCounts.forEach(({ roleIndex, count }) => {
-        setFireCountForRole(roleIndex, count);
-      });
-      autoCalculateBudget();
-    },
-    [setFireCountForRole, autoCalculateBudget]
-  );
-
-  // Clear all hires and fires
-  const clearAllHires = useCallback(() => {
-    existingRoles.forEach((_, index) => {
-      setHireCountForRole(index, 0);
-    });
-    autoCalculateBudget();
-  }, [existingRoles, setHireCountForRole, autoCalculateBudget]);
-
-  const clearAllFires = useCallback(() => {
-    existingRoles.forEach((_, index) => {
-      setFireCountForRole(index, 0);
-    });
-    autoCalculateBudget();
-  }, [existingRoles, setFireCountForRole, autoCalculateBudget]);
-
-  // Get roles that can be fired from (have current employees)
-  const getFireableRoles = useCallback(() => {
-    return existingRoles.filter((role) => role.current_head_count > 0);
-  }, [existingRoles]);
-
-  // Get maximum fire count for each role
-  const getMaxFireCounts = useCallback(() => {
-    return existingRoles.map((role) => ({
-      role_name: role.role_name,
-      max_fires: role.current_head_count,
-      current_fires: role.fires,
-    }));
-  }, [existingRoles]);
-
-  // Validate hire/fire operations
-  const validateHireFireOperations = useCallback(() => {
-    const errors: string[] = [];
-
-    existingRoles.forEach((role) => {
-      if (role.fires > role.current_head_count) {
-        errors.push(
-          `${role.role_name}: Cannot fire ${role.fires} employees when only ${role.current_head_count} are currently employed`
-        );
-      }
-
-      const finalCount = role.current_head_count + role.hires - role.fires;
-      if (finalCount < 0) {
-        errors.push(
-          `${role.role_name}: Final employee count would be negative (${finalCount})`
-        );
-      }
-    });
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
-  }, [existingRoles]);
-
-  return {
-    // Individual operations
-    hireEmployeesForRole,
-    fireEmployeesForRole,
-    setHireCountForRole,
-    setFireCountForRole,
-    setHireCountForNewRole,
-
-    // Bulk operations
-    bulkHireForRoles,
-    bulkFireFromRoles,
-    setMultipleHireCounts,
-    setMultipleFireCounts,
-
-    // Clear operations
-    clearAllHires,
-    clearAllFires,
-
-    // Analysis and validation
-    getNetEmployeeChanges,
-    getHiringFireStatistics,
-    getFireableRoles,
-    getMaxFireCounts,
-    validateHireFireOperations,
-
-    // Auto budget calculation
-    autoCalculateBudget,
-
-    // Data access
-    existingRoles,
-  };
-}

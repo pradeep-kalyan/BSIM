@@ -1,6 +1,6 @@
 // app/(yourroute)/[simulationID]/page.tsx
 import prisma from "@/app/functions/prisma";
-import CompanyPage from "./_components/CompanyPage";
+import CompanyPage from "../../../components/company/CompanyPage";
 
 interface PageProps {
   params: Promise<{ simulationID: string }>;

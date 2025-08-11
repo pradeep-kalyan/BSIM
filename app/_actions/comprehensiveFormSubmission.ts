@@ -37,18 +37,16 @@ interface ComprehensiveFormData {
     quality_changes: number;
   };
   production: {
-    production_capacity: number;
-    inventory_value: number;
-    storage_capacity: number;
-    defect_rate: number;
-    quality_improvement_investment: number;
-    efficiency_upgrade_cost: number;
-    maintenance_budget: number;
-    automation_level: number;
-    safety_investment: number;
-    environmental_compliance_cost: number;
-    units_to_produce: number;
-    cost_per_unit: number;
+    products: Array<{
+      product_id: string;
+      units_to_produce: number;
+      cost_per_unit: number;
+      total_cost: number;
+      production_capacity: number;
+      storage_capacity: number;
+      inventory_value: number;
+      defect_rate: number;
+    }>;
   };
   finance: {
     investment_amount: number;
@@ -67,12 +65,11 @@ interface ComprehensiveFormData {
     quality_rating: number;
     innovation_rating: number;
     sustainability_rating: number;
-    production_cost: number;
     selling_price: number;
-    inventory_level: number;
-    production_capacity: number;
-    development_cost: number;
-    marketing_budget: number;
+    inventory_level?: number;
+    production_capacity?: number;
+    development_cost?: number;
+    marketing_budget?: number;
     status: string;
     launch_period?: number | null;
     discontinue_period?: number | null;
@@ -405,67 +402,94 @@ export async function comprehensiveFormSubmission(
         }
       })(),
 
-      // 2.4. Submit Production Decision
+      // 2.4. Submit Production Decisions (per product)
       (async () => {
         try {
-          const existingProductionDecision = await prisma.production.findFirst({
-            where: {
-              company_id: companyId,
-              period: currentPeriod,
-            },
-          });
+          const productionResults = [];
 
-          if (existingProductionDecision) {
-            // Only update if not yet finalized to preserve historical data
-            if (!existingProductionDecision.finalised) {
-              const updatedProductionDecision = await prisma.production.update({
-                where: { id: existingProductionDecision.id },
+          // Process each product's production decision
+          for (const productData of formData.production.products) {
+            // Get product name for the result
+            const product = await prisma.product.findUnique({
+              where: { id: productData.product_id },
+              select: { name: true },
+            });
+
+            const existingProductionDecision =
+              await prisma.production.findFirst({
+                where: {
+                  company_id: companyId,
+                  product_id: productData.product_id,
+                  period: currentPeriod,
+                },
+              });
+
+            if (existingProductionDecision) {
+              // Only update if not yet finalized to preserve historical data
+              if (!existingProductionDecision.finalised) {
+                const updatedProductionDecision =
+                  await prisma.production.update({
+                    where: { id: existingProductionDecision.id },
+                    data: {
+                      units_to_produce: productData.units_to_produce,
+                      cost_per_unit: productData.cost_per_unit,
+                      total_cost:
+                        productData.total_cost ||
+                        productData.units_to_produce *
+                          productData.cost_per_unit *
+                          (1 + productData.defect_rate / 100),
+                      production_capacity: productData.production_capacity,
+                      storage_capacity: productData.storage_capacity,
+                      inventory_value: productData.inventory_value,
+                      defect_rate: productData.defect_rate,
+                      finalised: true,
+                    },
+                  });
+                productionResults.push({
+                  success: true,
+                  id: updatedProductionDecision.id,
+                  name: product?.name || "Unknown Product",
+                });
+              } else {
+                // If already finalized, preserve the historical data
+                productionResults.push({
+                  success: true,
+                  id: existingProductionDecision.id,
+                  name: product?.name || "Unknown Product",
+                });
+              }
+            } else {
+              const productionDecision = await prisma.production.create({
                 data: {
-                  units_to_produce: formData.production.units_to_produce,
-                  cost_per_unit: formData.production.cost_per_unit,
-                  budget:
-                    formData.production.units_to_produce *
-                    formData.production.cost_per_unit,
-                  production_capacity: formData.production.production_capacity,
-                  storage_capacity: formData.production.storage_capacity,
-                  inventory_value: formData.production.inventory_value,
-                  defect_rate: formData.production.defect_rate,
+                  company_id: companyId,
+                  product_id: productData.product_id,
+                  period: currentPeriod,
+                  units_to_produce: productData.units_to_produce,
+                  cost_per_unit: productData.cost_per_unit,
+                  total_cost:
+                    productData.total_cost ||
+                    productData.units_to_produce *
+                      productData.cost_per_unit *
+                      (1 + productData.defect_rate / 100),
+                  production_capacity: productData.production_capacity,
+                  storage_capacity: productData.storage_capacity,
+                  inventory_value: productData.inventory_value,
+                  defect_rate: productData.defect_rate,
                   finalised: true,
                 },
               });
-              submissionResults.production = {
+              productionResults.push({
                 success: true,
-                id: updatedProductionDecision.id,
-              };
-            } else {
-              // If already finalized, preserve the historical data
-              submissionResults.production = {
-                success: true,
-                id: existingProductionDecision.id,
-              };
+                id: productionDecision.id,
+                name: product?.name || "Unknown Product",
+              });
             }
-          } else {
-            const productionDecision = await prisma.production.create({
-              data: {
-                company_id: companyId,
-                period: currentPeriod,
-                units_to_produce: formData.production.units_to_produce,
-                cost_per_unit: formData.production.cost_per_unit,
-                budget:
-                  formData.production.units_to_produce *
-                  formData.production.cost_per_unit,
-                production_capacity: formData.production.production_capacity,
-                storage_capacity: formData.production.storage_capacity,
-                inventory_value: formData.production.inventory_value,
-                defect_rate: formData.production.defect_rate,
-                finalised: true,
-              },
-            });
-            submissionResults.production = {
-              success: true,
-              id: productionDecision.id,
-            };
           }
+
+          submissionResults.production = {
+            success: true,
+            products: productionResults,
+          };
         } catch (error) {
           submissionResults.production = {
             success: false,
@@ -575,12 +599,6 @@ export async function comprehensiveFormSubmission(
                     quality_rating: productData.quality_rating,
                     innovation_rating: productData.innovation_rating,
                     sustainability_rating: productData.sustainability_rating,
-                    production_cost: productData.production_cost,
-                    selling_price: productData.selling_price,
-                    inventory_level: productData.inventory_level,
-                    production_capacity: productData.production_capacity,
-                    development_cost: productData.development_cost,
-                    marketing_budget: productData.marketing_budget,
                     status: productData.status,
                     launch_period: productData.launch_period,
                     discontinue_period: productData.discontinue_period,
@@ -601,12 +619,6 @@ export async function comprehensiveFormSubmission(
                     quality_rating: productData.quality_rating,
                     innovation_rating: productData.innovation_rating,
                     sustainability_rating: productData.sustainability_rating,
-                    production_cost: productData.production_cost,
-                    selling_price: productData.selling_price,
-                    inventory_level: productData.inventory_level,
-                    production_capacity: productData.production_capacity,
-                    development_cost: productData.development_cost,
-                    marketing_budget: productData.marketing_budget,
                     status: productData.status,
                     launch_period: productData.launch_period || currentPeriod,
                     discontinue_period: productData.discontinue_period,
@@ -662,20 +674,6 @@ export async function comprehensiveFormSubmission(
           const productSales = formData.sales[product.id];
 
           if (productSales && productSales.sales_volume > 0) {
-            // Update inventory level by reducing sales volume
-            const newInventoryLevel = Math.max(
-              0,
-              product.inventory_level - productSales.sales_volume
-            );
-
-            // Update product inventory
-            await prisma.product.update({
-              where: { id: product.id },
-              data: {
-                inventory_level: newInventoryLevel,
-              },
-            });
-
             // Check if product performance record exists for this period
             const existingPerformance =
               await prisma.product_performance.findFirst({
@@ -827,16 +825,6 @@ export async function comprehensiveFormSubmission(
                     market_share: productSales.market_share,
                     customer_satisfaction: productSales.customer_satisfaction,
                   },
-                });
-
-                // Update inventory
-                const newInventoryLevel = Math.max(
-                  0,
-                  product.inventory_level - productSales.sales_volume
-                );
-                await prisma.product.update({
-                  where: { id: product.id },
-                  data: { inventory_level: newInventoryLevel },
                 });
               }
             }

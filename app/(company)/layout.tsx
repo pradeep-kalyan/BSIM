@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { checkAuthStatus } from "@/app/_actions/auth";
 import { JWTPayload } from "@/app/functions/jwt";
-import LogoutBtn from "../(auth)/_components/Logout";
+import LogoutBtn from "../components/auth/Logout";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface MainLayoutProps {
@@ -97,7 +97,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
               damping: 25,
               stiffness: 100,
             }}
-           
           >
             {children}
           </motion.div>
