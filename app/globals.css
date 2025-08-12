@@ -144,5 +144,10 @@
     @apply bg-background text-foreground;
   }
 }
+.joyride-highlight {
+  border: 3px solid #ffffff;
+  border-radius: 8px;
+  
+}
 
 

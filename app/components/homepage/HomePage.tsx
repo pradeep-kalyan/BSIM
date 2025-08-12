@@ -21,6 +21,7 @@ import {
   Calendar,
   Award,
   Play,
+  Info,
 } from "lucide-react";
 import {
   AreaChart,
@@ -45,6 +46,7 @@ import LogoutBtn from "@/app/components/auth/Logout";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
+import { getCurrentUser } from "@/app/functions/jwt";
 import {
   CompanyHistoryType,
   DashboardData,
@@ -52,6 +54,7 @@ import {
   TooltipProps,
   HRRole,
 } from "@/app/types/homepage";
+import Joyride, { CallBackProps } from "react-joyride";
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (
@@ -138,6 +141,67 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const router = useRouter();
   const { exportDashboard, isExporting } = useExport();
   const swapyRef = useRef<HTMLDivElement | null>(null);
+  const [joyrideRun, setJoyrideRun] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+  const steps = [
+    {
+      target: ".details",
+      content:
+        "Drag the cards to customize and arrange your dashboard layout easily.",
+      disableBeacon: true,
+    },
+    {
+      target: ".export-dashboard-btn",
+      content: "Click here to export your dashboard as an image.",
+      disableBeacon: true,
+    },
+    {
+      target: ".simulate",
+      content: "Run a simulation to test your strategies.",
+      disableBeacon: true,
+    },
+  ];
+
+  const [highlightedSelector, setHighlightedSelector] = useState<string | null>(
+    null
+  );
+
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { index, status, action, step } = data;
+
+    if (status === "finished" || status === "skipped") {
+      setHighlightedSelector(null);
+      setJoyrideRun(false);
+      return;
+    }
+
+    if (action === "start" || action === "update") {
+      if (typeof step.target === "string") {
+        setHighlightedSelector(step.target);
+      } else if (step.target instanceof HTMLElement) {
+        // Convert the element to a selector if possible
+        const selector = step.target.className
+          ? `.${step.target.className.split(" ").join(".")}`
+          : "";
+        setHighlightedSelector(selector || null);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // remove previous highlights
+    document.querySelectorAll(".joyride-highlight").forEach((el) => {
+      el.classList.remove("joyride-highlight");
+    });
+
+    // highlight the current step target
+    if (highlightedSelector) {
+      const el = document.querySelector(highlightedSelector);
+      if (el) el.classList.add("joyride-highlight");
+    }
+  }, [highlightedSelector]);
+
+
   const swapyInstanceRef = useRef<ReturnType<typeof createSwapy> | null>(null);
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
@@ -148,7 +212,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       return false;
     }
   };
-   const CompanyLogo = ({
+  const CompanyLogo = ({
     logoUrl,
     companyName,
   }: {
@@ -247,7 +311,33 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   useEffect(() => {
     swapyInstanceRef.current?.update?.();
   }, [selectedPeriod, data]);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      setCurrentUserId(user?.id);
+    };
+    fetchUser();
+  }, []);
 
+  // Run Joyride only if user hasn't seen it
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const tourKey = `hasSeenHomePageTour_${currentUserId}`;
+    const hasSeen = localStorage.getItem(tourKey);
+
+    if (!hasSeen) {
+      setJoyrideRun(true);
+      localStorage.setItem(tourKey, "true");
+    }
+  }, [currentUserId]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const handleInfoClick = () => {
+    setJoyrideRun(true);
+  };
   // Get current period data
   const { currentCompanyData } = createCurrentPeriodData();
   const isCurrentPeriod = selectedPeriod === data?.company?.current_period;
@@ -796,6 +886,18 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
   return (
     <div ref={container}>
+      {mounted && (
+        <Joyride
+          steps={steps}
+          run={joyrideRun}
+          continuous
+          showSkipButton
+          spotlightClicks
+          scrollToFirstStep
+          styles={{ options: { zIndex: 10000 } }}
+         callback={handleJoyrideCallback}
+        />
+      )}
       <div className="min-h-screen bg-slate-800 text-white">
         <style>{`
         @keyframes fadeInUp {
@@ -844,6 +946,44 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         
         .capturing-screenshot .recharts-surface {
           overflow: visible !important;
+        }
+
+        /* Info button styles */
+        .info-button {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          z-index: 1000;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          transition: all 0.3s ease;
+          animation: pulse 2s infinite;
+        }
+        
+        .info-button:hover {
+          transform: scale(1.1);
+          box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(102, 126, 234, 0.7);
+          }
+          70% {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 10px rgba(102, 126, 234, 0);
+          }
+          100% {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(102, 126, 234, 0);
+          }
         }
       `}</style>
         {/* Enhanced Header */}
@@ -894,7 +1034,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 <button
                   onClick={capture}
                   disabled={isExporting}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 cursor-pointer rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+                  className="export-dashboard-btn bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 cursor-pointer rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
                 >
                   {isExporting ? "Exporting..." : "Export Dashboard"}
                 </button>
@@ -908,7 +1048,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   <button
                     onClick={handleSimulate}
                     disabled={isSimulating}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="simulate bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     {isSimulating ? "Simulating..." : "Simulate"}
                     <Play size={20} />
@@ -921,7 +1061,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         </div>
 
         <div
-          className="container mx-auto px-6 py-8 space-y-8"
+          className="details container mx-auto px-6 py-8 space-y-8 "
           data-swapy-container
           ref={swapyRef}
         >
@@ -1420,6 +1560,16 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             </div>
           </div>
         </div>
+
+        {/* Info Button */}
+        <button
+          onClick={handleInfoClick}
+          className="info-button"
+          title="Take a guided tour"
+          aria-label="Start guided tour"
+        >
+          <Info size={24} />
+        </button>
       </div>
     </div>
   );
