@@ -3,14 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { Pencil, Trash2, ArrowRight } from "lucide-react";
-import { ExtendedSimulation } from "@/app/types/simulation";
+import { CardProps } from "@/app/types/simulation";
 
-interface CardProps {
-  simulations: ExtendedSimulation[];
-  currentUserId?: string;
-  onEdit?: (sim: ExtendedSimulation) => void;
-  onDelete?: (id: string) => void;
-}
+const truncateChars = (text: string, charLimit: number) => {
+  if (text.length <= charLimit) return text;
+  return text.slice(0, charLimit) + " ...";
+};
 
 const Card: React.FC<CardProps> = ({
   simulations,
@@ -52,15 +50,18 @@ const Card: React.FC<CardProps> = ({
             )}
 
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-white truncate">
-                {sim.name}
+              <h3
+                className="text-lg font-semibold mb-2 text-white"
+                title={sim.name}
+              >
+                {truncateChars(sim.name, 25)}
               </h3>
               <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
                 {sim.description}
               </p>
             </div>
 
-            <div className="group flex justify-start mt-2">
+            <div className="group flex justify-end mt-2">
               {(isOwner || sim.canAccess) && (
                 <Link
                   href={`/simulations/${sim.id}`}

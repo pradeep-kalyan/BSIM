@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { IndianRupee, FlaskConical, Timer, TriangleAlert } from "lucide-react";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import { useRDForm, useCashBalance } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";

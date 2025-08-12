@@ -3,22 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { logoutUser, getCurrentUser } from "@/app/_actions/auth";
 import { useRouter } from "next/navigation";
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (user: User) => void;
-  logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
-  checkAuth: () => Promise<void>;
-}
+import {User,AuthContextType} from "@/app/types/auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

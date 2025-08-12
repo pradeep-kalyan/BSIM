@@ -13,6 +13,7 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
   ]);
   const [accessEmail, setAccessEmail] = useState("");
   const [accessEmails, setAccessEmails] = useState<string[]>([]);
+  const [name, setName] = useState("");
 
   const handleAddEmail = () => {
     if (accessEmail && !accessEmails.includes(accessEmail)) {
@@ -50,6 +51,9 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
           placeholder_text="Enter simulation name"
           id="name"
           name="name"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
 
         <Inputbox
@@ -117,8 +121,10 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
         <div className="flex justify-end pt-4">
           <button
             type="submit"
-            disabled={loading}
-            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 text-white font-medium rounded-xl transition"
+            disabled={loading || !name.trim()}
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 
+             hover:bg-blue-700 text-white font-medium rounded-xl transition 
+             disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Rocket size={18} />
             {loading ? "Launching..." : "Launch Simulation"}

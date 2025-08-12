@@ -19,7 +19,7 @@ import {
   useHRRoleManagement,
 } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import { Users, Award, IndianRupee } from "lucide-react";
 import { TooltipWrapper } from "@/components/ui/tooltip";
 
@@ -241,9 +241,7 @@ const HRDashboard = () => {
                         text="Annual salary per employee"
                       />
                       <Slider
-                        label={`${formatCurrency(
-                          role.salary_per_head || 0
-                        )}`}
+                        label={`${formatCurrency(role.salary_per_head || 0)}`}
                         value={[
                           isNaN(role.salary_per_head)
                             ? 0

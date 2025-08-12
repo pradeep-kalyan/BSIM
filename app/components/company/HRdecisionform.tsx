@@ -2,23 +2,7 @@
 
 import React from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
-
-interface HRRole {
-  role_name: string;
-  salary_per_head: number;
-  head_count: number;
-}
-
-interface Props {
-  hrRoles: HRRole[];
-  onRoleChange: (index: number, field: string, value: string | number) => void;
-  onAddRole: () => void;
-  onRemoveRole: (index: number) => void;
-  trainingBudget: number;
-  onTrainingBudgetChange: (value: number) => void;
-  employeeSatisfaction: number;
-  onEmployeeSatisfactionChange: (value: number) => void;
-}
+import { Props } from "@/app/types/HR";
 
 const HRDecisionForm = ({
   hrRoles,

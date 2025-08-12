@@ -20,7 +20,7 @@ import {
   useProductForm,
   useProductionForm,
 } from "@/app/context/FormContext";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import formatCurrency from "@/app/functions/formatCurrency";
 
 // Type for production data per product - matches DB schema

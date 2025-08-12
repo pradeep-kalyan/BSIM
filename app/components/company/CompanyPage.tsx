@@ -13,13 +13,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import EditCompanyForm from "./EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { useRouter } from "next/navigation";
-import { company } from "@prisma/client";
-interface ExtendedCompany extends company {
-  canAccess?: boolean;
-  canEdit?: boolean;
-  user_id: string;
-}
-
+import { ExtendedCompany } from "@/app/types/company";
 interface Props {
   simulationID: string;
   simulationName: string;

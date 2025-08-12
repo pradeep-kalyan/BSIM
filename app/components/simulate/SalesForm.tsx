@@ -16,8 +16,9 @@ import {
   useProductionForm,
 } from "@/app/context/FormContext";
 import { Slider } from "@/components/ui/slider";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import formatCurrency from "@/app/functions/formatCurrency";
+
 // Type for production data per product
 type ProductProductionData = {
   product_id: string;
@@ -525,7 +526,7 @@ const Sales = () => {
 
         {/* Projected Cash Balance */}
         <div className="mt-6 ml-2 text-slate-300 text-m">
-          Projected Cash Balance: 
+          Projected Cash Balance:
           {formatCurrency(Math.round(projectedCashBalance))}
         </div>
       </div>

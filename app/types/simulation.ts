@@ -29,3 +29,21 @@ export interface ExtendedSimulation {
     name: string;
   }[];
 }
+export interface Props {
+  simulation: {
+    id: string;
+    name: string;
+    description: string | null;
+    config: Record<string, unknown>;
+    simulation_access?: { user: { email: string } }[];
+  };
+  onClose: () => void;
+  onUpdated: () => void;
+  onUpdatedPartial: () => void;
+}
+export interface CardProps {
+  simulations: ExtendedSimulation[];
+  currentUserId?: string;
+  onEdit?: (sim: ExtendedSimulation) => void;
+  onDelete?: (id: string) => void;
+}

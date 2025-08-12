@@ -7,29 +7,11 @@ import { Building2, Rocket } from "lucide-react";
 import HRDecisionForm from "@/app/components/company/HRdecisionform";
 import { createHRDecisionWithRoles } from "@/app/_actions/hr";
 import ProductForm from "./ProductForm";
-// import { createCompanyWithProducts } from "@/app/_actions/createCompanyWithProducts";
+import { ProductInput } from "@/app/types/homepage";
 
 interface Props {
   simulationID: string;
   onCreated: () => void;
-}
-
-interface ProductInput {
-  name: string;
-  description?: string;
-  category: string;
-  quality_rating?: number;
-  innovation_rating?: number;
-  sustainability_rating?: number;
-  production_cost?: number;
-  selling_price?: number;
-  inventory_level?: number;
-  production_capacity?: number;
-  development_cost?: number;
-  marketing_budget?: number;
-  status?: string;
-  launch_period?: number;
-  discontinue_period?: number;
 }
 
 const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
@@ -157,7 +139,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         setLoading(false);
         return;
       }
-      form
 
       // Create company with products
       const { companyId } = await createCompany({

@@ -31,7 +31,7 @@ import {
 import { useSimulation } from "@/app/context/SimulationContext";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 interface PreviewDashboardProps {
   companyId: string;
   onEditSection?: (section: number) => void;
@@ -137,14 +137,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
           return "pending";
       }
     },
-    [
-      hrData,
-      marketingData,
-      rdData,
-      productData,
-      financeData,
-      totalSalesMetrics,
-    ]
+    [hrData, marketingData, rdData, productData, financeData, totalSalesMetrics]
   );
 
   useEffect(() => {

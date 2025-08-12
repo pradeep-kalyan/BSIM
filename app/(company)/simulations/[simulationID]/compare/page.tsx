@@ -7,6 +7,7 @@ import React, {
   useRef,
   useCallback,
 } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import { getSimulationscompare } from "@/app/_actions/createSim";
@@ -28,48 +29,10 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import Checkboxdropdown from "@/app/ui/checkboxdropdown";
-import { getCompanyComparisonData } from "@/app/_actions/company";
+import { getCompanyComparisonData } from "@/app/_actions/companyData";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
-// Types for better type safety
-interface Company {
-  id: string;
-  name: string;
-  cash_balance: number;
-  total_assets: number;
-  total_liabilities: number;
-  brand_value: number;
-  marketing_budget: number;
-  current_period: number;
-  finance: {
-    total_revenue: number;
-    net_profit: number;
-    roi: number;
-    burn_rate: number;
-  };
-  hr: {
-    total_budget: number;
-    employee_satisfaction: number;
-  };
-  rd: {
-    budget: number;
-    patented: number;
-    quality_changes: number;
-  };
-  production: {
-    production_capacity: number;
-    defect_rate: number;
-  };
-  products: Array<{
-    name: string;
-    market_share: number;
-    customer_satisfaction: number;
-  }>;
-}
-interface CompanyOption {
-  id: string;
-  name: string;
-}
+import { CompanyOption, Company } from "@/app/types/compare";
 
 type SortOption = "revenue" | "profit" | "assets" | "cash" | "roi";
 type MetricType = "financial" | "operational" | "innovation";
@@ -99,7 +62,11 @@ const ComparePage: React.FC = () => {
   );
 
   const { simId } = useSimulation();
-
+const truncateWords = (text: string, wordLimit: number) => {
+  const words = text.split(" ");
+  if (words.length <= wordLimit) return text;
+  return words.slice(0, wordLimit).join(" ") + " ...";
+};
   // Extract metric value for sorting with better type safety
   const getMetricValue = (company: Company, metric: SortOption): number => {
     switch (metric) {
@@ -329,13 +296,48 @@ const ComparePage: React.FC = () => {
     >
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4" ref={container}>
-          <h1 className="text-3xl font-bold">Company Comparison Dashboard</h1>
+          {/* Left: Back button + title + refresh */}
+          <div className="flex items-center gap-3">
+            {/* Back to Companies Button */}
+            <button
+              onClick={handleViewCompany}
+              title="Back to Companies"
+              className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-full 
+    shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+            >
+              <ArrowLeft className="w-5 h-6" />
+            </button>
+
+            <h1 className="text-3xl font-bold ">
+              Company Comparison Dashboard
+            </h1>
+
+            {comparisonStarted && (
+              <button
+                onClick={handleRefresh}
+                disabled={loading || selectedCompanyIds.length < 2}
+                title="Refresh"
+                className="flex items-center justify-center w-10 h-10 
+      bg-blue-600 text-white rounded-full shadow-md hover:shadow-lg 
+      transition-all duration-200 transform hover:scale-105
+      disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+              </button>
+            )}
+          </div>
+
+          {/* Right: Action buttons */}
           <div className="flex items-center gap-4">
             {comparisonStarted && companiesData.length > 0 && (
               <button
                 onClick={handleExportComparison}
                 disabled={isExporting}
-                className="flex items-center gap-2 bg-[rgba(33,150,243,0.1)] hover:bg-[rgba(33,150,243,0.2)] border border-[rgba(33,150,243,0.3)] hover:border-[rgba(33,150,243,0.5)] rounded-lg px-4 py-2 text-[#64b5f6] hover:text-[#42a5f5] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 
+      shadow-md hover:shadow-lg transition-all duration-200
+      disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isExporting ? (
                   <LoaderCircle className="w-4 h-4 animate-spin" />
@@ -345,31 +347,8 @@ const ComparePage: React.FC = () => {
                 {isExporting ? "Exporting..." : "Export Comparison"}
               </button>
             )}
-            <button
-              onClick={handleViewCompany}
-              className="bg-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
-            >
-              Back to Companies
-            </button>
-            {comparisonStarted && (
-              <button
-                onClick={handleRefresh}
-                disabled={loading || selectedCompanyIds.length < 2}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </button>
-            )}
           </div>
         </div>
-
-        <p className="mb-6 text-gray-400">
-          Simulation ID:{" "}
-          <span className="text-white font-mono">{simulationId}</span>
-        </p>
 
         {error && (
           <div className="mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg flex items-center gap-3">
@@ -379,7 +358,7 @@ const ComparePage: React.FC = () => {
         )}
 
         {/* Company Selection */}
-        <div className="flex items-center gap-4 mb-10 flex-wrap">
+        <div className="flex items-center gap-4 mb-11 flex-wrap ">
           <Checkboxdropdown
             options={allCompanies.map((c) => c.name)}
             selected={allCompanies
@@ -394,30 +373,9 @@ const ComparePage: React.FC = () => {
                 setSelectedCompanyIds(selectedIds);
               }
             }}
-            placeholder="Select companies (max 3)"
+            onCompare={handleCompareClick} // now compare happens from inside dropdown
+            placeholder="Select companies"
           />
-
-          <button
-            onClick={handleCompareClick}
-            disabled={selectedCompanyIds.length < 2 || loading}
-            className={`px-6 py-3 rounded-md font-medium transition-all flex items-center gap-2 ${
-              selectedCompanyIds.length >= 2 && !loading
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:brightness-110 shadow-lg"
-                : "bg-gray-700 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Loading...
-              </>
-            ) : (
-              <>
-                <BarChart3 className="w-4 h-4" />
-                Compare Companies
-              </>
-            )}
-          </button>
 
           {selectedCompanyIds.length > 0 && (
             <span className="text-sm text-gray-400">
@@ -491,8 +449,8 @@ const ComparePage: React.FC = () => {
                         <Building2 className="w-6 h-6 text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-white">
-                          {company.name}
+                        <h3 className="text-xl font-semibold text-white" title={company.name}> 
+                          {truncateWords(company.name, 2)}
                         </h3>
                         <p className="text-gray-400 text-sm">
                           Period {company.current_period}
@@ -540,9 +498,9 @@ const ComparePage: React.FC = () => {
                   {sortedCompanies.map((company) => (
                     <div
                       key={company.id}
-                      className="font-semibold text-white text-right"
+                      className="font-semibold text-white text-right" title={company.name}
                     >
-                      {company.name}
+                      {truncateWords(company.name, 2)}
                     </div>
                   ))}
                 </div>
@@ -596,9 +554,9 @@ const ComparePage: React.FC = () => {
                     {sortedCompanies.map((company) => (
                       <div
                         key={company.id}
-                        className="font-semibold text-white text-right text-sm"
+                        className="font-semibold text-white text-right text-sm" title={company.name}
                       >
-                        {company.name}
+                        {truncateWords(company.name, 2)}
                       </div>
                     ))}
                   </div>
@@ -642,8 +600,8 @@ const ComparePage: React.FC = () => {
                         key={company.id}
                         className="border-b border-gray-700/50 pb-4 last:border-b-0"
                       >
-                        <h4 className="font-semibold text-white mb-2">
-                          {company.name}
+                        <h4 className="font-semibold text-white mb-2" title="company.name">
+                          {truncateWords(company.name, 2)}
                         </h4>
                         <div className="space-y-2">
                           {company.products.map((product, idx) => (
@@ -691,9 +649,9 @@ const ComparePage: React.FC = () => {
                   {sortedCompanies.map((company) => (
                     <div
                       key={company.id}
-                      className="font-semibold text-white text-right"
+                      className="font-semibold text-white text-right" title={company.name}
                     >
-                      {company.name}
+                      {truncateWords(company.name, 2)}
                     </div>
                   ))}
                 </div>

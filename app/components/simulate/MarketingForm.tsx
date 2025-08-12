@@ -2,13 +2,10 @@
 
 import { IndianRupee, Globe, Store, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
-import {
-  useMarketingForm,
-  useCashBalance,
-} from "@/app/context/FormContext";
+import { useMarketingForm, useCashBalance } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { Slider } from "@/components/ui/slider";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import { TooltipWrapper } from "@/components/ui/tooltip";
 
 const percent = (part: number, total: number) =>

@@ -2,14 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 // import { useForm } from "@/app/context/FormContext";
 import { type ProductFormData } from "@/app/types/simulate";
-
-interface ProductFormPageProps {
-  mode: "add" | "edit";
-  initialProduct?: Partial<ProductFormData>;
-  onSubmit: (data: Partial<ProductFormData>) => void;
-  onCancel: () => void;
-  submitting?: boolean;
-}
+import { ProductFormPageProps } from "@/app/types/company";
 
 type Product = ProductFormData;
 

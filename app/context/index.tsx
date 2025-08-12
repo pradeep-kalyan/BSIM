@@ -5,38 +5,27 @@ import { AuthProvider } from "./AuthContext";
 import { SimulationProvider, useSimulation } from "./SimulationContext";
 import { FormProvider, useForm } from "./FormContext";
 import { getInitialFormData } from "../_actions/formActions";
-
+ 
 // Component to initialize form data every time on load
 function FormDataInitializer() {
   const { comId, period } = useSimulation();
   const { initializeForms } = useForm();
   const [, setIsLoading] = useState(false);
-
+ 
   useEffect(() => {
     if (!comId || !period) return;
-
+ 
     const fetchAndInitializeForms = async () => {
       setIsLoading(true);
       try {
         const initialData = await getInitialFormData(comId, period - 1);
-
-        // Debug logging to see what data we get from the database
-        console.log("=== Form Initializer Debug ===");
-        console.log("Company ID:", comId);
-        console.log("Period:", period - 1);
-        console.log("Raw initial data:", initialData);
-        console.log("Products from DB:", initialData.products);
-        console.log("Sales from DB:", initialData.sales);
-        console.log("Production from DB:", initialData.production);
-        console.log("HR Role from DB:", initialData.hrRole);
-        console.log("==============================");
-
+ 
         // Create production data map by product_id
         const productionByProductId = new Map();
         (initialData.production ?? []).forEach((prod) => {
           productionByProductId.set(prod.product_id, prod);
         });
-
+ 
         // Create sales data map by product_id
         const salesByProductId = new Map();
         (initialData.sales ?? []).forEach((sale) => {
@@ -54,7 +43,7 @@ function FormDataInitializer() {
             });
           }
         });
-
+ 
         // Get production data per product for the new structure
         const productionDataPerProduct = (initialData.products ?? []).map(
           (product) => {
@@ -62,13 +51,13 @@ function FormDataInitializer() {
             const productionRecord = (initialData.production ?? []).find(
               (prod) => prod.product_id === product.id
             );
-
+ 
             const unitsToProduceVal = productionRecord?.units_to_produce ?? 0;
             const costPerUnitVal = productionRecord?.cost_per_unit ?? 0;
             const defectRateVal = productionRecord?.defect_rate ?? 0;
             const totalCostVal =
               unitsToProduceVal * costPerUnitVal * (1 + defectRateVal / 100);
-
+ 
             return {
               product_id: product.id!,
               units_to_produce: unitsToProduceVal,
@@ -82,7 +71,7 @@ function FormDataInitializer() {
             };
           }
         );
-
+ 
         const formInitialData = {
           finance: {
             investment_amount: initialData.finance?.investment_amount ?? 0,
@@ -174,19 +163,9 @@ function FormDataInitializer() {
             productBudgetImpact: 0,
           },
         };
-
-        // Debug the final form data structure
-        console.log("=== Final Form Data Being Initialized ===");
-        console.log("Products mapped:", formInitialData.product);
-        console.log("Sales mapped:", formInitialData.sales);
-        console.log("Production aggregated:", formInitialData.production);
-        console.log("HR data:", formInitialData.hr);
-        console.log("Cash balance:", formInitialData.cashBalance);
-        console.log("==========================================");
-
+ 
         initializeForms(formInitialData);
-      } catch (error) {
-        console.error("Error initializing forms:", error);
+      } catch {
         // Provide proper fallback structure with proper mapping and types
         initializeForms({
           finance: {
@@ -256,13 +235,13 @@ function FormDataInitializer() {
         setIsLoading(false);
       }
     };
-
+ 
     fetchAndInitializeForms();
   }, [comId, period, initializeForms]);
-
+ 
   return null;
 }
-
+ 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
