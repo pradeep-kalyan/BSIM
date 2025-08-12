@@ -8,7 +8,7 @@ import {
 import { getCurrentUser } from "@/app/functions/jwt";
 import CreateCompanyForm from "./CreateCompanyForm";
 import CompanyList from "./ComCard";
-import { CheckCircle, Building2 } from "lucide-react";
+import { CheckCircle, Building2, ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import EditCompanyForm from "./EditCompanyForm";
 import { useSimulation } from "@/app/context/SimulationContext";
@@ -104,8 +104,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
     try {
       await deleteCompany(companyId);
       await fetchCompanies();
-    } catch {
-    }
+    } catch {}
   };
 
   const handleEdit = (company: ExtendedCompany) => setEditCompany(company);
@@ -140,6 +139,19 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
 
   return (
     <div className="min-h-screen px-3 py-5 bg-slate-900 text-white relative">
+      <button
+        onClick={handleViewSimulations}
+        className="group flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium
+             bg-slate-800 text-white shadow-md border border-slate-700
+             hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500
+             hover:shadow-lg hover:shadow-blue-500/30
+             transition-all duration-200 ease-out
+             focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+      >
+        <ArrowLeftIcon className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1" />
+        View Simulations
+      </button>
+
       {/* Tab Filters */}
       <div className="mb-3 mt-9 flex justify-between items-center">
         <div className="flex gap-3">
@@ -199,13 +211,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
         companies.
       </div>
       <div className="absolute top-4 right-4 flex gap-2">
-        <button
-          onClick={handleViewSimulations}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md hover:scale-105 transition-transform duration-200"
-        >
-          View Simulations
-        </button>
-
         {(ownedCompanies.length > 0 || accessibleCompanies.length > 0) && (
           <>
             <motion.button

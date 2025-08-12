@@ -284,7 +284,7 @@ const ProductionForm = () => {
             <div className="space-y-6">
               <Slider
                 label="Units to Produce"
-                tooltipText="Final usable units"
+                tooltipText="How many finished products you want to make that are ready to sell"
                 value={[selectedProduct.units_to_produce]}
                 min={0}
                 max={selectedProduct.production_capacity * 2 || 2000}
@@ -299,8 +299,8 @@ const ProductionForm = () => {
               />
 
               <Slider
-                label="Cost per Unit (₹)"
-                tooltipText="Production cost per unit"
+                label="Cost per Unit"
+                tooltipText="How much money it costs to make one unit of this product (in rupees)"
                 value={[selectedProduct.cost_per_unit]}
                 min={0}
                 max={1000}
@@ -316,7 +316,7 @@ const ProductionForm = () => {
 
               <Slider
                 label="Production Capacity"
-                tooltipText="Maximum units per year"
+                tooltipText="The maximum number of units your factory can produce in one year"
                 value={[selectedProduct.production_capacity || 0]}
                 min={0}
                 max={selectedProduct.production_capacity || 10000}
@@ -333,8 +333,8 @@ const ProductionForm = () => {
 
             <div className="space-y-6">
               <Slider
-                label="Defect Rate (%)"
-                tooltipText="Production defect percentage"
+                label="Defect Rate"
+                tooltipText="What percentage of products you make will be defective and cannot be sold (0-100%)"
                 isPercentage
                 value={[selectedProduct.defect_rate]}
                 min={0}
@@ -347,7 +347,7 @@ const ProductionForm = () => {
 
               <Slider
                 label="Storage Capacity"
-                tooltipText="Units storage capacity"
+                tooltipText="How many finished products you can store in your warehouse"
                 value={[selectedProduct.storage_capacity || 0]}
                 min={0}
                 max={10000}

@@ -90,8 +90,8 @@ const RDForm = () => {
             {/* R&D Budget Slider */}
             <div>
               <Slider
-                label="R&D Budget (₹/year)"
-                tooltipText="Total research allocation"
+                label="R&D Budget"
+                tooltipText="How much money you want to spend on research and developing new products each year (in rupees per year)"
                 defaultValue={[data.budget ?? 0]}
                 value={[data.budget ?? 0]}
                 min={0}
@@ -109,7 +109,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Products in Pipeline"
-                tooltipText="Products in development"
+                tooltipText="How many new products you are currently working on developing"
                 defaultValue={[data.pip ?? 0]}
                 value={[data.pip ?? 0]}
                 min={0}
@@ -124,8 +124,8 @@ const RDForm = () => {
             {/* Time to Market Slider */}
             <div>
               <Slider
-                label="Time to Market (in months)"
-                tooltipText="Development launch time"
+                label="Time to Market"
+                tooltipText="How many months it will take to finish developing and launch your new products (in months)"
                 defaultValue={[data.time_to_market ?? 0]}
                 value={[data.time_to_market ?? 0]}
                 min={0}
@@ -143,7 +143,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Patents Expected"
-                tooltipText="Intellectual property protection"
+                tooltipText="How many patents or legal protections you expect to get for your inventions and ideas"
                 defaultValue={[data.patented ?? 0]}
                 value={[data.patented ?? 0]}
                 min={0}
@@ -160,8 +160,8 @@ const RDForm = () => {
             {/* Quality Improvements Slider */}
             <div>
               <Slider
-                label="Quality Improvements (%)"
-                tooltipText="Product quality enhancement"
+                label="Quality Improvements"
+                tooltipText="How much better you want to make your products compared to what you have now (0-100%)"
                 defaultValue={[data.quality_changes ?? 0]}
                 value={[data.quality_changes ?? 0]}
                 isPercentage={true}

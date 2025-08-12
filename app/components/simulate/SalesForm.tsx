@@ -277,22 +277,22 @@ const Sales = () => {
                   <div className="flex flex-col gap-4">
                     <Slider
                       label="Sales Volume (Units)"
-                      tooltipText="Units to sell"
+                      tooltipText="How many units of this product you want to try to sell"
                       value={[pSales.sales_volume || 0]}
-                      fixedMin={0}
-                      fixedMax={getAvailableInventory(id) || 1000}
+                      min={0}
+                      max={pSales.sales_volume * 2 || 1000}
                       onValueChange={(val) =>
                         handleProductInputChange(id, "sales_volume", val[0])
                       }
                     />
                     <Slider
-                      label="Selling Price per Unit (₹)"
-                      tooltipText="Price per unit"
+                      label="Selling Price per Unit"
+                      tooltipText="How much money you want to charge customers for each unit of this product (in rupees)"
                       value={[
                         pSales.selling_price || product.selling_price || 0,
                       ]}
-                      fixedMin={0}
-                      fixedMax={10000}
+                      min={0}
+                      max={pSales.selling_price * 2 || 0}
                       onValueChange={(val) =>
                         handleProductInputChange(id, "selling_price", val[0])
                       }
@@ -316,8 +316,8 @@ const Sales = () => {
                   {/* Middle stats */}
                   <div className="flex flex-col items-center gap-10">
                     <Slider
-                      label="Customer Satisfaction (1-10)"
-                      tooltipText="Customer satisfaction rating"
+                      label="Customer Satisfaction"
+                      tooltipText="How satisfied you want your customers to be with this product. Higher satisfaction may help sales but could increase costs (scale of 1-10)"
                       value={[pSales.customer_satisfaction || 1]}
                       min={1}
                       max={10}
@@ -331,8 +331,8 @@ const Sales = () => {
                     />
 
                     <Slider
-                      label="Market Share (%)"
-                      tooltipText="Target market percentage"
+                      label="Market Share"
+                      tooltipText="What percentage of the total market you want to try to capture with this product (0-100%)"
                       value={[pSales.market_share || 0]}
                       min={0}
                       max={100}

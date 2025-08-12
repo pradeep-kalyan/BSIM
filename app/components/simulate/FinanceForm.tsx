@@ -137,8 +137,8 @@ const FinanceForm = () => {
               {/* Loan Amount Slider */}
               <div>
                 <Slider
-                  label="Loan Amount (₹)"
-                  tooltipText="Borrow cash from banks"
+                  label="Loan Amount"
+                  tooltipText="How much money you want to borrow from banks or lenders (in rupees)"
                   defaultValue={[data?.loan_amount ?? 0]}
                   value={[data?.loan_amount ?? 0]}
                   min={0}
@@ -150,8 +150,8 @@ const FinanceForm = () => {
               {/* Equity Issue Slider */}
               <div>
                 <Slider
-                  label="Equity Issue (₹)"
-                  tooltipText="Issue new shares"
+                  label="Equity Issue"
+                  tooltipText="How much money you want to raise by selling shares of your company to investors (in rupees)"
                   defaultValue={[data?.equity_issue ?? 0]}
                   value={[data?.equity_issue ?? 0]}
                   min={0}
@@ -171,8 +171,8 @@ const FinanceForm = () => {
               {/* Investment Amount Slider */}
               <div>
                 <Slider
-                  label="Investment Amount (₹)"
-                  tooltipText="Invest in instruments"
+                  label="Investment Amount"
+                  tooltipText="How much money you want to invest in financial instruments like stocks or bonds (in rupees)"
                   defaultValue={[data?.investment_amount ?? 0]}
                   value={[data?.investment_amount ?? 0]}
                   min={0}
@@ -186,8 +186,8 @@ const FinanceForm = () => {
               {/* Loan Repayment Slider */}
               <div>
                 <Slider
-                  label="Loan Repayment (₹)"
-                  tooltipText="Repay existing loans"
+                  label="Loan Repayment"
+                  tooltipText="How much money you want to pay back on your existing loans (in rupees)"
                   defaultValue={[data?.repay_loan ?? 0]}
                   value={[data?.repay_loan ?? 0]}
                   min={0}
@@ -199,8 +199,8 @@ const FinanceForm = () => {
               {/* Dividend Payout Slider */}
               <div>
                 <Slider
-                  label="Dividend Payout (₹)"
-                  tooltipText="Distribute to shareholders"
+                  label="Dividend Payout"
+                  tooltipText="How much profit you want to share with your company's shareholders or investors (in rupees)"
                   defaultValue={[data?.dividend_payout ?? 0]}
                   value={[data?.dividend_payout ?? 0]}
                   min={0}

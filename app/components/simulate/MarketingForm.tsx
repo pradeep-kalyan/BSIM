@@ -144,8 +144,8 @@ const MarketingForm = () => {
               {/* Total Marketing Budget */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
-                  label="Total Marketing(₹/per year)"
-                  text="Total marketing budget"
+                  label="Total Marketing"
+                  text="How much money you want to spend on all marketing activities for the whole year (in rupees per year)"
                 />
                 <Slider
                   className="w-[200px]"
@@ -162,8 +162,8 @@ const MarketingForm = () => {
               {/* Online Marketing */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
-                  label="Online Marketing(₹/per year)"
-                  text="Digital channels budget"
+                  label="Online Marketing"
+                  text="How much money you want to spend on internet and digital advertising like social media, Google ads, websites (in rupees per year)"
                 />
                 <Slider
                   className="w-[200px]"
@@ -183,8 +183,8 @@ const MarketingForm = () => {
               {/* Offline Marketing */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
-                  label="Offline Marketing(₹/per year)"
-                  text="Traditional channels budget"
+                  label="Offline Marketing"
+                  text="How much money you want to spend on traditional advertising like TV, radio, newspapers, billboards, and events (in rupees per year)"
                 />
                 <Slider
                   className="w-[200px]"
