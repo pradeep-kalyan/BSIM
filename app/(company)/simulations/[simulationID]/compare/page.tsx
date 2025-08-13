@@ -29,10 +29,10 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import Checkboxdropdown from "@/app/ui/checkboxdropdown";
-import { getCompanyComparisonData } from "@/app/_actions/companyData";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import { CompanyOption, Company } from "@/app/types/compare";
+import { getCompanyComparisonData } from "@/app/_actions/company";
 
 type SortOption = "revenue" | "profit" | "assets" | "cash" | "roi";
 type MetricType = "financial" | "operational" | "innovation";
@@ -671,11 +671,6 @@ const truncateWords = (text: string, wordLimit: number) => {
                   companies={sortedCompanies}
                   getValue={(c) => c.rd.quality_changes}
                   format={(v) => v.toString()}
-                />
-                <MetricRow
-                  label="Marketing Budget"
-                  companies={sortedCompanies}
-                  getValue={(c) => c.marketing_budget}
                 />
               </ComparisonCard>
             )}

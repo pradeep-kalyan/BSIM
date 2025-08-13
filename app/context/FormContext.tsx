@@ -84,8 +84,6 @@ export const getDefaultCompanyData = (): CompanyFormData => ({
   cash_balance: 100000,
   total_assets: 0,
   total_liabilities: 0,
-  marketing_budget: 0,
-  credit_rating: "",
   brand_value: 0,
 });
 

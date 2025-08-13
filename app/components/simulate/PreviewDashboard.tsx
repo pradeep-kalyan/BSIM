@@ -200,11 +200,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                   )
                 : 0
             }%`,
-            `Total Marketing Budget vs Company Budget: ${(
-              (marketingData.budget /
-                Math.max(companyData.marketing_budget || 1, 1)) *
-              100
-            ).toFixed(1)}%`,
           ],
           keyMetrics: [
             {
@@ -223,17 +218,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                       100
                     ).toFixed(0)}`
                   : "0/0",
-            },
-            {
-              label: "Budget Utilization",
-              value: `${
-                companyData.marketing_budget > 0
-                  ? (
-                      (marketingData.budget / companyData.marketing_budget) *
-                      100
-                    ).toFixed(1)
-                  : 0
-              }%`,
             },
           ],
         },
@@ -354,7 +338,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             `Total Liabilities: ${formatCurrency(
               companyData.total_liabilities || 0
             )}`,
-            `Credit Rating: ${companyData.credit_rating || "Not rated"}`,
             `Brand Value: ${formatCurrency(companyData.brand_value || 0)}`,
           ],
           keyMetrics: [
@@ -680,13 +663,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                       <p className="text-sm text-[#bbb]">Brand Value:</p>
                       <p className="text-sm text-purple-600 font-semibold">
                         {formatCurrency(companyData.brand_value || 0)}
-                      </p>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <p className="text-sm text-[#bbb]">Credit Rating:</p>
-                      <p className="text-white font-semibold text-sm">
-                        {companyData.credit_rating || "Not Rated"}
                       </p>
                     </div>
                   </div>

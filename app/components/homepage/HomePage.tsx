@@ -20,7 +20,7 @@ import {
   Lightbulb,
   Calendar,
   Award,
-  Play,
+  // Play,
   Info,
 } from "lucide-react";
 import {
@@ -46,7 +46,6 @@ import { useSimulation } from "@/app/context/SimulationContext";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
-import { getCurrentUser } from "@/app/functions/jwt";
 import {
   CompanyHistoryType,
   DashboardData,
@@ -55,6 +54,7 @@ import {
   HRRole,
 } from "@/app/types/homepage";
 import { ButtonStack } from "@/app/ui/StackBtn";
+import { getCurrentUser } from "@/app/functions/jwt";
 import Joyride, { CallBackProps } from "react-joyride";
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
@@ -142,6 +142,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const router = useRouter();
   const { exportDashboard, isExporting } = useExport();
   const swapyRef = useRef<HTMLDivElement | null>(null);
+  const swapyInstanceRef = useRef<ReturnType<typeof createSwapy> | null>(null);
   const [joyrideRun, setJoyrideRun] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const steps = [
@@ -157,18 +158,17 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       disableBeacon: true,
     },
     {
-      target: ".simulate",
+      target: ".simulate-dashboard-btn",
       content: "Run a simulation to preview how your strategies will perform.",
       disableBeacon: true,
     },
   ];
-
   const [highlightedSelector, setHighlightedSelector] = useState<string | null>(
     null
   );
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { index, status, action, step } = data;
+    const { status, action, step } = data;
 
     if (status === "finished" || status === "skipped") {
       setHighlightedSelector(null);
@@ -201,8 +201,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       if (el) el.classList.add("joyride-highlight");
     }
   }, [highlightedSelector]);
-
-  const swapyInstanceRef = useRef<ReturnType<typeof createSwapy> | null>(null);
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
     try {
@@ -257,11 +255,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       company_id: data?.company?.id || "",
       period: currentPeriod,
       cash_balance: data?.company?.cash_balance || 0,
-      data: data?.company?.data || "{}",
       total_assets: data?.company?.total_assets || 0,
       total_liabilities: data?.company?.total_liabilities || 0,
-      marketing_budget: data?.company?.marketing_budget || 0,
-      credit_rating: data?.company?.credit_rating || null,
       brand_value: data?.company?.brand_value || 0,
     };
 
@@ -891,7 +886,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           showSkipButton
           spotlightClicks
           disableOverlay
-          scrollToFirstStep
+          scrollToFirstStep={false}
+          disableScrolling
           styles={{
             tooltip: {
               width: "250px",
@@ -900,15 +896,16 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               lineHeight: "1.4",
             },
             buttonClose: {
-              width: 13, 
-              height: 13, 
-              padding: 0, 
+              // fixed from buttonClose to tooltipClose
+              width: 13,
+              height: 13,
+              padding: 0,
               lineHeight: "20px",
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginTop:"10px",
+              marginTop: "10px",
               marginRight: "10px",
             },
             tooltipContainer: {
@@ -929,7 +926,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           callback={handleJoyrideCallback}
         />
       )}
-      <div className="min-h-screen bg-slate-800 text-white">
+      <div className="h-full bg-slate-800 text-white">
         <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -978,14 +975,13 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         .capturing-screenshot .recharts-surface {
           overflow: visible !important;
         }
-
-        /* Info button styles */
+           /* Info button styles */
         .info-button {
           position: fixed;
           bottom: 20px;
           right: 20px;
           z-index: 1000;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: #2563eb; /* Tailwind blue-600 */
           color: white;
           border: none;
           border-radius: 50%;
@@ -999,6 +995,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           transition: all 0.3s ease;
           animation: pulse 2s infinite;
         }
+
         
         .info-button:hover {
           transform: scale(1.1);
@@ -1018,7 +1015,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         }
       `}</style>
         {/* Fixed Header */}
-        <div className="bg-slate-600 shadow-2xl sticky top-0 z-50 w-full">
+        <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sticky top-0 z-50 w-full">
           <div className="container mx-auto px-6 py-4">
             <div className="flex justify-between items-center gap-8">
               {/* LEFT: Company info */}
@@ -1080,7 +1077,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 <button
                   onClick={capture}
                   disabled={isExporting}
-                  className="export-dashboard-btn bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 cursor-pointer rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
+                  title="Export dashboard as image"
                 >
                   {isExporting ? (
                     <>
@@ -1127,24 +1125,34 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   </svg>
                   Back to Companies
                 </button>
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleSimulate}
-                    disabled={isSimulating}
-                    className="simulate bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    {isSimulating ? "Simulating..." : "Simulate"}
-                    <Play size={20} />
-                  </button>
-                  <LogoutBtn />
-                </div>
-              </div>
+
+                <button
+                  onClick={handleSimulate}
+                  disabled={isSimulating}
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
+                  title="Start simulation"
+                >
+                  {isSimulating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Simulating...
+                    </>
+                  ) : (
+                    <>
+                      <Play size={16} />
+                      Simulate
+                    </>
+                  )}
+                </button>
+
+                <LogoutBtn />
+              </div> */}
             </div>
           </div>
         </div>
 
         <div
-          className="details container mx-auto px-6 py-8 space-y-8 "
+          className="details container mx-auto px-6 py-8 space-y-8"
           data-swapy-container
           ref={swapyRef}
         >
@@ -1643,8 +1651,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             </div>
           </div>
         </div>
-
-        {/* Info Button */}
         <button
           onClick={handleInfoClick}
           className="info-button"
@@ -1654,8 +1660,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           <Info size={20} />
         </button>
       </div>
-    </div>
-    </div>
     </div>
   );
 };

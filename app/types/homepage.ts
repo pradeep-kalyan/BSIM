@@ -6,8 +6,6 @@ export interface CompanyHistoryType {
   data?: string;
   total_assets: number;
   total_liabilities: number;
-  marketing_budget: number;
-  credit_rating?: string | null;
   brand_value: number;
 }
 
@@ -128,11 +126,8 @@ export interface DashboardData {
     logo_url: string | null;
     current_period: number;
     cash_balance: number;
-    data?: string;
     total_assets: number;
     total_liabilities: number;
-    marketing_budget: number;
-    credit_rating?: string | null;
     brand_value: number;
   };
   history: CompanyHistoryType[];

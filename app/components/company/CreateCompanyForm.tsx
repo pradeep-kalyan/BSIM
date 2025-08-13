@@ -29,6 +29,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
     cash_balance: 0,
     total_assets: 0,
     total_liabilities: 0,
+    brand_value: 0,
   });
 
   useEffect(() => {
@@ -43,7 +44,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
             cash_balance: firstCompany.cash_balance || 0,
             total_assets: firstCompany.total_assets || 0,
             total_liabilities: firstCompany.total_liabilities || 0,
-            marketing_budget: firstCompany.marketing_budget || 0,
             brand_value: firstCompany.brand_value || 0,
           }));
         }
@@ -180,6 +180,11 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
         return;
       }
 
+      setForm((prev) => ({
+        ...prev,
+        brand_value: prev.total_assets - prev.total_liabilities,
+      }));
+
       const { company } = await createCompany({
         simulation_id: simulationID,
         user_id: user.id,
@@ -206,6 +211,7 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
           cash_balance: 0,
           total_assets: 0,
           total_liabilities: 0,
+          brand_value: 0,
         });
         setHrRoles([{ role_name: "", salary_per_head: 0, head_count: 0 }]);
         setTrainingBudget(0);
@@ -449,7 +455,6 @@ const CreateCompanyForm = ({ simulationID, onCreated }: Props) => {
                   inventory_level: 0,
                   production_capacity: 0,
                   development_cost: 0,
-                  marketing_budget: 0,
                   status: "active",
                   launch_period: 1,
                   discontinue_period: undefined,

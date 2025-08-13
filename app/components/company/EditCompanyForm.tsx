@@ -31,7 +31,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
     cash_balance: company.cash_balance || 0,
     total_assets: company.total_assets || 0,
     total_liabilities: company.total_liabilities || 0,
-    marketing_budget: company.marketing_budget || 0,
     brand_value: company.brand_value || 0,
   });
 

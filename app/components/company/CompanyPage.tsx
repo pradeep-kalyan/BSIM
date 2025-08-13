@@ -211,7 +211,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowForm((prev) => !prev)}
-              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+              className="flex items-center gap-2 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
             >
               {showForm ? "View Companies" : "Create Company"}
             </motion.button>
@@ -222,7 +222,7 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
               onClick={() =>
                 router.push(`/simulations/${simulationID}/compare`)
               }
-              className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
+              className="flex items-center gap-2 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium shadow-md"
             >
               Compare Companies
             </motion.button>

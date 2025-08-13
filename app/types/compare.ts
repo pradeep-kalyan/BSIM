@@ -5,7 +5,6 @@ export interface Company {
   total_assets: number;
   total_liabilities: number;
   brand_value: number;
-  marketing_budget: number;
   current_period: number;
   finance: {
     total_revenue: number;

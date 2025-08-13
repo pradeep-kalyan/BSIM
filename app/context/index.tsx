@@ -5,16 +5,16 @@ import { AuthProvider } from "./AuthContext";
 import { SimulationProvider, useSimulation } from "./SimulationContext";
 import { FormProvider, useForm } from "./FormContext";
 import { getInitialFormData } from "../_actions/formActions";
- 
+
 // Component to initialize form data every time on load
 function FormDataInitializer() {
   const { comId, period } = useSimulation();
   const { initializeForms } = useForm();
   const [, setIsLoading] = useState(false);
- 
+
   useEffect(() => {
     if (!comId || !period) return;
- 
+
     const fetchAndInitializeForms = async () => {
       setIsLoading(true);
       try {
@@ -25,7 +25,7 @@ function FormDataInitializer() {
         (initialData.production ?? []).forEach((prod) => {
           productionByProductId.set(prod.product_id, prod);
         });
- 
+
         // Create sales data map by product_id
         const salesByProductId = new Map();
         (initialData.sales ?? []).forEach((sale) => {
@@ -43,7 +43,7 @@ function FormDataInitializer() {
             });
           }
         });
- 
+
         // Get production data per product for the new structure
         const productionDataPerProduct = (initialData.products ?? []).map(
           (product) => {
@@ -51,13 +51,13 @@ function FormDataInitializer() {
             const productionRecord = (initialData.production ?? []).find(
               (prod) => prod.product_id === product.id
             );
- 
+
             const unitsToProduceVal = productionRecord?.units_to_produce ?? 0;
             const costPerUnitVal = productionRecord?.cost_per_unit ?? 0;
             const defectRateVal = productionRecord?.defect_rate ?? 0;
             const totalCostVal =
               unitsToProduceVal * costPerUnitVal * (1 + defectRateVal / 100);
- 
+
             return {
               product_id: product.id!,
               units_to_produce: unitsToProduceVal,
@@ -71,7 +71,7 @@ function FormDataInitializer() {
             };
           }
         );
- 
+
         const formInitialData = {
           finance: {
             investment_amount: initialData.finance?.investment_amount ?? 0,
@@ -141,8 +141,6 @@ function FormDataInitializer() {
             cash_balance: initialData.company?.cash_balance ?? 100000,
             total_assets: initialData.company?.total_assets ?? 0,
             total_liabilities: initialData.company?.total_liabilities ?? 0,
-            marketing_budget: initialData.company?.marketing_budget ?? 0,
-            credit_rating: initialData.company?.credit_rating ?? "",
             brand_value: initialData.company?.brand_value ?? 0,
           },
           simulation: {
@@ -209,8 +207,6 @@ function FormDataInitializer() {
             cash_balance: 100000,
             total_assets: 0,
             total_liabilities: 0,
-            marketing_budget: 0,
-            credit_rating: "",
             brand_value: 0,
           },
           simulation: {
@@ -235,13 +231,13 @@ function FormDataInitializer() {
         setIsLoading(false);
       }
     };
- 
+
     fetchAndInitializeForms();
   }, [comId, period, initializeForms]);
- 
+
   return null;
 }
- 
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, BarChart3, Ban } from "lucide-react";
+import { ChevronDown, BarChart3 } from "lucide-react";
 
 interface checkboxdropdownProps {
   options: string[];
