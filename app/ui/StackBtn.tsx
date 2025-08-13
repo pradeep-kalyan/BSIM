@@ -34,7 +34,7 @@ export function ButtonStack({
       toast.info("Logout successful");
       setTimeout(() => {
         router.push("/login");
-      }, 300);
+      }, 100);
     } catch {
       toast.error("Logout failed. Please try again.");
     } finally {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 // import { useForm } from "@/app/context/FormContext";
 import { type ProductFormData } from "@/app/types/simulate";
+import { on } from "events";
 
 interface ProductFormPageProps {
   mode: "add" | "edit";
@@ -34,9 +35,9 @@ export default function ProductFormPage({
   const [product, setProduct] = useState<Product>(
     mode === "edit" && initialProduct
       ? {
-          ...emptyProduct,
-          ...initialProduct,
-        }
+        ...emptyProduct,
+        ...initialProduct,
+      }
       : emptyProduct
   );
   const [errors, setErrors] = useState<Partial<Record<keyof Product, string>>>(
@@ -105,13 +106,24 @@ export default function ProductFormPage({
 
   return (
     <div className="bg-slate-800 rounded-lg p-3 border border-slate-700/70 max-w-md mx-auto mt-4 z-20 relative">
-      <h3 className="text-lg font-semibold text-white mb-2">
+      <h3 className="text-lg tracking-wide font-semibold font-roboto-sans text-white mb-2 ">
         {mode === "edit" ? "Edit Product" : "Add New Product"}
       </h3>
+
+      <div className="absolute top-1 right-2">
+        <button
+          onClick={() => onCancel()}
+          className="text-red-400 hover:text-red-500 bg-slate-800 rounded-full m-2 hover:text-white"
+          title="Close"
+        >
+          ✕
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-3">
         {/* Name */}
         <div>
-          <label className="block text-xs text-slate-300 mb-1">
+          <label className="block text-xs text-slate-200 mb-1 tracking-wide font-semibold font-geist-sans">
             Product Name
           </label>
           <Input
@@ -129,7 +141,7 @@ export default function ProductFormPage({
         {/* Category & Description in one row */}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs text-slate-300 mb-1">
+            <label className="block text-xs text-slate-200 mb-1 tracking-wide font-semibold font-geist-sans">
               Category
             </label>
             <Input
@@ -145,7 +157,7 @@ export default function ProductFormPage({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-300 mb-1">
+            <label className="block text-xs text-slate-200 mb-1 tracking-wide font-semibold font-geist-sans">
               Description
             </label>
             <Input
@@ -159,9 +171,9 @@ export default function ProductFormPage({
         </div>
 
         {/* Ratings */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 tracking-wide font-semibold font-geist-sans">
           <div>
-            <label className="block text-xs text-slate-300 mb-1">
+            <label className="block text-xs text-slate-200 mb-1">
               Quality (1-10)
             </label>
             <Input
@@ -182,7 +194,7 @@ export default function ProductFormPage({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-300 mb-1">
+            <label className="block text-xs text-slate-200 mb-1">
               Innovation (1-10)
             </label>
             <Input
@@ -203,7 +215,7 @@ export default function ProductFormPage({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-300 mb-1">
+            <label className="block text-xs text-slate-200 mb-1">
               Sustainability (1-10)
             </label>
             <Input
@@ -229,7 +241,7 @@ export default function ProductFormPage({
         <div className="flex gap-2 mt-3">
           <button
             type="submit"
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded disabled:opacity-60 hover:bg-blue-700 transition-colors"
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded disabled:opacity-60 hover:bg-blue-700 transition-colors font-roboto-sans"
             disabled={submitting}
           >
             {mode === "edit" ? "Update" : "Add Product"}
@@ -237,7 +249,7 @@ export default function ProductFormPage({
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-1.5 text-sm bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors"
+            className="px-3 py-1.5 text-sm bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors font-roboto-sans"
             disabled={submitting}
           >
             Cancel

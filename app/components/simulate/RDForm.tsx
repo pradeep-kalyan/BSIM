@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { IndianRupee, FlaskConical, Timer, TriangleAlert } from "lucide-react";
+import React, { useState } from "react";
+import { IndianRupee, FlaskConical, Timer, TriangleAlert, Award } from "lucide-react";
 import InfoCard from "@/app/components/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import { useRDForm, useCashBalance } from "@/app/context/FormContext";
@@ -13,17 +13,11 @@ const RDForm = () => {
 
   const [budgetAlert, setBudgetAlert] = useState<string | null>(null);
 
-  // Update R&D budget impact dynamically whenever budget or total_development changes
-  useEffect(() => {
-    // Budget impact is automatically handled by updateData in useRDForm hook
-  }, [data.budget, data.total_development]);
-
   const handleChange = (fieldId: keyof typeof data, value: number) => {
     updateData({ [fieldId]: value });
     setError(fieldId, "");
     setBudgetAlert(null);
 
-    // Basic validation for budget
     if (
       fieldId === "budget" &&
       value > (cashBalance.originalCashBalance || 0)
@@ -33,7 +27,7 @@ const RDForm = () => {
   };
 
   return (
-    <div className="bg-slate-800/50 shadow-md p-4">
+    <div className="h-full bg-slate-800/50 shadow-md p-4">
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 mx-2">
         <InfoCard
           label="R&D Budget"
@@ -72,8 +66,8 @@ const RDForm = () => {
           label="Quality Improvements"
           value={`${data.quality_changes ?? 0}%`}
           isCurrency={false}
-          Icon={Timer}
-          iconColor="text-green-400"
+          Icon={Award}
+          iconColor="text-purple-400"
           labelColor="text-white"
           valueColor="text-white"
           width="w-full"
@@ -83,10 +77,11 @@ const RDForm = () => {
 
       <div className="max-w-full mx-2 ">
         <div className="bg-slate-800/50 shadow-md rounded-2xl py-4 px-6 border border-slate-700">
-          <h2 className="text-2xl font-bold text-white mb-2">
+          <h2 className="text-xl tracking-wide font-semibold font-roboto-sans text-white">
             Set R&D Strategy
           </h2>
-          <div className="grid gap-6 md:grid-cols-2">
+          <hr className=" my-5 border border-slate-700" />
+          <div className="grid gap-6 md:grid-cols-2 px-6">
             {/* R&D Budget Slider */}
             <div>
               <Slider
@@ -157,6 +152,38 @@ const RDForm = () => {
               )}
             </div>
 
+            <div className="flex text-white flex gap-6 items-center text-medium font-roboto-sans">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div className="flex flex-col gap-1">
+                  <p>Available Cash:</p>
+                  <p>{formatCurrency(cashBalance.originalCashBalance)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div className="flex flex-col gap-1">
+                  <p>R&D budget:</p>
+                  <p>
+                    {formatCurrency(
+                      cashBalance.financeBudgetImpact - (data.budget ?? 0)
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <div className="flex flex-col gap-1">
+                  <p>Projected Balance:</p>
+                  <p>
+                    {formatCurrency(projectedCashBalance ?? 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Quality Improvements Slider */}
             <div>
               <Slider
@@ -177,48 +204,12 @@ const RDForm = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <div className="text-slate-300">
-                Available Cash:{" "}
-                {formatCurrency(cashBalance.originalCashBalance)}
-              </div>
-              <div className="text-xl text-blue-400 font-semibold">
-                R&D budget:{" "}
-                <span
-                  className={
-                    projectedCashBalance - (data.budget ?? 0) < 0
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }
-                >
-                  {formatCurrency(
-                    cashBalance.financeBudgetImpact - (data.budget ?? 0)
-                  )}
-                </span>
-              </div>
-
-              <div className="text-xl text-blue-400 font-semibold">
-                Projected Balance:{" "}
-                <span
-                  className={
-                    projectedCashBalance - (data.budget ?? 0) < 0
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }
-                >
-                  {formatCurrency(projectedCashBalance ?? 0)}
-                </span>
-              </div>
-            </div>
-          </div>
-
           {budgetAlert && (
             <div className="mt-6 space-y-4">
               <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
                 <div className="flex items-start gap-3">
                   <TriangleAlert className="text-rose-500 mt-0.5" />
-                  <p className="text-sm">{budgetAlert}</p>
+                  <p className="text-sm font-roboto-sans">{budgetAlert}</p>
                 </div>
               </div>
             </div>
