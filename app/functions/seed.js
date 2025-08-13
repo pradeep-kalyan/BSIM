@@ -35,1077 +35,510 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var prisma_1 = require("./prisma");
+var client_1 = require("@prisma/client");
+var prisma = new client_1.PrismaClient();
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var hashedPassword, admin, instructor, students, techSimulation, retailSimulation, manufacturingSimulation, simulationAccess, companies, products, financeData, _i, financeData_1, _a, companyIndex, periods, baseRevenue, growthRate, profitMargin, period, revenue, operatingCosts, netProfit, roi, hrData, _b, hrData_1, _c, companyIndex, periods, baseSalaryBudget, _loop_1, period, _d, _e, _f, companyIndex, periods, period, budget, _loop_2, _g, products_1, product, _h, hrData_2, _j, companyIndex, periods, period, baseBudget, totalBudget, onlineRatio, onlineBudget, offlineBudget, _loop_3, _k, products_2, product, _l, hrData_3, _m, companyIndex, periods, period, company, financeRecord, companyAccessRecords, userCount, simulationCount, companyCount, productCount, financeCount, hrCount, rdCount, productionCount, marketingCount, performanceCount, historyCount;
-        var _o;
-        return __generator(this, function (_p) {
-            switch (_p.label) {
+        var hashedPassword, users, simulations, companies, techCompany, retailCompany, manufacturingCompany, companyAccessData, products, productData, _i, productData_1, productInfo, product, hrRoles, _a, companies_1, company, hrDecision, _b, hrRoles_1, role, _c, companies_2, company, _d, products_1, product, _e, companies_3, company, _f, companies_4, company, _g, products_2, product;
+        return __generator(this, function (_h) {
+            switch (_h.label) {
                 case 0:
-
-                    // Clean existing data in correct order (respecting foreign key constraints)
-                    return [4 /*yield*/, prisma_1.default.product_performance.deleteMany()];
+                    console.log('🌱 Starting seed process...');
+                    // Clear existing data
+                    return [4 /*yield*/, prisma.product_performance.deleteMany()];
                 case 1:
-                    // Clean existing data in correct order (respecting foreign key constraints)
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.marketing.deleteMany()];
+                    // Clear existing data
+                    _h.sent();
+                    return [4 /*yield*/, prisma.marketing.deleteMany()];
                 case 2:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.rd.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.rd.deleteMany()];
                 case 3:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.production.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.hr_role_decision.deleteMany()];
                 case 4:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.hr_role_decision.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.hr_decision.deleteMany()];
                 case 5:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.hr_decision.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.production.deleteMany()];
                 case 6:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.finance.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.finance.deleteMany()];
                 case 7:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.product.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.product.deleteMany()];
                 case 8:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.company_history.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.company_history.deleteMany()];
                 case 9:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.company_access.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.company_access.deleteMany()];
                 case 10:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.simulation_access.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.simulation_access.deleteMany()];
                 case 11:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.company.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.company.deleteMany()];
                 case 12:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.simulation.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.simulation.deleteMany()];
                 case 13:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.user.deleteMany()];
+                    _h.sent();
+                    return [4 /*yield*/, prisma.user.deleteMany()];
                 case 14:
-                    _p.sent();
-                    // Create Users
-
+                    _h.sent();
                     hashedPassword = "$2y$10$N/ohrDUZObMGWG30oskpee40vFV8CtG7nCwkDO6vrx9IL6f8OuQZu";
-                    return [4 /*yield*/, prisma_1.default.user.create({
-                            data: {
-                                name: "Admin User",
-                                email: "admin@simulation.com",
-                                password_hash: hashedPassword,
-                                role: "admin",
-                            },
-                        })];
-                case 15:
-                    admin = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.user.create({
-                            data: {
-                                name: "Dr. Sarah Johnson",
-                                email: "sarah.johnson@university.edu",
-                                password_hash: hashedPassword,
-                                role: "user", // Schema only has "user" and "admin" roles
-                            },
-                        })];
-                case 16:
-                    instructor = _p.sent();
                     return [4 /*yield*/, Promise.all([
-                            prisma_1.default.user.create({
+                            prisma.user.create({
                                 data: {
-                                    name: "Alice Chen",
-                                    email: "alice.chen@student.edu",
+                                    id: 'user1',
+                                    name: 'Alice Johnson',
+                                    email: 'alice.johnson@example.com',
                                     password_hash: hashedPassword,
-                                    role: "user",
+                                    role: 'admin',
                                 },
                             }),
-                            prisma_1.default.user.create({
+                            prisma.user.create({
                                 data: {
-                                    name: "Bob Martinez",
-                                    email: "bob.martinez@student.edu",
+                                    id: 'user2',
+                                    name: 'Bob Smith',
+                                    email: 'bob.smith@example.com',
                                     password_hash: hashedPassword,
-                                    role: "user",
+                                    role: 'user',
                                 },
                             }),
-                            prisma_1.default.user.create({
+                            prisma.user.create({
                                 data: {
-                                    name: "Carol Williams",
-                                    email: "carol.williams@student.edu",
+                                    id: 'user3',
+                                    name: 'Carol Williams',
+                                    email: 'carol.williams@example.com',
                                     password_hash: hashedPassword,
-                                    role: "user",
+                                    role: 'user',
                                 },
                             }),
-                            prisma_1.default.user.create({
+                        ])];
+                case 15:
+                    users = _h.sent();
+                    console.log('✅ Created 3 users');
+                    return [4 /*yield*/, Promise.all([
+                            prisma.simulation.create({
                                 data: {
-                                    name: "David Kim",
-                                    email: "david.kim@student.edu",
-                                    password_hash: hashedPassword,
-                                    role: "user",
+                                    id: 'sim1',
+                                    name: 'Tech Startup Challenge',
+                                    description: 'Navigate the competitive world of technology startups. Build innovative products, manage resources, and capture market share in the fast-paced tech industry.',
+                                    config: JSON.stringify({
+                                        duration: 12,
+                                        starting_cash: 1000000,
+                                        market_conditions: 'competitive',
+                                        industry: 'technology',
+                                        difficulty: 'medium'
+                                    }),
+                                    current_period: 1,
+                                    status: 'active',
+                                    created_by: 'user1',
                                 },
                             }),
-                            prisma_1.default.user.create({
+                            prisma.simulation.create({
                                 data: {
-                                    name: "Emma Rodriguez",
-                                    email: "emma.rodriguez@student.edu",
-                                    password_hash: hashedPassword,
-                                    role: "user",
+                                    id: 'sim2',
+                                    name: 'Retail Empire Builder',
+                                    description: 'Build a retail empire from the ground up. Manage supply chains, optimize inventory, and create customer loyalty in various retail segments.',
+                                    config: JSON.stringify({
+                                        duration: 16,
+                                        starting_cash: 750000,
+                                        market_conditions: 'stable',
+                                        industry: 'retail',
+                                        difficulty: 'easy'
+                                    }),
+                                    current_period: 1,
+                                    status: 'active',
+                                    created_by: 'user2',
                                 },
                             }),
-                            prisma_1.default.user.create({
+                            prisma.simulation.create({
                                 data: {
-                                    name: "Frank Liu",
-                                    email: "frank.liu@student.edu",
-                                    password_hash: hashedPassword,
-                                    role: "user",
+                                    id: 'sim3',
+                                    name: 'Manufacturing Mastery',
+                                    description: 'Master the art of manufacturing excellence. Optimize production processes, implement lean methodologies, and compete in global markets.',
+                                    config: JSON.stringify({
+                                        duration: 20,
+                                        starting_cash: 2000000,
+                                        market_conditions: 'volatile',
+                                        industry: 'manufacturing',
+                                        difficulty: 'hard'
+                                    }),
+                                    current_period: 1,
+                                    status: 'active',
+                                    created_by: 'user3',
                                 },
+                            }),
+                        ])];
+                case 16:
+                    simulations = _h.sent();
+                    console.log('✅ Created 3 simulations');
+                    // Create simulation access permissions
+                    return [4 /*yield*/, Promise.all([
+                            // User1 has access to all simulations
+                            prisma.simulation_access.create({
+                                data: { simulation_id: 'sim1', user_id: 'user1', access_level: 'owner' }
+                            }),
+                            prisma.simulation_access.create({
+                                data: { simulation_id: 'sim2', user_id: 'user1', access_level: 'editor' }
+                            }),
+                            prisma.simulation_access.create({
+                                data: { simulation_id: 'sim3', user_id: 'user1', access_level: 'editor' }
+                            }),
+                            // User2 owns sim2 and has viewer access to sim1
+                            prisma.simulation_access.create({
+                                data: { simulation_id: 'sim2', user_id: 'user2', access_level: 'owner' }
+                            }),
+                            prisma.simulation_access.create({
+                                data: { simulation_id: 'sim1', user_id: 'user2', access_level: 'viewer' }
+                            }),
+                            // User3 owns sim3 and has viewer access to sim1
+                            prisma.simulation_access.create({
+                                data: { simulation_id: 'sim3', user_id: 'user3', access_level: 'owner' }
+                            }),
+                            prisma.simulation_access.create({
+                                data: { simulation_id: 'sim1', user_id: 'user3', access_level: 'viewer' }
                             }),
                         ])];
                 case 17:
-                    students = _p.sent();
-                    // Create Simulations
-
-                    return [4 /*yield*/, prisma_1.default.simulation.create({
+                    // Create simulation access permissions
+                    _h.sent();
+                    console.log('✅ Created simulation access permissions');
+                    companies = [];
+                    return [4 /*yield*/, prisma.company.create({
                             data: {
-                                name: "Technology Industry Competition Q1-Q4 2024",
-                                description: "A comprehensive business simulation where teams compete as technology companies in smartphone, laptop, and smart device markets. Focus on R&D, production efficiency, marketing strategies, and financial management.",
-                                config: JSON.stringify({
-                                    maxPeriods: 12,
-                                    startingCash: 1000000,
-                                    marketSize: 50000000,
-                                    inflationRate: 0.025,
-                                    interestRate: 0.055,
-                                    taxRate: 0.21,
-                                    marketGrowthRate: 0.08,
-                                    categories: ["smartphones", "laptops", "tablets", "smart_devices"],
-                                    competitorCount: 4,
-                                    economicFactors: {
-                                        recession_risk: 0.15,
-                                        supply_chain_disruption: 0.1,
-                                        currency_volatility: 0.05,
-                                    },
+                                id: 'comp1',
+                                simulation_id: 'sim1',
+                                user_id: 'user1',
+                                name: 'InnovateTech Solutions',
+                                description: 'Cutting-edge AI and machine learning solutions for enterprise clients',
+                                logo_url: 'https://example.com/logos/innovatetech.png',
+                                cash_balance: 9850000,
+                                current_period: 1,
+                                total_assets: 1200000,
+                                total_liabilities: 200000,
+                                marketing_budget: 75000,
+                                credit_rating: 'A-',
+                                brand_value: 150000,
+                                data: JSON.stringify({
+                                    employee_count: 45,
+                                    office_locations: ['San Francisco', 'Austin'],
+                                    key_partnerships: ['Google Cloud', 'AWS']
                                 }),
-                                current_period: 4,
-                                status: "active",
-                                created_by: instructor.id,
                             },
                         })];
                 case 18:
-                    techSimulation = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.simulation.create({
+                    techCompany = _h.sent();
+                    return [4 /*yield*/, prisma.company.create({
                             data: {
-                                name: "Retail Fashion & Lifestyle Challenge",
-                                description: "A retail-focused simulation covering fashion, home goods, and lifestyle products. Emphasis on inventory management, seasonal trends, customer satisfaction, and omnichannel strategies.",
-                                config: JSON.stringify({
-                                    maxPeriods: 8,
-                                    startingCash: 500000,
-                                    marketSize: 25000000,
-                                    seasonality: true,
-                                    seasons: ["Spring", "Summer", "Fall", "Winter"],
-                                    categories: ["apparel", "accessories", "home_goods", "beauty"],
-                                    retailChannels: ["online", "physical_stores", "marketplace"],
+                                id: 'comp2',
+                                simulation_id: 'sim2',
+                                user_id: 'user2',
+                                name: 'TechGadget Central',
+                                description: 'Premier retailer of cutting-edge consumer electronics and gadgets',
+                                logo_url: 'https://example.com/logos/techgadget.png',
+                                cash_balance: 9580000,
+                                current_period: 1,
+                                total_assets: 920000,
+                                total_liabilities: 200000,
+                                marketing_budget: 85000,
+                                credit_rating: 'A-',
+                                brand_value: 140000,
+                                data: JSON.stringify({
+                                    employee_count: 42,
+                                    store_locations: ['New York', 'Chicago', 'Miami', 'Dallas'],
+                                    vendor_partnerships: ['Apple', 'Samsung', 'Sony']
                                 }),
-                                current_period: 2,
-                                status: "active",
-                                created_by: admin.id,
                             },
                         })];
                 case 19:
-                    retailSimulation = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.simulation.create({
+                    retailCompany = _h.sent();
+                    return [4 /*yield*/, prisma.company.create({
                             data: {
-                                name: "Advanced Manufacturing & Supply Chain",
-                                description: "Industrial manufacturing simulation focusing on automotive parts, machinery, and industrial equipment. Covers supply chain optimization, quality control, and international trade.",
-                                config: JSON.stringify({
-                                    maxPeriods: 10,
-                                    startingCash: 2000000,
-                                    marketSize: 100000000,
-                                    globalMarkets: true,
-                                    supplyChainComplexity: "high",
-                                    qualityStandards: ["ISO9001", "Six Sigma"],
-                                    categories: ["automotive_parts", "machinery", "industrial_equipment"],
-                                }),
+                                id: 'comp3',
+                                simulation_id: 'sim3',
+                                user_id: 'user3',
+                                name: 'Precision Auto Parts',
+                                description: 'High-precision automotive components for luxury vehicle manufacturers',
+                                logo_url: 'https://example.com/logos/precision.png',
+                                cash_balance: 8800000,
                                 current_period: 1,
-                                status: "paused",
-                                created_by: instructor.id,
+                                total_assets: 2500000,
+                                total_liabilities: 400000,
+                                marketing_budget: 120000,
+                                credit_rating: 'AA-',
+                                brand_value: 300000,
+                                data: JSON.stringify({
+                                    employee_count: 150,
+                                    manufacturing_facilities: ['Detroit', 'Stuttgart', 'Tokyo'],
+                                    certifications: ['ISO 9001', 'TS 16949']
+                                }),
                             },
                         })];
                 case 20:
-                    manufacturingSimulation = _p.sent();
-                    // Create Simulation Access
-
-                    simulationAccess = __spreadArray(__spreadArray(__spreadArray([], students.slice(0, 4).map(function (student) { return ({
-                        simulation_id: techSimulation.id,
-                        user_id: student.id,
-                        access_level: "editor",
-                    }); }), true), students.slice(4, 6).map(function (student) { return ({
-                        simulation_id: retailSimulation.id,
-                        user_id: student.id,
-                        access_level: "editor",
-                    }); }), true), [
-                        // Manufacturing simulation - instructor only for now
-                        {
-                            simulation_id: manufacturingSimulation.id,
-                            user_id: instructor.id,
-                            access_level: "owner",
-                        },
-                    ], false);
-                    return [4 /*yield*/, Promise.all(simulationAccess.map(function (access) {
-                            return prisma_1.default.simulation_access.create({ data: access });
-                        }))];
+                    manufacturingCompany = _h.sent();
+                    companies.push(techCompany, retailCompany, manufacturingCompany);
+                    console.log('✅ Created 3 companies (1 per simulation)');
+                    companyAccessData = companies.map(function (company) { return ({
+                        company_id: company.id,
+                        user_id: company.user_id,
+                        access_level: 'owner',
+                    }); });
+                    return [4 /*yield*/, prisma.company_access.createMany({
+                            data: companyAccessData,
+                        })];
                 case 21:
-                    _p.sent();
-                    // Create Companies with realistic business data
-
-                    return [4 /*yield*/, Promise.all([
-                            // Tech Simulation Companies
-                            prisma_1.default.company.create({
-                                data: {
-                                    simulation_id: techSimulation.id,
-                                    user_id: students[0].id,
-                                    name: "TechNova Solutions",
-                                    description: "Leading provider of AI-powered consumer electronics and enterprise solutions",
-                                    logo_url: "https://example.com/logos/technova.svg",
-                                    cash_balance: 1250000,
-                                    current_period: 4,
-                                    data: JSON.stringify({
-                                        headquarters: "San Francisco, CA",
-                                        founded: 2019,
-                                        employees: 120,
-                                        offices: ["SF", "Austin", "Seattle"],
-                                        certifications: ["ISO27001", "SOC2"],
-                                        patents: 23,
-                                        awards: ["Tech Innovation 2023", "Best Employer 2024"],
-                                    }),
-                                    total_assets: 2800000,
-                                    total_liabilities: 650000,
-                                    marketing_budget: 280000,
-                                    credit_rating: "A-",
-                                    brand_value: 450000,
-                                },
-                            }),
-                            prisma_1.default.company.create({
-                                data: {
-                                    simulation_id: techSimulation.id,
-                                    user_id: students[1].id,
-                                    name: "Quantum Dynamics Corp",
-                                    description: "Next-generation quantum computing solutions and advanced semiconductors",
-                                    logo_url: "https://example.com/logos/quantum.svg",
-                                    cash_balance: 980000,
-                                    current_period: 4,
-                                    data: JSON.stringify({
-                                        headquarters: "Boston, MA",
-                                        founded: 2018,
-                                        employees: 85,
-                                        offices: ["Boston", "Research Triangle", "Boulder"],
-                                        specialization: ["Quantum Computing", "AI Chips"],
-                                        partnerships: ["IBM", "Intel", "MIT"],
-                                        patents: 41,
-                                    }),
-                                    total_assets: 2200000,
-                                    total_liabilities: 580000,
-                                    marketing_budget: 190000,
-                                    credit_rating: "A",
-                                    brand_value: 520000,
-                                },
-                            }),
-                            prisma_1.default.company.create({
-                                data: {
-                                    simulation_id: techSimulation.id,
-                                    user_id: students[2].id,
-                                    name: "Nexus Interactive",
-                                    description: "Immersive AR/VR experiences and interactive digital solutions",
-                                    logo_url: "https://example.com/logos/nexus.svg",
-                                    cash_balance: 750000,
-                                    current_period: 4,
-                                    data: JSON.stringify({
-                                        headquarters: "Los Angeles, CA",
-                                        founded: 2020,
-                                        employees: 65,
-                                        offices: ["LA", "Portland", "Vancouver"],
-                                        focus: ["AR/VR", "Gaming", "Digital Media"],
-                                        clients: ["Netflix", "Disney", "Sony"],
-                                        awards: ["VR Innovation Award 2023"],
-                                    }),
-                                    total_assets: 1800000,
-                                    total_liabilities: 420000,
-                                    marketing_budget: 220000,
-                                    credit_rating: "B+",
-                                    brand_value: 280000,
-                                },
-                            }),
-                            prisma_1.default.company.create({
-                                data: {
-                                    simulation_id: techSimulation.id,
-                                    user_id: students[3].id,
-                                    name: "GreenTech Innovations",
-                                    description: "Sustainable technology solutions for renewable energy and smart cities",
-                                    logo_url: "https://example.com/logos/greentech.svg",
-                                    cash_balance: 1100000,
-                                    current_period: 4,
-                                    data: JSON.stringify({
-                                        headquarters: "Denver, CO",
-                                        founded: 2017,
-                                        employees: 95,
-                                        offices: ["Denver", "Phoenix", "Portland"],
-                                        focus: ["Solar Tech", "Smart Grid", "IoT"],
-                                        certifications: ["B-Corp", "LEED Platinum"],
-                                        sustainability_score: 9.2,
-                                    }),
-                                    total_assets: 2400000,
-                                    total_liabilities: 380000,
-                                    marketing_budget: 160000,
-                                    credit_rating: "A-",
-                                    brand_value: 380000,
-                                },
-                            }),
-                            // Retail Simulation Companies
-                            prisma_1.default.company.create({
-                                data: {
-                                    simulation_id: retailSimulation.id,
-                                    user_id: students[4].id,
-                                    name: "Urban Threads Co.",
-                                    description: "Contemporary fashion brand focusing on sustainable streetwear and lifestyle products",
-                                    logo_url: "https://example.com/logos/urban-threads.svg",
-                                    cash_balance: 420000,
-                                    current_period: 2,
-                                    data: JSON.stringify({
-                                        headquarters: "New York, NY",
-                                        founded: 2021,
-                                        employees: 45,
-                                        stores: 12,
-                                        online_presence: true,
-                                        target_demographic: "18-35 urban professionals",
-                                        sustainability_initiatives: [
-                                            "recycled materials",
-                                            "carbon neutral shipping",
-                                        ],
-                                    }),
-                                    total_assets: 850000,
-                                    total_liabilities: 280000,
-                                    marketing_budget: 95000,
-                                    credit_rating: "B+",
-                                    brand_value: 120000,
-                                },
-                            }),
-                            prisma_1.default.company.create({
-                                data: {
-                                    simulation_id: retailSimulation.id,
-                                    user_id: students[5].id,
-                                    name: "EcoLifestyle Market",
-                                    description: "Premium eco-friendly lifestyle products and wellness accessories",
-                                    logo_url: "https://example.com/logos/eco-lifestyle.svg",
-                                    cash_balance: 380000,
-                                    current_period: 2,
-                                    data: JSON.stringify({
-                                        headquarters: "Portland, OR",
-                                        founded: 2022,
-                                        employees: 28,
-                                        stores: 6,
-                                        online_marketplace: true,
-                                        certifications: ["Organic", "Fair Trade", "Cruelty Free"],
-                                        customer_base: "eco-conscious millennials",
-                                    }),
-                                    total_assets: 650000,
-                                    total_liabilities: 180000,
-                                    marketing_budget: 75000,
-                                    credit_rating: "B",
-                                    brand_value: 85000,
-                                },
-                            }),
-                        ])];
-                case 22:
-                    companies = _p.sent();
-                    // Create Products with realistic specifications
-
-                    return [4 /*yield*/, Promise.all([
-                            // TechNova Products
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[0].id,
-                                    name: "TechNova Pro X1",
-                                    description: "Flagship smartphone with advanced AI camera and 5G connectivity",
-                                    category: "smartphones",
-                                    quality_rating: 8.7,
-                                    innovation_rating: 9.1,
-                                    sustainability_rating: 7.3,
-                                    status: "active",
-                                    launch_period: 1,
-                                },
-                            }),
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[0].id,
-                                    name: "TechNova Workstation Elite",
-                                    description: "High-performance laptop for professionals and creatives",
-                                    category: "laptops",
-                                    quality_rating: 8.9,
-                                    innovation_rating: 8.4,
-                                    sustainability_rating: 6.8,
-                                    status: "active",
-                                    launch_period: 2,
-                                },
-                            }),
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[0].id,
-                                    name: "TechNova Smart Hub",
-                                    description: "AI-powered smart home control center with voice recognition",
-                                    category: "smart_devices",
-                                    quality_rating: 8.2,
-                                    innovation_rating: 8.8,
-                                    sustainability_rating: 8.1,
-                                    status: "active",
-                                    launch_period: 3,
-                                },
-                            }),
-                            // Quantum Dynamics Products
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[1].id,
-                                    name: "QuantumBook Pro",
-                                    description: "Quantum-enhanced laptop with breakthrough processing capabilities",
-                                    category: "laptops",
-                                    quality_rating: 9.3,
-                                    innovation_rating: 9.8,
-                                    sustainability_rating: 7.1,
-                                    status: "active",
-                                    launch_period: 2,
-                                },
-                            }),
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[1].id,
-                                    name: "Quantum Dev Kit",
-                                    description: "Professional quantum computing development platform",
-                                    category: "development_tools",
-                                    quality_rating: 9.0,
-                                    innovation_rating: 9.9,
-                                    sustainability_rating: 6.5,
-                                    status: "active",
-                                    launch_period: 3,
-                                },
-                            }),
-                            // Nexus Interactive Products
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[2].id,
-                                    name: "NexusVR Immersion",
-                                    description: "Next-generation VR headset with haptic feedback",
-                                    category: "vr_devices",
-                                    quality_rating: 8.5,
-                                    innovation_rating: 9.2,
-                                    sustainability_rating: 6.9,
-                                    status: "active",
-                                    launch_period: 1,
-                                },
-                            }),
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[2].id,
-                                    name: "Nexus AR Glasses",
-                                    description: "Lightweight AR glasses for everyday use",
-                                    category: "ar_devices",
-                                    quality_rating: 7.8,
-                                    innovation_rating: 8.9,
-                                    sustainability_rating: 7.5,
-                                    status: "development",
-                                    launch_period: 4,
-                                },
-                            }),
-                            // GreenTech Products
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[3].id,
-                                    name: "EcoPhone Green",
-                                    description: "Fully recyclable smartphone with solar charging capability",
-                                    category: "smartphones",
-                                    quality_rating: 8.1,
-                                    innovation_rating: 8.6,
-                                    sustainability_rating: 9.5,
-                                    status: "active",
-                                    launch_period: 1,
-                                },
-                            }),
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[3].id,
-                                    name: "GreenTech Solar Tablet",
-                                    description: "Solar-powered tablet for field work and outdoor activities",
-                                    category: "tablets",
-                                    quality_rating: 7.9,
-                                    innovation_rating: 8.3,
-                                    sustainability_rating: 9.2,
-                                    status: "active",
-                                    launch_period: 2,
-                                },
-                            }),
-                            // Urban Threads Products
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[4].id,
-                                    name: "Urban Classic Denim",
-                                    description: "Premium sustainable denim collection",
-                                    category: "apparel",
-                                    quality_rating: 8.0,
-                                    innovation_rating: 7.2,
-                                    sustainability_rating: 8.8,
-                                    status: "active",
-                                    launch_period: 1,
-                                },
-                            }),
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[4].id,
-                                    name: "Street Style Accessories",
-                                    description: "Urban-inspired bags, hats, and accessories",
-                                    category: "accessories",
-                                    quality_rating: 7.5,
-                                    innovation_rating: 6.8,
-                                    sustainability_rating: 8.3,
-                                    status: "active",
-                                    launch_period: 1,
-                                },
-                            }),
-                            // EcoLifestyle Products
-                            prisma_1.default.product.create({
-                                data: {
-                                    company_id: companies[5].id,
-                                    name: "Bamboo Wellness Set",
-                                    description: "Complete bamboo wellness and self-care product line",
-                                    category: "wellness",
-                                    quality_rating: 8.3,
-                                    innovation_rating: 7.1,
-                                    sustainability_rating: 9.4,
-                                    status: "active",
-                                    launch_period: 1,
-                                },
-                            }),
-                        ])];
-                case 23:
-                    products = _p.sent();
-                    // Create comprehensive Finance Records
-
-                    financeData = [
-                        // TechNova - 4 periods of growth
-                        {
-                            companyIndex: 0,
-                            periods: 4,
-                            baseRevenue: 800000,
-                            growthRate: 0.18,
-                            profitMargin: 0.25,
-                        },
-                        // Quantum Dynamics - 4 periods with high R&D costs
-                        {
-                            companyIndex: 1,
-                            periods: 4,
-                            baseRevenue: 650000,
-                            growthRate: 0.22,
-                            profitMargin: 0.2,
-                        },
-                        // Nexus Interactive - 4 periods with seasonal variation
-                        {
-                            companyIndex: 2,
-                            periods: 4,
-                            baseRevenue: 520000,
-                            growthRate: 0.15,
-                            profitMargin: 0.18,
-                        },
-                        // GreenTech - 4 periods with steady growth
-                        {
-                            companyIndex: 3,
-                            periods: 4,
-                            baseRevenue: 720000,
-                            growthRate: 0.2,
-                            profitMargin: 0.22,
-                        },
-                        // Urban Threads - 2 periods
-                        {
-                            companyIndex: 4,
-                            periods: 2,
-                            baseRevenue: 350000,
-                            growthRate: 0.12,
-                            profitMargin: 0.15,
-                        },
-                        // EcoLifestyle - 2 periods
-                        {
-                            companyIndex: 5,
-                            periods: 2,
-                            baseRevenue: 280000,
-                            growthRate: 0.08,
-                            profitMargin: 0.12,
-                        },
+                    _h.sent();
+                    console.log('✅ Created company access permissions');
+                    products = [];
+                    productData = [
+                        // InnovateTech Solutions products
+                        { company_id: 'comp1', name: 'AI Analytics Suite', category: 'Software', description: 'Advanced AI-powered business analytics platform' },
+                        { company_id: 'comp1', name: 'ML Prediction Engine', category: 'Software', description: 'Machine learning-based predictive analytics tool' },
+                        { company_id: 'comp1', name: 'Smart Automation Hub', category: 'Software', description: 'Intelligent process automation platform' },
+                        // TechGadget Central products
+                        { company_id: 'comp2', name: 'Smart Home Bundle', category: 'Electronics', description: 'Complete smart home automation package' },
+                        { company_id: 'comp2', name: 'Gaming Peripherals Set', category: 'Electronics', description: 'High-performance gaming accessories collection' },
+                        { company_id: 'comp2', name: 'Wireless Audio System', category: 'Electronics', description: 'Premium wireless speaker and headphone system' },
+                        // Precision Auto Parts products
+                        { company_id: 'comp3', name: 'Precision Engine Components', category: 'Automotive', description: 'High-performance engine parts for luxury vehicles' },
+                        { company_id: 'comp3', name: 'Advanced Brake Systems', category: 'Automotive', description: 'State-of-the-art braking technology' },
+                        { company_id: 'comp3', name: 'Smart Suspension Kit', category: 'Automotive', description: 'Intelligent adaptive suspension systems' },
                     ];
-                    _i = 0, financeData_1 = financeData;
-                    _p.label = 24;
-                case 24:
-                    if (!(_i < financeData_1.length)) return [3 /*break*/, 29];
-                    _a = financeData_1[_i], companyIndex = _a.companyIndex, periods = _a.periods, baseRevenue = _a.baseRevenue, growthRate = _a.growthRate, profitMargin = _a.profitMargin;
-                    period = 1;
-                    _p.label = 25;
-                case 25:
-                    if (!(period <= periods)) return [3 /*break*/, 28];
-                    revenue = baseRevenue *
-                        Math.pow(1 + growthRate, period - 1) *
-                        (0.9 + Math.random() * 0.2);
-                    operatingCosts = revenue * (1 - profitMargin - 0.05 + Math.random() * 0.1);
-                    netProfit = revenue - operatingCosts;
-                    roi = (netProfit / operatingCosts) * 100;
-                    return [4 /*yield*/, prisma_1.default.finance.create({
+                    _i = 0, productData_1 = productData;
+                    _h.label = 22;
+                case 22:
+                    if (!(_i < productData_1.length)) return [3 /*break*/, 25];
+                    productInfo = productData_1[_i];
+                    return [4 /*yield*/, prisma.product.create({
                             data: {
-                                company_id: companies[companyIndex].id,
-                                user_id: companies[companyIndex].user_id,
-                                period: period,
-                                total_revenue: Math.round(revenue),
-                                net_profit: Math.round(netProfit),
-                                cash_balance: companies[companyIndex].cash_balance +
-                                    Math.round(netProfit * period * 0.7),
-                                operating_costs: Math.round(operatingCosts),
-                                roi: Math.round(roi * 100) / 100,
-                                burn_rate: Math.round(operatingCosts / 12),
-                                finalised: period < periods,
-                                investment_amount: period === 1 ? Math.round(baseRevenue * 0.3) : 0,
-                                loan_amount: period === 2 ? Math.round(baseRevenue * 0.15) : 0,
-                                repay_loan: period === 3 ? Math.round(baseRevenue * 0.08) : 0,
-                                dividend_payout: period === periods && netProfit > 0
-                                    ? Math.round(netProfit * 0.1)
-                                    : 0,
-                                equity_issue: 0,
-                                processed: period < periods,
-                                processed_at: period < periods
-                                    ? new Date(Date.now() - (periods - period) * 30 * 24 * 60 * 60 * 1000)
-                                    : null,
+                                company_id: productInfo.company_id,
+                                name: productInfo.name,
+                                description: productInfo.description,
+                                category: productInfo.category,
+                                quality_rating: 7,
+                                innovation_rating: 8,
+                                sustainability_rating: 9,
+                                status: 'active',
+                                launch_period: 1,
                             },
                         })];
-                case 26:
-                    _p.sent();
-                    _p.label = 27;
-                case 27:
-                    period++;
-                    return [3 /*break*/, 25];
-                case 28:
+                case 23:
+                    product = _h.sent();
+                    products.push(product);
+                    _h.label = 24;
+                case 24:
                     _i++;
-                    return [3 /*break*/, 24];
-                case 29:
-                    // Create HR Decisions with realistic role structures
-
-                    hrData = [
-                        { companyIndex: 0, periods: 4, baseSalaryBudget: 180000 }, // TechNova
-                        { companyIndex: 1, periods: 4, baseSalaryBudget: 160000 }, // Quantum
-                        { companyIndex: 2, periods: 4, baseSalaryBudget: 140000 }, // Nexus
-                        { companyIndex: 3, periods: 4, baseSalaryBudget: 155000 }, // GreenTech
-                        { companyIndex: 4, periods: 2, baseSalaryBudget: 85000 }, // Urban Threads
-                        { companyIndex: 5, periods: 2, baseSalaryBudget: 70000 }, // EcoLifestyle
+                    return [3 /*break*/, 22];
+                case 25:
+                    console.log('✅ Created 9 products (3 per company)');
+                    hrRoles = [
+                        { role_name: 'Software Engineer', salary_per_head: 120000, head_count: 8 },
+                        { role_name: 'Product Manager', salary_per_head: 140000, head_count: 3 },
+                        { role_name: 'Sales Representative', salary_per_head: 85000, head_count: 5 },
                     ];
-                    _b = 0, hrData_1 = hrData;
-                    _p.label = 30;
-                case 30:
-                    if (!(_b < hrData_1.length)) return [3 /*break*/, 35];
-                    _c = hrData_1[_b], companyIndex = _c.companyIndex, periods = _c.periods, baseSalaryBudget = _c.baseSalaryBudget;
-                    _loop_1 = function (period) {
-                        var salaryBudget, trainingBudget, totalBudget, hrDecision, roles;
-                        return __generator(this, function (_q) {
-                            switch (_q.label) {
-                                case 0:
-                                    salaryBudget = baseSalaryBudget + (period - 1) * 25000;
-                                    trainingBudget = salaryBudget * 0.08;
-                                    totalBudget = salaryBudget + trainingBudget;
-                                    return [4 /*yield*/, prisma_1.default.hr_decision.create({
-                                            data: {
-                                                company_id: companies[companyIndex].id,
-                                                period: period,
-                                                is_submitted: period < periods,
-                                                salary_budget: salaryBudget,
-                                                training_budget: trainingBudget,
-                                                total_budget: totalBudget,
-                                                employee_satisfaction: 7.0 + Math.random() * 2.0,
-                                                recruitment_cost: period === 1 ? 35000 : 15000,
-                                                firing_cost: period === 3 ? 12000 : 0,
-                                                total_employee_count: Math.floor(20 + period * 8 + Math.random() * 10),
-                                            },
-                                        })];
-                                case 1:
-                                    hrDecision = _q.sent();
-                                    roles = companyIndex < 4
-                                        ? [
-                                            { name: "Software Engineer", salary: 95000, count: 6 + period },
-                                            {
-                                                name: "Product Manager",
-                                                salary: 120000,
-                                                count: 2 + Math.floor(period / 2),
-                                            },
-                                            { name: "Data Scientist", salary: 105000, count: 2 + period },
-                                            { name: "UI/UX Designer", salary: 85000, count: 3 },
-                                            {
-                                                name: "Marketing Specialist",
-                                                salary: 75000,
-                                                count: 3 + period,
-                                            },
-                                        ]
-                                        : [
-                                            { name: "Store Manager", salary: 55000, count: 2 + period },
-                                            { name: "Sales Associate", salary: 35000, count: 8 + period * 2 },
-                                            { name: "Marketing Coordinator", salary: 50000, count: 2 },
-                                            { name: "Visual Merchandiser", salary: 45000, count: 1 + period },
-                                        ];
-                                    return [4 /*yield*/, Promise.all(roles.map(function (role) {
-                                            return prisma_1.default.hr_role_decision.create({
-                                                data: {
-                                                    hr_decision_id: hrDecision.id,
-                                                    role_name: role.name,
-                                                    salary_per_head: role.salary,
-                                                    head_count: role.count,
-                                                },
-                                            });
-                                        }))];
-                                case 2:
-                                    _q.sent();
-                                    return [2 /*return*/];
-                            }
-                        });
-                    };
-                    period = 1;
-                    _p.label = 31;
-                case 31:
-                    if (!(period <= periods)) return [3 /*break*/, 34];
-                    return [5 /*yield**/, _loop_1(period)];
-                case 32:
-                    _p.sent();
-                    _p.label = 33;
-                case 33:
-                    period++;
-                    return [3 /*break*/, 31];
-                case 34:
-                    _b++;
-                    return [3 /*break*/, 30];
-                case 35:
-                    // Create R&D Decisions
-
-                    _d = 0, _e = hrData.slice(0, 4);
-                    _p.label = 36;
-                case 36:
-                    if (!(_d < _e.length)) return [3 /*break*/, 41];
-                    _f = _e[_d], companyIndex = _f.companyIndex, periods = _f.periods;
-                    period = 1;
-                    _p.label = 37;
-                case 37:
-                    if (!(period <= periods)) return [3 /*break*/, 40];
-                    budget = 200000 + period * 40000 + Math.random() * 50000;
-                    return [4 /*yield*/, prisma_1.default.rd.create({
+                    _a = 0, companies_1 = companies;
+                    _h.label = 26;
+                case 26:
+                    if (!(_a < companies_1.length)) return [3 /*break*/, 32];
+                    company = companies_1[_a];
+                    return [4 /*yield*/, prisma.hr_decision.create({
                             data: {
-                                company_id: companies[companyIndex].id,
-                                period: period,
-                                budget: Math.round(budget),
-                                pip: 2 + Math.floor(Math.random() * 4), // Products in pipeline
-                                time_to_market: 4 + Math.floor(Math.random() * 8),
-                                total_development: 1 + period + Math.floor(Math.random() * 2),
-                                patented: Math.floor(Math.random() * 3),
-                                quality_changes: Math.floor(Math.random() * 5) - 2, // -2 to 2
-                                finalised: period < periods,
+                                company_id: company.id,
+                                period: 1,
+                                is_submitted: true,
+                                salary_budget: 500000,
+                                training_budget: 50000,
+                                total_budget: 600000,
+                                employee_satisfaction: 78,
+                                recruitment_cost: 25000,
+                                firing_cost: 15000,
+                                total_employee_count: 16,
+                            },
+                        })];
+                case 27:
+                    hrDecision = _h.sent();
+                    _b = 0, hrRoles_1 = hrRoles;
+                    _h.label = 28;
+                case 28:
+                    if (!(_b < hrRoles_1.length)) return [3 /*break*/, 31];
+                    role = hrRoles_1[_b];
+                    return [4 /*yield*/, prisma.hr_role_decision.create({
+                            data: {
+                                hr_decision_id: hrDecision.id,
+                                role_name: role.role_name,
+                                salary_per_head: role.salary_per_head,
+                                head_count: role.head_count,
+                            },
+                        })];
+                case 29:
+                    _h.sent();
+                    _h.label = 30;
+                case 30:
+                    _b++;
+                    return [3 /*break*/, 28];
+                case 31:
+                    _a++;
+                    return [3 /*break*/, 26];
+                case 32:
+                    console.log('✅ Created HR decisions with role decisions for all companies');
+                    _c = 0, companies_2 = companies;
+                    _h.label = 33;
+                case 33:
+                    if (!(_c < companies_2.length)) return [3 /*break*/, 36];
+                    company = companies_2[_c];
+                    return [4 /*yield*/, prisma.finance.create({
+                            data: {
+                                company_id: company.id,
+                                user_id: company.user_id,
+                                period: 1,
+                                total_revenue: 250000,
+                                net_profit: 125000,
+                                cash_balance: company.cash_balance,
+                                operating_costs: 5000,
+                                roi: 5,
+                                burn_rate: 500,
+                                finalised: true,
+                                investment_amount: 100000,
+                                loan_amount: 0,
+                                repay_loan: 0,
+                                dividend_payout: 25000,
+                                equity_issue: 0,
+                                notes: 'Strong performance this period',
+                                processed: true,
+                                processed_at: new Date(),
+                            },
+                        })];
+                case 34:
+                    _h.sent();
+                    _h.label = 35;
+                case 35:
+                    _c++;
+                    return [3 /*break*/, 33];
+                case 36:
+                    console.log('✅ Created finance decisions for all companies');
+                    _d = 0, products_1 = products;
+                    _h.label = 37;
+                case 37:
+                    if (!(_d < products_1.length)) return [3 /*break*/, 40];
+                    product = products_1[_d];
+                    return [4 /*yield*/, prisma.production.create({
+                            data: {
+                                company_id: product.company_id,
+                                product_id: product.id,
+                                period: 1,
+                                units_to_produce: 1250,
+                                cost_per_unit: 250,
+                                total_cost: 75000,
+                                production_capacity: 2000,
+                                storage_capacity: 500,
+                                inventory_value: 50000,
+                                defect_rate: 5,
+                                finalised: true,
                             },
                         })];
                 case 38:
-                    _p.sent();
-                    _p.label = 39;
+                    _h.sent();
+                    _h.label = 39;
                 case 39:
-                    period++;
+                    _d++;
                     return [3 /*break*/, 37];
                 case 40:
-                    _d++;
-                    return [3 /*break*/, 36];
+                    console.log('✅ Created production decisions for all products');
+                    _e = 0, companies_3 = companies;
+                    _h.label = 41;
                 case 41:
-                    // Create Production Decisions for products that have launched
-
-                    _loop_2 = function (product) {
-                        var company, maxPeriod, period, baseProduction, unitsToProduced, costPerUnit, totalCost;
-                        return __generator(this, function (_r) {
-                            switch (_r.label) {
-                                case 0:
-                                    if (!product.launch_period) return [3 /*break*/, 4];
-                                    company = companies.find(function (c) { return c.id === product.company_id; });
-                                    maxPeriod = (_o = company === null || company === void 0 ? void 0 : company.current_period) !== null && _o !== void 0 ? _o : 100;
-                                    period = product.launch_period;
-                                    _r.label = 1;
-                                case 1:
-                                    if (!(period <= maxPeriod)) return [3 /*break*/, 4];
-                                    baseProduction = 1200;
-                                    unitsToProduced = baseProduction +
-                                        Math.floor(Math.random() * 800) +
-                                        (period - product.launch_period) * 200;
-                                    costPerUnit = 180 + Math.floor(Math.random() * 120);
-                                    totalCost = unitsToProduced * costPerUnit;
-                                    return [4 /*yield*/, prisma_1.default.production.create({
-                                            data: {
-                                                product_id: product.id,
-                                                company_id: product.company_id,
-                                                period: period,
-                                                units_to_produce: unitsToProduced,
-                                                cost_per_unit: costPerUnit,
-                                                total_cost: totalCost,
-                                                production_capacity: Math.floor(unitsToProduced * 1.3),
-                                                storage_capacity: Math.floor(unitsToProduced * 0.4),
-                                                inventory_value: totalCost * 0.8,
-                                                defect_rate: Math.random() * 3, // 0-3% defect rate
-                                                finalised: period < maxPeriod,
-                                            },
-                                        })];
-                                case 2:
-                                    _r.sent();
-                                    _r.label = 3;
-                                case 3:
-                                    period++;
-                                    return [3 /*break*/, 1];
-                                case 4: return [2 /*return*/];
-                            }
-                        });
-                    };
-                    _g = 0, products_1 = products;
-                    _p.label = 42;
-                case 42:
-                    if (!(_g < products_1.length)) return [3 /*break*/, 45];
-                    product = products_1[_g];
-                    return [5 /*yield**/, _loop_2(product)];
-                case 43:
-                    _p.sent();
-                    _p.label = 44;
-                case 44:
-                    _g++;
-                    return [3 /*break*/, 42];
-                case 45:
-                    // Create Marketing Decisions
-
-                    _h = 0, hrData_2 = hrData;
-                    _p.label = 46;
-                case 46:
-                    if (!(_h < hrData_2.length)) return [3 /*break*/, 51];
-                    _j = hrData_2[_h], companyIndex = _j.companyIndex, periods = _j.periods;
-                    period = 1;
-                    _p.label = 47;
-                case 47:
-                    if (!(period <= periods)) return [3 /*break*/, 50];
-                    baseBudget = companyIndex < 4 ? 120000 : 60000;
-                    totalBudget = baseBudget + period * 20000;
-                    onlineRatio = 0.6 + Math.random() * 0.3;
-                    onlineBudget = Math.floor(totalBudget * onlineRatio);
-                    offlineBudget = totalBudget - onlineBudget;
-                    return [4 /*yield*/, prisma_1.default.marketing.create({
-                            data: {
-                                company_id: companies[companyIndex].id,
-                                period: period,
-                                budget: totalBudget,
-                                offline: offlineBudget,
-                                online: onlineBudget,
-                                finalised: period < periods,
-                            },
-                        })];
-                case 48:
-                    _p.sent();
-                    _p.label = 49;
-                case 49:
-                    period++;
-                    return [3 /*break*/, 47];
-                case 50:
-                    _h++;
-                    return [3 /*break*/, 46];
-                case 51:
-                    // Create Product Performance Records
-
-                    _loop_3 = function (product) {
-                        var company, maxPeriod, period, baseSales, seasonalMultiplier, salesVolume, basePrice, sellingPrice, revenue, costs, profit;
-                        return __generator(this, function (_s) {
-                            switch (_s.label) {
-                                case 0:
-                                    if (!product.launch_period) return [3 /*break*/, 4];
-                                    company = companies.find(function (c) { return c.id === product.company_id; });
-                                    maxPeriod = company === null || company === void 0 ? void 0 : company.current_period;
-                                    if (!(typeof maxPeriod === "number")) return [3 /*break*/, 4];
-                                    period = product.launch_period;
-                                    _s.label = 1;
-                                case 1:
-                                    if (!(period <= maxPeriod)) return [3 /*break*/, 4];
-                                    baseSales = 800 + Math.floor(Math.random() * 600);
-                                    seasonalMultiplier = 0.8 + Math.random() * 0.4;
-                                    salesVolume = Math.floor(baseSales *
-                                        seasonalMultiplier *
-                                        (1 + (period - product.launch_period) * 0.15));
-                                    basePrice = product.category === "apparel"
-                                        ? 89
-                                        : product.category === "smartphones"
-                                            ? 799
-                                            : product.category === "laptops"
-                                                ? 1299
-                                                : 599;
-                                    sellingPrice = basePrice + Math.floor(Math.random() * 200) - 100;
-                                    revenue = salesVolume * sellingPrice;
-                                    costs = revenue * (0.4 + Math.random() * 0.2);
-                                    profit = revenue - costs;
-                                    return [4 /*yield*/, prisma_1.default.product_performance.create({
-                                            data: {
-                                                product_id: product.id,
-                                                period: period,
-                                                sales_volume: salesVolume,
-                                                selling_price: sellingPrice,
-                                                revenue: Math.round(revenue),
-                                                profit: Math.round(profit),
-                                                costs: Math.round(costs),
-                                                market_share: 3 + Math.random() * 12, // 3-15% market share
-                                                customer_satisfaction: 6.5 + Math.random() * 2.5, // 6.5-9.0 satisfaction
-                                            },
-                                        })];
-                                case 2:
-                                    _s.sent();
-                                    _s.label = 3;
-                                case 3:
-                                    period++;
-                                    return [3 /*break*/, 1];
-                                case 4: return [2 /*return*/];
-                            }
-                        });
-                    };
-                    _k = 0, products_2 = products;
-                    _p.label = 52;
-                case 52:
-                    if (!(_k < products_2.length)) return [3 /*break*/, 55];
-                    product = products_2[_k];
-                    return [5 /*yield**/, _loop_3(product)];
-                case 53:
-                    _p.sent();
-                    _p.label = 54;
-                case 54:
-                    _k++;
-                    return [3 /*break*/, 52];
-                case 55:
-                    // Create Company History Records (snapshots for each period)
-
-                    _l = 0, hrData_3 = hrData;
-                    _p.label = 56;
-                case 56:
-                    if (!(_l < hrData_3.length)) return [3 /*break*/, 62];
-                    _m = hrData_3[_l], companyIndex = _m.companyIndex, periods = _m.periods;
-                    period = 1;
-                    _p.label = 57;
-                case 57:
-                    if (!(period <= periods)) return [3 /*break*/, 61];
-                    company = companies[companyIndex];
-                    return [4 /*yield*/, prisma_1.default.finance.findUnique({
-                            where: {
-                                company_id_period: {
-                                    company_id: company.id,
-                                    period: period,
-                                },
-                            },
-                        })];
-                case 58:
-                    financeRecord = _p.sent();
-                    if (!financeRecord) return [3 /*break*/, 60];
-                    return [4 /*yield*/, prisma_1.default.company_history.create({
+                    if (!(_e < companies_3.length)) return [3 /*break*/, 44];
+                    company = companies_3[_e];
+                    return [4 /*yield*/, prisma.rd.create({
                             data: {
                                 company_id: company.id,
-                                period: period,
-                                cash_balance: financeRecord.cash_balance,
-                                total_assets: company.total_assets + financeRecord.net_profit * period * 0.5,
-                                total_liabilities: company.total_liabilities +
-                                    Math.max(0, -financeRecord.net_profit * 0.2),
-                                marketing_budget: company.marketing_budget,
-                                credit_rating: company.credit_rating,
-                                brand_value: company.brand_value + Math.max(0, financeRecord.net_profit * 0.1),
+                                period: 1,
+                                budget: 50000,
+                                pip: 1,
+                                time_to_market: 2,
+                                total_development: 5,
+                                patented: 2,
+                                quality_changes: 5,
+                                finalised: true,
+                            },
+                        })];
+                case 42:
+                    _h.sent();
+                    _h.label = 43;
+                case 43:
+                    _e++;
+                    return [3 /*break*/, 41];
+                case 44:
+                    console.log('✅ Created R&D decisions for all companies');
+                    _f = 0, companies_4 = companies;
+                    _h.label = 45;
+                case 45:
+                    if (!(_f < companies_4.length)) return [3 /*break*/, 48];
+                    company = companies_4[_f];
+                    return [4 /*yield*/, prisma.marketing.create({
+                            data: {
+                                company_id: company.id,
+                                period: 1,
+                                budget: 10000,
+                                offline: 5000,
+                                online: 5000,
+                                finalised: true,
+                            },
+                        })];
+                case 46:
+                    _h.sent();
+                    _h.label = 47;
+                case 47:
+                    _f++;
+                    return [3 /*break*/, 45];
+                case 48:
+                    console.log('✅ Created marketing decisions for all companies');
+                    _g = 0, products_2 = products;
+                    _h.label = 49;
+                case 49:
+                    if (!(_g < products_2.length)) return [3 /*break*/, 52];
+                    product = products_2[_g];
+                    return [4 /*yield*/, prisma.product_performance.create({
+                            data: {
+                                product_id: product.id,
+                                period: 1,
+                                sales_volume: 1000,
+                                selling_price: 5000,
+                                revenue: 150000,
+                                profit: 50000,
+                                market_share: 5,
+                                customer_satisfaction: 8,
+                                costs: 100000,
                                 data: JSON.stringify({
-                                    employees: Math.floor(20 + period * 8 + Math.random() * 10),
-                                    market_position: Math.floor(1 + Math.random() * 4),
-                                    innovation_index: (7 + Math.random() * 2).toFixed(1),
-                                    sustainability_score: (6 + Math.random() * 3).toFixed(1),
-                                    customer_base: Math.floor(5000 + period * 1500 + Math.random() * 2000),
-                                    geographic_reach: period >= 2 ? "National" : "Regional",
+                                    customer_reviews: 5,
+                                    return_rate: 5,
+                                    repeat_customers: 50
                                 }),
                             },
                         })];
-                case 59:
-                    _p.sent();
-                    _p.label = 60;
-                case 60:
-                    period++;
-                    return [3 /*break*/, 57];
-                case 61:
-                    _l++;
-                    return [3 /*break*/, 56];
-                case 62:
-                    // Create Company Access Records
-
-                    companyAccessRecords = __spreadArray(__spreadArray(__spreadArray(__spreadArray([], companies.map(function (company) { return ({
-                        company_id: company.id,
-                        user_id: company.user_id,
-                        access_level: "owner",
-                    }); }), true), companies.slice(0, 4).map(function (company) { return ({
-                        company_id: company.id,
-                        user_id: instructor.id,
-                        access_level: "viewer",
-                    }); }), true), companies.slice(4, 6).map(function (company) { return ({
-                        company_id: company.id,
-                        user_id: admin.id,
-                        access_level: "viewer",
-                    }); }), true), [
-                        // Cross-company viewer access for learning purposes
-                        {
-                            company_id: companies[0].id, // TechNova
-                            user_id: students[1].id, // Bob can view Alice's company
-                            access_level: "viewer",
-                        },
-                        {
-                            company_id: companies[1].id, // Quantum
-                            user_id: students[0].id, // Alice can view Bob's company
-                            access_level: "viewer",
-                        },
-                    ], false);
-                    return [4 /*yield*/, Promise.all(companyAccessRecords.map(function (access) {
-                            return prisma_1.default.company_access.create({ data: access });
-                        }))];
-                case 63:
-                    _p.sent();
-                    return [4 /*yield*/, prisma_1.default.user.count()];
-                case 64:
-                    userCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.simulation.count()];
-                case 65:
-                    simulationCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.company.count()];
-                case 66:
-                    companyCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.product.count()];
-                case 67:
-                    productCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.finance.count()];
-                case 68:
-                    financeCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.hr_decision.count()];
-                case 69:
-                    hrCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.rd.count()];
-                case 70:
-                    rdCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.production.count()];
-                case 71:
-                    productionCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.marketing.count()];
-                case 72:
-                    marketingCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.product_performance.count()];
-                case 73:
-                    performanceCount = _p.sent();
-                    return [4 /*yield*/, prisma_1.default.company_history.count()];
-                case 74:
-                    historyCount = _p.sent();
-
-
+                case 50:
+                    _h.sent();
+                    _h.label = 51;
+                case 51:
+                    _g++;
+                    return [3 /*break*/, 49];
+                case 52:
+                    console.log('✅ Created product performances for all products');
+                    console.log('🎉 Seed completed successfully!');
+                    console.log('\n📊 Summary:');
+                    console.log('- 3 Users created');
+                    console.log('- 3 Simulations created (all at period 1)');
+                    console.log('- 3 Companies created (1 per simulation, all at period 1)');
+                    console.log('- 9 Products created (3 per company)');
+                    console.log('- HR decisions with 3 roles each created for all companies');
+                    console.log('- Finance, Production, R&D, and Marketing decisions created');
+                    console.log('- Product performances created for all products');
                     return [2 /*return*/];
             }
         });
@@ -1113,13 +546,13 @@ function main() {
 }
 main()
     .catch(function (e) {
-    console.error("❌ Error during seeding:", e);
+    console.error('❌ Error during seed:', e);
     process.exit(1);
 })
     .finally(function () { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, prisma_1.default.$disconnect()];
+            case 0: return [4 /*yield*/, prisma.$disconnect()];
             case 1:
                 _a.sent();
                 return [2 /*return*/];

@@ -90,10 +90,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
-      // Handle save and submit logic here (only on the final Preview & Submit step)
       handleSaveAndSubmit();
     } else {
-      // Move to next step for all other cases
       setActiveStep((prev) => prev + 1);
     }
   };
@@ -338,7 +336,6 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         return (
           <PreviewDashboard
             companyId={companyId}
-            onEditSection={(sectionIndex) => setActiveStep(sectionIndex)}
           />
         );
       default:
@@ -372,7 +369,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       )}
 
       {/* Sidebar with Steps */}
-      <div className="w-full md:w-[240px] lg:w-[280px] h-auto md:h-screen bg-slate-900 shadow-md backdrop-blur-2xl border-r border-white/10 overflow-hidden flex flex-col relative">
+      <div className="w-full md:w-[240px] lg:w-[280px] h-auto font-roboto-sans md:h-screen bg-slate-900 shadow-md backdrop-blur-2xl border-r border-white/10 overflow-hidden flex flex-col relative">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-blue-500/5 to-black/10" />
         {/* Header */}
         <div className="p-4 border-b border-white/10 relative z-10">
@@ -411,8 +408,8 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               isActive
                 ? "bg-blue-500/10 border-l-4 border-blue-500 translate-x-1"
                 : isCompleted
-                ? "bg-green-500/5 border-l-4 border-green-500 hover:translate-x-1"
-                : "border-l-4 border-transparent hover:bg-white/5 hover:translate-x-1",
+                  ? "bg-green-500/5 border-l-4 border-green-500 hover:translate-x-1"
+                  : "border-l-4 border-transparent hover:bg-white/5 hover:translate-x-1",
             ].join(" ");
 
             return (
@@ -425,13 +422,12 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 <div className="flex items-start gap-3 mb-1">
                   {/* Icon Badge */}
                   <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-                      isCompleted
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isCompleted
                         ? "bg-green-500 shadow-md"
                         : isActive
-                        ? "bg-blue-500 shadow-md"
-                        : "bg-white/10"
-                    }`}
+                          ? "bg-blue-500 shadow-md"
+                          : "bg-white/10"
+                      }`}
                   >
                     <Icon
                       size={16}
@@ -442,13 +438,12 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                   {/* Labels */}
                   <div className="flex-1">
                     <h4
-                      className={`text-sm font-medium mb-0.5 ${
-                        isActive
+                      className={`text-sm font-medium mb-0.5 ${isActive
                           ? "text-white"
                           : isCompleted
-                          ? "text-green-300"
-                          : "text-gray-300"
-                      }`}
+                            ? "text-green-300"
+                            : "text-gray-300"
+                        }`}
                     >
                       {step.label}
                     </h4>
@@ -456,13 +451,12 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                     {/* Description (only show on desktop) */}
                     {!isMobile && (
                       <p
-                        className={`text-xs leading-snug ${
-                          isActive
+                        className={`text-xs leading-snug ${isActive
                             ? "text-blue-200"
                             : isCompleted
-                            ? "text-green-200"
-                            : "text-gray-500"
-                        }`}
+                              ? "text-green-200"
+                              : "text-gray-500"
+                          }`}
                       >
                         {step.description}
                       </p>
@@ -473,28 +467,26 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 {/* Step Indicator */}
                 <div className="flex items-center ml-12">
                   <div
-                    className={`w-[5px] h-[5px] rounded-full mr-2 ${
-                      isCompleted
+                    className={`w-[5px] h-[5px] rounded-full mr-2 ${isCompleted
                         ? "bg-green-500"
                         : isActive
-                        ? "bg-blue-500"
-                        : "bg-white/20"
-                    }`}
+                          ? "bg-blue-500"
+                          : "bg-white/20"
+                      }`}
                   />
                   <span
-                    className={`text-[0.65rem] ${
-                      isCompleted
+                    className={`text-[0.65rem] ${isCompleted
                         ? "text-green-500"
                         : isActive
-                        ? "text-blue-300"
-                        : "text-gray-500"
-                    }`}
+                          ? "text-blue-300"
+                          : "text-gray-500"
+                      }`}
                   >
                     {isCompleted
                       ? "Completed"
                       : isActive
-                      ? "In Progress"
-                      : "Pending"}
+                        ? "In Progress"
+                        : "Pending"}
                   </span>
                 </div>
               </div>
@@ -524,7 +516,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 size: 24,
                 className: "text-blue-300 mr-3",
               })}
-              <div className="py-1">
+              <div className="py-1 font-roboto-sans">
                 <h2 className="text-base font-bold mb-[2px] bg-gradient-to-br from-white to-blue-400 bg-clip-text text-transparent">
                   {steps[activeStep].label}
                 </h2>
@@ -534,7 +526,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               </div>
             </div>
             <div className="flex-grow" />
-            <div className="flex flex-col justify-end text-white mr-2">
+            <div className="flex flex-col justify-end text-white mr-2 font-roboto-sans">
               <h2 className="text-xl font-bold">{companyData.name}</h2>
               <span className="text-s flex justify-end text-gray-300">
                 Period {period}
@@ -542,7 +534,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             </div>
             <a
               href={`/homepage/${companyId}`}
-              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-m font-semibold px-3 py-2 rounded-md no-underline"
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-m font-medium font-roboto-sans px-3 py-2 rounded-md no-underline"
             >
               Dashboard
             </a>
@@ -565,17 +557,16 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             <button
               onClick={handleBack}
               disabled={activeStep === 0 || isSubmitting}
-              className={`min-w-[100px] h-10 rounded-xl font-semibold text-sm border-2 transition-all ${
-                activeStep === 0 || isSubmitting
+              className={`min-w-[100px] h-10 rounded-xl font-semibold text-sm border-2 transition-all ${activeStep === 0 || isSubmitting
                   ? "border-white/10 text-gray-500 cursor-not-allowed"
                   : "border-white/20 text-gray-300 hover:border-white/40 hover:bg-white/5 hover:-translate-y-[1px]"
-              }`}
+                }`}
             >
               Previous
             </button>
 
             {/* Step Info */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 font-roboto-sans">
               <span className="text-sm text-gray-400">Step</span>
               <span className="px-2 py-0.5 text-blue-300 bg-blue-500/20 text-sm font-bold rounded-md">
                 {activeStep + 1} / {steps.length}
@@ -586,17 +577,16 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             <button
               onClick={handleNext}
               disabled={activeStep > steps.length - 1 || isSubmitting}
-              className={`min-w-[100px] h-10 rounded-xl text-white font-bold text-sm transition-all ${
-                isSubmitting
+              className={`min-w-[100px] h-10 rounded-xl text-white font-bold font-roboto-sans text-sm transition-all ${isSubmitting
                   ? "bg-gray-600 cursor-not-allowed"
                   : "bg-blue-500 shadow-md hover:-translate-y-[1px]"
-              }`}
+                }`}
             >
               {isSubmitting
                 ? "Submitting..."
                 : activeStep === steps.length - 1
-                ? "Submit"
-                : "Next"}
+                  ? "Submit"
+                  : "Next"}
             </button>
           </div>
         </div>

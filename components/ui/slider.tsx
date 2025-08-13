@@ -33,7 +33,7 @@ function Slider({
   isFixed = false,
   fixedMin,
   fixedMax,
-  required = false, // ✅ Default to false
+  required = false, 
   ...props
 }: CustomSliderProps) {
   const [min, setMin] = React.useState(
@@ -108,7 +108,7 @@ function Slider({
     : max;
 
   return (
-    <div className="flex flex-col w-full gap-3 text-white">
+    <div className="flex flex-col w-full gap-3 text-white font-semibold font-geist-sans">
       {label && (
         <div className="flex items-center gap-1">
           {tooltipText ? (

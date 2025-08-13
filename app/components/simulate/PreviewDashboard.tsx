@@ -5,15 +5,15 @@ import {
   Users,
   Wallet,
   TrendingUp,
-  Activity,
+  IndianRupee,
   BarChart2,
-  Briefcase,
   Beaker,
   Package,
   DollarSign,
   ShoppingCart,
   LoaderCircle,
   Download,
+  PiggyBank,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/app/lib/utils/utils";
@@ -34,7 +34,6 @@ import { useExport } from "@/app/hooks/useExport";
 import InfoCard from "@/app/ui/InfoCard";
 interface PreviewDashboardProps {
   companyId: string;
-  onEditSection?: (section: number) => void;
 }
 
 interface SectionSummary {
@@ -45,12 +44,14 @@ interface SectionSummary {
   keyMetrics?: { label: string; value: string }[];
 }
 
-const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
-  onEditSection,
-}) => {
+const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
   const [loading, setLoading] = useState(true);
   const { projectedCashBalance } = useCashBalance();
   const [sections, setSections] = useState<SectionSummary[]>([]);
+  const [modalData, setModalData] = useState<{
+    title: string;
+    items: string[];
+  } | null>(null);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const { exportDashboard, isExporting } = useExport();
 
@@ -239,17 +240,12 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               value: formatCurrency(rdData.budget || 0),
             },
             {
-              label: "Innovation Index",
-              value: `${
-                (rdData.patented || 0) + (rdData.quality_changes || 0)
-              }`,
+              label: "Quality Improvements",
+              value: `${rdData.quality_changes || 0}`,
             },
             {
-              label: "Development ROI",
-              value:
-                rdData.budget > 0
-                  ? `${((rdData.pip / rdData.budget) * 100).toFixed(1)}%`
-                  : "0%",
+              label: "Time to Market",
+              value: `${rdData.time_to_market} Months`,
             },
           ],
         },
@@ -306,10 +302,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                   {
                     label: "Production Cost",
                     value: formatCurrency(productData[0].production_cost || 0),
-                  },
-                  {
-                    label: "Quality Rating",
-                    value: `${productData[0].quality_rating || 0}/10`,
                   },
                   {
                     label: "Profit Margin",
@@ -582,7 +574,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
             label={`Projected Cash Balance`}
             value={projectedCashBalance || 0}
             isCurrency={true}
-            Icon={TrendingUp}
+            Icon={PiggyBank}
             width="w-full"
             height="h-full"
             iconColor="text-purple-400"
@@ -599,7 +591,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               (financeData.loan_amount || 0)
             }
             isCurrency={true}
-            Icon={Activity}
+            Icon={IndianRupee}
             width="w-full"
             height="h-full"
             iconColor="text-orange-400"
@@ -622,7 +614,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
               (companyData.total_liabilities || 0)
             }
             isCurrency={true}
-            Icon={Briefcase}
+            Icon={TrendingUp}
             width="w-full"
             height="h-full"
             iconColor="text-purple-400"
@@ -661,7 +653,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
 
                     <div className="flex justify-between">
                       <p className="text-sm text-[#bbb]">Brand Value:</p>
-                      <p className="text-sm text-purple-600 font-semibold">
+                      <p className="text-sm text-green-500 font-semibold">
                         {formatCurrency(companyData.brand_value || 0)}
                       </p>
                     </div>
@@ -738,7 +730,6 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
           return (
             <Card
               key={section.title}
-              onClick={() => onEditSection?.(index)}
               className={cn(
                 "relative h-full cursor-pointer overflow-hidden border border-slate-600 bg-slate-800/50 shadow-md transition-all duration-300",
                 "hover:-translate-y-1.5]"
@@ -820,31 +811,67 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = ({
                       Strategic Summary
                     </p>
 
-                    <div>
-                      {section.summary.slice(0, 4).map((point, idx) => (
+                    {section.summary.slice(0, 4).map((point, idx) => (
+                      <div key={idx} className="flex items-start mb-1.5 py-0.5">
                         <div
-                          key={idx}
-                          className="flex items-start mb-1.5 py-0.5"
-                        >
-                          <div
-                            className="w-[6px] h-[6px] rounded-full mt-1 mr-1.5 flex-shrink-0"
-                            style={{
-                              backgroundColor: getStatusColor(section.status),
-                            }}
-                          />
-                          <p className="text-[#ccc] text-[0.8rem] font-normal leading-snug">
-                            {point}
-                          </p>
-                        </div>
-                      ))}
-
-                      {section.summary.length > 4 && (
-                        <p className="text-[#64b5f6] italic text-[0.75rem] ml-6">
-                          +{section.summary.length - 4} more items...
+                          className="w-[6px] h-[6px] rounded-full mt-1 mr-1.5 flex-shrink-0"
+                          style={{
+                            backgroundColor: getStatusColor(section.status),
+                          }}
+                        />
+                        <p className="text-[#ccc] text-[0.8rem] font-normal leading-snug">
+                          {point}
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    ))}
+
+                    {section.summary.length > 4 && (
+                      <button
+                        onClick={() =>
+                          setModalData({
+                            title: section.title,
+                            items: section.summary,
+                          })
+                        }
+                        className="text-[#64b5f6] italic text-[0.75rem] ml-6 hover:underline"
+                      >
+                        +{section.summary.length - 4} more items...
+                      </button>
+                    )}
                   </div>
+                  {modalData && (
+                    <div className="fixed inset-0 bg-slate-800/50 shadow-md flex items-center justify-center z-50">
+                      <div className="bg-slate-800/90 border border-slate-600 rounded-lg p-6 max-w-lg w-full text-white">
+                        <div className="flex justify-between items-center mb-4">
+                          <h2 className="text-lg font-semibold">
+                            {modalData.title} - Full Summary
+                          </h2>
+                          <button
+                            onClick={() => setModalData(null)}
+                            className="text-red-400 hover:text-red-500"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div className="max-h-[400px] overflow-y-auto pr-2">
+                          {modalData.items.map((point, idx) => (
+                            <div key={idx} className="flex items-start mb-2">
+                              <div className="w-[6px] h-[6px] rounded-full mt-2 mr-2 flex-shrink-0 bg-green-400" />
+                              <p className="text-sm text-gray-300">{point}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-right mt-4">
+                          <button
+                            onClick={() => setModalData(null)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
