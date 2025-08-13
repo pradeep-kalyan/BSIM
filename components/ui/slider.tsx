@@ -2,7 +2,6 @@ import React from "react";
 import { Input } from "./input";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { TooltipWrapper } from "./tooltip";
-import { Label } from "recharts";
 import { cn } from "@/app/lib/utils/utils";
 
 interface CustomSliderProps
@@ -17,6 +16,7 @@ interface CustomSliderProps
   isFixed?: boolean;
   fixedMin?: number;
   fixedMax?: number;
+  required?: boolean;
 }
 
 function Slider({
@@ -33,6 +33,7 @@ function Slider({
   isFixed = false,
   fixedMin,
   fixedMax,
+  required = false, 
   ...props
 }: CustomSliderProps) {
   const [min, setMin] = React.useState(
@@ -107,13 +108,21 @@ function Slider({
     : max;
 
   return (
-    <div className="flex flex-col w-full gap-1 text-white font-semibold font-geist-sans">
-      {label && tooltipText && (
-        <TooltipWrapper label={label} text={tooltipText ?? ""} />
-      )}
-      {label && !tooltipText && <Label>{label}</Label>}
-      {!label && tooltipText && (
-        <TooltipWrapper label={label ?? ""} text={tooltipText} />
+    <div className="flex flex-col w-full gap-3 text-white font-semibold font-geist-sans">
+      {label && (
+        <div className="flex items-center gap-1">
+          {tooltipText ? (
+            <TooltipWrapper label={label} text={tooltipText} />
+          ) : (
+            <span className="font-medium text-gray-200">{label}</span>
+          )}
+          {required && (
+            <>
+              <span className="text-red-500">*</span>
+              <span className="sr-only">(required)</span>
+            </>
+          )}
+        </div>
       )}
 
       <div className="flex items-center gap-4 w-full">
@@ -125,7 +134,6 @@ function Slider({
             max={displayMax}
             onValueChange={(val) => {
               if (isFixed) {
-                // ✅ clamp slider movement too
                 val = val.map((v) =>
                   Math.max(displayMin, Math.min(displayMax, v))
                 );
@@ -172,7 +180,7 @@ function Slider({
               onChange={(e) => handleInputChange(e, index)}
               min={displayMin}
               max={displayMax}
-              className="h-8 text-white bg-gray-900 border-gray-700 focus-visible:ring-blue-500"
+              className="h-8 text-white bg-gray-900 border-gray-700 focus-visible:ring-blue-500 selection:bg-blue-500 selection:text-white"
             />
           ))}
         </div>

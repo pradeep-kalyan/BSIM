@@ -25,10 +25,9 @@ const MarketingForm = () => {
     value: number
   ) => {
     setBudgetError(null);
-
-    // Ensure value is not negative
+  
     if (value < 0) value = 0;
-
+  
     if (field === "budget") {
       const half = Math.floor(value / 2);
       updateData({
@@ -36,38 +35,31 @@ const MarketingForm = () => {
         online: half,
         offline: value - half,
       });
-    } else if (field === "online") {
-      // When online changes, offline adjusts to maintain the total or creates a new total
+    } 
+    else if (field === "online") {
       const newOnline = value;
-      const currentOffline = marketingData.offline || 0;
-      const newBudget = newOnline + currentOffline;
+      const newOffline = Math.max(0, (marketingData.budget || 0) - newOnline);
       updateData({
         online: newOnline,
-        offline: currentOffline,
-        budget: newBudget,
-      });
-    } else if (field === "offline") {
-      // When offline changes, online stays the same and total adjusts
-      const newOffline = value;
-      const currentOnline = marketingData.online || 0;
-      const newBudget = currentOnline + newOffline;
-      updateData({
-        online: currentOnline,
         offline: newOffline,
-        budget: newBudget,
+        budget: newOnline + newOffline,
+      });
+    } 
+    else if (field === "offline") {
+      const newOffline = value;
+      const newOnline = Math.max(0, (marketingData.budget || 0) - newOffline);
+      updateData({
+        online: newOnline,
+        offline: newOffline,
+        budget: newOnline + newOffline,
       });
     }
-
-    // Basic validation
+  
     if (value > (cashBalance.originalCashBalance || 0)) {
       setBudgetError("Insufficient cash balance for this marketing budget.");
     }
   };
-
-  const frozenData = React.useMemo(() => {
-    const { budget, online, offline } = marketingData;
-    return { budget, online, offline };
-  }, [marketingData]);
+  
   return (
     <div className="h-full bg-slate-800/50 shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto">
@@ -87,7 +79,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Total Budget"
-            value={formatCurrency(frozenData.budget)}
+            value={formatCurrency(marketingData.budget) || 0}
             Icon={IndianRupee}
             iconColor="text-blue-400"
             labelColor="text-white"
@@ -100,7 +92,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Online"
-            value={formatCurrency(frozenData.online)}
+            value={formatCurrency(marketingData.online) || 0}
             Icon={Globe}
             iconColor="text-green-400"
             labelColor="text-white"
@@ -113,7 +105,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Offline"
-            value={formatCurrency(frozenData.offline)}
+            value={formatCurrency(marketingData.offline) || 0}
             Icon={Store}
             iconColor="text-purple-400"
             labelColor="text-white"
@@ -155,7 +147,7 @@ const MarketingForm = () => {
                   label={`${formatCurrency(marketingData.budget)}`}
                   value={[marketingData.budget]}
                   min={0}
-                  max={Math.max(100000, marketingData.budget * 2)}
+                  max={(marketingData.budget * 2 || 100000)}
                   onValueChange={(val: number[]) => {
                     handleBudgetChange("budget", val[0]);
                   }}
@@ -176,7 +168,7 @@ const MarketingForm = () => {
                   )})`}
                   value={[marketingData.online]}
                   min={0}
-                  max={Math.max(50000, marketingData.budget * 2)}
+                  max={marketingData.online * 2 || 50000}
                   onValueChange={(val: number[]) => {
                     handleBudgetChange("online", val[0]);
                   }}
@@ -197,7 +189,7 @@ const MarketingForm = () => {
                   )})`}
                   value={[marketingData.offline]}
                   min={0}
-                  max={Math.max(50000, marketingData.budget * 2)}
+                  max={marketingData.offline * 2 || 5000}
                   onValueChange={(val: number[]) => {
                     handleBudgetChange("offline", val[0]);
                   }}
@@ -230,11 +222,10 @@ const MarketingForm = () => {
                 <div className="bg-slate-600/40 rounded-lg p-3">
                   <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Remaining Cash</p>
                   <p
-                    className={`text-lg font-semibold font-geist-sans ${
-                      projectedCashBalance < 0
-                        ? "text-red-400"
-                        : "text-emerald-400"
-                    }`}
+                    className={`text-lg font-semibold font-geist-sans ${projectedCashBalance < 0
+                      ? "text-red-400"
+                      : "text-emerald-400"
+                      }`}
                   >
                     {formatCurrency(projectedCashBalance)}
                   </p>

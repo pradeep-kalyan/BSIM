@@ -204,9 +204,8 @@ const ComparePage: React.FC = () => {
         } else {
           setError("Simulation not found");
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load companies");
-        console.error("Error loading companies:", err);
       }
     };
 

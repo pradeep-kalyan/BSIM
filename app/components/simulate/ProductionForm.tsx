@@ -34,6 +34,7 @@ const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 // Helper cost calculation
+// Helper cost calculation
 const calculateProductionCost = (
   targetUnits: number,
   costPerUnit: number,
@@ -80,6 +81,7 @@ const ProductionForm = () => {
     updateProductionData({ ...productionData, products: updatedProducts });
 
     // Update inventory level if units changed
+    // Update inventory level if units changed
     if (field === "units_to_produce") {
       const productIndex = productData.findIndex((p) => p.id === productId);
       if (productIndex >= 0) {
@@ -90,8 +92,10 @@ const ProductionForm = () => {
     }
 
     setError(String(field), "");
+    setError(String(field), "");
   }
 
+  // Sync productData with productionData
   // Sync productData with productionData
   React.useEffect(() => {
     if (productData.length > 0) {
@@ -121,10 +125,15 @@ const ProductionForm = () => {
           ...productionData,
           products: [...productionData.products, ...newProductionEntries],
         });
+        updateProductionData({
+          ...productionData,
+          products: [...productionData.products, ...newProductionEntries],
+        });
       }
     }
   }, [productData, productionData, updateProductionData]);
 
+  // Merge data
   // Merge data
   const mergedProducts = productData.map((prod) => {
     const productionEntry = productionData.products.find(
@@ -440,3 +449,4 @@ const ProductionForm = () => {
 };
 
 export default ProductionForm;
+

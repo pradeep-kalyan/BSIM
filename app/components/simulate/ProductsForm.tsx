@@ -78,9 +78,8 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
 
       addProduct(newProduct);
       setShowProductForm(false);
-    } catch (err) {
+    } catch {
       setError("Failed to add product");
-      console.error("Error adding product:", err);
     } finally {
       setSubmitting(false);
     }
@@ -117,9 +116,8 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
       updateProductByIndex(productIndex, updatedProduct);
       setShowProductForm(false);
       setEditProduct(null);
-    } catch (err) {
+    } catch {
       setError("Failed to update product");
-      console.error("Error updating product:", err);
     } finally {
       setSubmitting(false);
     }
@@ -136,9 +134,8 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
           launch_period: period || undefined,
         });
       }
-    } catch (err) {
+    } catch {
       setError("Failed to launch product");
-      console.error("Error launching product:", err);
     } finally {
       setSubmitting(false);
     }
@@ -155,9 +152,8 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
           discontinue_period: period || undefined,
         });
       }
-    } catch (err) {
+    } catch {
       setError("Failed to discontinue product");
-      console.error("Error discontinuing product:", err);
     } finally {
       setSubmitting(false);
     }

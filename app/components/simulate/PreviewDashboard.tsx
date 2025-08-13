@@ -135,14 +135,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
           return "pending";
       }
     },
-    [
-      hrData,
-      marketingData,
-      rdData,
-      productData,
-      financeData,
-      totalSalesMetrics,
-    ]
+    [hrData, marketingData, rdData, productData, financeData, totalSalesMetrics]
   );
 
   useEffect(() => {
@@ -478,8 +471,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
       // Restore original styles
       dashboardRef.current.style.cssText = originalStyle;
       dashboardRef.current.className = originalClass;
-    } catch (error) {
-      console.error("Export failed:", error);
+    } catch {
       // Restore original styles in case of error
       if (dashboardRef.current) {
         dashboardRef.current.style.cssText = "";

@@ -244,8 +244,8 @@ const HRDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
-                        label="Salary per employee (₹/year)"
-                        text="Annual salary per employee"
+                        label="Salary per employee"
+                        text="Set how much you want to pay each employee per year (in rupees)"
                       />
                       <Slider
                         label={`₹${(
@@ -274,7 +274,7 @@ const HRDashboard = () => {
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Staffing Changes"
-                        text="Net headcount change"
+                        text="Decide how many people to hire or fire. Positive numbers mean more employees, negative numbers mean fewer employees"
                       />
                       <Slider
                         label={`Net: ${(data.existingRoles[selectedRoleIndex]?.hires || 0) -
@@ -384,8 +384,8 @@ const HRDashboard = () => {
 
                     <div>
                       <TooltipWrapper
-                        label="Salary (₹/per year)"
-                        text="Annual compensation package"
+                        label="Salary"
+                        text="The yearly salary you will pay for each person in this new role (in rupees per year)"
                       />
                       <Slider
                         className="w-[200px]"
@@ -410,7 +410,7 @@ const HRDashboard = () => {
                     <div>
                       <TooltipWrapper
                         label="Headcount"
-                        text="Number of new positions"
+                        text="How many people you want to hire for this new position"
                       />
                       <Slider
                         className="w-[200px]"
@@ -440,8 +440,8 @@ const HRDashboard = () => {
               {/* Training Budget */}
               <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
-                  label="Training Budget (₹/year)"
-                  text="Employee development budget allocation"
+                  label="Training Budget"
+                  text="Money you want to spend on training and developing your employees' skills each year (in rupees per year)"
                 />
                 <Slider
                   label={`${formatCurrency(data?.training_budget || 0)}`}

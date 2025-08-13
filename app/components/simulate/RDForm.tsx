@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { IndianRupee, FlaskConical, Timer, TriangleAlert ,Award} from "lucide-react";
+import { IndianRupee, FlaskConical, Timer, TriangleAlert, Award } from "lucide-react";
 import InfoCard from "@/app/components/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import { useRDForm, useCashBalance } from "@/app/context/FormContext";
@@ -77,7 +77,7 @@ const RDForm = () => {
 
       <div className="max-w-full mx-2 ">
         <div className="bg-slate-800/50 shadow-md rounded-2xl py-4 px-6 border border-slate-700">
-          <h2 className="text-xl tracking-wide font-semibold font-electrolize text-white">
+          <h2 className="text-xl tracking-wide font-semibold font-roboto-sans text-white">
             Set R&D Strategy
           </h2>
           <hr className=" my-5 border border-slate-700" />
@@ -85,8 +85,8 @@ const RDForm = () => {
             {/* R&D Budget Slider */}
             <div>
               <Slider
-                label="R&D Budget (₹/year)"
-                tooltipText="Total R&D allocation"
+                label="R&D Budget"
+                tooltipText="How much money you want to spend on research and developing new products each year (in rupees per year)"
                 defaultValue={[data.budget ?? 0]}
                 value={[data.budget ?? 0]}
                 min={0}
@@ -104,7 +104,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Products in Pipeline"
-                tooltipText="Products under development"
+                tooltipText="How many new products you are currently working on developing"
                 defaultValue={[data.pip ?? 0]}
                 value={[data.pip ?? 0]}
                 min={0}
@@ -119,8 +119,8 @@ const RDForm = () => {
             {/* Time to Market Slider */}
             <div>
               <Slider
-                label="Time to Market (in months)"
-                tooltipText="Development to launch time"
+                label="Time to Market"
+                tooltipText="How many months it will take to finish developing and launch your new products (in months)"
                 defaultValue={[data.time_to_market ?? 0]}
                 value={[data.time_to_market ?? 0]}
                 min={0}
@@ -138,7 +138,7 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Patents Expected"
-                tooltipText="Intellectual property protection"
+                tooltipText="How many patents or legal protections you expect to get for your inventions and ideas"
                 defaultValue={[data.patented ?? 0]}
                 value={[data.patented ?? 0]}
                 min={0}
@@ -152,38 +152,34 @@ const RDForm = () => {
               )}
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="space-y-2">
-                <div className="text-slate-300 font-geist-sans">
-                  Available Cash:{" "}
-                  {formatCurrency(cashBalance.originalCashBalance)}
+            <div className="flex text-white flex gap-6 items-center text-medium font-roboto-sans">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div className="flex flex-col gap-1">
+                  <p>Available Cash:</p>
+                  <p>{formatCurrency(cashBalance.originalCashBalance)}</p>
                 </div>
-                <div className="text-lg text-blue-400 font-semibold">
-                  R&D budget:{" "}
-                  <span
-                    className={
-                      projectedCashBalance - (data.budget ?? 0) < 0
-                        ? "font-geist-sans text-rose-400"
-                        : "font-geist-sans text-emerald-400"
-                    }
-                  >
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div className="flex flex-col gap-1">
+                  <p>R&D budget:</p>
+                  <p>
                     {formatCurrency(
                       cashBalance.financeBudgetImpact - (data.budget ?? 0)
                     )}
-                  </span>
+                  </p>
                 </div>
+              </div>
 
-                <div className="text-lg text-blue-400 font-semibold">
-                  Projected Balance:{" "}
-                  <span
-                    className={
-                      projectedCashBalance - (data.budget ?? 0) < 0
-                        ? "font-geist-sans text-rose-400"
-                        : "font-geist-sans text-emerald-400"
-                    }
-                  >
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <div className="flex flex-col gap-1">
+                  <p>Projected Balance:</p>
+                  <p>
                     {formatCurrency(projectedCashBalance ?? 0)}
-                  </span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -191,8 +187,8 @@ const RDForm = () => {
             {/* Quality Improvements Slider */}
             <div>
               <Slider
-                label="Quality Improvements (%)"
-                tooltipText="Product quality enhancement"
+                label="Quality Improvements"
+                tooltipText="How much better you want to make your products compared to what you have now (0-100%)"
                 defaultValue={[data.quality_changes ?? 0]}
                 value={[data.quality_changes ?? 0]}
                 isPercentage={true}
@@ -213,7 +209,7 @@ const RDForm = () => {
               <div className="bg-rose-900/60 border border-rose-700 text-rose-300 rounded-lg p-4 animate-pulse">
                 <div className="flex items-start gap-3">
                   <TriangleAlert className="text-rose-500 mt-0.5" />
-                  <p className="text-sm">{budgetAlert}</p>
+                  <p className="text-sm font-roboto-sans">{budgetAlert}</p>
                 </div>
               </div>
             </div>
