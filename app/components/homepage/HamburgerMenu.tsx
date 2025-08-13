@@ -32,7 +32,9 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
     const handleLogout = useCallback(() => {
         setIsOpen(false);
-        onLogout ? onLogout() : console.log('Logout clicked');
+        if (onLogout) {
+            onLogout();
+        }
     }, [onLogout]);
 
     const menuItems = [
