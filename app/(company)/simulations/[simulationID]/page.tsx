@@ -1,4 +1,3 @@
-// app/(yourroute)/[simulationID]/page.tsx
 import prisma from "@/app/functions/prisma";
 import CompanyPage from "../../../components/company/CompanyPage";
 import { getCurrentUser } from "@/app/_actions/auth";
@@ -8,7 +7,8 @@ interface PageProps {
 }
 
 const Page = async ({ params }: PageProps) => {
-  const { simulationID } = await params;
+  const param = await params;
+  const simulationID = param.simulationID;
 
   const simulation = await prisma.simulation.findUnique({
     where: { id: simulationID },

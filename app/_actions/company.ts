@@ -71,7 +71,6 @@ export async function getCompaniesBySimulation(simulationId: string) {
         _count: {
           select: {
             products: true,
-            // decisions: true,
           },
         },
       },
