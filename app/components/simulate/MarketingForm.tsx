@@ -75,7 +75,7 @@ const MarketingForm = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <InfoCard
             label="Available Cash"
-            value={cashBalance.originalCashBalance || 0}
+            value={formatCurrency(cashBalance.originalCashBalance || 0)}
             Icon={IndianRupee}
             iconColor="text-yellow-400"
             labelColor="text-white"
@@ -87,7 +87,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Total Budget"
-            value={frozenData.budget}
+            value={formatCurrency(frozenData.budget)}
             Icon={IndianRupee}
             iconColor="text-blue-400"
             labelColor="text-white"
@@ -100,7 +100,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Online"
-            value={frozenData.online}
+            value={formatCurrency(frozenData.online)}
             Icon={Globe}
             iconColor="text-green-400"
             labelColor="text-white"
@@ -113,7 +113,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Offline"
-            value={frozenData.offline}
+            value={formatCurrency(frozenData.offline)}
             Icon={Store}
             iconColor="text-purple-400"
             labelColor="text-white"
@@ -132,10 +132,10 @@ const MarketingForm = () => {
               <Globe className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-white font-geist-sans">
                 Marketing Strategy
               </h2>
-              <p className="text-slate-400 text-sm">
+              <p className="text-slate-400 text-sm font-geist-sans">
                 Configure your marketing budget allocation
               </p>
             </div>
@@ -191,7 +191,7 @@ const MarketingForm = () => {
                 />
                 <Slider
                   className="w-[200px]"
-                  label={`${marketingData.offline.toLocaleString()} (${percent(
+                  label={`${formatCurrency(marketingData.offline)} (${percent(
                     marketingData.offline,
                     marketingData.budget
                   )})`}
@@ -209,28 +209,28 @@ const MarketingForm = () => {
 
             {/* Financial Impact Summary */}
             <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
-              <h4 className="text-lg font-bold text-white mb-3">
+              <h4 className="text-lg font-bold text-white mb-3 tracking-wide font-semibold font-roboto-sans">
                 Financial Impact Summary
               </h4>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">
                     Marketing Budget
                   </p>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-semibold text-white font-geist-sans">
                     {formatCurrency(marketingData.budget)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Available Cash</p>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Available Cash</p>
+                  <p className="text-lg font-semibold text-white font-geist-sans">
                     {formatCurrency(cashBalance.originalCashBalance || 0)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Remaining Cash</p>
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Remaining Cash</p>
                   <p
-                    className={`text-lg font-bold ${
+                    className={`text-lg font-semibold font-geist-sans ${
                       projectedCashBalance < 0
                         ? "text-red-400"
                         : "text-emerald-400"

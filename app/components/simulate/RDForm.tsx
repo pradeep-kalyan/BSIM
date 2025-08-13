@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { IndianRupee, FlaskConical, Timer, TriangleAlert } from "lucide-react";
+import React, { useState } from "react";
+import { IndianRupee, FlaskConical, Timer, TriangleAlert ,Award} from "lucide-react";
 import InfoCard from "@/app/components/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import { useRDForm, useCashBalance } from "@/app/context/FormContext";
@@ -10,19 +10,14 @@ import formatCurrency from "@/app/functions/formatCurrency";
 const RDForm = () => {
   const { data, updateData, getError, setError } = useRDForm();
   const { projectedCashBalance, cashBalance } = useCashBalance();
-  const [budgetAlert, setBudgetAlert] = useState<string | null>(null);
 
-  // Update R&D budget impact dynamically whenever budget or total_development changes
-  useEffect(() => {
-    // Budget impact is automatically handled by updateData in useRDForm hook
-  }, [data.budget, data.total_development]);
+  const [budgetAlert, setBudgetAlert] = useState<string | null>(null);
 
   const handleChange = (fieldId: keyof typeof data, value: number) => {
     updateData({ [fieldId]: value });
     setError(fieldId, "");
     setBudgetAlert(null);
 
-    // Basic validation for budget
     if (
       fieldId === "budget" &&
       value > (cashBalance.originalCashBalance || 0)
@@ -32,11 +27,11 @@ const RDForm = () => {
   };
 
   return (
-    <div className="bg-slate-800/50 shadow-md p-4">
+    <div className="h-full bg-slate-800/50 shadow-md p-4">
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 mx-2">
         <InfoCard
           label="R&D Budget"
-          value={data.budget ?? 0}
+          value={formatCurrency(data.budget ?? 0)}
           isCurrency={true}
           Icon={IndianRupee}
           iconColor="text-yellow-400"
@@ -71,8 +66,8 @@ const RDForm = () => {
           label="Quality Improvements"
           value={`${data.quality_changes ?? 0}%`}
           isCurrency={false}
-          Icon={Timer}
-          iconColor="text-green-400"
+          Icon={Award}
+          iconColor="text-purple-400"
           labelColor="text-white"
           valueColor="text-white"
           width="w-full"
@@ -82,10 +77,11 @@ const RDForm = () => {
 
       <div className="max-w-full mx-2 ">
         <div className="bg-slate-800/50 shadow-md rounded-2xl py-4 px-6 border border-slate-700">
-          <h2 className="text-2xl font-bold text-white mb-2">
+          <h2 className="text-xl tracking-wide font-semibold font-electrolize text-white">
             Set R&D Strategy
           </h2>
-          <div className="grid gap-6 md:grid-cols-2">
+          <hr className=" my-5 border border-slate-700" />
+          <div className="grid gap-6 md:grid-cols-2 px-6">
             {/* R&D Budget Slider */}
             <div>
               <Slider
@@ -156,19 +152,19 @@ const RDForm = () => {
               )}
             </div>
 
-            <div className="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="space-y-2">
-                <div className="text-slate-300">
+                <div className="text-slate-300 font-geist-sans">
                   Available Cash:{" "}
                   {formatCurrency(cashBalance.originalCashBalance)}
                 </div>
-                <div className="text-xl text-blue-400 font-semibold">
+                <div className="text-lg text-blue-400 font-semibold">
                   R&D budget:{" "}
                   <span
                     className={
                       projectedCashBalance - (data.budget ?? 0) < 0
-                        ? "text-rose-400"
-                        : "text-emerald-400"
+                        ? "font-geist-sans text-rose-400"
+                        : "font-geist-sans text-emerald-400"
                     }
                   >
                     {formatCurrency(
@@ -177,13 +173,13 @@ const RDForm = () => {
                   </span>
                 </div>
 
-                <div className="text-xl text-blue-400 font-semibold">
+                <div className="text-lg text-blue-400 font-semibold">
                   Projected Balance:{" "}
                   <span
                     className={
                       projectedCashBalance - (data.budget ?? 0) < 0
-                        ? "text-rose-400"
-                        : "text-emerald-400"
+                        ? "font-geist-sans text-rose-400"
+                        : "font-geist-sans text-emerald-400"
                     }
                   >
                     {formatCurrency(projectedCashBalance ?? 0)}

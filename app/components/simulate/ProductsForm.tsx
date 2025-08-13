@@ -1,6 +1,5 @@
 "use client";
 import {
-  IndianRupee,
   Plus,
   Star,
   Lightbulb,
@@ -9,6 +8,7 @@ import {
   Play,
   Square,
   Edit,
+  TrendingUp,
 } from "lucide-react";
 import React, { useState } from "react";
 import InfoCard from "@/app/components/InfoCard";
@@ -184,19 +184,22 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
     products.length > 0
       ? products.reduce((acc, p) => acc + p.quality_rating, 0) / products.length
       : 0;
-
+  const avgSustainability = products.reduce((acc, p) => acc + p.sustainability_rating, 0) / products.length || 0;
+  const avgInnovation = products.reduce((acc, p) => acc + p.innovation_rating, 0) / products.length || 0;
   // ---- RENDER ----
-
+  const avgPerformance = parseFloat(
+    ((avgQualityRating + avgInnovation + avgSustainability) / 3).toFixed(1)
+  );
   if (!companyData) {
     return (
       <div className="min-h-screen bg-slate-800/50 shadow-md flex items-center justify-center">
-        <p className="text-slate-300">No company data found</p>
+        <p className="text-slate-300 font-semibold font-roboto-sans">No company data found</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800/50 shadow-md py-2 px-6">
+    <div className="h-full bg-slate-800/50 shadow-md py-2 px-6">
       <div className="max-w-7xl mx-auto mt-2">
         {/* Header */}
         <div>
@@ -226,17 +229,16 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
             iconColor="text-yellow-400"
           />
           <InfoCard
-            label="Portfolio Value"
-            value={""}
-            isCurrency={true}
-            Icon={IndianRupee}
+            label="Avg Performance"
+            value={avgPerformance*10 + "%"}
+            Icon={TrendingUp}
             width="w-full"
             height="h-full"
             iconColor="text-green-400"
           />
           <InfoCard
             label="Avg Quality"
-            value={parseFloat(avgQualityRating.toFixed(1))}
+            value={parseFloat(avgQualityRating.toFixed(1))*10 + "%"}
             Icon={Star}
             width="w-full"
             height="h-full"
@@ -247,7 +249,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
         {/* Products List */}
         <div className="bg-slate-800/50 shadow-md rounded-xl p-6 border border-slate-700 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="flex items-center text-2xl font-bold text-white mb-6">
+            <h2 className="flex items-center text-xl tracking-wide font-semibold font-roboto-sans text-white pt-1">
               Product Portfolio
             </h2>
             <button
@@ -256,7 +258,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                 setEditProduct(null);
                 setShowProductForm(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mb-2"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 tracking-wide font-base font-roboto-sans text-white rounded-lg hover:bg-green-700 transition-colors "
             >
               <Plus className="h-4 w-4" />
               New Product
@@ -265,7 +267,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
           {products.length === 0 ? (
             <div className="text-center py-8">
               <Package className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-400">
+              <p className="text-slate-400 tracking-wide font-semibold font-roboto-sans">
                 No products yet. Create your first product!
               </p>
             </div>
@@ -333,9 +335,8 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${
-                              (product.sustainability_rating / 10) * 100
-                            }%`,
+                            width: `${(product.sustainability_rating / 10) * 100
+                              }%`,
                           }}
                         />
                       </div>
@@ -361,7 +362,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                           product.id && handleDiscontinueProduct(product.id)
                         }
                         disabled={submitting || !product.id}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 bg-red-600/90 hover:bg-red-600/80 text-white px-3 py-2 rounded text-xs font-medium tracking-wide font-roboto-sans transition-colors flex items-center justify-center gap-1"
                       >
                         <Square className="h-3 w-3" />
                         Discontinue
@@ -369,7 +370,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                     )}
                     <button
                       onClick={() => {
-                        // Convert ProductFormData to Product type for editing
                         if (product.id) {
                           const productForEdit: Product = {
                             id: product.id,
@@ -391,7 +391,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                           setShowProductForm(true);
                         }
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs font-medium tracking-wide font-roboto-sans transition-colors flex items-center justify-center gap-1"
                     >
                       <Edit className="h-3 w-3" />
                       Edit
@@ -406,15 +406,6 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
         {showProductForm && (
           <div className="fixed z-50 top-0 left-0 w-full h-full flex items-center justify-center bg-slate-900/60">
             <div className="relative w-full max-w-xl">
-              <div className="absolute top-1 right-2">
-                <button
-                  onClick={() => setShowProductForm(false)}
-                  className="text-slate-400 bg-slate-800 rounded-full p-1 hover:text-white"
-                  title="Close"
-                >
-                  ×
-                </button>
-              </div>
               <ProductFormPage
                 mode={formMode}
                 initialProduct={editProduct || undefined}

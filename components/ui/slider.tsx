@@ -107,7 +107,7 @@ function Slider({
     : max;
 
   return (
-    <div className="flex flex-col w-full gap-3 text-white">
+    <div className="flex flex-col w-full gap-1 text-white font-semibold font-geist-sans">
       {label && tooltipText && (
         <TooltipWrapper label={label} text={tooltipText ?? ""} />
       )}

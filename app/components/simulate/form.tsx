@@ -341,7 +341,6 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
         return (
           <PreviewDashboard
             companyId={companyId}
-            onEditSection={(sectionIndex) => setActiveStep(sectionIndex)}
           />
         );
       default:
@@ -375,7 +374,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
       )}
 
       {/* Sidebar with Steps */}
-      <div className="w-full md:w-[240px] lg:w-[280px] h-auto md:h-screen bg-slate-900 shadow-md backdrop-blur-2xl border-r border-white/10 overflow-hidden flex flex-col relative">
+      <div className="w-full md:w-[240px] lg:w-[280px] h-auto font-roboto-sans md:h-screen bg-slate-900 shadow-md backdrop-blur-2xl border-r border-white/10 overflow-hidden flex flex-col relative">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-blue-500/5 to-black/10" />
         {/* Header */}
         <div className="p-4 border-b border-white/10 relative z-10">
@@ -527,7 +526,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
                 size: 24,
                 className: "text-blue-300 mr-3",
               })}
-              <div className="py-1">
+              <div className="py-1 font-roboto-sans">
                 <h2 className="text-base font-bold mb-[2px] bg-gradient-to-br from-white to-blue-400 bg-clip-text text-transparent">
                   {steps[activeStep].label}
                 </h2>
@@ -537,7 +536,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
               </div>
             </div>
             <div className="flex-grow" />
-            <div className="flex flex-col justify-end text-white mr-2">
+            <div className="flex flex-col justify-end text-white mr-2 font-roboto-sans">
               <h2 className="text-xl font-bold">{companyData.name}</h2>
               <span className="text-s flex justify-end text-gray-300">
                 Period {period}
@@ -545,7 +544,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             </div>
             <a
               href={`/homepage/${companyId}`}
-              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-m font-semibold px-3 py-2 rounded-md no-underline"
+              className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-m font-medium font-roboto-sans px-3 py-2 rounded-md no-underline"
             >
               Dashboard
             </a>
@@ -578,7 +577,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             </button>
 
             {/* Step Info */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 font-roboto-sans">
               <span className="text-sm text-gray-400">Step</span>
               <span className="px-2 py-0.5 text-blue-300 bg-blue-500/20 text-sm font-bold rounded-md">
                 {activeStep + 1} / {steps.length}
@@ -589,7 +588,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             <button
               onClick={handleNext}
               disabled={activeStep > steps.length - 1 || isSubmitting}
-              className={`min-w-[100px] h-10 rounded-xl text-white font-bold text-sm transition-all ${
+              className={`min-w-[100px] h-10 rounded-xl text-white font-bold font-roboto-sans text-sm transition-all ${
                 isSubmitting
                   ? "bg-gray-600 cursor-not-allowed"
                   : "bg-blue-500 shadow-md hover:-translate-y-[1px]"

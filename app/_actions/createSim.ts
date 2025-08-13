@@ -260,22 +260,3 @@ export async function revokeAccessByEmail(simulationId: string, email: string) {
 
   revalidatePath(`/simulations/${simulationId}`);
 }
-// in _actions/simulation.ts
-export async function getSimulationWithOwnership(simulationId: string) {
-  const user = await getCurrentUser();
-  if (!user) throw new Error("Unauthorized");
-
-  const sim = await prisma.simulation.findUnique({
-    where: { id: simulationId },
-    select: {
-      id: true,
-      name: true,
-      created_by: true,
-    },
-  });
-
-  if (!sim) throw new Error("Simulation not found");
-
-  const isOwner = sim.created_by === user.id;
-  return { ...sim, isOwner };
-}
