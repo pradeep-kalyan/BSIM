@@ -116,8 +116,6 @@ export interface CompanyFormData {
   cash_balance: number;
   total_assets: number;
   total_liabilities: number;
-  marketing_budget: number;
-  credit_rating?: string;
   brand_value: number;
 }
 

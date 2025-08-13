@@ -46,7 +46,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             loading: isExporting,
             color: 'from-orange-400 to-orange-500',
             hoverColor: 'hover:from-orange-500 hover:to-amber-600',
-            description: 'Download as image'
+            description: 'Download as image',
+            extraClass: "export-dashboard-btn",
         },
         {
             icon: ArrowLeft,
@@ -56,7 +57,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             loading: false,
             color: 'from-blue-500 to-blue-600',
             hoverColor: 'hover:from-blue-600 hover:to-blue-700',
-            description: 'Go to companies'
+            description: 'Go to companies',
         },
         {
             icon: Play,
@@ -66,7 +67,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             loading: isSimulating,
             color: 'from-purple-500 to-purple-600',
             hoverColor: 'hover:from-purple-600 hover:to-purple-700',
-            description: 'Run simulation'
+            description: 'Run simulation',
+            extraClass: "simulate-dashboard-btn",
         },
         {
             icon: LogOut,
@@ -76,28 +78,29 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             loading: false,
             color: 'from-red-500 to-red-600',
             hoverColor: 'hover:from-red-600 hover:to-red-700',
-            description: 'Sign out'
+            description: 'Sign out',
         }
     ];
 
     return (
         <>
             <style jsx>{`
-        @keyframes menuSlideIn {
-          from { opacity: 0; transform: scale(0.95) translateY(-5px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes menuSlideOut {
-          from { opacity: 1; transform: scale(1) translateY(0); }
-          to { opacity: 0; transform: scale(0.95) translateY(-5px); }
-        }
-        .menu-enter { animation: menuSlideIn 0.15s ease-out forwards; }
-        .menu-exit { animation: menuSlideOut 0.15s ease-in forwards; }
-        .hamburger-line { transition: all 0.3s ease; transform-origin: center; }
-        .hamburger-open .line-1 { transform: rotate(45deg) translate(3px, 3px); }
-        .hamburger-open .line-2 { opacity: 0; transform: scaleX(0); }
-        .hamburger-open .line-3 { transform: rotate(-45deg) translate(3px, -3px); }
-      `}</style>
+                @keyframes menuSlideIn {
+                    from { opacity: 0; transform: scale(0.95) translateY(-5px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                @keyframes menuSlideOut {
+                    from { opacity: 1; transform: scale(1) translateY(0); }
+                    to { opacity: 0; transform: scale(0.95) translateY(-5px); }
+                }
+                .menu-enter { animation: menuSlideIn 0.15s ease-out forwards; }
+                .menu-exit { animation: menuSlideOut 0.15s ease-in forwards; }
+                .hamburger-line { transition: all 0.3s ease; transform-origin: center; }
+                .hamburger-open .line-1 { transform: rotate(45deg) translate(3px, 3px); }
+                .hamburger-open .line-2 { opacity: 0; transform: scaleX(0); }
+                .hamburger-open .line-3 { transform: rotate(-45deg) translate(3px, -3px); }
+            `}</style>
+
             <div className="relative">
                 <button
                     onClick={toggleMenu}
@@ -113,15 +116,11 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 </button>
 
                 {isOpen && (
-                    <div
-                        className="fixed z-30"
-                        onClick={toggleMenu}
-                    />
+                    <div className="fixed z-30 inset-0" onClick={toggleMenu} />
                 )}
 
                 <div
-                    className={`absolute top-12 right-0 w-56 bg-slate-800 rounded-xl shadow-lg border border-slate-600 z-40 overflow-hidden ${isOpen ? 'menu-enter pointer-events-auto' : 'menu-exit pointer-events-none opacity-0'
-                        }`}
+                    className={`absolute top-12 right-0 w-56 bg-slate-800 rounded-xl shadow-lg border border-slate-600 z-40 overflow-hidden ${isOpen ? 'menu-enter pointer-events-auto' : 'menu-exit pointer-events-none opacity-0'}`}
                 >
                     <div className="p-3 border-b border-slate-600 bg-slate-800 flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-white">Actions</h3>
@@ -136,10 +135,11 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                     key={i}
                                     onClick={item.onClick}
                                     disabled={item.disabled}
-                                    className={`w-full flex items-center gap-4 py-2 px-4 rounded-lg mb-1 text-sm transition-all duration-150 ${item.disabled
-                                        ? 'opacity-50 cursor-not-allowed bg-gray-100'
-                                        : `bg-gradient-to-r ${item.color} ${item.hoverColor} text-white hover:scale-[1.01] active:scale-[0.99]`
-                                        }`}
+                                    className={`${item.extraClass ?? ''} w-full flex items-center gap-4 py-2 px-4 rounded-lg mb-1 text-sm transition-all duration-150 ${
+                                        item.disabled
+                                            ? 'opacity-50 cursor-not-allowed bg-gray-100'
+                                            : `bg-gradient-to-r ${item.color} ${item.hoverColor} text-white hover:scale-[1.01] active:scale-[0.99]`
+                                    }`}
                                 >
                                     {item.loading ? (
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -148,7 +148,9 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                     )}
                                     <div className="flex-1 text-left">
                                         {item.loading ? `${item.label}...` : item.label}
-                                        <div className="text-[10px] opacity-80">{item.loading ? 'Please wait...' : item.description}</div>
+                                        <div className="text-[10px] opacity-80">
+                                            {item.loading ? 'Please wait...' : item.description}
+                                        </div>
                                     </div>
                                 </button>
                             );

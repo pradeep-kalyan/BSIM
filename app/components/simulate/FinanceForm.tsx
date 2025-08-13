@@ -17,7 +17,7 @@ import {
   useCompanyForm,
   useFinanceForm,
 } from "@/app/context/FormContext";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import formatCurrency from "@/app/functions/formatCurrency";
 const FinanceForm = () => {
   const { data: companyData } = useCompanyForm();

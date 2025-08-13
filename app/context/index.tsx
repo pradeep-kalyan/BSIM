@@ -141,8 +141,6 @@ function FormDataInitializer() {
             cash_balance: initialData.company?.cash_balance ?? 100000,
             total_assets: initialData.company?.total_assets ?? 0,
             total_liabilities: initialData.company?.total_liabilities ?? 0,
-            marketing_budget: initialData.company?.marketing_budget ?? 0,
-            credit_rating: initialData.company?.credit_rating ?? "",
             brand_value: initialData.company?.brand_value ?? 0,
           },
           simulation: {
@@ -209,8 +207,6 @@ function FormDataInitializer() {
             cash_balance: 100000,
             total_assets: 0,
             total_liabilities: 0,
-            marketing_budget: 0,
-            credit_rating: "",
             brand_value: 0,
           },
           simulation: {

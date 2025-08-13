@@ -11,31 +11,11 @@ import {
   TrendingUp,
 } from "lucide-react";
 import React, { useState } from "react";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-// Data types
-interface Product {
-  id: string;
-  name: string;
-  description?: string | null;
-  category: string;
-  quality_rating: number;
-  innovation_rating: number;
-  sustainability_rating: number;
-  status: string;
-  launch_period?: number | null;
-  discontinue_period?: number | null;
-  latest_performance?: {
-    sales_volume: number;
-    revenue: number;
-    costs: number;
-    profit: number;
-    market_share: number;
-    customer_satisfaction: number;
-  } | null;
-}
+import {Product }from "@/app/types/company";
 
 interface ProductsFormProps {
   companyId: string;

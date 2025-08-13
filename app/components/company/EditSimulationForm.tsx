@@ -18,19 +18,7 @@ import {
   Save,
   Loader2,
 } from "lucide-react";
-
-interface Props {
-  simulation: {
-    id: string;
-    name: string;
-    description: string | null;
-    config: Record<string, unknown>;
-    simulation_access?: { user: { email: string } }[];
-  };
-  onClose: () => void;
-  onUpdated: () => void;
-  onUpdatedPartial: () => void;
-}
+import { Props } from "@/app/types/simulation";
 
 const EditSimulationForm: React.FC<Props> = ({
   simulation,

@@ -16,7 +16,7 @@ import {
   useProductForm,
   useProductionForm,
 } from "@/app/context/FormContext";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import formatCurrency from "@/app/functions/formatCurrency";
 
 type ProductProductionData = {

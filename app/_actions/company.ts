@@ -16,7 +16,6 @@ interface ProductInput {
   inventory_level?: number;
   production_capacity?: number;
   development_cost?: number;
-  marketing_budget?: number;
   status?: string;
   launch_period?: number;
   discontinue_period?: number;
@@ -31,7 +30,6 @@ interface CreateCompanyInput {
   cash_balance?: number;
   total_assets?: number;
   total_liabilities?: number;
-  marketing_budget?: number;
   brand_value?: number;
   products?: ProductInput[];
   accessEmails?: string[];
@@ -209,7 +207,6 @@ export async function updateCompany(
     cash_balance?: number;
     total_assets?: number;
     total_liabilities?: number;
-    marketing_budget?: number;
     brand_value?: number;
   }
 ) {
@@ -446,7 +443,6 @@ export async function getCompanyComparisonData(
       total_assets: company.total_assets ?? 0,
       total_liabilities: company.total_liabilities ?? 0,
       brand_value: company.brand_value ?? 0,
-      marketing_budget: company.marketing_budget ?? 0,
       current_period: company.current_period ?? 0,
       finance: {
         total_revenue: finance?.total_revenue ?? 0,

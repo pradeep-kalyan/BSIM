@@ -1,7 +1,6 @@
 import prisma from "./prisma";
 
 async function main() {
-
   // Clean existing data in correct order (respecting foreign key constraints)
   await prisma.product_performance.deleteMany();
   await prisma.marketing.deleteMany();
@@ -203,19 +202,9 @@ async function main() {
         logo_url: "https://example.com/logos/technova.svg",
         cash_balance: 1250000,
         current_period: 4,
-        data: JSON.stringify({
-          headquarters: "San Francisco, CA",
-          founded: 2019,
-          employees: 120,
-          offices: ["SF", "Austin", "Seattle"],
-          certifications: ["ISO27001", "SOC2"],
-          patents: 23,
-          awards: ["Tech Innovation 2023", "Best Employer 2024"],
-        }),
+
         total_assets: 2800000,
         total_liabilities: 650000,
-        marketing_budget: 280000,
-        credit_rating: "A-",
         brand_value: 450000,
       },
     }),
@@ -230,19 +219,8 @@ async function main() {
         logo_url: "https://example.com/logos/quantum.svg",
         cash_balance: 980000,
         current_period: 4,
-        data: JSON.stringify({
-          headquarters: "Boston, MA",
-          founded: 2018,
-          employees: 85,
-          offices: ["Boston", "Research Triangle", "Boulder"],
-          specialization: ["Quantum Computing", "AI Chips"],
-          partnerships: ["IBM", "Intel", "MIT"],
-          patents: 41,
-        }),
         total_assets: 2200000,
         total_liabilities: 580000,
-        marketing_budget: 190000,
-        credit_rating: "A",
         brand_value: 520000,
       },
     }),
@@ -257,19 +235,8 @@ async function main() {
         logo_url: "https://example.com/logos/nexus.svg",
         cash_balance: 750000,
         current_period: 4,
-        data: JSON.stringify({
-          headquarters: "Los Angeles, CA",
-          founded: 2020,
-          employees: 65,
-          offices: ["LA", "Portland", "Vancouver"],
-          focus: ["AR/VR", "Gaming", "Digital Media"],
-          clients: ["Netflix", "Disney", "Sony"],
-          awards: ["VR Innovation Award 2023"],
-        }),
         total_assets: 1800000,
         total_liabilities: 420000,
-        marketing_budget: 220000,
-        credit_rating: "B+",
         brand_value: 280000,
       },
     }),
@@ -284,19 +251,8 @@ async function main() {
         logo_url: "https://example.com/logos/greentech.svg",
         cash_balance: 1100000,
         current_period: 4,
-        data: JSON.stringify({
-          headquarters: "Denver, CO",
-          founded: 2017,
-          employees: 95,
-          offices: ["Denver", "Phoenix", "Portland"],
-          focus: ["Solar Tech", "Smart Grid", "IoT"],
-          certifications: ["B-Corp", "LEED Platinum"],
-          sustainability_score: 9.2,
-        }),
         total_assets: 2400000,
         total_liabilities: 380000,
-        marketing_budget: 160000,
-        credit_rating: "A-",
         brand_value: 380000,
       },
     }),
@@ -312,22 +268,8 @@ async function main() {
         logo_url: "https://example.com/logos/urban-threads.svg",
         cash_balance: 420000,
         current_period: 2,
-        data: JSON.stringify({
-          headquarters: "New York, NY",
-          founded: 2021,
-          employees: 45,
-          stores: 12,
-          online_presence: true,
-          target_demographic: "18-35 urban professionals",
-          sustainability_initiatives: [
-            "recycled materials",
-            "carbon neutral shipping",
-          ],
-        }),
         total_assets: 850000,
         total_liabilities: 280000,
-        marketing_budget: 95000,
-        credit_rating: "B+",
         brand_value: 120000,
       },
     }),
@@ -342,19 +284,8 @@ async function main() {
         logo_url: "https://example.com/logos/eco-lifestyle.svg",
         cash_balance: 380000,
         current_period: 2,
-        data: JSON.stringify({
-          headquarters: "Portland, OR",
-          founded: 2022,
-          employees: 28,
-          stores: 6,
-          online_marketplace: true,
-          certifications: ["Organic", "Fair Trade", "Cruelty Free"],
-          customer_base: "eco-conscious millennials",
-        }),
         total_assets: 650000,
         total_liabilities: 180000,
-        marketing_budget: 75000,
-        credit_rating: "B",
         brand_value: 85000,
       },
     }),
@@ -751,11 +682,7 @@ async function main() {
       const company = companies.find((c) => c.id === product.company_id);
       const maxPeriod = company?.current_period ?? 100;
 
-      for (
-        let period = product.launch_period;
-        period <= maxPeriod;
-        period++
-      ) {
+      for (let period = product.launch_period; period <= maxPeriod; period++) {
         const baseProduction = 1200;
         const unitsToProduced =
           baseProduction +
@@ -814,7 +741,11 @@ async function main() {
       const maxPeriod = company?.current_period;
 
       if (typeof maxPeriod === "number") {
-        for (let period = product.launch_period; period <= maxPeriod; period++) {
+        for (
+          let period = product.launch_period;
+          period <= maxPeriod;
+          period++
+        ) {
           const baseSales = 800 + Math.floor(Math.random() * 600);
           const seasonalMultiplier = 0.8 + Math.random() * 0.4; // ±20% seasonal variation
           const salesVolume = Math.floor(
@@ -823,40 +754,41 @@ async function main() {
               (1 + (period - product.launch_period) * 0.15)
           );
 
-        const basePrice =
-          product.category === "apparel"
-            ? 89
-            : product.category === "smartphones"
-            ? 799
-            : product.category === "laptops"
-            ? 1299
-            : 599;
+          const basePrice =
+            product.category === "apparel"
+              ? 89
+              : product.category === "smartphones"
+              ? 799
+              : product.category === "laptops"
+              ? 1299
+              : 599;
 
-        const sellingPrice = basePrice + Math.floor(Math.random() * 200) - 100;
-        const revenue = salesVolume * sellingPrice;
-        const costs = revenue * (0.4 + Math.random() * 0.2);
-        const profit = revenue - costs;
+          const sellingPrice =
+            basePrice + Math.floor(Math.random() * 200) - 100;
+          const revenue = salesVolume * sellingPrice;
+          const costs = revenue * (0.4 + Math.random() * 0.2);
+          const profit = revenue - costs;
 
-        await prisma.product_performance.create({
-          data: {
-            product_id: product.id,
-            period: period,
-            sales_volume: salesVolume,
-            selling_price: sellingPrice,
-            revenue: Math.round(revenue),
-            profit: Math.round(profit),
-            costs: Math.round(costs),
-            market_share: 3 + Math.random() * 12, // 3-15% market share
-            customer_satisfaction: 6.5 + Math.random() * 2.5, // 6.5-9.0 satisfaction
-          },
-        });
+          await prisma.product_performance.create({
+            data: {
+              product_id: product.id,
+              period: period,
+              sales_volume: salesVolume,
+              selling_price: sellingPrice,
+              revenue: Math.round(revenue),
+              profit: Math.round(profit),
+              costs: Math.round(costs),
+              market_share: 3 + Math.random() * 12, // 3-15% market share
+              customer_satisfaction: 6.5 + Math.random() * 2.5, // 6.5-9.0 satisfaction
+            },
+          });
         }
       }
     }
   }
-  
-    // Create Company History Records (snapshots for each period)
-    console.log("📈 Creating company history records...");
+
+  // Create Company History Records (snapshots for each period)
+  console.log("📈 Creating company history records...");
   for (const { companyIndex, periods } of hrData) {
     for (let period = 1; period <= periods; period++) {
       const company = companies[companyIndex];
@@ -881,8 +813,6 @@ async function main() {
             total_liabilities:
               company.total_liabilities +
               Math.max(0, -financeRecord.net_profit * 0.2),
-            marketing_budget: company.marketing_budget,
-            credit_rating: company.credit_rating,
             brand_value:
               company.brand_value + Math.max(0, financeRecord.net_profit * 0.1),
             data: JSON.stringify({

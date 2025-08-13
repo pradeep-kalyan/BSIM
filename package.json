@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "next lint && npx tsc --noEmit",
     "seed": "node app/functions/seed",
-    "gitpush": "read -p 'Commit message: ' msg && git add . && git commit -m \"$msg\" && git push",
-    "postinstall": "npx prisma generate"
+    "gitpush": "read -p 'Commit message: ' msg && git add . && git commit -m \"$msg\" && git push"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -34,8 +33,9 @@
     "lucide-react": "^0.510.0",
     "motion": "^12.11.4",
     "next": "15.3.2",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-joyride": "^3.0.0-7",
     "react-number-format": "^5.4.4",
     "react-toastify": "^11.0.5",
     "recharts": "^3.1.0",

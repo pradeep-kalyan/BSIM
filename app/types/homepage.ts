@@ -6,8 +6,6 @@ export interface CompanyHistoryType {
   data?: string;
   total_assets: number;
   total_liabilities: number;
-  marketing_budget: number;
-  credit_rating?: string | null;
   brand_value: number;
 }
 
@@ -128,11 +126,8 @@ export interface DashboardData {
     logo_url: string | null;
     current_period: number;
     cash_balance: number;
-    data?: string;
     total_assets: number;
     total_liabilities: number;
-    marketing_budget: number;
-    credit_rating?: string | null;
     brand_value: number;
   };
   history: CompanyHistoryType[];
@@ -169,4 +164,21 @@ export interface PieTooltipProps {
       percentage: number;
     };
   }>;
+}
+export interface ProductInput {
+  name: string;
+  description?: string;
+  category: string;
+  quality_rating?: number;
+  innovation_rating?: number;
+  sustainability_rating?: number;
+  production_cost?: number;
+  selling_price?: number;
+  inventory_level?: number;
+  production_capacity?: number;
+  development_cost?: number;
+  marketing_budget?: number;
+  status?: string;
+  launch_period?: number;
+  discontinue_period?: number;
 }
