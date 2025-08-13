@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 // import { useForm } from "@/app/context/FormContext";
 import { type ProductFormData } from "@/app/types/simulate";
-import { on } from "events";
 
 interface ProductFormPageProps {
   mode: "add" | "edit";
