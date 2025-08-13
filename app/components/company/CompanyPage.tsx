@@ -152,6 +152,17 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
         View Simulations
       </button>
 
+      <motion.h1
+        initial={{ opacity: 0, y: -15, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="font-extrabold text-white mt-6 mb-8 flex items-center gap-3 tracking-tight"
+      >
+        <Building2 className="w-8 h-8 text-cyan-300 text-xl" />
+        <span className="text-cyan-200 text-3xl">Welcome to</span>
+        <span className="italic text-cyan-100 text-4xl">{simulationName}</span>
+      </motion.h1>
+
       {/* Tab Filters */}
       <div className="mb-3 mt-9 flex justify-between items-center">
         <div className="flex gap-3">
@@ -191,7 +202,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           ))}
         </div>
       </div>
-
       {/* Success Toast */}
       {success && (
         <motion.div
@@ -204,7 +214,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           Company created successfully!
         </motion.div>
       )}
-
       {/* Company Counter */}
       <div className="mb-6 flex  text-slate-400 text-sm">
         Showing {visibleCompanies.length} of {allCompanies.length} total
@@ -293,7 +302,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Edit Modal */}
       {editCompany && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -306,7 +314,6 @@ const CompanyPage = ({ simulationID, simulationName }: Props) => {
           </div>
         </div>
       )}
-
       {/* Delete Confirmation Modal */}
       {confirmDeleteId && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
