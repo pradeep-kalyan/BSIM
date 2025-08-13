@@ -15,7 +15,7 @@ import {
   useProductionForm,
 } from "@/app/context/FormContext";
 import { Slider } from "@/components/ui/slider";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");

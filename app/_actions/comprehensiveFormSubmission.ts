@@ -69,7 +69,6 @@ interface ComprehensiveFormData {
     inventory_level?: number;
     production_capacity?: number;
     development_cost?: number;
-    marketing_budget?: number;
     status: string;
     launch_period?: number | null;
     discontinue_period?: number | null;
@@ -111,11 +110,8 @@ export async function comprehensiveFormSubmission(
         current_period: true,
         cash_balance: true,
         user_id: true,
-        data: true,
         total_assets: true,
         total_liabilities: true,
-        marketing_budget: true,
-        credit_rating: true,
         brand_value: true,
       },
     });
@@ -855,11 +851,8 @@ export async function comprehensiveFormSubmission(
               company_id: companyId,
               period: currentPeriod,
               cash_balance: company.cash_balance,
-              data: company.data,
               total_assets: company.total_assets,
               total_liabilities: company.total_liabilities,
-              marketing_budget: company.marketing_budget,
-              credit_rating: company.credit_rating,
               brand_value: company.brand_value,
             },
           });

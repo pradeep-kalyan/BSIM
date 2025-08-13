@@ -2,24 +2,13 @@
 
 import React from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import { company } from "@prisma/client";
-
+import { CompanyCardProps } from "@/app/types/company";
 import ViewDashboard from "./ViewDashboard";
 
-interface ExtendedCompany extends company {
-  canAccess?: boolean;
-  canEdit?: boolean;
-  user_id: string; // The creator's user ID
-}
-
-interface CompanyCardProps {
-  companies: ExtendedCompany[];
-  currentUserId?: string;
-  onEdit?: (company: ExtendedCompany) => void;
-  onDelete?: (id: string) => void;
-  simulationName: string;
-  simulationID?: string; // Optional, if you want to use it for navigation or other purposes
-}
+const truncateChars = (text: string, charLimit: number) => {
+  if (text.length <= charLimit) return text;
+  return text.slice(0, charLimit) + " ...";
+};
 
 const CompanyList: React.FC<CompanyCardProps> = ({
   companies,
@@ -61,8 +50,11 @@ const CompanyList: React.FC<CompanyCardProps> = ({
             )}
 
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-white truncate">
-                {company.name}
+              <h3
+                className="text-xl font-semibold mb-2 text-white"
+                title={company.name}
+              >
+                {truncateChars(company.name, 20)}
               </h3>
               <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-4">
                 {company.description || "No description provided."}

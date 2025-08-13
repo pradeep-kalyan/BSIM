@@ -48,6 +48,7 @@ export function ButtonStack({
       label: isExporting ? "Exporting..." : "Export Dashboard",
       onClick: capture,
       disabled: isExporting,
+      extraClass: "export-dashboard-btn",
     },
     {
       icon: <ArrowLeft size={20} />,
@@ -60,6 +61,7 @@ export function ButtonStack({
       label: isSimulating ? "Simulating..." : "Simulate",
       onClick: handleSimulate,
       disabled: isSimulating,
+      extraClass: "simulate-dashboard-btn",
     },
     {
       icon: <LogOut size={20} />,
@@ -96,7 +98,7 @@ export function ButtonStack({
       aria-label="Button stack navigation"
       onMouseLeave={() => setHoveredIndex(null)}
     >
-      {buttons.map(({ icon, label, onClick, disabled }, i) => {
+      {buttons.map(({ icon, label, onClick, disabled ,extraClass}, i) => {
         const isExpanded = hoveredIndex === i;
 
         // Positioning logic to fix icon clipping and overlapping
@@ -144,9 +146,10 @@ export function ButtonStack({
             onClick={onClick}
             disabled={disabled}
             className={`
+               ${extraClass}
               absolute top-0
               h-14
-              bg-gradient-to-r from-blue-600 to-indigo-700
+              bg-blue-600
               text-white
               rounded-xl
               font-semibold
@@ -158,7 +161,7 @@ export function ButtonStack({
               whitespace-nowrap
               cursor-pointer
               disabled:opacity-50
-              hover:bg-indigo-800
+              hover:bg-blue-500
               hover:shadow-lg
               transform hover:scale-105
               focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1

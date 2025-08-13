@@ -19,7 +19,7 @@ import {
   useHRRoleManagement,
 } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import { Users, Award, IndianRupee } from "lucide-react";
 import { TooltipWrapper } from "@/components/ui/tooltip";
 

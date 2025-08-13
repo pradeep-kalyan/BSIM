@@ -20,6 +20,8 @@ import {
   Lightbulb,
   Calendar,
   Award,
+  // Play,
+  Info,
 } from "lucide-react";
 import {
   AreaChart,
@@ -53,6 +55,8 @@ import {
   HRRole,
 } from "@/app/types/homepage";
 import { ButtonStack } from "@/app/ui/StackBtn";
+import { getCurrentUser } from "@/app/functions/jwt";
+import Joyride, { CallBackProps } from "react-joyride";
 import { toast } from "react-toastify";
 import { logoutUser } from "@/app/_actions/auth";
 
@@ -142,6 +146,64 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const { exportDashboard, isExporting } = useExport();
   const swapyRef = useRef<HTMLDivElement | null>(null);
   const swapyInstanceRef = useRef<ReturnType<typeof createSwapy> | null>(null);
+  const [joyrideRun, setJoyrideRun] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+  const steps = [
+    {
+      target: ".details",
+      content:
+        "Customize your dashboard layout by dragging and arranging the sections.",
+      disableBeacon: true,
+    },
+    {
+      target: ".export-dashboard-btn",
+      content: "Click here to download your dashboard as an image.",
+      disableBeacon: true,
+    },
+    {
+      target: ".simulate-dashboard-btn",
+      content: "Run a simulation to preview how your strategies will perform.",
+      disableBeacon: true,
+    },
+  ];
+  const [highlightedSelector, setHighlightedSelector] = useState<string | null>(
+    null
+  );
+
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, action, step } = data;
+
+    if (status === "finished" || status === "skipped") {
+      setHighlightedSelector(null);
+      setJoyrideRun(false);
+      return;
+    }
+
+    if (action === "start" || action === "update") {
+      if (typeof step.target === "string") {
+        setHighlightedSelector(step.target);
+      } else if (step.target instanceof HTMLElement) {
+        // Convert the element to a selector if possible
+        const selector = step.target.className
+          ? `.${step.target.className.split(" ").join(".")}`
+          : "";
+        setHighlightedSelector(selector || null);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // remove previous highlights
+    document.querySelectorAll(".joyride-highlight").forEach((el) => {
+      el.classList.remove("joyride-highlight");
+    });
+
+    // highlight the current step target
+    if (highlightedSelector) {
+      const el = document.querySelector(highlightedSelector);
+      if (el) el.classList.add("joyride-highlight");
+    }
+  }, [highlightedSelector]);
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
     try {
@@ -196,11 +258,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       company_id: data?.company?.id || "",
       period: currentPeriod,
       cash_balance: data?.company?.cash_balance || 0,
-      data: data?.company?.data || "{}",
       total_assets: data?.company?.total_assets || 0,
       total_liabilities: data?.company?.total_liabilities || 0,
-      marketing_budget: data?.company?.marketing_budget || 0,
-      credit_rating: data?.company?.credit_rating || null,
       brand_value: data?.company?.brand_value || 0,
     };
 
@@ -250,7 +309,33 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   useEffect(() => {
     swapyInstanceRef.current?.update?.();
   }, [selectedPeriod, data]);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      setCurrentUserId(user?.id);
+    };
+    fetchUser();
+  }, []);
 
+  // Run Joyride only if user hasn't seen it
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const tourKey = `hasSeenHomePageTour_${currentUserId}`;
+    const hasSeen = localStorage.getItem(tourKey);
+
+    if (!hasSeen) {
+      setJoyrideRun(true);
+      localStorage.setItem(tourKey, "true");
+    }
+  }, [currentUserId]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  const handleInfoClick = () => {
+    setJoyrideRun(true);
+  };
   // Get current period data
   const { currentCompanyData } = createCurrentPeriodData();
   const isCurrentPeriod = selectedPeriod === data?.company?.current_period;
@@ -812,6 +897,54 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
   return (
     <div ref={container}>
+      {mounted && (
+        <Joyride
+          steps={steps}
+          run={joyrideRun}
+          continuous
+          showSkipButton
+          spotlightClicks
+          disableOverlay
+          scrollToFirstStep={false}
+          disableScrolling
+          styles={{
+            tooltip: {
+              width: "250px",
+              padding: "10px 14px",
+              fontSize: "14px",
+              lineHeight: "1.4",
+            },
+            buttonClose: {
+              // fixed from buttonClose to tooltipClose
+              width: 13,
+              height: 13,
+              padding: 0,
+              lineHeight: "20px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: "10px",
+              marginRight: "10px",
+            },
+            tooltipContainer: {
+              textAlign: "center",
+              marginTop: "16px",
+            },
+            tooltipContent: {
+              padding: 0,
+            },
+            buttonNext: {
+              padding: "4px 10px",
+              fontSize: "13px",
+            },
+            buttonSkip: {
+              fontSize: "12px",
+            },
+          }}
+          callback={handleJoyrideCallback}
+        />
+      )}
       <div className="h-full bg-slate-800 text-white">
         <style>{`
         @keyframes fadeInUp {
@@ -861,9 +994,47 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
         .capturing-screenshot .recharts-surface {
           overflow: visible !important;
         }
+           /* Info button styles */
+        .info-button {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          z-index: 1000;
+          background: #2563eb; /* Tailwind blue-600 */
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          transition: all 0.3s ease;
+          animation: pulse 2s infinite;
+        }
+
+        
+        .info-button:hover {
+          transform: scale(1.1);
+          box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(102, 126, 234, 0.7);
+          }
+          70% {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 10px rgba(102, 126, 234, 0);
+          }
+          100% {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(102, 126, 234, 0);
+          }
+        }
       `}</style>
         {/* Fixed Header */}
-        <div className="bg-slate-900 shadow-2xl sticky top-0 z-50 w-full">
+        <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sticky top-0 z-50 w-full">
           <div className="container mx-auto px-6 py-4">
             <div className="flex justify-between items-center gap-8">
               {/* LEFT: Company info */}
@@ -913,13 +1084,13 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   </div>
                 </div>
               </div>
-              {/* <ButtonStack
+              <ButtonStack
                 isExporting={isExporting}
                 isSimulating={isSimulating}
                 capture={capture}
                 handleViewCompany={handleViewCompany}
                 handleSimulate={handleSimulate}
-              /> */}
+              />
 
               {/* <div className="flex items-center gap-3 animate-fade-in-up flex-shrink-0">
                 <button
@@ -995,7 +1166,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
                 <LogoutBtn />
               </div> */}
-              <HamburgerMenu
+              {/* <HamburgerMenu
                 isExporting={isExporting}
                 isSimulating={isSimulating}
                 capture={capture}
@@ -1004,13 +1175,13 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 onLogout={() => {
                   handleLogout();
                 }}
-              />
+              /> */}
             </div>
           </div>
         </div>
 
         <div
-          className="container mx-auto px-6 py-8 space-y-8"
+          className="details container mx-auto px-6 py-8 space-y-8"
           data-swapy-container
           ref={swapyRef}
         >
@@ -1505,6 +1676,14 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             </div>
           </div>
         </div>
+        <button
+          onClick={handleInfoClick}
+          className="info-button"
+          title="Take a guided tour"
+          aria-label="Start guided tour"
+        >
+          <Info size={20} />
+        </button>
       </div>
     </div>
   );

@@ -137,8 +137,6 @@ export async function getInitialFormData(companyId: string, period: number) {
           cash_balance: true,
           total_assets: true,
           total_liabilities: true,
-          marketing_budget: true,
-          credit_rating: true,
           brand_value: true,
         },
       }),

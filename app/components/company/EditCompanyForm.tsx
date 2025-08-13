@@ -21,22 +21,7 @@ import {
   FileText,
 } from "lucide-react";
 import formatCurrency from "@/app/functions/formatCurrency";
-interface Props {
-  company: {
-    id: string;
-    name: string;
-    description?: string | null;
-    logo_url?: string | null;
-    cash_balance?: number;
-    total_assets?: number;
-    total_liabilities?: number;
-    marketing_budget?: number;
-    brand_value?: number;
-    company_access?: { user: { email: string } }[];
-  };
-  onClose: () => void;
-  onUpdated?: () => void;
-}
+import { Props } from "@/app/types/company";
 
 const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
   const [formData, setFormData] = useState({
@@ -46,7 +31,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
     cash_balance: company.cash_balance || 0,
     total_assets: company.total_assets || 0,
     total_liabilities: company.total_liabilities || 0,
-    marketing_budget: company.marketing_budget || 0,
     brand_value: company.brand_value || 0,
   });
 

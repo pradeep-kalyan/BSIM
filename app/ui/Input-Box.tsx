@@ -1,4 +1,3 @@
-// ui/Inputbox.tsx
 import React from "react";
 
 interface InputboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -25,12 +24,9 @@ const Inputbox: React.FC<InputboxProps> = ({
 
   return (
     <div className="flex flex-col w-full bg-transparent rounded-md gap-1">
-      <label
-        htmlFor={id}
-        className="text-white/60 font-semibold text-sm ml-1 flex items-center gap-1"
-      >
-        <span>{label}</span>
-        {isRequired && <span className="text-red-500">*</span>}
+      <label htmlFor={id} className="text-white/60 font-semibold text-sm ml-1">
+        {label}
+        {isRequired && <span className="text-red-500 ml-0.5">*</span>}
       </label>
 
       <input
