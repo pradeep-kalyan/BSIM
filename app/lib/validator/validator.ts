@@ -238,12 +238,6 @@ export const productInputSchema = z.object({
   quality_rating: z.number().min(0).max(10).optional(),
   innovation_rating: z.number().min(0).max(10).optional(),
   sustainability_rating: z.number().min(0).max(10).optional(),
-  production_cost: z.number().min(0).optional(),
-  selling_price: z.number().min(0).optional(),
-  inventory_level: z.number().min(0).optional(),
-  production_capacity: z.number().min(0).optional(),
-  development_cost: z.number().min(0).optional(),
-  marketing_budget: z.number().min(0).optional(),
   status: z.enum(["active", "inactive", "discontinued"]).optional(),
   launch_period: z.number().min(1).optional(),
   discontinue_period: z.number().optional(),
@@ -255,28 +249,53 @@ export const hrRoleSchema = z.object({
   head_count: z.number().min(0, "Head count must be non-negative"),
 });
 
-export const createCompanySchema = z.object({
-  simulation_id: z.string().min(1, "Simulation ID is required"),
-  user_id: z.string().min(1, "User ID is required"),
-  name: z.string().min(1, "Company name is required"),
-  description: z.string().optional(),
-  logo_url: z.string().url("Invalid logo URL").optional().or(z.literal("")),
-  cash_balance: z.number().min(0),
-  total_assets: z.number().min(0),
-  total_liabilities: z.number().min(0),
-  marketing_budget: z.number().min(0),
-  brand_value: z.number().min(0),
-  products: z.array(productInputSchema).optional(),
-  accessEmails: z.array(z.string().email("Invalid email")).optional(),
-
-  // HR Decision Data
+export const HRschema = z.object({
   hrRoles: z.array(hrRoleSchema),
   trainingBudget: z.number().min(0),
-  employeeSatisfaction: z.number().min(0).max(100),
+  employeeSatisfaction: z.number().min(0),
 });
 
+export const createCompanySchema = z.object({
+  name: z.string().min(5, "Company name is required"),
+  description: z.string().optional(),
+  logo_url: z.url("Invalid logo URL").optional().or(z.literal("")),
+  cash_balance: z.number().min(1, "Cash balance must be greater than 0"),
+  total_assets: z.number().min(1, "Total assets must be greater than 0"),
+  total_liabilities: z
+    .number()
+    .min(1, "Total liabilities must be greater than 0"),
+  brand_value: z.number().min(0).optional(),
+  products: z.array(productInputSchema).optional(),
+  accessEmails: z.array(z.email("Invalid email")).optional(),
+});
+
+export const ProdIn = z.object({
+  products: z
+    .array(productInputSchema)
+    .min(1, "At least one product is required"),
+});
+
+/* ---------------------- SIM SCHEMA ---------------------- */
+export const simSchema = z.object({
+  name: z.string().min(3, "Simulation name must be at least 3 characters"),
+  description: z
+    .string()
+    .max(300, "Description must be under 300 characters")
+    .optional()
+    .or(z.literal("")),
+  accessEmails: z.array(z.string().email("Invalid email address")).optional(),
+  configFields: z
+    .array(
+      z.object({
+        key: z.string().min(1, "Key is required"),
+        value: z.string().min(1, "Value is required"),
+      })
+    )
+    .optional(),
+});
 /* ---------------------- Inferred Types ---------------------- */
 export type Product = z.infer<typeof productSchema>;
+export type ProductInput = z.infer<typeof productInputSchema>;
 export type Finance = z.infer<typeof financeSchema>;
 export type Production = z.infer<typeof productionSchema>;
 export type HrDecision = z.infer<typeof hrDecisionSchema>;
@@ -295,3 +314,4 @@ export type CreateProductPerformance = z.infer<
   typeof createProductPerformanceSchema
 >;
 export type createCompany = z.infer<typeof createCompanySchema>;
+export type CreateSim = z.infer<typeof simSchema>;

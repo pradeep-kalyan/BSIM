@@ -5,6 +5,25 @@ import Inputbox from "@/app/ui/Input-Box";
 import createSim from "@/app/_actions/createSim";
 import DynamicConfigFields from "./DynamicConfigFields";
 import { FlaskConical, Rocket } from "lucide-react";
+import { z } from "zod";
+
+const simSchema = z.object({
+  name: z.string().min(3, "Simulation name must be at least 3 characters"),
+  description: z
+    .string()
+    .max(300, "Description must be under 300 characters")
+    .optional()
+    .or(z.literal("")),
+  accessEmails: z.array(z.string().email("Invalid email address")).optional(),
+  configFields: z
+    .array(
+      z.object({
+        key: z.string().min(1, "Key is required"),
+        value: z.string().min(1, "Value is required"),
+      })
+    )
+    .optional(),
+});
 
 const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
   const [loading, setLoading] = useState(false);
@@ -13,6 +32,7 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
   ]);
   const [accessEmail, setAccessEmail] = useState("");
   const [accessEmails, setAccessEmails] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleAddEmail = () => {
     if (accessEmail && !accessEmails.includes(accessEmail)) {
@@ -27,8 +47,36 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const formValues = {
+      name: (document.getElementById("name") as HTMLInputElement)?.value || "",
+      description:
+        (document.getElementById("description") as HTMLInputElement)?.value ||
+        "",
+      accessEmails,
+      configFields: newConfigFields.filter(
+        (f) => f.key.trim() !== "" && f.value.trim() !== ""
+      ),
+    };
+
+    const parsed = simSchema.safeParse(formValues);
+
+    if (!parsed.success) {
+      setErrors(
+        Object.fromEntries(
+          Object.entries(parsed.error.flatten().fieldErrors).map(([k, v]) => [
+            k,
+            v?.[0] || "",
+          ])
+        )
+      );
+      return;
+    }
+
+    setErrors({});
     const formData = new FormData(e.currentTarget);
     formData.append("accessEmails", accessEmails.join(","));
+    formData.append("configFields", JSON.stringify(formValues.configFields));
 
     setLoading(true);
     await createSim(formData);
@@ -50,7 +98,9 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
           placeholder_text="Enter simulation name"
           id="name"
           name="name"
+          isRequired
         />
+        {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
 
         <Inputbox
           label="Description"
@@ -59,6 +109,9 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
           id="description"
           name="description"
         />
+        {errors.description && (
+          <p className="text-red-400 text-sm">{errors.description}</p>
+        )}
 
         {/* Access Management */}
         <div className="space-y-2">
@@ -82,6 +135,9 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
               Add
             </button>
           </div>
+          {errors.accessEmails && (
+            <p className="text-red-400 text-sm">{errors.accessEmails}</p>
+          )}
 
           {accessEmails.length > 0 && (
             <div className="space-y-2">
@@ -113,12 +169,15 @@ const CreateSim = ({ onCreated }: { onCreated: () => void }) => {
           fields={newConfigFields}
           setFields={setNewConfigFields}
         />
+        {errors.configFields && (
+          <p className="text-red-400 text-sm">{errors.configFields}</p>
+        )}
 
         <div className="flex justify-end pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 text-white font-medium rounded-xl transition"
+            className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:bg-blue-700 text-white font-medium rounded-xl transition disabled:opacity-50"
           >
             <Rocket size={18} />
             {loading ? "Launching..." : "Launch Simulation"}

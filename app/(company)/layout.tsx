@@ -26,8 +26,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           return;
         }
         setUser(userData);
-      } catch (error) {
-        console.error("Authentication error:", error);
+      } catch {
         router.push("/login");
       } finally {
         setIsLoading(false);

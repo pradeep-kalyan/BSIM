@@ -69,7 +69,7 @@ const CompanyList: React.FC<CompanyCardProps> = ({
               </p>
             </div>
 
-            <div className="flex justify-start mt-2">
+            <div className="flex justify-end items-center mt-2">
               {(isOwner || company.canAccess) && (
                 <ViewDashboard companyId={company.id} />
               )}

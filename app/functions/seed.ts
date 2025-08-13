@@ -1,7 +1,6 @@
 import prisma from "./prisma";
 
 async function main() {
-  console.log("🌱 Starting database seeding...");
 
   // Clean existing data in correct order (respecting foreign key constraints)
   await prisma.product_performance.deleteMany();
@@ -20,7 +19,6 @@ async function main() {
   await prisma.user.deleteMany();
 
   // Create Users
-  console.log("👥 Creating users...");
   const hashedPassword =
     "$2y$10$N/ohrDUZObMGWG30oskpee40vFV8CtG7nCwkDO6vrx9IL6f8OuQZu"; // "password123"
 

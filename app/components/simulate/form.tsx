@@ -215,8 +215,6 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           redirect("/homepage/" + companyId);
         }, 1500);
       } else {
-        console.error("Submission failed:", result);
-
         // Show detailed error message
         let errorMessage = "Error submitting simulation";
 
@@ -280,8 +278,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
           }
         }, 10000);
       }
-    } catch (error) {
-      console.error("Unexpected error in form submission:", error);
+    } catch {
       setIsSubmitting(false);
 
       // Show generic error message
