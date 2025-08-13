@@ -1,5 +1,7 @@
+"use client";
+
 import React from "react";
-import { Input } from "./input";
+import { NumericFormat } from "react-number-format";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { TooltipWrapper } from "./tooltip";
 import { cn } from "@/app/lib/utils/utils";
@@ -33,7 +35,7 @@ function Slider({
   isFixed = false,
   fixedMin,
   fixedMax,
-  required = false, // ✅ Default to false
+  required = false,
   ...props
 }: CustomSliderProps) {
   const [min, setMin] = React.useState(
@@ -69,28 +71,6 @@ function Slider({
     onValueChange?.(val);
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    const newVal = [..._value];
-    let num = Number(e.target.value);
-
-    if (isFixed) {
-      num = Math.max(displayMin, Math.min(displayMax, num));
-    } else if (isPercentage) {
-      num = Math.max(0, Math.min(100, num));
-    } else if (isRating) {
-      num = Math.max(1, Math.min(10, num));
-    } else {
-      if (num > max) setMax(num * 2);
-      if (num < min) setMin(num);
-    }
-
-    newVal[index] = num;
-    handleChange(newVal);
-  };
-
   const displayMin = isFixed
     ? fixedMin ?? (isRating ? 1 : isPercentage ? 0 : min)
     : isRating
@@ -110,7 +90,7 @@ function Slider({
   return (
     <div className="flex flex-col w-full gap-3 text-white">
       {label && (
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           {tooltipText ? (
             <TooltipWrapper label={label} text={tooltipText} />
           ) : (
@@ -125,8 +105,10 @@ function Slider({
         </div>
       )}
 
-      <div className="flex items-center gap-4 w-full">
-        <div className="flex flex-col gap-1">
+      {/* Responsive layout */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
+        {/* Slider section */}
+        <div className="flex flex-col gap-1 flex-1 min-w-20 sm:min-w-0 sm:flex-shrink">
           <SliderPrimitive.Root
             value={value ?? _value}
             defaultValue={defaultValue}
@@ -141,7 +123,7 @@ function Slider({
               handleChange(val);
             }}
             className={cn(
-              "relative flex w-[300px] touch-none select-none items-center",
+              "relative flex touch-none select-none items-center w-full",
               className
             )}
             {...props}
@@ -171,16 +153,40 @@ function Slider({
           </div>
         </div>
 
-        <div className="flex gap-2 w-32">
+        {/* Input section */}
+        <div className="flex gap-2 w-full sm:w-auto sm:flex-shrink-0">
           {_value.map((val, index) => (
-            <Input
+            <NumericFormat
               key={index}
-              type="number"
-              value={val}
-              onChange={(e) => handleInputChange(e, index)}
-              min={displayMin}
-              max={displayMax}
-              className="h-8 text-white bg-gray-900 border-gray-700 focus-visible:ring-blue-500 selection:bg-blue-500 selection:text-white"
+              value={Number.isNaN(val) ? "" : val}
+              onValueChange={(values) => {
+                if (values.value === "") {
+                  const newVal = [..._value];
+                  newVal[index] = NaN;
+                  setValue(newVal);
+                  return;
+                }
+
+                let num = Number(values.value);
+                if (isFixed) {
+                  num = Math.max(displayMin, Math.min(displayMax, num));
+                } else if (isPercentage) {
+                  num = Math.max(0, Math.min(100, num));
+                } else if (isRating) {
+                  num = Math.max(1, Math.min(10, num));
+                } else {
+                  if (num > max) setMax(num * 2);
+                  if (num < min) setMin(num);
+                }
+
+                const newVal = [..._value];
+                newVal[index] = num;
+                handleChange(newVal);
+              }}
+              allowNegative={false}
+              decimalScale={isPercentage || isRating ? 0 : undefined}
+              suffix={isPercentage ? "%" : undefined}
+              className="h-8 min-w-[60px] flex-grow sm:flex-grow-0 w-full sm:w-auto text-white bg-gray-900 border-gray-700 focus-visible:ring-blue-500 selection:bg-blue-500 selection:text-white px-2 rounded"
             />
           ))}
         </div>
