@@ -147,17 +147,17 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     {
       target: ".details",
       content:
-        "Drag the cards to customize and arrange your dashboard layout easily.",
+        "Customize your dashboard layout by dragging and arranging the sections.",
       disableBeacon: true,
     },
     {
       target: ".export-dashboard-btn",
-      content: "Click here to export your dashboard as an image.",
+      content: "Click here to download your dashboard as an image.",
       disableBeacon: true,
     },
     {
       target: ".simulate",
-      content: "Run a simulation to test your strategies.",
+      content: "Run a simulation to preview how your strategies will perform.",
       disableBeacon: true,
     },
   ];
@@ -200,7 +200,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       if (el) el.classList.add("joyride-highlight");
     }
   }, [highlightedSelector]);
-
 
   const swapyInstanceRef = useRef<ReturnType<typeof createSwapy> | null>(null);
   const isValidImageUrl = (url?: string) => {
@@ -893,9 +892,43 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           continuous
           showSkipButton
           spotlightClicks
+          disableOverlay
           scrollToFirstStep
-          styles={{ options: { zIndex: 10000 } }}
-         callback={handleJoyrideCallback}
+          styles={{
+            tooltip: {
+              width: "250px",
+              padding: "10px 14px",
+              fontSize: "14px",
+              lineHeight: "1.4",
+            },
+            buttonClose: {
+              width: 13, 
+              height: 13, 
+              padding: 0, 
+              lineHeight: "20px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop:"10px",
+              marginRight: "10px",
+            },
+            tooltipContainer: {
+              textAlign: "center",
+              marginTop: "16px",
+            },
+            tooltipContent: {
+              padding: 0,
+            },
+            buttonNext: {
+              padding: "4px 10px",
+              fontSize: "13px",
+            },
+            buttonSkip: {
+              fontSize: "12px",
+            },
+          }}
+          callback={handleJoyrideCallback}
         />
       )}
       <div className="min-h-screen bg-slate-800 text-white">
@@ -958,8 +991,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           color: white;
           border: none;
           border-radius: 50%;
-          width: 60px;
-          height: 60px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1568,7 +1601,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           title="Take a guided tour"
           aria-label="Start guided tour"
         >
-          <Info size={24} />
+          <Info size={20} />
         </button>
       </div>
     </div>
