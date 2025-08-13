@@ -18,7 +18,7 @@ function FormDataInitializer() {
     const fetchAndInitializeForms = async () => {
       setIsLoading(true);
       try {
-        const initialData = await getInitialFormData(comId, period - 1);
+        const initialData = await getInitialFormData(comId, period === 1 ? period : period - 1);
 
         // Create production data map by product_id
         const productionByProductId = new Map();

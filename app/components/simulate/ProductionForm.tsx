@@ -2,7 +2,7 @@
 
 import {
   IndianRupee,
-  Factory,
+  Box,
   Package,
   AlertTriangle,
   CheckCircle,
@@ -34,6 +34,7 @@ const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 // Helper cost calculation
+// Helper cost calculation
 const calculateProductionCost = (
   targetUnits: number,
   costPerUnit: number,
@@ -61,26 +62,25 @@ const ProductionForm = () => {
     const updatedProducts = productionData.products.map((prod) =>
       prod.product_id === productId
         ? {
-            ...prod,
-            [field]: value,
-            total_cost:
-              field === "units_to_produce" ||
+          ...prod,
+          [field]: value,
+          total_cost:
+            field === "units_to_produce" ||
               field === "cost_per_unit" ||
               field === "defect_rate"
-                ? calculateProductionCost(
-                    field === "units_to_produce"
-                      ? value
-                      : prod.units_to_produce,
-                    field === "cost_per_unit" ? value : prod.cost_per_unit,
-                    field === "defect_rate" ? value : prod.defect_rate
-                  )
-                : prod.total_cost,
-          }
+              ? calculateProductionCost(
+                field === "units_to_produce" ? value : prod.units_to_produce,
+                field === "cost_per_unit" ? value : prod.cost_per_unit,
+                field === "defect_rate" ? value : prod.defect_rate
+              )
+              : prod.total_cost,
+        }
         : prod
     );
 
     updateProductionData({ ...productionData, products: updatedProducts });
 
+    // Update inventory level if units changed
     // Update inventory level if units changed
     if (field === "units_to_produce") {
       const productIndex = productData.findIndex((p) => p.id === productId);
@@ -92,8 +92,10 @@ const ProductionForm = () => {
     }
 
     setError(String(field), "");
+    setError(String(field), "");
   }
 
+  // Sync productData with productionData
   // Sync productData with productionData
   React.useEffect(() => {
     if (productData.length > 0) {
@@ -123,10 +125,15 @@ const ProductionForm = () => {
           ...productionData,
           products: [...productionData.products, ...newProductionEntries],
         });
+        updateProductionData({
+          ...productionData,
+          products: [...productionData.products, ...newProductionEntries],
+        });
       }
     }
   }, [productData, productionData, updateProductionData]);
 
+  // Merge data
   // Merge data
   const mergedProducts = productData.map((prod) => {
     const productionEntry = productionData.products.find(
@@ -181,7 +188,7 @@ const ProductionForm = () => {
   );
 
   return (
-    <div className="bg-slate-800/50 shadow-md rounded-xl py-4 px-6">
+    <div className="bg-slate-800/50 shadow-md py-4 px-6">
       {/* Key Metrics */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <InfoCard
@@ -190,7 +197,7 @@ const ProductionForm = () => {
             (sum, prod) => sum + (prod.production_capacity || 0),
             0
           )}
-          Icon={Factory}
+          Icon={Box}
           iconColor="text-purple-400"
           labelColor="text-white"
           valueColor="text-white"
@@ -222,21 +229,25 @@ const ProductionForm = () => {
         />
       </section>
       <div className="flex items-center justify-between mb-3">
-        <div className="flex text-xl text-white font-bold">Production</div>
+        <div className="flex text-xl text-white tracking-wide font-semibold font-roboto-sans">
+          Production Strategy
+        </div>
         {/* Product Selector */}
-        <div className="flex items-center justify-center">
-          <label className="block text-sm font-medium text-white mb-2">
-            Select Product
+        <div className="flex items-center justify-center mr-8">
+          <label className="block text-m font-medium font-roboto-sans text-white mb-2">
+            Select Product:
             <select
               value={selectedProductId}
               onChange={(e) => setSelectedProductId(e.target.value)}
-              className="bg-slate-800 text-white p-2 rounded-md border border-slate-600 ml-3"
+              className="bg-slate-800 text-white p-2 font-geist-sans rounded-md border border-slate-600 ml-3"
             >
-              {mergedProducts.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
+              {mergedProducts
+                .filter((product) => product.status === "active")
+                .map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
             </select>
           </label>
         </div>
@@ -246,8 +257,8 @@ const ProductionForm = () => {
       {selectedProduct ? (
         <div className="bg-slate-800/50 shadow-md rounded-xl border border-slate-600 p-6 mb-4">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-white">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-white font-geist-sans">
               {selectedProduct.name}
             </h3>
             <div>
@@ -255,36 +266,37 @@ const ProductionForm = () => {
                 const productionEfficiency =
                   selectedProduct.production_capacity > 0
                     ? (selectedProduct.units_to_produce /
-                        selectedProduct.production_capacity) *
-                      100
+                      selectedProduct.production_capacity) *
+                    100
                     : 0;
                 if (productionEfficiency > 100)
                   return (
-                    <div className="flex items-center gap-1 text-red-400 bg-red-500/20 px-3 py-1 rounded-full text-sm">
+                    <div className="flex items-center gap-1 font-geist-sans text-red-400 bg-red-500/20 px-3 py-1 rounded-full text-sm">
                       <AlertTriangle className="h-4 w-4" /> Overload
                     </div>
                   );
                 if (productionEfficiency > 80)
                   return (
-                    <div className="flex items-center gap-1 text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full text-sm">
+                    <div className="flex items-center gap-1 font-geist-sans text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full text-sm">
                       <Zap className="h-4 w-4" /> High Load
                     </div>
                   );
                 return (
-                  <div className="flex items-center gap-1 text-green-400 bg-green-500/20 px-3 py-1 rounded-full text-sm">
+                  <div className="flex items-center gap-1 font-geist-sans text-green-400 bg-green-500/20 px-3 py-1 rounded-full text-sm">
                     <CheckCircle className="h-4 w-4" /> Optimal
                   </div>
                 );
               })()}
             </div>
           </div>
+          <hr className=" my-5 border border-slate-700" />
 
           {/* Sliders */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4 px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-8">
             <div className="space-y-6">
               <Slider
                 label="Units to Produce"
-                tooltipText="Final usable units"
+                tooltipText="Set the number of final usable units you want to produce (defect rate only affects production cost)"
                 value={[selectedProduct.units_to_produce]}
                 min={0}
                 max={selectedProduct.production_capacity * 2 || 2000}
@@ -300,33 +312,25 @@ const ProductionForm = () => {
 
               <Slider
                 label="Cost per Unit (₹)"
-                tooltipText="Production cost per unit"
+                tooltipText="The cost per unit affects your total production expenses and profit margins"
                 value={[selectedProduct.cost_per_unit]}
                 min={0}
                 max={1000}
                 onValueChange={(val) =>
                   selectedProduct.id &&
-                  handleProductChange(
-                    selectedProduct.id,
-                    "cost_per_unit",
-                    val[0]
-                  )
+                  handleProductChange(selectedProduct.id, "cost_per_unit", val[0])
                 }
               />
 
               <Slider
                 label="Production Capacity"
-                tooltipText="Maximum units per year"
+                tooltipText="Production capacity determines how many units you can produce per year"
                 value={[selectedProduct.production_capacity || 0]}
                 min={0}
                 max={selectedProduct.production_capacity || 10000}
                 onValueChange={(val) =>
                   selectedProduct.id &&
-                  handleProductChange(
-                    selectedProduct.id,
-                    "production_capacity",
-                    val[0]
-                  )
+                  handleProductChange(selectedProduct.id, "production_capacity", val[0])
                 }
               />
             </div>
@@ -334,7 +338,7 @@ const ProductionForm = () => {
             <div className="space-y-6">
               <Slider
                 label="Defect Rate (%)"
-                tooltipText="Production defect percentage"
+                tooltipText="Defect rate increases production costs (more units must be produced to get the target amount) but doesn't reduce final usable units"
                 isPercentage
                 value={[selectedProduct.defect_rate]}
                 min={0}
@@ -347,30 +351,26 @@ const ProductionForm = () => {
 
               <Slider
                 label="Storage Capacity"
-                tooltipText="Units storage capacity"
+                tooltipText="Storage capacity determines how many units you can store after production"
                 value={[selectedProduct.storage_capacity || 0]}
                 min={0}
                 max={10000}
                 onValueChange={(val) =>
                   selectedProduct.id &&
-                  handleProductChange(
-                    selectedProduct.id,
-                    "storage_capacity",
-                    val[0]
-                  )
+                  handleProductChange(selectedProduct.id, "storage_capacity", val[0])
                 }
               />
 
               {/* Production Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <div className="bg-slate-800/50 rounded-xl p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 mx-5">
+                <div className="bg-slate-800/50 rounded-xl p-5 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <IndianRupee className="h-4 w-4 text-green-400" />
-                    <span className="text-sm font-semibold text-green-400">
+                    <span className="text-sm font-semibold font-roboto-sans text-green-400">
                       Production Cost
                     </span>
                   </div>
-                  <div className="text-xl font-bold text-white">
+                  <div className="text-lg font-semibold text-white font-geist-sans">
                     ₹
                     {formatNumber(
                       Math.round(
@@ -384,21 +384,21 @@ const ProductionForm = () => {
                   </div>
                 </div>
 
-                <div className="bg-slate-800/50 rounded-xl p-4">
+                <div className="bg-slate-800/50 rounded-xl p-5 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Warehouse className="h-4 w-4 text-purple-400" />
-                    <span className="text-sm font-semibold text-purple-400">
+                    <span className="text-sm text-purple-400 font-semibold font-roboto-sans">
                       Storage Usage
                     </span>
                   </div>
-                  <div className="text-xl font-bold text-white">
+                  <div className="text-lg font-semibold text-white font-geist-sans">
                     {selectedProduct.storage_capacity > 0
                       ? `${(
-                          (selectedProduct.units_to_produce /
-                            selectedProduct.storage_capacity) *
-                          100
-                        ).toFixed(1)}%`
-                      : "N/A"}
+                        (selectedProduct.units_to_produce /
+                          selectedProduct.storage_capacity) *
+                        100
+                      ).toFixed(1)}%`
+                      : "0.0%"}
                     <span className="text-sm text-slate-400 ml-2">
                       {selectedProduct.storage_capacity > 0
                         ? "of capacity"
@@ -409,35 +409,35 @@ const ProductionForm = () => {
               </div>
             </div>
           </div>
+
         </div>
       ) : null}
 
       {/* Financial Summary */}
       <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
-        <h4 className="text-lg font-bold text-white mb-3">
+        <h4 className="text-lg tracking-wide font-semibold font-roboto-sans text-white mb-3">
           Financial Impact Summary
         </h4>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-center">
           <div className="bg-slate-600/40 rounded-lg p-3">
-            <p className="text-slate-300 text-xs mb-1">Total Production Cost</p>
-            <p className="text-lg font-bold text-white">
-              ₹{formatNumber(Math.round(totalCost))}
+            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Total Production Cost</p>
+            <p className="text-lg font-semibold text-white font-geist-sans">
+              {formatCurrency(totalCost)}
             </p>
           </div>
           <div className="bg-slate-600/40 rounded-lg p-3">
-            <p className="text-slate-300 text-xs mb-1">Available Cash</p>
-            <p className="text-lg font-bold text-white">
+            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Available Cash</p>
+            <p className="text-lg font-semibold text-white font-geist-sans">
               {formatCurrency(cashBalance.originalCashBalance ?? 0)}
             </p>
           </div>
           <div className="bg-slate-600/40 rounded-lg p-3">
-            <p className="text-slate-300 text-xs mb-1">Cash After Production</p>
+            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Cash After Production</p>
             <p
-              className={`text-lg font-bold ${
-                totalCost > projectedCashBalance
-                  ? "text-red-400"
-                  : "text-emerald-400"
-              }`}
+              className={`text-lg font-semibold ${totalCost > projectedCashBalance
+                ? "font-geist-sans text-red-400"
+                : "font-geist-sans text-emerald-400"
+                }`}
             >
               {formatCurrency(Math.round(projectedCashBalance))}
             </p>
@@ -449,3 +449,4 @@ const ProductionForm = () => {
 };
 
 export default ProductionForm;
+

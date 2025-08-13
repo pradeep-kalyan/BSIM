@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-
 import { getSimulations, deleteSimulation } from "@/app/_actions/createSim";
-
 import { getCurrentUser } from "@/app/functions/jwt";
 import CreateSim from "../../components/company/CreateSim";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +16,7 @@ const Page = () => {
   const [initialLoad, setInitialLoad] = useState(true);
   const [success, setSuccess] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
+  const [currentUserName, setCurrentUserName] = useState<string | undefined>();
   const [editSim, setEditSim] = useState<ExtendedSimulation | null>(null);
   const [activeTab, setActiveTab] = useState<"owned" | "shared" | "all">(
     "owned"
@@ -29,10 +28,9 @@ const Page = () => {
     const data = await getSimulations();
     const user = await getCurrentUser();
 
-    // Type assertion since getSimulations already processes the data correctly
     setSimulations(data as unknown as ExtendedSimulation[]);
-
     setCurrentUserId(user?.id);
+    setCurrentUserName(user?.name || "Explorer");
     setInitialLoad(false);
   };
 
@@ -87,41 +85,51 @@ const Page = () => {
 
   return (
     <div className="min-h-screen px-6 py-10 bg-slate-900 text-white relative">
-      {/* Tabs */}
-      {/* Tab Filters */}
-<div className="mb-3 mt-9 flex justify-between items-center">
-  <div className="flex gap-3">
-    {[
-      { key: "owned", label: "Owned", count: ownedSimulations.length },
-      { key: "shared", label: "Shared", count: sharedSimulations.length },
-      { key: "all", label: "All", count: allSimulations.length },
-    ].map((tab) => (
-      <button
-        key={tab.key}
-        onClick={() => setActiveTab(tab.key as "owned" | "shared" | "all")}
-        className={`relative px-5 py-3 rounded-xl font-medium transition-colors ${
-          activeTab === tab.key
-            ? "bg-blue-600 text-white"
-            : "bg-slate-800 text-slate-200 hover:bg-slate-700"
-        }`}
+      {/* Welcome Message */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mb-8"
       >
-        {tab.label}
+        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+          Welcome back, {currentUserName}! 🚀
+        </h1>
+      </motion.div>
 
-        {/* Count badge */}
-        <span
-          className={`absolute -top-1.5 -right-1.5 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-semibold ${
-            activeTab === tab.key
-              ? "bg-white text-blue-600"
-              : "bg-slate-600 text-white"
-          }`}
-        >
-          {tab.count}
-        </span>
-      </button>
-    ))}
-  </div>
-</div>
-
+      {/* Tabs */}
+      <div className="mb-3 mt-2 flex justify-between items-center">
+        <div className="flex gap-3">
+          {[
+            { key: "owned", label: "Owned", count: ownedSimulations.length },
+            { key: "shared", label: "Shared", count: sharedSimulations.length },
+            { key: "all", label: "All", count: allSimulations.length },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() =>
+                setActiveTab(tab.key as "owned" | "shared" | "all")
+              }
+              className={`relative px-5 py-3 rounded-xl font-medium transition-colors ${
+                activeTab === tab.key
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-800 text-slate-200 hover:bg-slate-700"
+              }`}
+            >
+              {tab.label}
+              <span
+                className={`absolute -top-1.5 -right-1.5 w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-semibold ${
+                  activeTab === tab.key
+                    ? "bg-white text-blue-600"
+                    : "bg-slate-600 text-white"
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Success Toast */}
       {success && (
@@ -145,7 +153,6 @@ const Page = () => {
       {/* Dropdowns + Toggle Button */}
       {allSimulations.length > 0 && (
         <div className="absolute top-4 right-4 flex items-center gap-3 z-10">
-          {/* Toggle Create/View */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

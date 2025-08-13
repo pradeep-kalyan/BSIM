@@ -20,7 +20,6 @@ import {
   Lightbulb,
   Calendar,
   Award,
-  Play,
 } from "lucide-react";
 import {
   AreaChart,
@@ -41,7 +40,8 @@ import QuickStat from "@/app/ui/QuickStat";
 import ChartCard from "@/app/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
-import LogoutBtn from "@/app/components/auth/Logout";
+import HamburgerMenu from './HamburgerMenu';
+// import LogoutBtn from "@/app/components/auth/Logout";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
@@ -52,6 +52,9 @@ import {
   TooltipProps,
   HRRole,
 } from "@/app/types/homepage";
+import { ButtonStack } from "@/app/ui/StackBtn";
+import { toast } from "react-toastify";
+import { logoutUser } from "@/app/_actions/auth";
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (
@@ -167,7 +170,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       .toUpperCase();
 
     return (
-      <div className="w-32 h-32 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-white text-4xl font-bold">
+      <div className="w-28  h-28 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-white text-4xl font-bold">
         {showFallback ? (
           <span>{initials}</span>
         ) : (
@@ -265,17 +268,17 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const finForPeriod =
     isCurrentPeriod && data.finance_decision
       ? {
-          period: selectedPeriod,
-          total_revenue: data.finance_decision.total_revenue || 0,
-          net_profit: data.finance_decision.net_profit || 0,
-          cash_balance:
-            data.finance_decision.cash_balance ||
-            data?.company?.cash_balance ||
-            0,
-          operating_costs: data.finance_decision.operating_costs || 0,
-          roi: data.finance_decision.roi || 0,
-          burn_rate: data.finance_decision.burn_rate || 0,
-        }
+        period: selectedPeriod,
+        total_revenue: data.finance_decision.total_revenue || 0,
+        net_profit: data.finance_decision.net_profit || 0,
+        cash_balance:
+          data.finance_decision.cash_balance ||
+          data?.company?.cash_balance ||
+          0,
+        operating_costs: data.finance_decision.operating_costs || 0,
+        roi: data.finance_decision.roi || 0,
+        burn_rate: data.finance_decision.burn_rate || 0,
+      }
       : data.financialHistory?.find((f) => +f.period === +selectedPeriod) || {};
 
   const finForPeriodPrev =
@@ -285,9 +288,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   // Product performance - include current period products
   const productPerformance = isCurrentPeriod
     ? data.productPerformance?.filter((p) => +p.period === +selectedPeriod) ||
-      []
+    []
     : data.productPerformance?.filter((p) => +p.period === +selectedPeriod) ||
-      [];
+    [];
 
   const productPerformancePrev =
     data.productPerformance?.filter(
@@ -298,125 +301,125 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const hrMetrics =
     isCurrentPeriod && data.hr_decision
       ? [
-          {
-            period: selectedPeriod,
-            totalBudget: data.hr_decision.total_budget || 0,
-            total_budget: data.hr_decision.total_budget || 0,
-            employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
-            employee_satisfaction: data.hr_decision.employee_satisfaction || 0,
-            totalEmployees:
+        {
+          period: selectedPeriod,
+          totalBudget: data.hr_decision.total_budget || 0,
+          total_budget: data.hr_decision.total_budget || 0,
+          employeeSatisfaction: data.hr_decision.employee_satisfaction || 0,
+          employee_satisfaction: data.hr_decision.employee_satisfaction || 0,
+          totalEmployees:
+            data.hr_decision.total_employee_count ||
+            data.hr_decision.roles?.reduce(
+              (sum: number, role: HRRole) => sum + (role.head_count || 0),
+              0
+            ) ||
+            0,
+          total_employee_count:
+            data.hr_decision.total_employee_count ||
+            data.hr_decision.roles?.reduce(
+              (sum: number, role: HRRole) => sum + (role.head_count || 0),
+              0
+            ) ||
+            0,
+          // Calculate newHires as difference from previous period
+          newHires: (() => {
+            const currentTotal =
               data.hr_decision.total_employee_count ||
               data.hr_decision.roles?.reduce(
                 (sum: number, role: HRRole) => sum + (role.head_count || 0),
                 0
               ) ||
-              0,
-            total_employee_count:
-              data.hr_decision.total_employee_count ||
-              data.hr_decision.roles?.reduce(
+              0;
+            const prevPeriodHR = data.hrMetrics?.find(
+              (h) => +h.period === +(selectedPeriod - 1)
+            );
+
+            type PrevHRData = {
+              totalEmployees?: number;
+              total_employee_count?: number;
+              employees?: number;
+              roles?: HRRole[];
+            };
+
+            const prevHRTyped = prevPeriodHR as PrevHRData;
+            const prevTotal =
+              prevHRTyped?.totalEmployees ??
+              prevHRTyped?.total_employee_count ??
+              prevHRTyped?.employees ??
+              prevHRTyped?.roles?.reduce(
                 (sum: number, role: HRRole) => sum + (role.head_count || 0),
                 0
-              ) ||
-              0,
-            // Calculate newHires as difference from previous period
-            newHires: (() => {
+              ) ??
+              0;
+            return Math.max(0, currentTotal - prevTotal);
+          })(),
+          roles: data.hr_decision.roles || [],
+        },
+      ]
+      : data.hrMetrics
+        ?.filter((h) => +h.period === +selectedPeriod)
+        .map((metric) => ({
+          ...metric,
+          // Ensure newHires is calculated for historical periods if not present
+          newHires:
+            metric.newHires ??
+            (() => {
               const currentTotal =
-                data.hr_decision.total_employee_count ||
-                data.hr_decision.roles?.reduce(
-                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
-                  0
-                ) ||
-                0;
-              const prevPeriodHR = data.hrMetrics?.find(
-                (h) => +h.period === +(selectedPeriod - 1)
-              );
-
-              type PrevHRData = {
-                totalEmployees?: number;
-                total_employee_count?: number;
-                employees?: number;
-                roles?: HRRole[];
-              };
-
-              const prevHRTyped = prevPeriodHR as PrevHRData;
-              const prevTotal =
-                prevHRTyped?.totalEmployees ??
-                prevHRTyped?.total_employee_count ??
-                prevHRTyped?.employees ??
-                prevHRTyped?.roles?.reduce(
+                metric.totalEmployees ??
+                metric.total_employee_count ??
+                metric.employees ??
+                metric.roles?.reduce(
                   (sum: number, role: HRRole) => sum + (role.head_count || 0),
                   0
                 ) ??
                 0;
+
+              const prevMetric = data.hrMetrics?.find(
+                (h) => +h.period === +(selectedPeriod - 1)
+              );
+              const prevTotal =
+                prevMetric?.totalEmployees ??
+                prevMetric?.total_employee_count ??
+                prevMetric?.employees ??
+                prevMetric?.roles?.reduce(
+                  (sum: number, role: HRRole) => sum + (role.head_count || 0),
+                  0
+                ) ??
+                0;
+
               return Math.max(0, currentTotal - prevTotal);
             })(),
-            roles: data.hr_decision.roles || [],
-          },
-        ]
-      : data.hrMetrics
-          ?.filter((h) => +h.period === +selectedPeriod)
-          .map((metric) => ({
-            ...metric,
-            // Ensure newHires is calculated for historical periods if not present
-            newHires:
-              metric.newHires ??
-              (() => {
-                const currentTotal =
-                  metric.totalEmployees ??
-                  metric.total_employee_count ??
-                  metric.employees ??
-                  metric.roles?.reduce(
-                    (sum: number, role: HRRole) => sum + (role.head_count || 0),
-                    0
-                  ) ??
-                  0;
-
-                const prevMetric = data.hrMetrics?.find(
-                  (h) => +h.period === +(selectedPeriod - 1)
-                );
-                const prevTotal =
-                  prevMetric?.totalEmployees ??
-                  prevMetric?.total_employee_count ??
-                  prevMetric?.employees ??
-                  prevMetric?.roles?.reduce(
-                    (sum: number, role: HRRole) => sum + (role.head_count || 0),
-                    0
-                  ) ??
-                  0;
-
-                return Math.max(0, currentTotal - prevTotal);
-              })(),
-          })) || [
-          { department: "No Data", employees: 0, satisfaction: 0, newHires: 0 },
-        ];
+        })) || [
+        { department: "No Data", employees: 0, satisfaction: 0, newHires: 0 },
+      ];
 
   // Production data - use current decision for current period
   const productionData =
     isCurrentPeriod && data.production_decision
       ? [
-          {
-            period: selectedPeriod,
-            month: "Current",
-            produced: data.production_decision.units_to_produce || 0,
-            defects: Math.round(
-              ((data.production_decision.units_to_produce || 0) *
-                (data.production_decision.defect_rate || 0)) /
+        {
+          period: selectedPeriod,
+          month: "Current",
+          produced: data.production_decision.units_to_produce || 0,
+          defects: Math.round(
+            ((data.production_decision.units_to_produce || 0) *
+              (data.production_decision.defect_rate || 0)) /
+            100
+          ),
+          efficiency:
+            (data.production_decision.production_capacity ?? 0) > 0
+              ? Math.round(
+                ((data.production_decision.units_to_produce || 0) /
+                  (data.production_decision.production_capacity ?? 1)) *
                 100
-            ),
-            efficiency:
-              (data.production_decision.production_capacity ?? 0) > 0
-                ? Math.round(
-                    ((data.production_decision.units_to_produce || 0) /
-                      (data.production_decision.production_capacity ?? 1)) *
-                      100
-                  )
-                : 0,
-            budget: data.production_decision.budget || 0,
-          },
-        ]
+              )
+              : 0,
+          budget: data.production_decision.budget || 0,
+        },
+      ]
       : data.productionData?.filter((d) => +d.period === +selectedPeriod) || [
-          { month: "Current", produced: 0, defects: 0, efficiency: 0 },
-        ];
+        { month: "Current", produced: 0, defects: 0, efficiency: 0 },
+      ];
 
   // Get period-specific decisions from arrays when available
   const hr_decision = isCurrentPeriod
@@ -500,9 +503,9 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       color: "#EF4444",
       percentage: totalDeptBudget
         ? 100 -
-          (Math.round((rd_budget / totalDeptBudget) * 100) +
-            Math.round((production_budget / totalDeptBudget) * 100) +
-            Math.round((marketing_budget / totalDeptBudget) * 100))
+        (Math.round((rd_budget / totalDeptBudget) * 100) +
+          Math.round((production_budget / totalDeptBudget) * 100) +
+          Math.round((marketing_budget / totalDeptBudget) * 100))
         : 0,
     },
   ];
@@ -529,16 +532,16 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       );
       return periodData
         ? {
-            ...periodData,
-            revenue: periodData.total_revenue || periodData.revenue || 0,
-            profit: periodData.net_profit || periodData.profit || 0,
-          }
+          ...periodData,
+          revenue: periodData.total_revenue || periodData.revenue || 0,
+          profit: periodData.net_profit || periodData.profit || 0,
+        }
         : {
-            period,
-            revenue: 0,
-            profit: 0,
-            total_revenue: 0,
-          };
+          period,
+          revenue: 0,
+          profit: 0,
+          total_revenue: 0,
+        };
     });
 
     // Filter out any entries with invalid data
@@ -606,21 +609,21 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     ),
     productPerformance: productPerformance.length
       ? productPerformance.filter(
-          (product) => product && (product.name || product.product?.name)
-        )
+        (product) => product && (product.name || product.product?.name)
+      )
       : [],
     hrMetrics: hrMetrics.length
       ? hrMetrics.filter(
-          (metric) => metric && typeof metric.period === "number"
-        )
+        (metric) => metric && typeof metric.period === "number"
+      )
       : [
-          {
-            department: "No Data",
-            employees: 0,
-            satisfaction: 0,
-            newHires: 0,
-          },
-        ],
+        {
+          department: "No Data",
+          employees: 0,
+          satisfaction: 0,
+          newHires: 0,
+        },
+      ],
     productionData: productionData.length
       ? productionData.filter((data) => data && typeof data.period === "number")
       : [{ month: "Current", produced: 0, defects: 0, efficiency: 0 }],
@@ -774,15 +777,12 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const capture = async () => {
     try {
       if (!container.current) {
-
         alert("Unable to capture: Dashboard container is not available");
         return;
       }
 
       await exportDashboard(container.current);
     } catch (error) {
-
-
       let errorMessage = "Dashboard export failed. ";
       if (error instanceof Error) {
         errorMessage += error.message;
@@ -794,9 +794,25 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     }
   };
 
+  const { clearAll } = useSimulation();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      clearAll();
+      toast.info("Logout successful");
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 100);
+    } catch {
+      toast.error("Logout failed. Please try again.");
+    }
+  };
+
   return (
     <div ref={container}>
-      <div className="min-h-screen bg-slate-800 text-white">
+      <div className="h-full bg-slate-800 text-white">
         <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
@@ -846,76 +862,149 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           overflow: visible !important;
         }
       `}</style>
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
-          <div className="container mx-auto py-4">
-            <div className="flex items-center gap-34">
-              {/* LEFT: Company name + logo + period */}
-              <div className="flex items-start gap-4 animate-slide-in-left ml-22">
-                {/* Logo */}
-                <CompanyLogo
-                  logoUrl={data?.company?.logo_url ?? undefined}
-                  companyName={data?.company?.name || "Company"}
-                />
-                {/* Company name and description */}
-                <div>
-                  <h1 className="text-4xl font-bold mt-4">
-                    {data?.company?.name}
+        {/* Fixed Header */}
+        <div className="bg-slate-900 shadow-2xl sticky top-0 z-50 w-full">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex justify-between items-center gap-8">
+              {/* LEFT: Company info */}
+              <div className="flex items-center gap-4 animate-slide-in-left min-w-0 flex-1">
+                {/* Company Logo */}
+                <div className="flex-shrink-0">
+                  <CompanyLogo
+                    logoUrl={data?.company?.logo_url ?? undefined}
+                    companyName={data?.company?.name || "Company"}
+                  />
+                </div>
+
+                {/* Company Details */}
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl font-bold text-white truncate">
+                    {data?.company?.name || "Company Dashboard"}
                   </h1>
 
-                  {/* Period selector */}
-                  <div className="flex items-center mt-3 space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Calendar size={16} />
-                      <span className="text-sm">Period:</span>
-                      <select
-                        className="ml-2 px-2 py-1 rounded bg-slate-800 text-white border border-slate-600 focus:outline-none"
-                        value={selectedPeriod}
-                        onChange={handlePeriodChange}
-                      >
-                        {periods.map((p, index) => (
-                          <option key={`period-${p}-${index}`} value={p}>
-                            Period {p}{" "}
-                            {p === data?.company?.current_period
-                              ? "(Current)"
-                              : ""}
-                          </option>
-                        ))}
-                      </select>
-                      {isCurrentPeriod && (
-                        <span className="current-period-badge">LIVE</span>
-                      )}
-                    </div>
+                  {/* Period Selector */}
+                  <div className="flex items-center mt-2 space-x-2">
+                    <Calendar
+                      size={16}
+                      className="text-gray-300 flex-shrink-0"
+                    />
+                    <span className="text-sm text-gray-300 whitespace-nowrap">
+                      Period:
+                    </span>
+                    <select
+                      className="px-3 py-1 rounded-md bg-slate-800 text-white border border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm min-w-[120px]"
+                      value={selectedPeriod}
+                      onChange={handlePeriodChange}
+                    >
+                      {periods.map((p, index) => (
+                        <option key={`period-${p}-${index}`} value={p}>
+                          Period {p}{" "}
+                          {p === data?.company?.current_period
+                            ? "(Current)"
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                    {isCurrentPeriod && (
+                      <span className="current-period-badge whitespace-nowrap">
+                        LIVE
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
-              {/* Right side: buttons */}
-              <div className="flex gap-3 items-center animate-fade-in-up ml-22">
+              {/* <ButtonStack
+                isExporting={isExporting}
+                isSimulating={isSimulating}
+                capture={capture}
+                handleViewCompany={handleViewCompany}
+                handleSimulate={handleSimulate}
+              /> */}
+
+              {/* <div className="flex items-center gap-3 animate-fade-in-up flex-shrink-0">
                 <button
                   onClick={capture}
                   disabled={isExporting}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 cursor-pointer rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
+                  title="Export dashboard as image"
                 >
-                  {isExporting ? "Exporting..." : "Export Dashboard"}
+                  {isExporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Export
+                    </>
+                  )}
                 </button>
+
                 <button
                   onClick={handleViewCompany}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
+                  title="Back to companies list"
                 >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
                   Back to Companies
                 </button>
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleSimulate}
-                    disabled={isSimulating}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    {isSimulating ? "Simulating..." : "Simulate"}
-                    <Play size={20} />
-                  </button>
-                  <LogoutBtn />
-                </div>
-              </div>
+
+                <button
+                  onClick={handleSimulate}
+                  disabled={isSimulating}
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
+                  title="Start simulation"
+                >
+                  {isSimulating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Simulating...
+                    </>
+                  ) : (
+                    <>
+                      <Play size={16} />
+                      Simulate
+                    </>
+                  )}
+                </button>
+
+                <LogoutBtn />
+              </div> */}
+              <HamburgerMenu
+                isExporting={isExporting}
+                isSimulating={isSimulating}
+                capture={capture}
+                handleViewCompany={handleViewCompany}
+                handleSimulate={handleSimulate}
+                onLogout={() => {
+                  handleLogout();
+                }}
+              />
             </div>
           </div>
         </div>
@@ -959,9 +1048,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 <DashboardCard
                   title="Total Revenue"
                   value={formatCurrency(currentRevenue ?? 0)}
-                  subtitle={`Period ${selectedPeriod}${
-                    isCurrentPeriod ? " (Current)" : ""
-                  }`}
+                  subtitle={`Period ${selectedPeriod}${isCurrentPeriod ? " (Current)" : ""
+                    }`}
                   icon={BarChart3}
                   iconColor="text-blue-400"
                   change={revenueChange}
@@ -989,9 +1077,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               <div data-swapy-item="item-revenue">
                 <ChartCard
                   title="Revenue & Profit Trend"
-                  subtitle={`Last ${
-                    periods.length
-                  } periods (up to Period ${Math.max(...periods)})`}
+                  subtitle={`Last ${periods.length
+                    } periods (up to Period ${Math.max(...periods)})`}
                   className="lg:col-span-2"
                 >
                   <ResponsiveContainer width="100%" height={300}>
@@ -1074,18 +1161,17 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               <div data-swapy-item="item-department-budgets">
                 <ChartCard
                   title="Department Budgets"
-                  subtitle={`${
-                    isCurrentPeriod ? "Current" : `Period ${selectedPeriod}`
-                  } allocation`}
+                  subtitle={`${isCurrentPeriod ? "Current" : `Period ${selectedPeriod}`
+                    } allocation`}
                 >
-                  <ResponsiveContainer width="100%" height={120}>
+                  <ResponsiveContainer width="100%" height={200} >
                     <RechartsPieChart>
                       <Pie
                         data={chartData.departmentBudgets}
                         cx="50%"
                         cy="50%"
-                        innerRadius={30}
-                        outerRadius={60}
+                        innerRadius={50}
+                        outerRadius={100}
                         dataKey="value"
                       >
                         {chartData.departmentBudgets.map((entry, index) => (
@@ -1098,11 +1184,11 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                       />
                     </RechartsPieChart>
                   </ResponsiveContainer>
-                  <div className="grid grid-cols-1 gap-2 mt-4">
+                  <div className="grid grid-cols-2 gap-2 mt-4">
                     {chartData.departmentBudgets.map((dept) => (
                       <div
                         key={dept.name}
-                        className="flex items-center justify-between p-2 rounded bg-white/5"
+                        className="flex items-center justify-around p-2 rounded bg-white/5"
                       >
                         <div className="flex items-center space-x-2">
                           <div
@@ -1323,8 +1409,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                                   {entry.dataKey === "totalSales"
                                     ? `${entry.value} units`
                                     : `₹${(
-                                        (entry.value as number) / 1000
-                                      ).toFixed(0)}K`}
+                                      (entry.value as number) / 1000
+                                    ).toFixed(0)}K`}
                                 </p>
                               ))}
                             </div>
@@ -1373,9 +1459,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                         .slice(0, 4)
                         .map((product, index) => (
                           <div
-                            key={`${
-                              product.product?.name || product.name
-                            }-${index}`}
+                            key={`${product.product?.name || product.name
+                              }-${index}`}
                             className="p-3 rounded-lg bg-white/5"
                           >
                             <div className="flex justify-between items-center mb-2">

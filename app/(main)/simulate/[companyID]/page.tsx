@@ -1,17 +1,38 @@
 import { getCurrentUser } from "@/app/_actions/auth";
+import prisma from "@/app/functions/prisma";
 import React from "react";
 import Form from "../../../components/simulate/form";
+import { notFound } from "next/navigation";
 
 interface PageProps {
-  params: Promise<{
-    companyID: string;
-  }>;
+  params: Promise<{ companyID: string }>;
 }
 
 const Page = async ({ params }: PageProps) => {
-  const parameter = await params;
-  await getCurrentUser();
-  const { companyID } = parameter;
+  const { companyID } = await params;
+
+  // ✅ Check authentication
+  const user = await getCurrentUser();
+  if (!user) notFound();
+
+  // ✅ Check company access
+  const hasAccess = await prisma.company.findFirst({
+    where: {
+      id: companyID,
+      OR: [
+        { user_id: user.id }, // Owner
+        { company_access: { some: { user_id: user.id } } }, // Has access
+      ],
+    },
+  });
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-slate-900">
+        You do not have access to this company.
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-screen relative overflow-hidden bg-gradient-to-br from-[#0c0c0c] via-[#1a1a2e] to-[#16213e]">
