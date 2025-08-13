@@ -127,7 +127,6 @@ const HRDashboard = () => {
     }
     setSuccess(true);
   };
-  console.log(data.existingRoles);
 
   return (
     <div className="bg-slate-800/50 shadow-md py-4 px-6">

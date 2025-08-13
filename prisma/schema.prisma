@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -40,8 +40,8 @@ model user {
 model simulation {
   id             String   @id @default(cuid())
   name           String
-  description    String?  @db.LongText
-  config         String   @db.LongText 
+  description    String?
+  config         String
   current_period Int      @default(1)
   status         String   @default("active") // active / paused / completed
   created_by     String
