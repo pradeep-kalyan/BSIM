@@ -35,9 +35,8 @@ const HRDashboard = () => {
 
   // Get total employee count from the HR role management hook
   const { getTotalEmployees } = useHRRoleManagement();
-
-  const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
-    useCashBalance();
+  const [selectedRoleIndex, setSelectedRoleIndex] = React.useState(0);
+  const { cashBalance, projectedCashBalance, updateHRBudgetImpact } = useCashBalance();
   const { data: companyData } = useCompanyForm();
 
   // State for validation and success feedback
@@ -128,6 +127,7 @@ const HRDashboard = () => {
     }
     setSuccess(true);
   };
+  console.log(data.existingRoles);
 
   return (
     <div className="bg-slate-800/50 shadow-md py-4 px-6">
@@ -180,11 +180,10 @@ const HRDashboard = () => {
 
           <InfoCard
             label="Satisfaction"
-            value={`${
-              isNaN(data.employee_satisfaction)
-                ? 0
-                : parseFloat(data.employee_satisfaction.toFixed(0))
-            }%`}
+            value={`${isNaN(data.employee_satisfaction)
+              ? 0
+              : parseFloat(data.employee_satisfaction.toFixed(0))
+              }%`}
             Icon={Award}
             iconColor="text-purple-400"
             isCurrency={false}
@@ -201,59 +200,69 @@ const HRDashboard = () => {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-blue-400" />
-                <h3 className="text-lg font-bold text-slate-100">
+                <h3 className="text-lg tracking-wide font-semibold text-slate-100 font-sans-serif">
                   Current Workforce
                 </h3>
               </div>
-              <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm">
-                {data.existingRoles?.length} Roles
-              </span>
+              <div className="flex items-center gap-2">
+                <label className="text-white text-lg tracking-wide font-medium font-roboto-sans">Select Role:</label>
+                <select
+                  value={selectedRoleIndex}
+                  onChange={(e) => setSelectedRoleIndex(Number(e.target.value))}
+                  className="p-2 rounded bg-slate-700 text-white border border-slate-500 tracking-wide font-medium font-geist-sans"
+                >
+                  {data.existingRoles?.map((role, idx) => (
+                    <option key={idx} value={idx}>
+                      {role.role_name}
+                    </option>
+                  ))}
+                </select>
+                <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-sm tracking-wide font-medium font-roboto-sans">
+                  {data.existingRoles?.length} Roles
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {data.existingRoles?.map((role, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600"
-                >
-                  {/* Role Header */}
+            <div className="space-y-3 mx-5">
+              {data?.existingRoles?.[selectedRoleIndex] && (
+                <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <UserPlus className="h-4 w-4 text-blue-400" />
-                      <h4 className="text-lg font-bold text-white">
-                        {role.role_name}
+                      <h4 className="text-lg tracking-wide font-semibold font-geist-sans text-white">
+                        {data.existingRoles[selectedRoleIndex]?.role_name}
                       </h4>
                     </div>
-                    <div className="text-sm text-slate-300">
-                      Current: {role.current_head_count} • Projected:{" "}
-                      {role.current_head_count +
-                        (role.hires || 0) -
-                        (role.fires || 0)}
+                    <div className="text-sm text-slate-300 tracking-wide font-semibold font-roboto-sans">
+                      Current: {data.existingRoles[selectedRoleIndex]?.current_head_count} • Projected:{" "}
+                      {data.existingRoles[selectedRoleIndex].current_head_count +
+                        (data.existingRoles[selectedRoleIndex].hires || 0) -
+                        (data.existingRoles[selectedRoleIndex].fires || 0)}
                     </div>
                   </div>
 
-                  {/* Controls */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Salary Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Salary per employee"
                         text="Set how much you want to pay each employee per year (in rupees)"
                       />
                       <Slider
-                        label={`${formatCurrency(role.salary_per_head || 0)}`}
+                        label={`₹${(
+                          data.existingRoles[selectedRoleIndex]?.salary_per_head || 0
+                        ).toLocaleString()}`}
                         value={[
-                          isNaN(role.salary_per_head)
+                          isNaN(data.existingRoles[selectedRoleIndex]?.salary_per_head)
                             ? 0
-                            : role.salary_per_head,
+                            : data.existingRoles[selectedRoleIndex]?.salary_per_head,
                         ]}
                         min={0}
                         max={Math.max(
                           500000,
-                          (role.salary_per_head || 0) * 1.5
+                          (data.existingRoles[selectedRoleIndex]?.salary_per_head || 0) * 1.5
                         )}
                         onValueChange={(val) => {
-                          updateExistingRole(index, {
+                          updateExistingRole(selectedRoleIndex, {
                             salary_per_head: val[0],
                           });
                           setSuccess(false);
@@ -262,26 +271,30 @@ const HRDashboard = () => {
                       />
                     </div>
 
-                    {/* Staffing Control */}
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Staffing Changes"
                         text="Decide how many people to hire or fire. Positive numbers mean more employees, negative numbers mean fewer employees"
                       />
                       <Slider
-                        label={`Net: ${(role.hires || 0) - (role.fires || 0)}`}
-                        value={[(role.hires || 0) - (role.fires || 0)]}
-                        min={-role.current_head_count}
+                        label={`Net: ${(data.existingRoles[selectedRoleIndex]?.hires || 0) -
+                          (data.existingRoles[selectedRoleIndex]?.fires || 0)
+                          }`}
+                        value={[
+                          (data.existingRoles[selectedRoleIndex]?.hires || 0) -
+                          (data.existingRoles[selectedRoleIndex]?.fires || 0),
+                        ]}
+                        min={-data.existingRoles[selectedRoleIndex]?.current_head_count}
                         max={50}
                         onValueChange={(val) => {
                           const netChange = Math.round(val[0]);
                           if (netChange >= 0) {
-                            updateExistingRole(index, {
+                            updateExistingRole(selectedRoleIndex, {
                               hires: netChange,
                               fires: 0,
                             });
                           } else {
-                            updateExistingRole(index, {
+                            updateExistingRole(selectedRoleIndex, {
                               hires: 0,
                               fires: Math.abs(netChange),
                             });
@@ -293,20 +306,17 @@ const HRDashboard = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
           {/* New Roles Section */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-slate-100">
+              <h3 className="text-lg font-semibold font-roboto-sans text-slate-100">
                 Create New Positions
               </h3>
-              <div className="flex items-center gap-2">
-                <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-sm">
-                  {data?.newRoles?.length || 0} New
-                </span>
+              <div className="flex items-center gap-2 ">
                 <button
                   type="button"
                   onClick={() =>
@@ -316,17 +326,20 @@ const HRDashboard = () => {
                       hires: 1,
                     })
                   }
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm tracking-wide font-roboto-sans"
                 >
                   <PlusCircle size={14} className="inline mr-1" />
                   Add Role
                 </button>
+                <span className="bg-green-500/20 text-green-300 px-2 py-1 font-medium rounded text-sm">
+                  {data?.newRoles?.length || 0} New
+                </span>
               </div>
             </div>
 
             {data?.newRoles?.length === 0 && (
-              <div className="text-center py-4 bg-slate-700/30 rounded-lg border-2 border-dashed border-slate-600">
-                <p className="text-slate-400 text-sm">
+              <div className="text-center py-4 bg-slate-700/30 rounded-lg border-2 border-dashed border-slate-600 mx-5">
+                <p className="text-slate-400 text-sm tracking-wide font-semibold font-roboto-sans">
                   No new roles created yet
                 </p>
               </div>
@@ -336,10 +349,10 @@ const HRDashboard = () => {
               {data?.newRoles?.map((role, index) => (
                 <div
                   key={index}
-                  className="bg-green-700/20 rounded-lg p-4 border border-green-500/30"
+                  className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600 mx-5"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-lg font-bold text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-lg tracking-wide font-semibold font-geist-sans text-white">
                       {role.role_name || "New Position"}
                     </h4>
                     <button
@@ -351,9 +364,9 @@ const HRDashboard = () => {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
-                      <label className="text-sm text-slate-300 mb-1 block">
+                      <label className="text-m text-slate-300 mb-1 block tracking-wide font-semibold">
                         Position Title
                       </label>
                       <input
@@ -365,7 +378,7 @@ const HRDashboard = () => {
                           setSuccess(false);
                           setBudgetAlert(null);
                         }}
-                        className="w-full p-3 rounded bg-slate-800 text-white border border-slate-500 focus:border-green-400 focus:outline-none text-sm placeholder-slate-400 hover:bg-slate-700 transition-colors"
+                        className="w-full p-3 rounded bg-slate-800 text-white tracking-wide font-semibold font-geist-sans border border-slate-500 focus:border-slate-300 focus:outline-none text-sm placeholder-slate-400 hover:bg-slate-700 transition-colors"
                       />
                     </div>
 
@@ -420,10 +433,10 @@ const HRDashboard = () => {
 
           {/* Budget & Satisfaction Controls */}
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-slate-100 mb-3">
+            <h3 className="text-lg tracking-wide font-semibold font-roboto-sans text-slate-100 mb-3">
               HR Budget & Culture
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-5">
               {/* Training Budget */}
               <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
@@ -472,20 +485,8 @@ const HRDashboard = () => {
 
           {/* Validation & Summary */}
           <div className="space-y-4">
-            {/* Validation Button */}
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={handleValidate}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold transition-all"
-              >
-                <Check className="h-4 w-4 inline mr-2" />
-                Validate HR Decisions
-              </button>
-            </div>
-
-            {/* Validation Messages */}
-            {(budgetAlert || success) && (
+            <div className="flex items-start justify-between relative mx-5">
+              {/* Validation Messages (Left) */}
               <div className="space-y-2">
                 {budgetAlert && (
                   <div className="bg-rose-900/80 border border-rose-600 text-rose-200 rounded-lg p-3">
@@ -496,51 +497,62 @@ const HRDashboard = () => {
                   </div>
                 )}
                 {success && !budgetAlert && (
-                  <div className="bg-green-900/80 border border-green-500 text-green-100 rounded-lg p-3">
+                  <div className="bg-green-900/80 border border-green-500 text-green-100 rounded-lg p-2">
                     <div className="flex items-center gap-2">
                       <Check className="text-green-400 h-4 w-4" />
-                      <span className="text-sm">
+                      <span className="text-sm font-semibold font-roboto-sans">
                         All HR decisions validated successfully!
                       </span>
                     </div>
                   </div>
                 )}
               </div>
-            )}
+
+              {/* Validation Button (Fixed Right Corner) */}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleValidate}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-semibold font-roboto-sans tracking-wide transition-all"
+                >
+                  <Check className="h-4 w-4 inline mr-2" />
+                  Validate HR Decisions
+                </button>
+              </div>
+            </div>
 
             {/* Summary Section */}
-            <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
-              <h4 className="text-lg font-bold text-white mb-3">
+            <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500 mx-5">
+              <h4 className="text-lg tracking-wide font-semibold font-roboto-sans text-white mb-3">
                 Financial Impact Summary
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Salary Budget</p>
-                  <p className="text-lg font-bold text-yellow-400">
+                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">Salary Budget</p>
+                  <p className="text-lg font-bold font-geist-sans text-yellow-400">
                     {formatCurrency(projectedSalaryBudget || 0)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Training Budget</p>
-                  <p className="text-lg font-bold text-blue-400">
+                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">Training Budget</p>
+                  <p className="text-lg font-bold font-geist-sans text-blue-400">
                     {formatCurrency(data?.training_budget || 0)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Available Cash</p>
-                  <p className="text-lg font-bold text-blue-300">
+                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">Available Cash</p>
+                  <p className="text-lg font-bold font-geist-sans text-blue-300">
                     {formatCurrency(cashBalance.originalCashBalance || 0)}
                   </p>
                 </div>
 
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Cash After HR</p>
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Cash After HR</p>
                   <p
-                    className={`text-lg font-bold ${
-                      (projectedCashBalance || 0) < 0
-                        ? "text-red-400"
-                        : "text-emerald-400"
-                    }`}
+                    className={`text-lg font-bold font-geist-sans ${(projectedCashBalance || 0) < 0
+                      ? "text-red-400"
+                      : "text-emerald-400"
+                      }`}
                   >
                     {formatCurrency(projectedCashBalance || 0)}
                   </p>

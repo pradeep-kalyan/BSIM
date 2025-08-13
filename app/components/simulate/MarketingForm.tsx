@@ -2,7 +2,10 @@
 
 import { IndianRupee, Globe, Store, TriangleAlert } from "lucide-react";
 import React, { useState } from "react";
-import { useMarketingForm, useCashBalance } from "@/app/context/FormContext";
+import {
+  useMarketingForm,
+  useCashBalance,
+} from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { Slider } from "@/components/ui/slider";
 import InfoCard from "@/app/components/InfoCard";
@@ -22,10 +25,9 @@ const MarketingForm = () => {
     value: number
   ) => {
     setBudgetError(null);
-
-    // Ensure value is not negative
+  
     if (value < 0) value = 0;
-
+  
     if (field === "budget") {
       const half = Math.floor(value / 2);
       updateData({
@@ -33,38 +35,31 @@ const MarketingForm = () => {
         online: half,
         offline: value - half,
       });
-    } else if (field === "online") {
-      // When online changes, offline adjusts to maintain the total or creates a new total
+    } 
+    else if (field === "online") {
       const newOnline = value;
-      const currentOffline = marketingData.offline || 0;
-      const newBudget = newOnline + currentOffline;
+      const newOffline = Math.max(0, (marketingData.budget || 0) - newOnline);
       updateData({
         online: newOnline,
-        offline: currentOffline,
-        budget: newBudget,
-      });
-    } else if (field === "offline") {
-      // When offline changes, online stays the same and total adjusts
-      const newOffline = value;
-      const currentOnline = marketingData.online || 0;
-      const newBudget = currentOnline + newOffline;
-      updateData({
-        online: currentOnline,
         offline: newOffline,
-        budget: newBudget,
+        budget: newOnline + newOffline,
+      });
+    } 
+    else if (field === "offline") {
+      const newOffline = value;
+      const newOnline = Math.max(0, (marketingData.budget || 0) - newOffline);
+      updateData({
+        online: newOnline,
+        offline: newOffline,
+        budget: newOnline + newOffline,
       });
     }
-
-    // Basic validation
+  
     if (value > (cashBalance.originalCashBalance || 0)) {
       setBudgetError("Insufficient cash balance for this marketing budget.");
     }
   };
-
-  const frozenData = React.useMemo(() => {
-    const { budget, online, offline } = marketingData;
-    return { budget, online, offline };
-  }, [marketingData]);
+  
   return (
     <div className="h-full bg-slate-800/50 shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto">
@@ -84,7 +79,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Total Budget"
-            value={formatCurrency(frozenData.budget)}
+            value={formatCurrency(marketingData.budget) || 0}
             Icon={IndianRupee}
             iconColor="text-blue-400"
             labelColor="text-white"
@@ -97,7 +92,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Online"
-            value={formatCurrency(frozenData.online)}
+            value={formatCurrency(marketingData.online) || 0}
             Icon={Globe}
             iconColor="text-green-400"
             labelColor="text-white"
@@ -110,7 +105,7 @@ const MarketingForm = () => {
 
           <InfoCard
             label="Offline"
-            value={formatCurrency(frozenData.offline)}
+            value={formatCurrency(marketingData.offline) || 0}
             Icon={Store}
             iconColor="text-purple-400"
             labelColor="text-white"
@@ -123,16 +118,16 @@ const MarketingForm = () => {
         </div>
 
         {/* Marketing Strategy Form */}
-        <div className="bg-slate-800/90 rounded-xl p-6 border border-slate-600">
+        <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-600">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-500/20 rounded-lg">
               <Globe className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-white font-geist-sans">
                 Marketing Strategy
               </h2>
-              <p className="text-slate-400 text-sm">
+              <p className="text-slate-400 text-sm font-geist-sans">
                 Configure your marketing budget allocation
               </p>
             </div>
@@ -144,15 +139,15 @@ const MarketingForm = () => {
               {/* Total Marketing Budget */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
-                  label="Total Marketing"
-                  text="How much money you want to spend on all marketing activities for the whole year (in rupees per year)"
+                  label="Total Marketing(₹/per year)"
+                  text="Total marketing budget allocation"
                 />
                 <Slider
                   className="w-[200px]"
                   label={`${formatCurrency(marketingData.budget)}`}
                   value={[marketingData.budget]}
                   min={0}
-                  max={Math.max(100000, marketingData.budget * 2)}
+                  max={(marketingData.budget * 2 || 100000)}
                   onValueChange={(val: number[]) => {
                     handleBudgetChange("budget", val[0]);
                   }}
@@ -162,8 +157,8 @@ const MarketingForm = () => {
               {/* Online Marketing */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
-                  label="Online Marketing"
-                  text="How much money you want to spend on internet and digital advertising like social media, Google ads, websites (in rupees per year)"
+                  label="Online Marketing(₹/per year)"
+                  text="Digital marketing channels budget"
                 />
                 <Slider
                   className="w-[200px]"
@@ -173,7 +168,7 @@ const MarketingForm = () => {
                   )})`}
                   value={[marketingData.online]}
                   min={0}
-                  max={Math.max(50000, marketingData.budget * 2)}
+                  max={marketingData.online * 2 || 50000}
                   onValueChange={(val: number[]) => {
                     handleBudgetChange("online", val[0]);
                   }}
@@ -183,8 +178,8 @@ const MarketingForm = () => {
               {/* Offline Marketing */}
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
-                  label="Offline Marketing"
-                  text="How much money you want to spend on traditional advertising like TV, radio, newspapers, billboards, and events (in rupees per year)"
+                  label="Offline Marketing(₹/per year)"
+                  text="Traditional marketing channels budget"
                 />
                 <Slider
                   className="w-[200px]"
@@ -194,7 +189,7 @@ const MarketingForm = () => {
                   )})`}
                   value={[marketingData.offline]}
                   min={0}
-                  max={Math.max(50000, marketingData.budget * 2)}
+                  max={marketingData.offline * 2 || 5000}
                   onValueChange={(val: number[]) => {
                     handleBudgetChange("offline", val[0]);
                   }}
@@ -206,32 +201,31 @@ const MarketingForm = () => {
 
             {/* Financial Impact Summary */}
             <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
-              <h4 className="text-lg font-bold text-white mb-3">
+              <h4 className="text-lg font-bold text-white mb-3 tracking-wide font-semibold font-roboto-sans">
                 Financial Impact Summary
               </h4>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">
                     Marketing Budget
                   </p>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-lg font-semibold text-white font-geist-sans">
                     {formatCurrency(marketingData.budget)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Available Cash</p>
-                  <p className="text-lg font-bold text-white">
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Available Cash</p>
+                  <p className="text-lg font-semibold text-white font-geist-sans">
                     {formatCurrency(cashBalance.originalCashBalance || 0)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1">Remaining Cash</p>
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Remaining Cash</p>
                   <p
-                    className={`text-lg font-bold ${
-                      projectedCashBalance < 0
-                        ? "text-red-400"
-                        : "text-emerald-400"
-                    }`}
+                    className={`text-lg font-semibold font-geist-sans ${projectedCashBalance < 0
+                      ? "text-red-400"
+                      : "text-emerald-400"
+                      }`}
                   >
                     {formatCurrency(projectedCashBalance)}
                   </p>

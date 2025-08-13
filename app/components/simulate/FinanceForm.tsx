@@ -6,7 +6,7 @@ import {
   TrendingUp,
   TrendingDown,
   PiggyBank,
-  Factory,
+  Wallet,
   Package,
   IndianRupee,
   AlertTriangle,
@@ -72,7 +72,7 @@ const FinanceForm = () => {
   };
 
   return (
-    <div className="bg-slate-800/50 shadow-md py-4 px-6">
+    <div className="h-full bg-slate-800/50 shadow-md py-4 px-6">
       <div className="max-w-7xl mx-auto ">
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <InfoCard
@@ -81,7 +81,7 @@ const FinanceForm = () => {
               parseFloat(cashBalance.originalCashBalance.toFixed(0))
             )}
             isCurrency={true}
-            Icon={Factory}
+            Icon={Wallet}
             width="w-full"
             height="h-full"
             iconColor="text-green-400"
@@ -120,13 +120,14 @@ const FinanceForm = () => {
         </section>
 
         {/* Finance Decision Form */}
-        <div className="bg-slate-800/50 shadow-md rounded-xl p-6 border border-slate-700 mb-6">
-          <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
-            <DollarSign className="h-6 w-6 mr-2 text-green-400" />
-            Financial Decisions
-          </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <h3 className="text-xl font-semibold text-white flex items-center mb-6">
+          <DollarSign className="h-6 w-6 mr-2 text-green-400" />
+          Financial Decisions
+        </h3>
+
+        <div className="bg-slate-800/50 shadow-md rounded-xl p-6 border border-slate-700 mb-6 mx-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-5">
             {/* Cash Inflows */}
             <div className="space-y-4">
               <h4 className="text-lg font-medium text-green-400 flex items-center">
@@ -158,6 +159,32 @@ const FinanceForm = () => {
                   max={300000}
                   onValueChange={(val) => handleChange("equity_issue", val[0])}
                 />
+              </div>
+
+              <div className="mt-6 text-white flex gap-6 items-center text-sm font-roboto-sans">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                  <div className="flex flex-col gap-1">
+                    <p>Net Finance Impact:</p>
+                    <p>{formatCurrency(netFinanceImpact)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <div className="flex flex-col gap-1">
+                    <p>Original Cash:</p>
+                    <p>{formatCurrency(cashBalance.originalCashBalance)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <div className="flex flex-col gap-1">
+                    <p>Projected Cash:</p>
+                    <p>{formatCurrency(projectedCashBalance)}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -213,29 +240,6 @@ const FinanceForm = () => {
             </div>
           </div>
 
-          <div className="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <div className="text-xl text-blue-400 font-semibold">
-                Net Finance Impact: {formatCurrency(netFinanceImpact)}
-              </div>
-              <div className="text-sm space-y-1">
-                <div className="text-slate-300">
-                  Original Cash Balance:{" "}
-                  {formatCurrency(cashBalance.originalCashBalance)}
-                </div>
-                <div
-                  className={`font-semibold ${
-                    projectedCashBalance < 0
-                      ? "text-rose-400"
-                      : "text-emerald-400"
-                  }`}
-                >
-                  Projected Cash Balance: {formatCurrency(projectedCashBalance)}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Validation Feedback */}
           {budgetAlert && (
             <div className="mt-6 p-4 bg-yellow-900/20 border border-yellow-600 rounded-lg">
@@ -247,7 +251,7 @@ const FinanceForm = () => {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

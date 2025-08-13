@@ -1,14 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Geist,
-  Geist_Mono,
-  Electrolize,
-  Playfair,
-  Courier_Prime,
-  IBM_Plex_Mono,
-  IBM_Plex_Sans,
-  Roboto,
-} from "next/font/google";
+import { Geist, Geist_Mono, Electrolize, Playfair, Courier_Prime, IBM_Plex_Mono, IBM_Plex_Sans, Roboto } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "./context";
 

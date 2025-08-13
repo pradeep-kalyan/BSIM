@@ -44,18 +44,18 @@ export default function InfoCard({
                     <div className={`p-2 rounded-full bg-slate-900/60`}>
                         <Icon className={`h-5 w-5 ${iconColor}`} />
                     </div>
-                    <span className={`text-base font-semibold tracking-wide ${labelColor}`}>
+                    <span className={`text-base tracking-wide font-semibold font-roboto-sans ${labelColor}`}>
                         {label}
                     </span>
                 </div>
                 {subtext && (
-                    <p className="text-sm font-medium text-slate-400 whitespace-nowrap">
+                    <p className="text-sm font-semibold font-electrolize text-slate-400 whitespace-nowrap">
                         {subtext}
                     </p>
                 )}
             </div>
             <p
-                className={`text-2xl font-extrabold tracking-tight leading-snug ${valueColor}`}
+                className={`text-xl font-semibold font-geist-sans tracking-tight leading-snug ${valueColor}`}
             >
                 {displayValue}
             </p>
