@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "./app/functions/jwt";
@@ -24,7 +23,6 @@ const publicRoutes = ["/"];
  * Get JWT secret for token verification
  */
 
-
 /**
  * Verify JWT token from cookies
  */
@@ -39,28 +37,19 @@ async function verifyAuth(request: NextRequest) {
     const payload = await verifyToken(token);
 
     return payload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
 
-/**
- * Check if a route matches any of the protected route patterns
- */
 function isProtectedRoute(pathname: string): boolean {
   return protectedRoutes.some((route) => pathname.startsWith(route));
 }
 
-/**
- * Check if a route is an auth route (login/register)
- */
 function isAuthRoute(pathname: string): boolean {
   return authRoutes.some((route) => pathname.startsWith(route));
 }
 
-/**
- * Check if a route is public
- */
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.includes(pathname) || pathname.startsWith("/api/");
 }
@@ -68,11 +57,10 @@ function isPublicRoute(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files and API routes that don't need auth
   if (
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/api/auth/") ||
-    pathname.includes(".") // Skip for files with extensions
+    pathname.includes(".")
   ) {
     return NextResponse.next();
   }

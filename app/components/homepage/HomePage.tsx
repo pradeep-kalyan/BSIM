@@ -42,7 +42,7 @@ import QuickStat from "@/app/ui/QuickStat";
 import ChartCard from "@/app/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
-import LogoutBtn from "@/app/components/auth/Logout";
+// import LogoutBtn from "@/app/components/auth/Logout";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
@@ -54,6 +54,7 @@ import {
   TooltipProps,
   HRRole,
 } from "@/app/types/homepage";
+import { ButtonStack } from "@/app/ui/StackBtn";
 import Joyride, { CallBackProps } from "react-joyride";
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
@@ -230,7 +231,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       .toUpperCase();
 
     return (
-      <div className="w-32 h-32 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-white text-4xl font-bold">
+      <div className="w-28  h-28 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-white text-4xl font-bold">
         {showFallback ? (
           <span>{initials}</span>
         ) : (
@@ -863,15 +864,12 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const capture = async () => {
     try {
       if (!container.current) {
-        console.error("Container ref is not available");
         alert("Unable to capture: Dashboard container is not available");
         return;
       }
 
       await exportDashboard(container.current);
     } catch (error) {
-      console.error("Export failed:", error);
-
       let errorMessage = "Dashboard export failed. ";
       if (error instanceof Error) {
         errorMessage += error.message;
@@ -1019,62 +1017,114 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           }
         }
       `}</style>
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl">
-          <div className="container mx-auto py-4">
-            <div className="flex items-center gap-34">
-              {/* LEFT: Company name + logo + period */}
-              <div className="flex items-start gap-4 animate-slide-in-left -ml-22">
-                {/* Logo */}
-                <CompanyLogo
-                  logoUrl={data?.company?.logo_url ?? undefined}
-                  companyName={data?.company?.name || "Company"}
-                />
-                {/* Company name and description */}
-                <div>
-                  <h1 className="text-4xl font-bold mt-4">
-                    {data?.company?.name}
+        {/* Fixed Header */}
+        <div className="bg-slate-600 shadow-2xl sticky top-0 z-50 w-full">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex justify-between items-center gap-8">
+              {/* LEFT: Company info */}
+              <div className="flex items-center gap-4 animate-slide-in-left min-w-0 flex-1">
+                {/* Company Logo */}
+                <div className="flex-shrink-0">
+                  <CompanyLogo
+                    logoUrl={data?.company?.logo_url ?? undefined}
+                    companyName={data?.company?.name || "Company"}
+                  />
+                </div>
+
+                {/* Company Details */}
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl font-bold text-white truncate">
+                    {data?.company?.name || "Company Dashboard"}
                   </h1>
 
-                  {/* Period selector */}
-                  <div className="flex items-center mt-3 space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Calendar size={16} />
-                      <span className="text-sm">Period:</span>
-                      <select
-                        className="ml-2 px-2 py-1 rounded bg-slate-800 text-white border border-slate-600 focus:outline-none"
-                        value={selectedPeriod}
-                        onChange={handlePeriodChange}
-                      >
-                        {periods.map((p, index) => (
-                          <option key={`period-${p}-${index}`} value={p}>
-                            Period {p}{" "}
-                            {p === data?.company?.current_period
-                              ? "(Current)"
-                              : ""}
-                          </option>
-                        ))}
-                      </select>
-                      {isCurrentPeriod && (
-                        <span className="current-period-badge">LIVE</span>
-                      )}
-                    </div>
+                  {/* Period Selector */}
+                  <div className="flex items-center mt-2 space-x-2">
+                    <Calendar
+                      size={16}
+                      className="text-gray-300 flex-shrink-0"
+                    />
+                    <span className="text-sm text-gray-300 whitespace-nowrap">
+                      Period:
+                    </span>
+                    <select
+                      className="px-3 py-1 rounded-md bg-slate-800 text-white border border-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm min-w-[120px]"
+                      value={selectedPeriod}
+                      onChange={handlePeriodChange}
+                    >
+                      {periods.map((p, index) => (
+                        <option key={`period-${p}-${index}`} value={p}>
+                          Period {p}{" "}
+                          {p === data?.company?.current_period
+                            ? "(Current)"
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                    {isCurrentPeriod && (
+                      <span className="current-period-badge whitespace-nowrap">
+                        LIVE
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
-              {/* Right side: buttons */}
-              <div className="flex gap-3 items-center animate-fade-in-up">
+              <ButtonStack
+                isExporting={isExporting}
+                isSimulating={isSimulating}
+                capture={capture}
+                handleViewCompany={handleViewCompany}
+                handleSimulate={handleSimulate}
+              />
+
+              {/* <div className="flex items-center gap-3 animate-fade-in-up flex-shrink-0">
                 <button
                   onClick={capture}
                   disabled={isExporting}
                   className="export-dashboard-btn bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 cursor-pointer rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
                 >
-                  {isExporting ? "Exporting..." : "Export Dashboard"}
+                  {isExporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Export
+                    </>
+                  )}
                 </button>
+
                 <button
                   onClick={handleViewCompany}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white cursor-pointer px-4 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[180px]"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
+                  title="Back to companies list"
                 >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
                   Back to Companies
                 </button>
                 <div className="flex gap-3">
@@ -1275,7 +1325,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                     {chartData.departmentBudgets.map((dept) => (
                       <div
                         key={dept.name}
-                        className="flex items-center justify-between p-2 rounded bg-white/5"
+                        className="flex items-center justify-around p-2 rounded bg-white/5"
                       >
                         <div className="flex items-center space-x-2">
                           <div
@@ -1604,6 +1654,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           <Info size={20} />
         </button>
       </div>
+    </div>
+    </div>
     </div>
   );
 };

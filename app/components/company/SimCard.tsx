@@ -61,7 +61,7 @@ const Card: React.FC<CardProps> = ({
               </p>
             </div>
 
-            <div className="group flex justify-end mt-2">
+            <div className="group flex justify-end items-center mt-2">
               {(isOwner || sim.canAccess) && (
                 <Link
                   href={`/simulations/${sim.id}`}

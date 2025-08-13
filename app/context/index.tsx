@@ -19,7 +19,7 @@ function FormDataInitializer() {
       setIsLoading(true);
       try {
         const initialData = await getInitialFormData(comId, period - 1);
- 
+
         // Create production data map by product_id
         const productionByProductId = new Map();
         (initialData.production ?? []).forEach((prod) => {
@@ -163,7 +163,7 @@ function FormDataInitializer() {
             productBudgetImpact: 0,
           },
         };
- 
+
         initializeForms(formInitialData);
       } catch {
         // Provide proper fallback structure with proper mapping and types

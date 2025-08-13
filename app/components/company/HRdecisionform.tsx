@@ -2,7 +2,24 @@
 
 import React from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
-import { Props } from "@/app/types/HR";
+import { CustomInput } from "@/app/ui/CustomInput";
+
+interface HRRole {
+  role_name: string;
+  salary_per_head: number;
+  head_count: number;
+}
+
+interface Props {
+  hrRoles: HRRole[];
+  onRoleChange: (index: number, field: string, value: string | number) => void;
+  onAddRole: () => void;
+  onRemoveRole: (index: number) => void;
+  trainingBudget: number;
+  onTrainingBudgetChange: (value: number) => void;
+  employeeSatisfaction: number;
+  onEmployeeSatisfactionChange: (value: number) => void;
+}
 
 const HRDecisionForm = ({
   hrRoles,
@@ -21,146 +38,121 @@ const HRDecisionForm = ({
   const totalBudget = totalSalary + trainingBudget;
 
   return (
-    <div>
-      <h3 className="text-xl font-semibold text-slate-200 flex items-center gap-2 mb-3">
-        HR Roles
+    <div className="space-y-8">
+      {/* Header with Add Button */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-semibold text-slate-100">HR Roles</h3>
         <button
           type="button"
           onClick={onAddRole}
-          className="text-blue-400 hover:text-blue-500 transition"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-500 transition-colors shadow-sm"
         >
-          <div className="flex items-center gap-2">
-            <PlusCircle size={20} />
-            <span>Add</span>
-          </div>
+          <PlusCircle size={18} />
+          Add Role
         </button>
-      </h3>
+      </div>
 
-      {hrRoles.map((role, index) => (
-        <div key={index} className="grid grid-cols-3 gap-4 mb-4 items-end">
-          {/* Role Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Role
-            </label>
-            <input
-              type="text"
-              placeholder="Role Name"
+      {/* Roles Section */}
+      <div className="space-y-5">
+        {hrRoles.map((role, index) => (
+          <div
+            key={index}
+            className="grid md:grid-cols-4 gap-4 items-end bg-slate-800 p-5 rounded-lg border border-slate-700"
+          >
+            {/* Role Name */}
+            <CustomInput
+              label="Role"
               value={role.role_name}
-              onChange={(e) => {
-                const input = e.target.value;
-                if (/^[A-Za-z\s]*$/.test(input)) {
-                  onRoleChange(index, "role_name", input);
+              onChange={(val) => {
+                if (/^[A-Za-z\s]*$/.test(String(val))) {
+                  onRoleChange(index, "role_name", val);
                 }
               }}
-              className={`w-full p-2 rounded bg-slate-800 text-white `}
+              isText
+              required
+              placeholder="Role Name"
             />
-          </div>
 
-          {/* Salary per Head */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Salary
-            </label>
-            <input
-              type="number"
-              placeholder="Salary per Head"
+            {/* Salary per Head */}
+            <CustomInput
+              label="Salary per Head"
               value={role.salary_per_head}
-              onChange={(e) =>
-                onRoleChange(index, "salary_per_head", e.target.value)
+              onChange={(val) =>
+                onRoleChange(index, "salary_per_head", Number(val))
               }
-              min="0"
-              step="0.01"
-              className="w-full p-2 rounded bg-slate-800 text-white"
+              isCurrency
+              currencySymbol="₹"
+              min={0}
+              step={1000}
+              required
             />
-          </div>
 
-          {/* Head Count + Delete Button */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
-              Count
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="Head Count"
-                value={role.head_count}
-                onChange={(e) =>
-                  onRoleChange(index, "head_count", e.target.value)
-                }
-                min="0"
-                className="p-2 rounded bg-slate-800 text-white w-full"
-              />
+            {/* Head Count */}
+            <CustomInput
+              label="Head Count"
+              value={role.head_count}
+              onChange={(val) => onRoleChange(index, "head_count", Number(val))}
+              isNumeric
+              min={0}
+              required
+            />
+
+            {/* Delete Button */}
+            <div className="flex justify-end md:justify-start">
               <button
                 type="button"
                 onClick={() => onRemoveRole(index)}
-                className="text-red-400 hover:text-red-500"
+                className="flex items-center justify-center w-full text-red-500 cursor-pointer md:w-auto px-3 py-2 rounded-lg disabled:opacity-50"
                 disabled={hrRoles.length === 1}
               >
                 <Trash2 size={18} />
               </button>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Salary Budget (Auto)
-          </label>
-          <input
-            type="number"
-            value={totalSalary}
-            readOnly
-            className="w-full p-2 rounded bg-slate-700 text-white opacity-60 cursor-not-allowed"
-          />
-        </div>
+      {/* Budgets & Satisfaction Section */}
+      <div className="grid md:grid-cols-2 gap-6 bg-slate-900 p-6 rounded-lg border border-slate-700">
+        <CustomInput
+          label="Salary Budget (Auto)"
+          value={totalSalary}
+          onChange={() => {}}
+          isCurrency
+          readOnly
+          currencySymbol="₹"
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Training Budget
-          </label>
-          <input
-            type="number"
-            value={trainingBudget}
-            onChange={(e) =>
-              onTrainingBudgetChange(parseFloat(e.target.value) || 0)
-            }
-            min="0"
-            step="0.01"
-            className="w-full p-2 rounded bg-slate-800 text-white"
-          />
-        </div>
+        <CustomInput
+          label="Training Budget"
+          value={trainingBudget}
+          onChange={(val) => onTrainingBudgetChange(Number(val))}
+          isCurrency
+          currencySymbol="₹"
+          min={0}
+          step={1000}
+          required
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Total HR Budget
-          </label>
-          <input
-            type="number"
-            value={totalBudget}
-            readOnly
-            className="w-full p-2 rounded bg-slate-700 text-white opacity-60 cursor-not-allowed"
-          />
-        </div>
+        <CustomInput
+          label="Total HR Budget"
+          value={totalBudget}
+          onChange={() => {}}
+          isCurrency
+          currencySymbol="₹"
+          readOnly
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1">
-            Employee Satisfaction (0–100)
-          </label>
-          <input
-            type="number"
-            value={employeeSatisfaction}
-            onChange={(e) =>
-              onEmployeeSatisfactionChange(parseFloat(e.target.value) || 0)
-            }
-            min="0"
-            max="100"
-            step="0.01"
-            className="w-full p-2 rounded bg-slate-800 text-white"
-          />
-        </div>
+        <CustomInput
+          label="Employee Satisfaction"
+          value={employeeSatisfaction}
+          onChange={(val) => onEmployeeSatisfactionChange(Number(val))}
+          isPercentage
+          min={0}
+          max={100}
+          step={1}
+          required
+        />
       </div>
     </div>
   );

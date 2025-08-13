@@ -53,7 +53,7 @@ function main() {
         return __generator(this, function (_p) {
             switch (_p.label) {
                 case 0:
-                    console.log("🌱 Starting database seeding...");
+
                     // Clean existing data in correct order (respecting foreign key constraints)
                     return [4 /*yield*/, prisma_1.default.product_performance.deleteMany()];
                 case 1:
@@ -99,7 +99,7 @@ function main() {
                 case 14:
                     _p.sent();
                     // Create Users
-                    console.log("👥 Creating users...");
+
                     hashedPassword = "$2y$10$N/ohrDUZObMGWG30oskpee40vFV8CtG7nCwkDO6vrx9IL6f8OuQZu";
                     return [4 /*yield*/, prisma_1.default.user.create({
                             data: {
@@ -174,7 +174,7 @@ function main() {
                 case 17:
                     students = _p.sent();
                     // Create Simulations
-                    console.log("🎮 Creating simulations...");
+
                     return [4 /*yield*/, prisma_1.default.simulation.create({
                             data: {
                                 name: "Technology Industry Competition Q1-Q4 2024",
@@ -243,7 +243,7 @@ function main() {
                 case 20:
                     manufacturingSimulation = _p.sent();
                     // Create Simulation Access
-                    console.log("🔑 Setting up simulation access...");
+
                     simulationAccess = __spreadArray(__spreadArray(__spreadArray([], students.slice(0, 4).map(function (student) { return ({
                         simulation_id: techSimulation.id,
                         user_id: student.id,
@@ -266,7 +266,7 @@ function main() {
                 case 21:
                     _p.sent();
                     // Create Companies with realistic business data
-                    console.log("🏢 Creating companies...");
+
                     return [4 /*yield*/, Promise.all([
                             // Tech Simulation Companies
                             prisma_1.default.company.create({
@@ -427,7 +427,7 @@ function main() {
                 case 22:
                     companies = _p.sent();
                     // Create Products with realistic specifications
-                    console.log("📱 Creating products...");
+
                     return [4 /*yield*/, Promise.all([
                             // TechNova Products
                             prisma_1.default.product.create({
@@ -595,7 +595,7 @@ function main() {
                 case 23:
                     products = _p.sent();
                     // Create comprehensive Finance Records
-                    console.log("💰 Creating finance records...");
+
                     financeData = [
                         // TechNova - 4 periods of growth
                         {
@@ -698,7 +698,7 @@ function main() {
                     return [3 /*break*/, 24];
                 case 29:
                     // Create HR Decisions with realistic role structures
-                    console.log("👨‍💼 Creating HR decisions...");
+
                     hrData = [
                         { companyIndex: 0, periods: 4, baseSalaryBudget: 180000 }, // TechNova
                         { companyIndex: 1, periods: 4, baseSalaryBudget: 160000 }, // Quantum
@@ -790,7 +790,7 @@ function main() {
                     return [3 /*break*/, 30];
                 case 35:
                     // Create R&D Decisions
-                    console.log("🔬 Creating R&D decisions...");
+
                     _d = 0, _e = hrData.slice(0, 4);
                     _p.label = 36;
                 case 36:
@@ -825,7 +825,7 @@ function main() {
                     return [3 /*break*/, 36];
                 case 41:
                     // Create Production Decisions for products that have launched
-                    console.log("🏭 Creating production decisions...");
+
                     _loop_2 = function (product) {
                         var company, maxPeriod, period, baseProduction, unitsToProduced, costPerUnit, totalCost;
                         return __generator(this, function (_r) {
@@ -883,7 +883,7 @@ function main() {
                     return [3 /*break*/, 42];
                 case 45:
                     // Create Marketing Decisions
-                    console.log("📢 Creating marketing decisions...");
+
                     _h = 0, hrData_2 = hrData;
                     _p.label = 46;
                 case 46:
@@ -919,7 +919,7 @@ function main() {
                     return [3 /*break*/, 46];
                 case 51:
                     // Create Product Performance Records
-                    console.log("📊 Creating product performance records...");
+
                     _loop_3 = function (product) {
                         var company, maxPeriod, period, baseSales, seasonalMultiplier, salesVolume, basePrice, sellingPrice, revenue, costs, profit;
                         return __generator(this, function (_s) {
@@ -986,7 +986,7 @@ function main() {
                     return [3 /*break*/, 52];
                 case 55:
                     // Create Company History Records (snapshots for each period)
-                    console.log("📈 Creating company history records...");
+
                     _l = 0, hrData_3 = hrData;
                     _p.label = 56;
                 case 56:
@@ -1040,7 +1040,7 @@ function main() {
                     return [3 /*break*/, 56];
                 case 62:
                     // Create Company Access Records
-                    console.log("🔐 Creating company access records...");
+
                     companyAccessRecords = __spreadArray(__spreadArray(__spreadArray(__spreadArray([], companies.map(function (company) { return ({
                         company_id: company.id,
                         user_id: company.user_id,
@@ -1104,8 +1104,8 @@ function main() {
                     return [4 /*yield*/, prisma_1.default.company_history.count()];
                 case 74:
                     historyCount = _p.sent();
-                    console.log("✅ Database seeding completed successfully!");
-                    console.log("\n\uD83D\uDCCA SEEDING SUMMARY:\n\u250C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 Entity Type                 \u2502 Count \u2502\n\u251C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n\u2502 Users                       \u2502   ".concat(userCount.toString().padStart(3), " \u2502\n\u2502 Simulations                 \u2502   ").concat(simulationCount.toString().padStart(3), " \u2502\n\u2502 Companies                   \u2502   ").concat(companyCount.toString().padStart(3), " \u2502\n\u2502 Products                    \u2502   ").concat(productCount.toString().padStart(3), " \u2502\n\u2502 Finance Records             \u2502   ").concat(financeCount.toString().padStart(3), " \u2502\n\u2502 HR Decisions                \u2502   ").concat(hrCount.toString().padStart(3), " \u2502\n\u2502 R&D Decisions               \u2502   ").concat(rdCount.toString().padStart(3), " \u2502\n\u2502 Production Records          \u2502   ").concat(productionCount.toString().padStart(3), " \u2502\n\u2502 Marketing Decisions         \u2502   ").concat(marketingCount.toString().padStart(3), " \u2502\n\u2502 Product Performances        \u2502   ").concat(performanceCount.toString().padStart(3), " \u2502\n\u2502 Company Histories           \u2502   ").concat(historyCount.toString().padStart(3), " \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n\n\uD83C\uDFAF KEY FEATURES SEEDED:\n\u2022 Multi-industry simulations (Tech, Retail, Manufacturing)\n\u2022 Realistic financial progression with growth patterns\n\u2022 Comprehensive HR structures with role hierarchies\n\u2022 Product lifecycle management with performance tracking\n\u2022 Historical company snapshots for trend analysis\n\u2022 Proper access control and permissions\n\u2022 Business-ready KPIs and metrics\n\n\uD83D\uDE80 Ready for business simulation platform!\n  "));
+
+
                     return [2 /*return*/];
             }
         });

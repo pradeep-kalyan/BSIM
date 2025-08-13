@@ -19,7 +19,6 @@ import {
   Users,
   Image,
   FileText,
-  Star,
 } from "lucide-react";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { Props } from "@/app/types/company";
@@ -79,8 +78,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
     await revokeAccessByEmail(company.id, email);
     setAccessList((prev) => prev.filter((e) => e !== email));
   };
-
-
 
   return (
     <div className="max-w-4xl mx-auto h-[90vh] overflow-y-auto px-4">
@@ -236,87 +233,6 @@ const EditCompanyForm: React.FC<Props> = ({ company, onClose, onUpdated }) => {
               </div>
               <p className="text-xs text-slate-500">
                 {formatCurrency(formData.total_liabilities)}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <Star className="w-4 h-4" />
-                Brand Value
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  name="brand_value"
-                  className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 pl-10 text-white placeholder-slate-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
-                  value={formData.brand_value}
-                  onChange={handleChange}
-                  placeholder="0"
-                />
-                <Star className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-              <p className="text-xs text-slate-500">
-                {formatCurrency(formData.brand_value)}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <DollarSign className="w-4 h-4" />
-                Marketing Budget
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  name="marketing_budget"
-                  className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 pl-10 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-                  value={formData.marketing_budget}
-                  onChange={handleChange}
-                />
-                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-              <p className="text-xs text-slate-500">
-                {formatCurrency(formData.marketing_budget)}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <DollarSign className="w-4 h-4" />
-                Marketing Budget
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  name="marketing_budget"
-                  className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 pl-10 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-                  value={formData.marketing_budget}
-                  onChange={handleChange}
-                />
-                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-              <p className="text-xs text-slate-500">
-                {formatCurrency(formData.marketing_budget)}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <DollarSign className="w-4 h-4" />
-                Marketing Budget
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  name="marketing_budget"
-                  className="w-full bg-slate-800/50 border border-slate-600 rounded-xl p-3 pl-10 text-white placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-                  value={formData.marketing_budget}
-                  onChange={handleChange}
-                />
-                <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-              <p className="text-xs text-slate-500">
-                {formatCurrency(formData.marketing_budget)}
               </p>
             </div>
           </div>
