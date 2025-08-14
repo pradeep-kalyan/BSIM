@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { IndianRupee, FlaskConical, Timer, TriangleAlert, Award } from "lucide-react";
+import {
+  IndianRupee,
+  FlaskConical,
+  Timer,
+  TriangleAlert,
+  Award,
+} from "lucide-react";
 import InfoCard from "@/app/ui/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import { useRDForm, useCashBalance } from "@/app/context/FormContext";
@@ -86,12 +92,12 @@ const RDForm = () => {
             <div>
               <Slider
                 label="R&D Budget"
-                tooltipText="Money you spend per year on creating new products and improving existing ones"
+                tooltipText="Amount you spend per year on creating new products and improving existing ones (₹ per year)"
                 defaultValue={[data.budget ?? 0]}
-                value={[data.budget ?? 0]}
+                value={data.budget ?? 0}
                 min={0}
                 max={data.budget * 2 || 100000}
-                onValueChange={(val) => handleChange("budget", val[0])}
+                onValueChange={(val) => handleChange("budget", val)}
               />
               {getError("budget") && (
                 <p className="text-rose-400 text-xs mt-1">
@@ -104,12 +110,12 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Products in Pipeline"
-                tooltipText="Number of new products you're working on right now"
+                tooltipText="Number of new products you're currently developing and working on"
                 defaultValue={[data.pip ?? 0]}
-                value={[data.pip ?? 0]}
+                value={data.pip ?? 0}
                 min={0}
                 max={20}
-                onValueChange={(val) => handleChange("pip", val[0])}
+                onValueChange={(val) => handleChange("pip", val)}
               />
               {getError("pip") && (
                 <p className="text-rose-400 text-xs mt-1">{getError("pip")}</p>
@@ -120,12 +126,12 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Time to Market"
-                tooltipText="How many months it takes to finish and launch your new products"
+                tooltipText="Number of months needed to complete and launch your new products"
                 defaultValue={[data.time_to_market ?? 0]}
-                value={[data.time_to_market ?? 0]}
+                value={data.time_to_market ?? 0}
                 min={0}
                 max={36}
-                onValueChange={(val) => handleChange("time_to_market", val[0])}
+                onValueChange={(val) => handleChange("time_to_market", val)}
               />
               {getError("time_to_market") && (
                 <p className="text-rose-400 text-xs mt-1">
@@ -138,12 +144,12 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Patents Expected"
-                tooltipText="Number of legal protections you expect for your inventions"
+                tooltipText="Number of patents you expect to get for your inventions and innovations"
                 defaultValue={[data.patented ?? 0]}
-                value={[data.patented ?? 0]}
+                value={data.patented ?? 0}
                 min={0}
                 max={10}
-                onValueChange={(val) => handleChange("patented", val[0])}
+                onValueChange={(val) => handleChange("patented", val)}
               />
               {getError("patented") && (
                 <p className="text-rose-400 text-xs mt-1">
@@ -186,13 +192,13 @@ const RDForm = () => {
             <div>
               <Slider
                 label="Quality Improvements"
-                tooltipText="How much better you want to make your products compared to what you have now"
+                tooltipText="Percentage improvement you want to make in your products' quality over the year"
                 defaultValue={[data.quality_changes ?? 0]}
-                value={[data.quality_changes ?? 0]}
+                value={data.quality_changes ?? 0}
                 isPercentage={true}
                 min={0}
                 max={100}
-                onValueChange={(val) => handleChange("quality_changes", val[0])}
+                onValueChange={(val) => handleChange("quality_changes", val)}
               />
               {getError("quality_changes") && (
                 <p className="text-rose-400 text-xs mt-1">

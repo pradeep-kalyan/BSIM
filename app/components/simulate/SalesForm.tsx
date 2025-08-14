@@ -7,8 +7,6 @@ import {
   Package,
   AlertTriangle,
   Check,
-  Zap,
-  CheckCircle,
 } from "lucide-react";
 import {
   useProductForm,
@@ -227,9 +225,9 @@ const Sales = () => {
   };
 
   return (
-    <div className="h-full bg-slate-800/50 shadow-md py-4 px-6">
+    <div className="min-h-full bg-slate-800/50 shadow-md py-4 px-3 sm:px-6">
       {/* Top Info Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <InfoCard
           label="Total Revenue"
           value={totalMetrics.totalRevenue}
@@ -258,24 +256,29 @@ const Sales = () => {
         />
       </section>
 
-      <div className="mx-auto my-4 font-roboto-sans">
-        {/* Product Selection Dropdown */}
-        <div className="flex gap-3 justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white pt-1">Sales & Performance</h2>
-          <div className="flex items-center gap-2 ">
-            <label className="text-white text-lg tracking-wide font-medium font-roboto-sans">
+      <div className="mx-auto font-roboto-sans">
+        {/* Header and Product Selection */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">
+            Sales & Performance
+          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <label className="text-white text-sm sm:text-lg tracking-wide font-medium font-roboto-sans whitespace-nowrap">
               Select Product:
             </label>
             <select
               value={selectedProductId}
               onChange={(e) => setSelectedProductId(e.target.value)}
-              className="p-2 rounded bg-slate-700 text-white border border-slate-500 tracking-wide font-medium font-geist-sans">
+              className="p-2 rounded bg-slate-700 text-white border border-slate-500 tracking-wide font-medium font-geist-sans min-w-0 flex-1 sm:flex-none sm:min-w-[200px]"
+            >
               <option value="">-- Select Product --</option>
-              {products?.filter((p) => p.id && p.status === "active").map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
+              {products
+                ?.filter((p) => p.id && p.status === "active")
+                .map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -294,171 +297,196 @@ const Sales = () => {
               profit: 0,
             };
 
-          return (
-            <div key={id} className="bg-slate-800/50 shadow-md rounded-2xl px-6 py-4 border border-slate-700 mb-4">
-              <h2 className="text-2xl font-bold font-roboto-sans text-white">{product.name}</h2>
-              <hr className=" mt-2 mb-6 border border-slate-700" />
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Left sliders */}
-                <div className="flex flex-col gap-4">
-                  <Slider
-                    label="Sales Volume (Units)"
-                    tooltipText="Units to sell"
-                    value={[pSales.sales_volume || 0]}
-                    min={0}
-                    max={pSales.sales_volume * 2 || 1000}
-                    onValueChange={(val) => handleProductInputChange(id, "sales_volume", val[0])}
-                  />
-                  <Slider
-                    label="Selling Price per Unit (₹)"
-                    tooltipText="Price per unit for this product"
-                    value={[pSales.selling_price || product.selling_price || 0]}
-                    min={0}
-                    max={pSales.selling_price * 2 || 1000}
-                    onValueChange={(val) => handleProductInputChange(id, "selling_price", val[0])}
-                  />
+            return (
+              <div
+                key={id}
+                className="bg-slate-800/50 shadow-md rounded-2xl px-4 sm:px-6 py-4 sm:py-6 border border-slate-700 mb-4"
+              >
+                {/* Product Header */}
+                <div className="mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold font-roboto-sans text-white break-words">
+                    {product.name}
+                  </h2>
+                  <hr className="mt-2 mb-4 border border-slate-700" />
                 </div>
 
-                {/* Middle sliders */}
-                <div className="flex flex-col gap-4 flex-1">
-                  <Slider
-                    label="Customer Satisfaction (1-10)"
-                    tooltipText="Customer satisfaction rating"
-                    value={[pSales.customer_satisfaction || 1]}
-                    min={1}
-                    max={10}
-                    onValueChange={(val) =>
-                      handleProductInputChange(
-                        id,
-                        "customer_satisfaction",
-                        val[0]
-                      )
-                    }
-                  />
-                  <Slider
-                    label="Market Share (%)"
-                    tooltipText="Target market percentage"
-                    value={[pSales.market_share || 0]}
-                    min={0}
-                    max={100}
-                    onValueChange={(val) =>
-                      handleProductInputChange(id, "market_share", val[0])
-                    }
-                  />
-                </div>
-
-                {/* Right product info */}
-                <div className="flex flex-col gap-3 flex-1">
-                  <div className="w-full p-4 rounded-lg text-white text-md space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300">
-                          Category:
-                        </span>
-                      </div>
-                      <span className="truncate max-w-[120px]" title={product.category}>
-                        {product.category}
-                      </span>
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                  {/* Sliders Section */}
+                  <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Sales Controls */}
+                    <div className="space-y-4">
+                      <Slider
+                        label="Sales Volume (Units)"
+                        tooltipText="Number of units you plan to sell this year"
+                        value={pSales.sales_volume || 0}
+                        min={0}
+                        max={pSales.sales_volume * 2 || 1000}
+                        onValueChange={(val) =>
+                          handleProductInputChange(id, "sales_volume", val)
+                        }
+                      />
+                      <Slider
+                        label="Selling Price per Unit (₹)"
+                        tooltipText="Price per unit you will charge customers for this product (₹ per unit)"
+                        value={pSales.selling_price || product.selling_price || 0}
+                        min={0}
+                        max={pSales.selling_price * 2 || 1000}
+                        onValueChange={(val) =>
+                          handleProductInputChange(id, "selling_price", val)
+                        }
+                      />
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300">
-                          Price:
-                        </span>
-                      </div>
-                      <span>
-                        ₹{pSales.selling_price || product.selling_price || 0}
-                      </span>
+                    {/* Performance Controls */}
+                    <div className="space-y-4">
+                      <Slider
+                        label="Customer Satisfaction (1-10)"
+                        tooltipText="How satisfied customers are with this product (rating from 1 to 10)"
+                        value={pSales.customer_satisfaction || 1}
+                        min={1}
+                        max={10}
+                        onValueChange={(val) =>
+                          handleProductInputChange(
+                            id,
+                            "customer_satisfaction",
+                            val
+                          )
+                        }
+                      />
+                      <Slider
+                        label="Market Share (%)"
+                        tooltipText="Percentage of the total market you want to capture with this product"
+                        value={pSales.market_share || 0}
+                        min={0}
+                        max={100}
+                        onValueChange={(val) =>
+                          handleProductInputChange(id, "market_share", val)
+                        }
+                      />
                     </div>
+                  </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300">
-                          Inventory:
-                        </span>
-                      </div>
-                      <span>{getAvailableInventory(id)} units</span>
-                    </div>
+                  {/* Product Info Section */}
+                  <div className="lg:col-span-1">
+                    <div className="bg-slate-700/30 rounded-lg p-4 h-full">
+                      <h3 className="text-lg font-semibold text-white mb-3">
+                        Product Details
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">Category:</span>
+                          </div>
+                          <span className="text-white text-sm sm:text-base truncate max-w-[120px] sm:max-w-none" title={product.category}>
+                            {product.category}
+                          </span>
+                        </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300">
-                          Cost/unit:
-                        </span>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">Price:</span>
+                          </div>
+                          <span className="text-white text-sm sm:text-base">
+                            ₹{formatNumber(pSales.selling_price || product.selling_price || 0)}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">Inventory:</span>
+                          </div>
+                          <span className="text-white text-sm sm:text-base">{getAvailableInventory(id)} units</span>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">Cost/unit:</span>
+                          </div>
+                          <span className="text-white text-sm sm:text-base">₹{formatNumber(product.production_cost || 0)}</span>
+                        </div>
                       </div>
-                      <span>₹{product.production_cost || 0}</span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-row items-center justify-between gap-4 mt-6 w-full px-5">
-                {/* Left: Metrics */}
-                <div className="flex justify-start gap-8 font-roboto-sans text-white">
-                  <div className="flex gap-2 items-center">
-                    <span className="w-3 h-3 rounded-full bg-green-400"></span>
-                    <span className="font-medium">Revenue:</span>
-                    <span>₹{formatNumber(Math.round(calc.revenue))}</span>
+                {/* Bottom Section - Metrics and Validation */}
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                  {/* Financial Metrics */}
+                  <div className="flex flex-col sm:flex-row gap-4 font-roboto-sans text-white w-full lg:w-auto">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0"></span>
+                      <span className="font-medium text-sm sm:text-base">Revenue:</span>
+                      <span className="text-sm sm:text-base">₹{formatNumber(Math.round(calc.revenue))}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-red-400 flex-shrink-0"></span>
+                      <span className="font-medium text-sm sm:text-base">Costs:</span>
+                      <span className="text-sm sm:text-base">₹{formatNumber(Math.round(calc.costs))}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-yellow-400 flex-shrink-0"></span>
+                      <span className="font-medium text-sm sm:text-base">Profit:</span>
+                      <span className="text-sm sm:text-base">₹{formatNumber(Math.round(calc.profit))}</span>
+                    </div>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <span className="w-3 h-3 rounded-full bg-red-400"></span>
-                    <span className="font-medium">Costs:</span>
-                    <span>₹{formatNumber(Math.round(calc.costs))}</span>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    <span className="w-3 h-3 rounded-full bg-yellow-400"></span>
-                    <span className="font-medium">Profit:</span>
-                    <span>₹{formatNumber(Math.round(calc.profit))}</span>
-                  </div>
-                </div>
 
-                {/* Right: Validation + Button */}
-                <div className="flex flex-row items-end gap-5">
-                  {validationAlerts[id] && (
-                    <div className="h-6 flex items-center">
-                      {validationAlerts[id] &&
-                        !validationAlerts[id].startsWith("Validated!") && (
-                          <div className="flex items-center gap-2 text-rose-400">
-                            <AlertTriangle size={18} />
-                            {validationAlerts[id]}
+                  {/* Validation Section */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
+                    {/* Validation Message */}
+                    {validationAlerts[id] && (
+                      <div className="flex items-start sm:items-center gap-2 text-sm max-w-full">
+                        {validationAlerts[id] &&
+                          !validationAlerts[id].startsWith("Validated!") && (
+                            <div className="flex items-start gap-2 text-rose-400">
+                              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+                              <span className="break-words">{validationAlerts[id]}</span>
+                            </div>
+                          )}
+                        {successProducts[id] && !validationAlerts[id] && (
+                          <div className="flex items-center gap-2 text-green-400">
+                            <Check size={16} />
+                            <span>Validated!</span>
                           </div>
                         )}
-                      {successProducts[id] && !validationAlerts[id] && (
-                        <div className="flex items-center gap-2 text-green-400">
-                          <Check size={18} />
-                          Validated!
-                        </div>
-                      )}
-                      {validationAlerts[id]?.startsWith("Validated!") && (
-                        <div className="flex items-center gap-2 text-green-400">
-                          <Check size={18} />
-                          {validationAlerts[id]}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div>
+                        {validationAlerts[id]?.startsWith("Validated!") && (
+                          <div className="flex items-start gap-2 text-green-400">
+                            <Check size={16} className="mt-0.5 flex-shrink-0" />
+                            <span className="break-words">{validationAlerts[id]}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Validate Button */}
                     <button
                       onClick={() => handleValidateProduct(id)}
-                      className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-roboto-sans rounded-lg shadow text-md"
+                      className="px-4 sm:px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-roboto-sans rounded-lg shadow text-sm sm:text-base transition-colors whitespace-nowrap flex-shrink-0"
                     >
                       Validate
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
 
+        {/* No Product Selected State */}
         {!selectedProductId && (
-          <div className="flex justify-center bg-slate-800/50 shadow-md rounded-2xl py-38 border border-slate-700 mb-4 px-5">
-            <p className="text-md font-roboto-sans text-slate-300">No Products Selected </p>
+          <div className="flex justify-center items-center bg-slate-800/50 shadow-md rounded-2xl py-16 sm:py-24 border border-slate-700 mb-4 px-5">
+            <div className="text-center">
+              <Package className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-lg font-roboto-sans text-slate-300 mb-1">
+                No Product Selected
+              </p>
+              <p className="text-sm text-slate-400">
+                Choose a product from the dropdown above to manage sales data
+              </p>
+            </div>
           </div>
         )}
       </div>

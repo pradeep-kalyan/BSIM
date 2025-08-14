@@ -42,11 +42,11 @@ import QuickStat from "@/app/ui/QuickStat";
 import ChartCard from "@/app/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
-import HamburgerMenu from "./HamburgerMenu";
-import LogoutBtn from "@/app/components/auth/Logout";
+import HamburgerMenu, { HamburgerMenuRef } from "./HamburgerMenu";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
+import { Step } from "react-joyride";
 import {
   CompanyHistoryType,
   DashboardData,
@@ -148,11 +148,12 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
   const swapyInstanceRef = useRef<ReturnType<typeof createSwapy> | null>(null);
   const [joyrideRun, setJoyrideRun] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
-  const steps = [
+  const [currentUsername, setCurrentUsername] = useState<string | undefined>();
+  const steps: Step[] = [
     {
       target: ".details",
       content:
-        "Customize your dashboard layout by dragging and arranging the sections.",
+        "Customize your dashboard  by dragging and arranging the sections.",
       disableBeacon: true,
       placement: "top",
     },
@@ -160,40 +161,89 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       target: ".export-dashboard-btn",
       content: "Click here to download your dashboard as an image.",
       disableBeacon: true,
-      placement: "bottom",
+      placement: "auto",
     },
     {
       target: ".simulate-dashboard-btn",
       content: "Run a simulation to preview how your strategies will perform.",
       disableBeacon: true,
-      placement: "bottom",
+      placement: "auto",
     },
   ];
+
   const [highlightedSelector, setHighlightedSelector] = useState<string | null>(
     null
   );
 
+  const menuRef = useRef<HamburgerMenuRef>(null);
+
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, action, step } = data;
+    const { status, action, step, type } = data;
 
     if (status === "finished" || status === "skipped") {
       setHighlightedSelector(null);
       setJoyrideRun(false);
+      menuRef.current?.closeMenu();
       return;
     }
 
+    // Highlighting logic
     if (action === "start" || action === "update") {
       if (typeof step.target === "string") {
         setHighlightedSelector(step.target);
       } else if (step.target instanceof HTMLElement) {
-        // Convert the element to a selector if possible
         const selector = step.target.className
           ? `.${step.target.className.split(" ").join(".")}`
           : "";
         setHighlightedSelector(selector || null);
       }
     }
+
+    // Open hamburger menu for certain steps
+    if (type === "step:before") {
+      if (
+        step?.target === ".export-dashboard-btn" ||
+        step?.target === ".simulate-dashboard-btn"
+      ) {
+        menuRef.current?.openMenu();
+      }
+    }
+
+    // Close hamburger menu after those steps
+    if (type === "step:after") {
+      if (
+        step?.target === ".export-dashboard-btn" ||
+        step?.target === ".simulate-dashboard-btn"
+      ) {
+        menuRef.current?.closeMenu();
+      }
+    }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Tooltip portal classes
+      const tooltip = document.querySelector(".react-joyride__tooltip");
+      const beacon = document.querySelector(".react-joyride__beacon");
+
+      if (
+        tooltip &&
+        !tooltip.contains(event.target as Node) &&
+        (!beacon || !beacon.contains(event.target as Node))
+      ) {
+        // Stop Joyride
+        setJoyrideRun(false);
+        // Remove highlights
+        document.querySelectorAll(".joyride-highlight").forEach((el) => {
+          el.classList.remove("joyride-highlight");
+          (el as HTMLElement).style.border = ""; // remove border if added via style
+        });
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     // remove previous highlights
@@ -325,6 +375,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     const fetchUser = async () => {
       const user = await getCurrentUser();
       setCurrentUserId(user?.id);
+      setCurrentUsername(user?.name);
     };
     fetchUser();
   }, []);
@@ -346,8 +397,15 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     setMounted(true);
   }, []);
   const handleInfoClick = () => {
-    setJoyrideRun(true);
+    // Smooth scroll to top
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Delay starting Joyride so scrolling finishes
+    setTimeout(() => {
+      setJoyrideRun(true);
+    }, 500); // adjust delay if needed
   };
+
   // Get current period data
   const { currentCompanyData } = createCurrentPeriodData();
   const isCurrentPeriod = selectedPeriod === data?.company?.current_period;
@@ -927,6 +985,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               lineHeight: "1.4",
               zIndex: 10000,
               marginTop: "50px",
+              transform: "translateY(30px)",
             },
             buttonClose: {
               // fixed from buttonClose to tooltipClose
@@ -947,7 +1006,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             },
             tooltipContainer: {
               textAlign: "center",
-              marginTop: "30px",
+              marginTop: "20px",
             },
             tooltipContent: {
               padding: 0,
@@ -1103,22 +1162,37 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   </div>
                 </div>
               </div>
-              <HamburgerMenu
-                isExporting={isExporting}
-                isSimulating={isSimulating}
-                capture={capture}
-                handleViewCompany={handleViewCompany}
-                handleSimulate={handleSimulate}
-                onLogout={() => {
-                  handleLogout();
-                }}
-              />
+
+              <div className="flex items-center gap-4">
+                {/* Username */}
+                {currentUsername && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-blue-300 text-sm font-medium truncate max-w-[150px]">
+                      {currentUsername}
+                    </span>
+                  </div>
+                )}
+
+                {/* Hamburger Menu */}
+                <HamburgerMenu
+                  ref={menuRef}
+                  isExporting={isExporting}
+                  isSimulating={isSimulating}
+                  capture={capture}
+                  handleViewCompany={handleViewCompany}
+                  handleSimulate={handleSimulate}
+                  onLogout={() => {
+                    handleLogout();
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
         <div
-          className="details sm:max-w-small md:max-w-medium lg:max-w-large xl:max-w-xlarge mx-auto px-6 py-8 space-y-8"
+          className="details sm:max-w-small md:max-w-medium lg:max-w-large xl:max-w-xlarge mx-auto py-8 px-6 space-y-8"
           data-swapy-container
           ref={swapyRef}
         >
@@ -1325,6 +1399,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           </div>
 
           {/* Department Overview */}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div data-swapy-slot="slot-hr-overview" className="lg:col-span-1">
               <div data-swapy-item="item-hr-overview">
@@ -1369,7 +1444,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             >
               <div data-swapy-item="item-production-metrics">
                 <ChartCard title="Production Metrics">
-                  <ResponsiveContainer width="100%" height={455}>
+                  <ResponsiveContainer width="100%" height={380}>
                     <BarChart data={chartData.productionData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                       <XAxis dataKey="month" stroke="#9CA3AF" />

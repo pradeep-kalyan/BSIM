@@ -200,9 +200,22 @@
   border-radius: 8px;
 }
 
-/* @theme {
-  --spacing-margin: 5rem;
-} */
+.hamburger-line {
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger-open .line-1 {
+  transform: rotate(45deg) translate(4.5px, 4px);
+}
+
+.hamburger-open .line-2 {
+  opacity: 0;
+}
+
+.hamburger-open .line-3 {
+  transform: rotate(-45deg) translate(4.5px, -4.5px);
+}
 
 @theme {
   --spacing-small: 40rem;

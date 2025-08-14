@@ -135,16 +135,16 @@ const MarketingForm = () => {
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Total Marketing"
-                  text="Total money you spend per year on advertising and promoting your products"
+                  text="Total amount you spend per year on advertising and promoting your products (₹ per year)"
                 />
                 <Slider
                   className="w-[200px]"
                   label={`${formatCurrency(marketingData.budget)}`}
-                  value={[marketingData.budget]}
+                  value={marketingData.budget}
                   min={0}
                   max={marketingData.budget * 2 || 100000}
-                  onValueChange={(val: number[]) => {
-                    handleBudgetChange("budget", val[0]);
+                  onValueChange={(val: number) => {
+                    handleBudgetChange("budget", val);
                   }}
                 />
               </div>
@@ -153,7 +153,7 @@ const MarketingForm = () => {
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Online Marketing"
-                  text="Money spent per year on internet advertising like social media, Google ads, and websites"
+                  text="Amount spent per year on internet advertising like social media, Google ads, and websites (₹ per year)"
                 />
                 <Slider
                   // className="w-[200px]"
@@ -161,11 +161,11 @@ const MarketingForm = () => {
                     marketingData.online,
                     marketingData.budget
                   )})`}
-                  value={[marketingData.online]}
+                  value={marketingData.online}
                   min={0}
                   max={marketingData.online * 2 || 50000}
-                  onValueChange={(val: number[]) => {
-                    handleBudgetChange("online", val[0]);
+                  onValueChange={(val) => {
+                    handleBudgetChange("online", val);
                   }}
                 />
               </div>
@@ -174,7 +174,7 @@ const MarketingForm = () => {
               <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Offline Marketing"
-                  text="Money spent per year on traditional advertising like TV commercials, newspapers, billboards, and radio ads"
+                  text="Amount spent per year on traditional advertising like TV commercials, newspapers, billboards, and radio ads (₹ per year)"
                 />
                 <Slider
                   className="w-[200px]"
@@ -182,11 +182,11 @@ const MarketingForm = () => {
                     marketingData.offline,
                     marketingData.budget
                   )})`}
-                  value={[marketingData.offline]}
+                  value={marketingData.offline}
                   min={0}
                   max={marketingData.offline * 2 || 5000}
-                  onValueChange={(val: number[]) => {
-                    handleBudgetChange("offline", val[0]);
+                  onValueChange={(val: number) => {
+                    handleBudgetChange("offline", val);
                   }}
                 />
               </div>

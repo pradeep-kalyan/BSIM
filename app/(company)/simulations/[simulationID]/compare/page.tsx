@@ -39,6 +39,7 @@ type MetricType = "financial" | "operational" | "innovation";
 
 const ComparePage: React.FC = () => {
   const { simId: simulationId } = useSimulation();
+  const [simulationName, setSimulationName] = useState<string>("");
   const [allCompanies, setAllCompanies] = useState<CompanyOption[]>([]);
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
   const [companiesData, setCompaniesData] = useState<Company[]>([]);
@@ -62,11 +63,11 @@ const ComparePage: React.FC = () => {
   );
 
   const { simId } = useSimulation();
-const truncateWords = (text: string, wordLimit: number) => {
-  const words = text.split(" ");
-  if (words.length <= wordLimit) return text;
-  return words.slice(0, wordLimit).join(" ") + " ...";
-};
+  const truncateWords = (text: string, wordLimit: number) => {
+    const words = text.split(" ");
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(" ") + " ...";
+  };
   // Extract metric value for sorting with better type safety
   const getMetricValue = (company: Company, metric: SortOption): number => {
     switch (metric) {
@@ -162,6 +163,7 @@ const truncateWords = (text: string, wordLimit: number) => {
         );
 
         if (currentSim) {
+          setSimulationName(currentSim.name);
           setAllCompanies(
             currentSim.companies.map((c: { id: string; name: string }) => ({
               id: c.id,
@@ -307,10 +309,15 @@ const truncateWords = (text: string, wordLimit: number) => {
               <ArrowLeft className="w-5 h-6" />
             </button>
 
-            <h1 className="text-3xl font-bold ">
-              Company Comparison Dashboard
-            </h1>
-
+            <h1 className="text-3xl font-bold">Company Comparison Dashboard</h1>
+            {simulationName && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-blue-300 text-sm font-medium truncate max-w-[150px]">
+                  {simulationName}
+                </span>
+              </div>
+            )}
             {comparisonStarted && (
               <button
                 onClick={handleRefresh}
@@ -448,7 +455,10 @@ const truncateWords = (text: string, wordLimit: number) => {
                         <Building2 className="w-6 h-6 text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-white" title={company.name}> 
+                        <h3
+                          className="text-xl font-semibold text-white"
+                          title={company.name}
+                        >
                           {truncateWords(company.name, 2)}
                         </h3>
                         <p className="text-gray-400 text-sm">
@@ -497,7 +507,8 @@ const truncateWords = (text: string, wordLimit: number) => {
                   {sortedCompanies.map((company) => (
                     <div
                       key={company.id}
-                      className="font-semibold text-white text-right" title={company.name}
+                      className="font-semibold text-white text-right"
+                      title={company.name}
                     >
                       {truncateWords(company.name, 2)}
                     </div>
@@ -553,7 +564,8 @@ const truncateWords = (text: string, wordLimit: number) => {
                     {sortedCompanies.map((company) => (
                       <div
                         key={company.id}
-                        className="font-semibold text-white text-right text-sm" title={company.name}
+                        className="font-semibold text-white text-right text-sm"
+                        title={company.name}
                       >
                         {truncateWords(company.name, 2)}
                       </div>
@@ -599,7 +611,10 @@ const truncateWords = (text: string, wordLimit: number) => {
                         key={company.id}
                         className="border-b border-gray-700/50 pb-4 last:border-b-0"
                       >
-                        <h4 className="font-semibold text-white mb-2" title="company.name">
+                        <h4
+                          className="font-semibold text-white mb-2"
+                          title="company.name"
+                        >
                           {truncateWords(company.name, 2)}
                         </h4>
                         <div className="space-y-2">
@@ -648,7 +663,8 @@ const truncateWords = (text: string, wordLimit: number) => {
                   {sortedCompanies.map((company) => (
                     <div
                       key={company.id}
-                      className="font-semibold text-white text-right" title={company.name}
+                      className="font-semibold text-white text-right"
+                      title={company.name}
                     >
                       {truncateWords(company.name, 2)}
                     </div>

@@ -1043,20 +1043,35 @@ export function useHRForm() {
 
   const updateDataWithCashImpact = useCallback(
     (data: Partial<HRFormData>) => {
-      // Calculate budget impact from the new data being passed in
-      const salary_budget = data.salary_budget ?? state.hr.salary_budget ?? 0;
-      const training_budget =
-        data.training_budget ?? state.hr.training_budget ?? 0;
-      const total_budget = data.total_budget ?? state.hr.total_budget ?? 0;
-
-      // Use total_budget if available, otherwise calculate from components
-      const budgetImpact =
-        total_budget > 0 ? total_budget : salary_budget + training_budget;
+      // Only calculate budget impact if budget-related fields are being updated
+      const budgetFields = ["salary_budget", "training_budget", "total_budget"];
+      const hasBudgetChanges = budgetFields.some((field) => field in data);
 
       updateHR(data);
-      updateHRBudgetImpact(budgetImpact);
+
+      // Only update budget impact if budget-related fields changed
+      if (hasBudgetChanges) {
+        const salary_budget = data.salary_budget ?? state.hr.salary_budget ?? 0;
+        const training_budget =
+          data.training_budget ?? state.hr.training_budget ?? 0;
+        const total_budget = data.total_budget ?? state.hr.total_budget ?? 0;
+
+        // Use total_budget if available, otherwise calculate from components
+        const budgetImpact =
+          total_budget > 0 ? total_budget : salary_budget + training_budget;
+
+        updateHRBudgetImpact(budgetImpact);
+      }
     },
     [updateHR, updateHRBudgetImpact, state.hr]
+  );
+
+  // Simple update function for non-budget fields
+  const updateDataOnly = useCallback(
+    (data: Partial<HRFormData>) => {
+      updateHR(data);
+    },
+    [updateHR]
   );
 
   // Helper function to calculate total budget from roles
@@ -1327,6 +1342,7 @@ export function useHRForm() {
   return {
     data: state.hr,
     updateData: updateDataWithCashImpact,
+    updateDataOnly, // For updates that don't affect budget
     setError,
     getError,
 

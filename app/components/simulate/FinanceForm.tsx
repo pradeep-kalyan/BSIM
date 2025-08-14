@@ -139,12 +139,12 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Amount"
-                  tooltipText="Money you borrow from banks to get cash now"
+                  tooltipText="Amount you borrow from banks this year (₹ per year)"
                   defaultValue={[data?.loan_amount ?? 0]}
-                  value={[data?.loan_amount ?? 0]}
+                  value={data?.loan_amount ?? 0}
                   min={0}
                   max={500000}
-                  onValueChange={(val) => handleChange("loan_amount", val[0])}
+                  onValueChange={(val) => handleChange("loan_amount", val)}
                 />
               </div>
 
@@ -152,8 +152,8 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Equity Issue"
-                  tooltipText="Money you raise by selling company shares to investors"
-                  defaultValue={data?.equity_issue ?? 0}
+                  tooltipText="Money you raise this year by selling company shares to investors (₹ per year)"
+                  defaultValue={[data?.equity_issue ?? 0]}
                   value={data?.equity_issue ?? 0}
                   min={0}
                   max={300000}
@@ -199,13 +199,13 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Investment Amount"
-                  tooltipText="Money you invest in stocks or bonds for future returns"
-                  defaultValue={data?.investment_amount ?? 0}
-                  value={[data?.investment_amount ?? 0]}
+                  tooltipText="Amount you invest this year in stocks or bonds for future returns (₹ per year)"
+                  defaultValue={[data?.investment_amount ?? 0]}
+                  value={data?.investment_amount ?? 0}
                   min={0}
                   max={200000}
                   onValueChange={(val) =>
-                    handleChange("investment_amount", val[0])
+                    handleChange("investment_amount", val)
                   }
                 />
               </div>
@@ -214,12 +214,12 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Repayment"
-                  tooltipText="Money you pay back on existing loans"
+                  tooltipText="Amount you pay back this year on existing loans (₹ per year)"
                   defaultValue={[data?.repay_loan ?? 0]}
-                  value={[data?.repay_loan ?? 0]}
+                  value={data?.repay_loan ?? 0}
                   min={0}
                   max={100000}
-                  onValueChange={(val) => handleChange("repay_loan", val[0])}
+                  onValueChange={(val) => handleChange("repay_loan", val)}
                 />
               </div>
 
@@ -227,14 +227,12 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Dividend Payout"
-                  tooltipText="Money you share with investors from company profits"
+                  tooltipText="Amount you share with investors this year from company profits (₹ per year)"
                   defaultValue={[data?.dividend_payout ?? 0]}
-                  value={[data?.dividend_payout ?? 0]}
+                  value={data?.dividend_payout ?? 0}
                   min={0}
                   max={100000}
-                  onValueChange={(val) =>
-                    handleChange("dividend_payout", val[0])
-                  }
+                  onValueChange={(val) => handleChange("dividend_payout", val)}
                 />
               </div>
             </div>

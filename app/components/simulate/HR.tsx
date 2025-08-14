@@ -31,6 +31,7 @@ const HRDashboard = () => {
     addNewRole,
     updateNewRole,
     removeNewRole,
+    updateDataOnly, 
   } = useHRForm();
 
   // Get total employee count from the HR role management hook
@@ -254,31 +255,30 @@ const HRDashboard = () => {
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Salary per Employee"
-                        text="How much money you pay each employee per year"
+                        text="Annual salary you pay each employee in this role (₹ per year)"
                       />
                       <Slider
                         label={`₹${(
                           data.existingRoles[selectedRoleIndex]
                             ?.salary_per_head || 0
                         ).toLocaleString()}`}
-                        value={[
+                        value={
                           isNaN(
                             data.existingRoles[selectedRoleIndex]
                               ?.salary_per_head
                           )
                             ? 0
                             : data.existingRoles[selectedRoleIndex]
-                                ?.salary_per_head,
-                        ]}
+                                ?.salary_per_head
+                        }
                         min={0}
                         max={Math.max(
-                          500000,
                           (data.existingRoles[selectedRoleIndex]
                             ?.salary_per_head || 0) * 1.5
                         )}
                         onValueChange={(val) => {
                           updateExistingRole(selectedRoleIndex, {
-                            salary_per_head: val[0],
+                            salary_per_head: val,
                           });
                           setSuccess(false);
                           setBudgetAlert(null);
@@ -289,24 +289,24 @@ const HRDashboard = () => {
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Staffing Changes"
-                        text="Change the number of employees in this role by hiring or firing"
+                        text="Number of employees you want to hire (+) or fire (-) in this role this year"
                       />
                       <Slider
                         label={`Net: ${
                           (data.existingRoles[selectedRoleIndex]?.hires || 0) -
                           (data.existingRoles[selectedRoleIndex]?.fires || 0)
                         }`}
-                        value={[
+                        value={
                           (data.existingRoles[selectedRoleIndex]?.hires || 0) -
-                            (data.existingRoles[selectedRoleIndex]?.fires || 0),
-                        ]}
+                          (data.existingRoles[selectedRoleIndex]?.fires || 0)
+                        }
                         min={
                           -data.existingRoles[selectedRoleIndex]
                             ?.current_head_count
                         }
                         max={50}
                         onValueChange={(val) => {
-                          const netChange = Math.round(val[0]);
+                          const netChange = Math.round(val);
                           if (netChange >= 0) {
                             updateExistingRole(selectedRoleIndex, {
                               hires: netChange,
@@ -404,22 +404,22 @@ const HRDashboard = () => {
                     <div>
                       <TooltipWrapper
                         label="Salary"
-                        text="Yearly pay for each person in this new job role"
+                        text="Annual salary for each person in this new job role (₹ per year)"
                       />
                       <Slider
                         className="w-[200px]"
                         label={`${formatCurrency(
                           role.salary_per_head || 50000
                         )}`}
-                        value={[
+                        value={
                           isNaN(role.salary_per_head)
                             ? 50000
-                            : role.salary_per_head,
-                        ]}
+                            : role.salary_per_head
+                        }
                         min={10000}
                         max={200000}
                         onValueChange={(val) => {
-                          updateNewRole(index, { salary_per_head: val[0] });
+                          updateNewRole(index, { salary_per_head: val });
                           setSuccess(false);
                           setBudgetAlert(null);
                         }}
@@ -429,16 +429,16 @@ const HRDashboard = () => {
                     <div>
                       <TooltipWrapper
                         label="Headcount"
-                        text="Number of people you want to hire for this new job role"
+                        text="Number of people you want to hire for this new job role this year"
                       />
                       <Slider
                         className="w-[200px]"
                         label={`${role.hires || 1} positions`}
-                        value={[isNaN(role.hires) ? 1 : role.hires]}
+                        value={isNaN(role.hires) ? 1 : role.hires}
                         min={1}
                         max={20}
                         onValueChange={(val) => {
-                          updateNewRole(index, { hires: Math.round(val[0]) });
+                          updateNewRole(index, { hires: Math.round(val) });
                           setSuccess(false);
                           setBudgetAlert(null);
                         }}
@@ -460,19 +460,19 @@ const HRDashboard = () => {
               <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Training Budget"
-                  text="Money you spend per year on teaching employees new skills and improving their abilities"
+                  text="Amount you spend per year on teaching employees new skills and improving their abilities (₹ per year)"
                 />
                 <Slider
                   label={`${formatCurrency(data?.training_budget || 0)}`}
                   value={
                     isNaN(data?.training_budget)
                       ? 0
-                      : data?.training_budget || 0,
-                  ]}
+                      : data?.training_budget || 0
+                  }
                   min={0}
                   max={Math.min(companyData?.cash_balance || 100000, 500000)}
                   onValueChange={(val) => {
-                    updateData({ training_budget: val[0] });
+                    updateData({ training_budget: val });
                     setSuccess(false);
                     setBudgetAlert(null);
                   }}
@@ -484,14 +484,14 @@ const HRDashboard = () => {
               <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Employee Satisfaction"
-                  text="How happy your employees are working for your company"
+                  text="How happy and motivated your employees are working for your company (percentage)"
                 />
                 <Slider
                   label={`${data?.employee_satisfaction?.toFixed(0)}%`}
-                  value={[data?.employee_satisfaction || 0]}
+                  value={data?.employee_satisfaction || 0}
                   isPercentage={true}
                   onValueChange={(val) => {
-                    updateData({ employee_satisfaction: val[0] });
+                    updateDataOnly({ employee_satisfaction: val });
                     setSuccess(false);
                   }}
                 />
