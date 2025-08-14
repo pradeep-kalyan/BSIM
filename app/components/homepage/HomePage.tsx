@@ -43,7 +43,7 @@ import ChartCard from "@/app/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import HamburgerMenu from './HamburgerMenu';
-// import LogoutBtn from "@/app/components/auth/Logout";
+import LogoutBtn from "@/app/components/auth/Logout";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
@@ -54,7 +54,7 @@ import {
   TooltipProps,
   HRRole,
 } from "@/app/types/homepage";
-import { ButtonStack } from "@/app/ui/StackBtn";
+// import { ButtonStack } from "@/app/ui/StackBtn";
 import { getCurrentUser } from "@/app/functions/jwt";
 import Joyride, { CallBackProps } from "react-joyride";
 import { toast } from "react-toastify";
@@ -204,6 +204,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       if (el) el.classList.add("joyride-highlight");
     }
   }, [highlightedSelector]);
+
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
     try {
@@ -213,6 +214,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       return false;
     }
   };
+  
   const CompanyLogo = ({
     logoUrl,
     companyName,
@@ -1084,13 +1086,13 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   </div>
                 </div>
               </div>
-              <ButtonStack
+              {/* <ButtonStack
                 isExporting={isExporting}
                 isSimulating={isSimulating}
                 capture={capture}
                 handleViewCompany={handleViewCompany}
                 handleSimulate={handleSimulate}
-              />
+              /> */}
 
               {/* <div className="flex items-center gap-3 animate-fade-in-up flex-shrink-0">
                 <button
@@ -1166,7 +1168,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
                 <LogoutBtn />
               </div> */}
-              {/* <HamburgerMenu
+              <HamburgerMenu
                 isExporting={isExporting}
                 isSimulating={isSimulating}
                 capture={capture}
@@ -1175,7 +1177,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 onLogout={() => {
                   handleLogout();
                 }}
-              /> */}
+              />
             </div>
           </div>
         </div>

@@ -32,7 +32,9 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
 
     const handleLogout = useCallback(() => {
         setIsOpen(false);
-        onLogout ? onLogout() : console.log('Logout clicked');
+        if (onLogout) {
+            onLogout();
+        }
     }, [onLogout]);
 
     const menuItems = [
@@ -42,8 +44,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             onClick: handleMenuItemClick(capture),
             disabled: isExporting,
             loading: isExporting,
-            color: 'from-orange-400 to-orange-500',
-            hoverColor: 'hover:from-orange-500 hover:to-amber-600',
+            color: 'bg-slate-800/50',
+            hoverColor: 'bg-slate-900/50',
             description: 'Download as image',
             extraClass: "export-dashboard-btn",
         },
@@ -53,8 +55,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             onClick: handleMenuItemClick(handleViewCompany),
             disabled: false,
             loading: false,
-            color: 'from-blue-500 to-blue-600',
-            hoverColor: 'hover:from-blue-600 hover:to-blue-700',
+            color:'bg-slate-800/50',
+            hoverColor: 'bg-slate-900/50',
             description: 'Go to companies',
         },
         {
@@ -63,8 +65,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             onClick: handleMenuItemClick(handleSimulate),
             disabled: isSimulating,
             loading: isSimulating,
-            color: 'from-purple-500 to-purple-600',
-            hoverColor: 'hover:from-purple-600 hover:to-purple-700',
+            color: 'bg-slate-800/50',
+            hoverColor: 'bg-slate-900/50',
             description: 'Run simulation',
             extraClass: "simulate-dashboard-btn",
         },
@@ -74,8 +76,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             onClick: handleLogout,
             disabled: false,
             loading: false,
-            color: 'from-red-500 to-red-600',
-            hoverColor: 'hover:from-red-600 hover:to-red-700',
+            color: 'bg-slate-800/50',
+            hoverColor: 'bg-slate-900/50',
             description: 'Sign out',
         }
     ];
@@ -133,11 +135,10 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                                     key={i}
                                     onClick={item.onClick}
                                     disabled={item.disabled}
-                                    className={`${item.extraClass ?? ''} w-full flex items-center gap-4 py-2 px-4 rounded-lg mb-1 text-sm transition-all duration-150 ${
-                                        item.disabled
+                                    className={`${item.extraClass ?? ''} w-full flex items-center gap-4 py-2 px-4 rounded-lg mb-1 text-sm transition-all duration-150 ${item.disabled
                                             ? 'opacity-50 cursor-not-allowed bg-gray-100'
-                                            : `bg-gradient-to-r ${item.color} ${item.hoverColor} text-white hover:scale-[1.01] active:scale-[0.99]`
-                                    }`}
+                                            : `bg-gradient-to-r ${item.color} ${item.hoverColor} text-white hover:scale-[1.01] active:scale-[0.99] border border-slate-500`
+                                        }`}
                                 >
                                     {item.loading ? (
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
