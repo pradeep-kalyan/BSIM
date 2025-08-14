@@ -42,8 +42,8 @@ import QuickStat from "@/app/ui/QuickStat";
 import ChartCard from "@/app/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
-// import HamburgerMenu from './HamburgerMenu';
-// import LogoutBtn from "@/app/components/auth/Logout";
+import HamburgerMenu from "./HamburgerMenu";
+import LogoutBtn from "@/app/components/auth/Logout";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
@@ -57,8 +57,8 @@ import {
 import { ButtonStack } from "@/app/ui/StackBtn";
 import { getCurrentUser } from "@/app/functions/jwt";
 import Joyride, { CallBackProps } from "react-joyride";
-// import { toast } from "react-toastify";
-// import { logoutUser } from "@/app/_actions/auth";
+import { toast } from "react-toastify";
+import { logoutUser } from "@/app/_actions/auth";
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (
@@ -154,16 +154,19 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       content:
         "Customize your dashboard layout by dragging and arranging the sections.",
       disableBeacon: true,
+      placement: "top",
     },
     {
       target: ".export-dashboard-btn",
       content: "Click here to download your dashboard as an image.",
       disableBeacon: true,
+      placement: "bottom",
     },
     {
       target: ".simulate-dashboard-btn",
       content: "Run a simulation to preview how your strategies will perform.",
       disableBeacon: true,
+      placement: "bottom",
     },
   ];
   const [highlightedSelector, setHighlightedSelector] = useState<string | null>(
@@ -204,6 +207,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       if (el) el.classList.add("joyride-highlight");
     }
   }, [highlightedSelector]);
+
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
     try {
@@ -213,32 +217,40 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       return false;
     }
   };
-  const CompanyLogo = ({
-    logoUrl,
-    companyName,
-  }: {
+
+  type CompanyLogoProps = {
     logoUrl?: string;
     companyName: string;
-  }) => {
+  };
+
+  const CompanyLogo = ({ logoUrl, companyName }: CompanyLogoProps) => {
     const [imageError, setImageError] = useState(false);
+
+    // Memoize initials to avoid recalculation on every render
+    // Replace the existing initials calculation
+    const initials = useMemo(() => {
+      if (!companyName || companyName.trim() === "") return "CO"; // Default fallback
+
+      return companyName
+        .trim()
+        .split(" ")
+        .filter((word) => word.length > 0) // Filter out empty strings
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    }, [companyName]);
 
     const showFallback = imageError || !isValidImageUrl(logoUrl);
 
-    const initials = companyName
-      ?.split(" ")
-      .map((word) => word[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-
     return (
-      <div className="w-28  h-28 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-white text-4xl font-bold">
+      <div className="w-28 h-28 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-white text-4xl font-bold">
         {showFallback ? (
           <span>{initials}</span>
         ) : (
           <Image
             src={logoUrl!}
-            alt="Company Logo"
+            alt={`${companyName} Logo`}
             className="object-cover w-full h-full"
             width={128}
             height={128}
@@ -879,21 +891,21 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
     }
   };
 
-  // const { clearAll } = useSimulation();
+  const { clearAll } = useSimulation();
 
-  // const handleLogout = async () => {
-  //   try {
-  //     await logoutUser();
-  //     clearAll();
-  //     toast.info("Logout successful");
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      clearAll();
+      toast.info("Logout successful");
 
-  //     setTimeout(() => {
-  //       router.push("/login");
-  //     }, 100);
-  //   } catch {
-  //     toast.error("Logout failed. Please try again.");
-  //   }
-  // };
+      setTimeout(() => {
+        router.push("/login");
+      }, 100);
+    } catch {
+      toast.error("Logout failed. Please try again.");
+    }
+  };
 
   return (
     <div ref={container}>
@@ -913,6 +925,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               padding: "10px 14px",
               fontSize: "14px",
               lineHeight: "1.4",
+              zIndex: 10000,
+              marginTop: "50px",
             },
             buttonClose: {
               // fixed from buttonClose to tooltipClose
@@ -927,9 +941,13 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
               marginTop: "10px",
               marginRight: "10px",
             },
+            overlay: {
+              backgroundColor: "rgba(0, 0, 0, 0.4)",
+              zIndex: 9999,
+            },
             tooltipContainer: {
               textAlign: "center",
-              marginTop: "16px",
+              marginTop: "30px",
             },
             tooltipContent: {
               padding: 0,
@@ -945,6 +963,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
           callback={handleJoyrideCallback}
         />
       )}
+
       <div className="h-full bg-slate-800 text-white">
         <style>{`
         @keyframes fadeInUp {
@@ -1035,7 +1054,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       `}</style>
         {/* Fixed Header */}
         <div className="bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sticky top-0 z-50 w-full">
-          <div className="container mx-auto px-6 py-4">
+          <div className="sm:max-w-small md:max-w-medium lg:max-w-large xl:max-w-xlarge mx-auto  px-6 py-4">
             <div className="flex justify-between items-center gap-8">
               {/* LEFT: Company info */}
               <div className="flex items-center gap-4 animate-slide-in-left min-w-0 flex-1">
@@ -1084,14 +1103,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   </div>
                 </div>
               </div>
-              <ButtonStack
-                isExporting={isExporting}
-                isSimulating={isSimulating}
-                capture={capture}
-                handleViewCompany={handleViewCompany}
-                handleSimulate={handleSimulate}
-              />
-
               {/* <div className="flex items-center gap-3 animate-fade-in-up flex-shrink-0">
                 <button
                   onClick={capture}
@@ -1166,7 +1177,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
 
                 <LogoutBtn />
               </div> */}
-              {/* <HamburgerMenu
+              <HamburgerMenu
                 isExporting={isExporting}
                 isSimulating={isSimulating}
                 capture={capture}
@@ -1175,13 +1186,13 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                 onLogout={() => {
                   handleLogout();
                 }}
-              /> */}
+              />
             </div>
           </div>
         </div>
 
         <div
-          className="details container mx-auto px-6 py-8 space-y-8"
+          className="details sm:max-w-small md:max-w-medium lg:max-w-large xl:max-w-xlarge mx-auto px-6 py-8 space-y-8"
           data-swapy-container
           ref={swapyRef}
         >
@@ -1331,7 +1342,10 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
             </div>
 
             <div data-swapy-slot="slot-department-budgets">
-              <div data-swapy-item="item-department-budgets">
+              <div
+                data-swapy-item="item-department-budgets"
+                className="chart-no-select"
+              >
                 <ChartCard
                   title="Department Budgets"
                   subtitle={`${

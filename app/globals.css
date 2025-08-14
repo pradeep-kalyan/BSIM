@@ -12,7 +12,6 @@
   }
 }
 
-
 /* Customize scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
@@ -79,7 +78,6 @@
 .font-roboto-sans {
   font-family: var(--font-roboto-sans), sans-serif;
 }
-
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -193,7 +191,6 @@
     @apply border-border outline-ring/50;
   }
 
-
   body {
     @apply bg-background text-foreground;
   }
@@ -201,7 +198,15 @@
 .joyride-highlight {
   border: 3px solid #ffffff;
   border-radius: 8px;
-  
 }
 
+/* @theme {
+  --spacing-margin: 5rem;
+} */
 
+@theme {
+  --spacing-small: 40rem;
+  --spacing-medium: 48rem;
+  --spacing-large: 64rem;
+  --spacing-xlarge: 80rem;
+}

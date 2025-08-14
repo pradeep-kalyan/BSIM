@@ -302,18 +302,19 @@ const Sales = () => {
             return (
               <div
                 key={id}
-                className="bg-slate-800/50 shadow-md rounded-2xl px-6 py-4 border border-slate-700 mb-4 px-5"
+                className="bg-slate-800/50 shadow-md rounded-2xl py-4 border border-slate-700 mb-4 px-5"
               >
-                <h2 className="text-2xl font-bold font-roboto-sans text-white">
+                <h2 className="text-2xl font-bold font-roboto-sans text-white mb-2">
                   {product.name}
                 </h2>
-                <hr className=" mt-2 mb-6 border border-slate-700" />
+                <hr className="border-slate-700 mb-6" />
+
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Left sliders */}
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-4 flex-1">
                     <Slider
                       label="Sales Volume (Units)"
-                      tooltipText="Units to sell"
+                      tooltipText="Number of units you plan to sell per year"
                       value={[pSales.sales_volume || 0]}
                       min={0}
                       max={pSales.sales_volume * 2 || 1000}
@@ -323,7 +324,7 @@ const Sales = () => {
                     />
                     <Slider
                       label="Selling Price per Unit (₹)"
-                      tooltipText="Price per unit for this product"
+                      tooltipText="Price you charge customers for each unit of this product"
                       value={[
                         pSales.selling_price || product.selling_price || 0,
                       ]}
@@ -335,11 +336,11 @@ const Sales = () => {
                     />
                   </div>
 
-                  {/* Middle stats */}
-                  <div className="flex flex-col items-center gap-4">
+                  {/* Middle sliders */}
+                  <div className="flex flex-col gap-4 flex-1">
                     <Slider
                       label="Customer Satisfaction (1-10)"
-                      tooltipText="Customer satisfaction rating"
+                      tooltipText="How satisfied customers are with this product on a scale of 1 to 10"
                       value={[pSales.customer_satisfaction || 1]}
                       min={1}
                       max={10}
@@ -351,10 +352,9 @@ const Sales = () => {
                         )
                       }
                     />
-
                     <Slider
                       label="Market Share (%)"
-                      tooltipText="Target market percentage"
+                      tooltipText="Percentage of the total market that this product aims to capture"
                       value={[pSales.market_share || 0]}
                       min={0}
                       max={100}
@@ -365,43 +365,55 @@ const Sales = () => {
                   </div>
 
                   {/* Right product info */}
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-full p-4 rounded-lg text-sm font-roboto-sans space-y-2 text-white">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300 font-medium">
-                          Category:
-                        </span>
-                        <span className="max-w-[120px] truncate">
+                  <div className="flex flex-col gap-3 flex-1">
+                    <div className="w-full p-4 rounded-lg bg-slate-800 text-white text-sm space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                          <span className="text-blue-300 font-medium">
+                            Category:
+                          </span>
+                        </div>
+                        <span className="truncate max-w-[120px]">
                           {product.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300 font-medium">
-                          Price:
-                        </span>
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                          <span className="text-blue-300 font-medium">
+                            Price:
+                          </span>
+                        </div>
                         <span>
                           ₹{pSales.selling_price || product.selling_price}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300 font-medium">
-                          Inventory:
-                        </span>
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                          <span className="text-blue-300 font-medium">
+                            Inventory:
+                          </span>
+                        </div>
                         <span>{getAvailableInventory(id)} units</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                        <span className="text-blue-300 font-medium">
-                          Cost/unit:
-                        </span>
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                          <span className="text-blue-300 font-medium">
+                            Cost/unit:
+                          </span>
+                        </div>
                         <span>₹{product.production_cost}</span>
                       </div>
                     </div>
                   </div>
                 </div>
+
                 <div className="flex flex-row items-center justify-between gap-4 mt-6 w-full px-5">
                   {/* Left: Metrics */}
                   <div className="flex justify-start gap-8 font-roboto-sans text-white">

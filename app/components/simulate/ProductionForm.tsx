@@ -62,19 +62,21 @@ const ProductionForm = () => {
     const updatedProducts = productionData.products.map((prod) =>
       prod.product_id === productId
         ? {
-          ...prod,
-          [field]: value,
-          total_cost:
-            field === "units_to_produce" ||
+            ...prod,
+            [field]: value,
+            total_cost:
+              field === "units_to_produce" ||
               field === "cost_per_unit" ||
               field === "defect_rate"
-              ? calculateProductionCost(
-                field === "units_to_produce" ? value : prod.units_to_produce,
-                field === "cost_per_unit" ? value : prod.cost_per_unit,
-                field === "defect_rate" ? value : prod.defect_rate
-              )
-              : prod.total_cost,
-        }
+                ? calculateProductionCost(
+                    field === "units_to_produce"
+                      ? value
+                      : prod.units_to_produce,
+                    field === "cost_per_unit" ? value : prod.cost_per_unit,
+                    field === "defect_rate" ? value : prod.defect_rate
+                  )
+                : prod.total_cost,
+          }
         : prod
     );
 
@@ -266,8 +268,8 @@ const ProductionForm = () => {
                 const productionEfficiency =
                   selectedProduct.production_capacity > 0
                     ? (selectedProduct.units_to_produce /
-                      selectedProduct.production_capacity) *
-                    100
+                        selectedProduct.production_capacity) *
+                      100
                     : 0;
                 if (productionEfficiency > 100)
                   return (
@@ -296,7 +298,7 @@ const ProductionForm = () => {
             <div className="space-y-6">
               <Slider
                 label="Units to Produce"
-                tooltipText="Set the number of final usable units you want to produce (defect rate only affects production cost)"
+                tooltipText="How many finished products you want to make"
                 value={[selectedProduct.units_to_produce]}
                 min={0}
                 max={selectedProduct.production_capacity * 2 || 2000}
@@ -311,34 +313,42 @@ const ProductionForm = () => {
               />
 
               <Slider
-                label="Cost per Unit (₹)"
-                tooltipText="The cost per unit affects your total production expenses and profit margins"
+                label="Cost per Unit"
+                tooltipText="How much it costs to make each product (in rupees per unit)"
                 value={[selectedProduct.cost_per_unit]}
                 min={0}
                 max={1000}
                 onValueChange={(val) =>
                   selectedProduct.id &&
-                  handleProductChange(selectedProduct.id, "cost_per_unit", val[0])
+                  handleProductChange(
+                    selectedProduct.id,
+                    "cost_per_unit",
+                    val[0]
+                  )
                 }
               />
 
               <Slider
                 label="Production Capacity"
-                tooltipText="Production capacity determines how many units you can produce per year"
+                tooltipText="Maximum number of products your factory can make per year"
                 value={[selectedProduct.production_capacity || 0]}
                 min={0}
                 max={selectedProduct.production_capacity || 10000}
                 onValueChange={(val) =>
                   selectedProduct.id &&
-                  handleProductChange(selectedProduct.id, "production_capacity", val[0])
+                  handleProductChange(
+                    selectedProduct.id,
+                    "production_capacity",
+                    val[0]
+                  )
                 }
               />
             </div>
 
             <div className="space-y-6">
               <Slider
-                label="Defect Rate (%)"
-                tooltipText="Defect rate increases production costs (more units must be produced to get the target amount) but doesn't reduce final usable units"
+                label="Defect Rate"
+                tooltipText="Percentage of products that come out broken or unusable"
                 isPercentage
                 value={[selectedProduct.defect_rate]}
                 min={0}
@@ -351,13 +361,17 @@ const ProductionForm = () => {
 
               <Slider
                 label="Storage Capacity"
-                tooltipText="Storage capacity determines how many units you can store after production"
+                tooltipText="How many finished products you can store in your warehouse"
                 value={[selectedProduct.storage_capacity || 0]}
                 min={0}
                 max={10000}
                 onValueChange={(val) =>
                   selectedProduct.id &&
-                  handleProductChange(selectedProduct.id, "storage_capacity", val[0])
+                  handleProductChange(
+                    selectedProduct.id,
+                    "storage_capacity",
+                    val[0]
+                  )
                 }
               />
 
@@ -394,10 +408,10 @@ const ProductionForm = () => {
                   <div className="text-lg font-semibold text-white font-geist-sans">
                     {selectedProduct.storage_capacity > 0
                       ? `${(
-                        (selectedProduct.units_to_produce /
-                          selectedProduct.storage_capacity) *
-                        100
-                      ).toFixed(1)}%`
+                          (selectedProduct.units_to_produce /
+                            selectedProduct.storage_capacity) *
+                          100
+                        ).toFixed(1)}%`
                       : "0.0%"}
                     <span className="text-sm text-slate-400 ml-2">
                       {selectedProduct.storage_capacity > 0
@@ -409,7 +423,6 @@ const ProductionForm = () => {
               </div>
             </div>
           </div>
-
         </div>
       ) : null}
 
@@ -420,24 +433,31 @@ const ProductionForm = () => {
         </h4>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-center">
           <div className="bg-slate-600/40 rounded-lg p-3">
-            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Total Production Cost</p>
+            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">
+              Total Production Cost
+            </p>
             <p className="text-lg font-semibold text-white font-geist-sans">
               {formatCurrency(totalCost)}
             </p>
           </div>
           <div className="bg-slate-600/40 rounded-lg p-3">
-            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Available Cash</p>
+            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">
+              Available Cash
+            </p>
             <p className="text-lg font-semibold text-white font-geist-sans">
               {formatCurrency(cashBalance.originalCashBalance ?? 0)}
             </p>
           </div>
           <div className="bg-slate-600/40 rounded-lg p-3">
-            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Cash After Production</p>
+            <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">
+              Cash After Production
+            </p>
             <p
-              className={`text-lg font-semibold ${totalCost > projectedCashBalance
-                ? "font-geist-sans text-red-400"
-                : "font-geist-sans text-emerald-400"
-                }`}
+              className={`text-lg font-semibold ${
+                totalCost > projectedCashBalance
+                  ? "font-geist-sans text-red-400"
+                  : "font-geist-sans text-emerald-400"
+              }`}
             >
               {formatCurrency(Math.round(projectedCashBalance))}
             </p>
@@ -449,4 +469,3 @@ const ProductionForm = () => {
 };
 
 export default ProductionForm;
-

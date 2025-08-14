@@ -36,7 +36,8 @@ const HRDashboard = () => {
   // Get total employee count from the HR role management hook
   const { getTotalEmployees } = useHRRoleManagement();
   const [selectedRoleIndex, setSelectedRoleIndex] = React.useState(0);
-  const { cashBalance, projectedCashBalance, updateHRBudgetImpact } = useCashBalance();
+  const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
+    useCashBalance();
   const { data: companyData } = useCompanyForm();
 
   // State for validation and success feedback
@@ -179,10 +180,11 @@ const HRDashboard = () => {
 
           <InfoCard
             label="Satisfaction"
-            value={`${isNaN(data.employee_satisfaction)
-              ? 0
-              : parseFloat(data.employee_satisfaction.toFixed(0))
-              }%`}
+            value={`${
+              isNaN(data.employee_satisfaction)
+                ? 0
+                : parseFloat(data.employee_satisfaction.toFixed(0))
+            }%`}
             Icon={Award}
             iconColor="text-purple-400"
             isCurrency={false}
@@ -204,7 +206,9 @@ const HRDashboard = () => {
                 </h3>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-white text-lg tracking-wide font-medium font-roboto-sans">Select Role:</label>
+                <label className="text-white text-lg tracking-wide font-medium font-roboto-sans">
+                  Select Role:
+                </label>
                 <select
                   value={selectedRoleIndex}
                   onChange={(e) => setSelectedRoleIndex(Number(e.target.value))}
@@ -233,8 +237,14 @@ const HRDashboard = () => {
                       </h4>
                     </div>
                     <div className="text-sm text-slate-300 tracking-wide font-semibold font-roboto-sans">
-                      Current: {data.existingRoles[selectedRoleIndex]?.current_head_count} • Projected:{" "}
-                      {data.existingRoles[selectedRoleIndex].current_head_count +
+                      Current:{" "}
+                      {
+                        data.existingRoles[selectedRoleIndex]
+                          ?.current_head_count
+                      }{" "}
+                      • Projected:{" "}
+                      {data.existingRoles[selectedRoleIndex]
+                        .current_head_count +
                         (data.existingRoles[selectedRoleIndex].hires || 0) -
                         (data.existingRoles[selectedRoleIndex].fires || 0)}
                     </div>
@@ -243,22 +253,28 @@ const HRDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
-                        label="Salary per employee"
-                        text="Set how much you want to pay each employee per year (in rupees)"
+                        label="Salary per Employee"
+                        text="How much money you pay each employee per year"
                       />
                       <Slider
                         label={`₹${(
-                          data.existingRoles[selectedRoleIndex]?.salary_per_head || 0
+                          data.existingRoles[selectedRoleIndex]
+                            ?.salary_per_head || 0
                         ).toLocaleString()}`}
                         value={[
-                          isNaN(data.existingRoles[selectedRoleIndex]?.salary_per_head)
+                          isNaN(
+                            data.existingRoles[selectedRoleIndex]
+                              ?.salary_per_head
+                          )
                             ? 0
-                            : data.existingRoles[selectedRoleIndex]?.salary_per_head,
+                            : data.existingRoles[selectedRoleIndex]
+                                ?.salary_per_head,
                         ]}
                         min={0}
                         max={Math.max(
                           500000,
-                          (data.existingRoles[selectedRoleIndex]?.salary_per_head || 0) * 1.5
+                          (data.existingRoles[selectedRoleIndex]
+                            ?.salary_per_head || 0) * 1.5
                         )}
                         onValueChange={(val) => {
                           updateExistingRole(selectedRoleIndex, {
@@ -273,17 +289,21 @@ const HRDashboard = () => {
                     <div className="bg-slate-600/30 rounded-lg p-3">
                       <TooltipWrapper
                         label="Staffing Changes"
-                        text="Decide how many people to hire or fire. Positive numbers mean more employees, negative numbers mean fewer employees"
+                        text="Change the number of employees in this role by hiring or firing"
                       />
                       <Slider
-                        label={`Net: ${(data.existingRoles[selectedRoleIndex]?.hires || 0) -
+                        label={`Net: ${
+                          (data.existingRoles[selectedRoleIndex]?.hires || 0) -
                           (data.existingRoles[selectedRoleIndex]?.fires || 0)
-                          }`}
+                        }`}
                         value={[
                           (data.existingRoles[selectedRoleIndex]?.hires || 0) -
-                          (data.existingRoles[selectedRoleIndex]?.fires || 0),
+                            (data.existingRoles[selectedRoleIndex]?.fires || 0),
                         ]}
-                        min={-data.existingRoles[selectedRoleIndex]?.current_head_count}
+                        min={
+                          -data.existingRoles[selectedRoleIndex]
+                            ?.current_head_count
+                        }
                         max={50}
                         onValueChange={(val) => {
                           const netChange = Math.round(val[0]);
@@ -384,7 +404,7 @@ const HRDashboard = () => {
                     <div>
                       <TooltipWrapper
                         label="Salary"
-                        text="The yearly salary you will pay for each person in this new role (in rupees per year)"
+                        text="Yearly pay for each person in this new job role"
                       />
                       <Slider
                         className="w-[200px]"
@@ -409,7 +429,7 @@ const HRDashboard = () => {
                     <div>
                       <TooltipWrapper
                         label="Headcount"
-                        text="How many people you want to hire for this new position"
+                        text="Number of people you want to hire for this new job role"
                       />
                       <Slider
                         className="w-[200px]"
@@ -440,11 +460,11 @@ const HRDashboard = () => {
               <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Training Budget"
-                  text="Money you want to spend on training and developing your employees' skills each year (in rupees per year)"
+                  text="Money you spend per year on teaching employees new skills and improving their abilities"
                 />
                 <Slider
                   label={`${formatCurrency(data?.training_budget || 0)}`}
-                  value={[
+                  value={
                     isNaN(data?.training_budget)
                       ? 0
                       : data?.training_budget || 0,
@@ -464,18 +484,15 @@ const HRDashboard = () => {
               <div className="bg-slate-700/20 rounded-lg p-4 border border-slate-600">
                 <TooltipWrapper
                   label="Employee Satisfaction"
-                  text="Target employee satisfaction percentage"
+                  text="How happy your employees are working for your company"
                 />
                 <Slider
                   label={`${data?.employee_satisfaction?.toFixed(0)}%`}
-                  value={[data?.employee_satisfaction]}
-                  min={0}
-                  max={100}
+                  value={[data?.employee_satisfaction || 0]}
                   isPercentage={true}
                   onValueChange={(val) => {
                     updateData({ employee_satisfaction: val[0] });
                     setSuccess(false);
-                    setBudgetAlert(null);
                   }}
                 />
               </div>
@@ -527,31 +544,40 @@ const HRDashboard = () => {
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">Salary Budget</p>
+                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">
+                    Salary Budget
+                  </p>
                   <p className="text-lg font-bold font-geist-sans text-yellow-400">
                     {formatCurrency(projectedSalaryBudget || 0)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">Training Budget</p>
+                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">
+                    Training Budget
+                  </p>
                   <p className="text-lg font-bold font-geist-sans text-blue-400">
                     {formatCurrency(data?.training_budget || 0)}
                   </p>
                 </div>
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">Available Cash</p>
+                  <p className="text-slate-300 text-xs tracking-wide font-semibold font-electrolize mb-1">
+                    Available Cash
+                  </p>
                   <p className="text-lg font-bold font-geist-sans text-blue-300">
                     {formatCurrency(cashBalance.originalCashBalance || 0)}
                   </p>
                 </div>
 
                 <div className="bg-slate-600/40 rounded-lg p-3">
-                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">Cash After HR</p>
+                  <p className="text-slate-300 text-xs mb-1 tracking-wide font-semibold font-electrolize">
+                    Cash After HR
+                  </p>
                   <p
-                    className={`text-lg font-bold font-geist-sans ${(projectedCashBalance || 0) < 0
-                      ? "text-red-400"
-                      : "text-emerald-400"
-                      }`}
+                    className={`text-lg font-bold font-geist-sans ${
+                      (projectedCashBalance || 0) < 0
+                        ? "text-red-400"
+                        : "text-emerald-400"
+                    }`}
                   >
                     {formatCurrency(projectedCashBalance || 0)}
                   </p>

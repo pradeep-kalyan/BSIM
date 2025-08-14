@@ -139,7 +139,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Amount"
-                  tooltipText="How much money you want to borrow from banks or lenders (in rupees)"
+                  tooltipText="Money you borrow from banks to get cash now"
                   defaultValue={[data?.loan_amount ?? 0]}
                   value={[data?.loan_amount ?? 0]}
                   min={0}
@@ -152,12 +152,12 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Equity Issue"
-                  tooltipText="How much money you want to raise by selling shares of your company to investors (in rupees)"
-                  defaultValue={[data?.equity_issue ?? 0]}
-                  value={[data?.equity_issue ?? 0]}
+                  tooltipText="Money you raise by selling company shares to investors"
+                  defaultValue={data?.equity_issue ?? 0}
+                  value={data?.equity_issue ?? 0}
                   min={0}
                   max={300000}
-                  onValueChange={(val) => handleChange("equity_issue", val[0])}
+                  onValueChange={(val) => handleChange("equity_issue", val)}
                 />
               </div>
 
@@ -199,8 +199,8 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Investment Amount"
-                  tooltipText="How much money you want to invest in financial instruments like stocks or bonds (in rupees)"
-                  defaultValue={[data?.investment_amount ?? 0]}
+                  tooltipText="Money you invest in stocks or bonds for future returns"
+                  defaultValue={data?.investment_amount ?? 0}
                   value={[data?.investment_amount ?? 0]}
                   min={0}
                   max={200000}
@@ -214,7 +214,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Loan Repayment"
-                  tooltipText="How much money you want to pay back on your existing loans (in rupees)"
+                  tooltipText="Money you pay back on existing loans"
                   defaultValue={[data?.repay_loan ?? 0]}
                   value={[data?.repay_loan ?? 0]}
                   min={0}
@@ -227,7 +227,7 @@ const FinanceForm = () => {
               <div>
                 <Slider
                   label="Dividend Payout"
-                  tooltipText="How much profit you want to share with your company's shareholders or investors (in rupees)"
+                  tooltipText="Money you share with investors from company profits"
                   defaultValue={[data?.dividend_payout ?? 0]}
                   value={[data?.dividend_payout ?? 0]}
                   min={0}
@@ -251,7 +251,7 @@ const FinanceForm = () => {
           )}
         </div>
       </div>
-    </div >
+    </div>
   );
 };
 
