@@ -43,7 +43,6 @@ import ChartCard from "@/app/ui/ChartCard";
 import { useRouter } from "next/navigation";
 import { useSimulation } from "@/app/context/SimulationContext";
 import HamburgerMenu, { HamburgerMenuRef } from "./HamburgerMenu";
-// import LogoutBtn from "@/app/components/auth/Logout";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import Image from "next/image";
@@ -55,7 +54,7 @@ import {
   TooltipProps,
   HRRole,
 } from "@/app/types/homepage";
-import { ButtonStack } from "@/app/ui/StackBtn";
+// import { ButtonStack } from "@/app/ui/StackBtn";
 import { getCurrentUser } from "@/app/functions/jwt";
 import Joyride, { CallBackProps } from "react-joyride";
 import { toast } from "react-toastify";
@@ -258,6 +257,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       if (el) el.classList.add("joyride-highlight");
     }
   }, [highlightedSelector]);
+
   const isValidImageUrl = (url?: string) => {
     if (!url) return false;
     try {
@@ -267,6 +267,7 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       return false;
     }
   };
+  
   const CompanyLogo = ({
     logoUrl,
     companyName,

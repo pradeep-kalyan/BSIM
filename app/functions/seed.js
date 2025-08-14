@@ -531,15 +531,6 @@ function main() {
                 case 52:
                     console.log('✅ Created product performances for all products');
                     console.log('🎉 Seed completed successfully!');
-                    console.log('\n📊 Summary:');
-                    console.log('- 3 Users created');
-                    console.log('- 3 Simulations created (all at period 1)');
-                    console.log('- 3 Companies created (1 per simulation, all at period 1)');
-                    console.log('- 9 Products created (3 per company)');
-                    console.log('- HR decisions with 3 roles each created for all companies');
-                    console.log('- Finance, Production, R&D, and Marketing decisions created');
-                    console.log('- Product performances created for all products');
-                    return [2 /*return*/];
             }
         });
     });
