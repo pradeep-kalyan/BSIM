@@ -18,14 +18,18 @@ import {
 } from "@/app/context/FormContext";
 import { Slider } from "@/components/ui/slider";
 import InfoCard from "@/app/ui/InfoCard";
+import formatCurrency from "@/app/functions/formatCurrency";
 
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 const Sales = () => {
   const { products } = useProductForm();
-  const { data: salesData, updateData: updateSalesData, setError } =
-    useSalesForm();
+  const {
+    data: salesData,
+    updateData: updateSalesData,
+    setError,
+  } = useSalesForm();
   const { data: productionData } = useProductionForm();
   const { projectedCashBalance, updateSalesBudgetImpact } = useCashBalance();
 
@@ -87,7 +91,11 @@ const Sales = () => {
 
     products?.forEach((p) => {
       if (!p.id) return;
-      const vals = calculatedValues[p.id] || { revenue: 0, costs: 0, profit: 0 };
+      const vals = calculatedValues[p.id] || {
+        revenue: 0,
+        costs: 0,
+        profit: 0,
+      };
       const pSales = salesData?.[p.id] || {};
       totalRevenue += vals.revenue;
       totalCosts += vals.costs;
@@ -152,7 +160,10 @@ const Sales = () => {
       market_share: 0,
       customer_satisfaction: 1,
     };
-    const updatedData = { ...salesData, [productId]: { ...current, [field]: value } };
+    const updatedData = {
+      ...salesData,
+      [productId]: { ...current, [field]: value },
+    };
     updateSalesData(updatedData);
     setError(field, "");
     setSuccessProducts((prev) => ({ ...prev, [productId]: false }));
@@ -220,10 +231,32 @@ const Sales = () => {
     <div className="h-full bg-slate-800/50 shadow-md py-4 px-6">
       {/* Top Info Cards */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <InfoCard label="Total Revenue" value={totalMetrics.totalRevenue} isCurrency Icon={IndianRupee} iconColor="text-green-400" />
-        <InfoCard label="Total Volume" value={totalMetrics.totalVolume} Icon={Package} iconColor="text-blue-400" />
-        <InfoCard label="Avg Market Share" value={`${parseFloat(totalMetrics.avgMarketShare.toFixed(1))}%`} Icon={TrendingUp} iconColor="text-violet-400" />
-        <InfoCard label="Total Profit" value={totalMetrics.totalProfit} isCurrency Icon={IndianRupee} iconColor="text-green-300" />
+        <InfoCard
+          label="Total Revenue"
+          value={totalMetrics.totalRevenue}
+          isCurrency
+          Icon={IndianRupee}
+          iconColor="text-green-400"
+        />
+        <InfoCard
+          label="Total Volume"
+          value={totalMetrics.totalVolume}
+          Icon={Package}
+          iconColor="text-blue-400"
+        />
+        <InfoCard
+          label="Avg Market Share"
+          value={`${parseFloat(totalMetrics.avgMarketShare.toFixed(1))}%`}
+          Icon={TrendingUp}
+          iconColor="text-violet-400"
+        />
+        <InfoCard
+          label="Total Profit"
+          value={totalMetrics.totalProfit}
+          isCurrency
+          Icon={IndianRupee}
+          iconColor="text-green-300"
+        />
       </section>
 
       <div className="mx-auto my-4 font-roboto-sans">
@@ -249,13 +282,18 @@ const Sales = () => {
         </div>
 
         {/* Display Selected Product */}
-        {selectedProductId && (() => {
-          const product = products?.find((p) => p.id === selectedProductId);
-          if (!product) return null;
+        {selectedProductId &&
+          (() => {
+            const product = products?.find((p) => p.id === selectedProductId);
+            if (!product) return null;
 
-          const id = product.id!;
-          const pSales = salesData?.[id] || {};
-          const calc = calculatedValues[id] || { revenue: 0, costs: 0, profit: 0 };
+            const id = product.id!;
+            const pSales = salesData?.[id] || {};
+            const calc = calculatedValues[id] || {
+              revenue: 0,
+              costs: 0,
+              profit: 0,
+            };
 
           return (
             <div

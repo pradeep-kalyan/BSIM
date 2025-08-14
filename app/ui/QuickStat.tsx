@@ -34,17 +34,25 @@ const QuickStat: React.FC<QuickStatProps> = ({
     <div
       className={`flex items-center gap-4 rounded-xl p-4 transition-colors duration-300 shadow-md ${
         colorClasses[color as keyof typeof colorClasses]
-      }`}
+      } w-full`}
     >
-      <div className="p-3 rounded-full bg-current/20 text-current">
+      {/* Icon */}
+      <div className="p-3 rounded-full bg-current/20 text-current flex-shrink-0">
         <Icon size={22} />
       </div>
-      <div className="flex-1">
-        <div className="text-sm text-white/70">{label}</div>
-        <div className="text-2xl font-semibold text-white">{value}</div>
+
+      {/* Main content + trend */}
+      <div className="flex-1 flex items-center justify-between">
+        {/* Label + Value */}
+        <div>
+          <div className="text-sm text-white/70">{label}</div>
+          <div className="text-2xl font-semibold text-white">{value}</div>
+        </div>
+
+        {/* Trend (right-aligned) */}
         {typeof trend === "number" && (
-          <div className={`flex items-center gap-1 mt-1 text-xs ${trendColor}`}>
-            <TrendIcon size={12} />
+          <div className={`flex items-center gap-1 text-sm ${trendColor}`}>
+            <TrendIcon size={14} />
             <span>{Math.abs(trend)}%</span>
           </div>
         )}
