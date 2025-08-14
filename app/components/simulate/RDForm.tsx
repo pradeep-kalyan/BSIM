@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { IndianRupee, FlaskConical, Timer, TriangleAlert, Award } from "lucide-react";
-import InfoCard from "@/app/components/InfoCard";
+import InfoCard from "@/app/ui/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import { useRDForm, useCashBalance } from "@/app/context/FormContext";
 import formatCurrency from "@/app/functions/formatCurrency";
@@ -152,7 +152,7 @@ const RDForm = () => {
               )}
             </div>
 
-            <div className="flex text-white flex gap-6 items-center text-medium font-roboto-sans">
+            <div className="flex text-white gap-6 items-center text-medium font-roboto-sans">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-amber-500"></div>
                 <div className="flex flex-col gap-1">

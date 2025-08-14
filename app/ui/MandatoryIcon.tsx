@@ -11,7 +11,7 @@ export default function Mandatory({ size = 12, className }: MandatoryProps) {
     <span
       className={className}
       style={{
-        color: "red",
+        color: "#ff6666",
         fontSize: size,
         marginLeft: 4,
         lineHeight: 1,
