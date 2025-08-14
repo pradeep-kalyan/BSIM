@@ -102,12 +102,12 @@ const HRDashboard = () => {
 
     // Basic validation checks with NaN protection
     if (isNaN(totalHRBudget) || totalHRBudget <= 0) {
-      setBudgetAlert("⚠️ Total HR budget must be greater than zero");
+      setBudgetAlert("Total HR budget must be greater than zero");
       return;
     }
 
-    if (isNaN(projectedSalaryBudget) || projectedSalaryBudget < 0) {
-      setBudgetAlert("⚠️ Salary budget cannot be negative");
+    if (isNaN(projectedSalaryBudget) || projectedSalaryBudget <= 0) {
+      setBudgetAlert("Salary budget cannot be negative and zero");
       return;
     }
 
@@ -115,7 +115,7 @@ const HRDashboard = () => {
       ? 0
       : data.training_budget;
     if (trainingBudgetValue < 0) {
-      setBudgetAlert("⚠️ Training budget cannot be negative");
+      setBudgetAlert("Training budget cannot be negative");
       return;
     }
 
@@ -123,7 +123,7 @@ const HRDashboard = () => {
       ? 0
       : data.employee_satisfaction;
     if (employeeSatisfaction < 0 || employeeSatisfaction > 100) {
-      setBudgetAlert("⚠️ Employee satisfaction must be between 0 and 100");
+      setBudgetAlert("Employee satisfaction must be between 0 and 100");
       return;
     }
     setSuccess(true);
@@ -505,7 +505,7 @@ const HRDashboard = () => {
               {/* Validation Messages (Left) */}
               <div className="space-y-2">
                 {budgetAlert && (
-                  <div className="bg-rose-900/80 border border-rose-600 text-rose-200 rounded-lg p-3">
+                  <div className="bg-rose-900/80 border border-rose-600 text-rose-200 rounded-lg p-2">
                     <div className="flex items-center gap-2">
                       <TriangleAlert className="text-rose-400 h-4 w-4" />
                       <span className="text-sm">{budgetAlert}</span>

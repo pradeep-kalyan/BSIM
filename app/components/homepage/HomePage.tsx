@@ -54,7 +54,7 @@ import {
   TooltipProps,
   HRRole,
 } from "@/app/types/homepage";
-import { ButtonStack } from "@/app/ui/StackBtn";
+// import { ButtonStack } from "@/app/ui/StackBtn";
 import { getCurrentUser } from "@/app/functions/jwt";
 import Joyride, { CallBackProps } from "react-joyride";
 import { toast } from "react-toastify";
@@ -1103,80 +1103,6 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
                   </div>
                 </div>
               </div>
-              {/* <div className="flex items-center gap-3 animate-fade-in-up flex-shrink-0">
-                <button
-                  onClick={capture}
-                  disabled={isExporting}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
-                  title="Export dashboard as image"
-                >
-                  {isExporting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Exporting...
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Export
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={handleViewCompany}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
-                  title="Back to companies list"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                    />
-                  </svg>
-                  Back to Companies
-                </button>
-
-                <button
-                  onClick={handleSimulate}
-                  disabled={isSimulating}
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm whitespace-nowrap min-w-[140px] justify-center"
-                  title="Start simulation"
-                >
-                  {isSimulating ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Simulating...
-                    </>
-                  ) : (
-                    <>
-                      <Play size={16} />
-                      Simulate
-                    </>
-                  )}
-                </button>
-
-                <LogoutBtn />
-              </div> */}
               <HamburgerMenu
                 isExporting={isExporting}
                 isSimulating={isSimulating}

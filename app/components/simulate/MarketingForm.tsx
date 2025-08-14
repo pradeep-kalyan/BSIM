@@ -196,7 +196,7 @@ const MarketingForm = () => {
 
             {/* Financial Impact Summary */}
             <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">
-              <h4 className="text-lg font-bold text-white mb-3 tracking-wide font-semibold font-roboto-sans">
+              <h4 className="text-lg text-white mb-3 tracking-wide font-semibold font-roboto-sans">
                 Financial Impact Summary
               </h4>
               <div className="grid grid-cols-3 gap-4 text-center">

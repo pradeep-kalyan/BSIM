@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  IndianRupee,
-  FlaskConical,
-  Timer,
-  TriangleAlert,
-  Award,
-} from "lucide-react";
+import { IndianRupee, FlaskConical, Timer, TriangleAlert, Award } from "lucide-react";
 import InfoCard from "@/app/ui/InfoCard";
 import { Slider } from "@/components/ui/slider";
 import { useRDForm, useCashBalance } from "@/app/context/FormContext";

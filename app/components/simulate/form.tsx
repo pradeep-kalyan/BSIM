@@ -527,7 +527,7 @@ const Form: React.FC<FormProps> = ({ companyId }) => {
             </div>
             <div className="flex-grow" />
             <div className="flex flex-col justify-end text-white mr-2 font-roboto-sans">
-              <h2 className="text-xl font-bold">{companyData.name}</h2>
+              <h2 className="text-lg font-semibold">{companyData.name}</h2>
               <span className="text-s flex justify-end text-gray-300">
                 Period {period}
               </span>

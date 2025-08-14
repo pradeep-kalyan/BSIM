@@ -32,6 +32,7 @@ import { useSimulation } from "@/app/context/SimulationContext";
 import formatCurrency from "@/app/functions/formatCurrency";
 import { useExport } from "@/app/hooks/useExport";
 import InfoCard from "@/app/ui/InfoCard";
+import { createPortal } from "react-dom";
 interface PreviewDashboardProps {
   companyId: string;
 }
@@ -187,19 +188,17 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
             )}`,
             `Offline Marketing: ${formatCurrency(marketingData.offline || 0)}`,
             `Online Marketing: ${formatCurrency(marketingData.online || 0)}`,
-            `Budget Allocation: Offline ${
-              marketingData.budget > 0
-                ? (
-                    (marketingData.offline / marketingData.budget) *
-                    100
-                  ).toFixed(1)
-                : 0
-            }% / Online ${
-              marketingData.budget > 0
-                ? ((marketingData.online / marketingData.budget) * 100).toFixed(
-                    1
-                  )
-                : 0
+            `Budget Allocation: Offline ${marketingData.budget > 0
+              ? (
+                (marketingData.offline / marketingData.budget) *
+                100
+              ).toFixed(1)
+              : 0
+            }% / Online ${marketingData.budget > 0
+              ? ((marketingData.online / marketingData.budget) * 100).toFixed(
+                1
+              )
+              : 0
             }%`,
           ],
           keyMetrics: [
@@ -212,12 +211,12 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
               value:
                 marketingData.budget > 0
                   ? `${(
-                      (marketingData.offline / marketingData.budget) *
-                      100
-                    ).toFixed(0)}/${(
-                      (marketingData.online / marketingData.budget) *
-                      100
-                    ).toFixed(0)}`
+                    (marketingData.offline / marketingData.budget) *
+                    100
+                  ).toFixed(0)}/${(
+                    (marketingData.online / marketingData.budget) *
+                    100
+                  ).toFixed(0)}`
                   : "0/0",
             },
           ],
@@ -258,34 +257,31 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
             `Products Count: ${productData.length}`,
             ...(productData.length > 0
               ? [
-                  `Product: ${productData[0].name || "Not specified"}`,
-                  `Category: ${productData[0].category || "Not specified"}`,
-                  `Description: ${productData[0].description || "None"}`,
-                  `Selling Price: ${formatCurrency(
-                    productData[0].selling_price || 0
-                  )}`,
-                  `Production Cost: ${formatCurrency(
-                    productData[0].production_cost || 0
-                  )}`,
-                  `Profit Margin: ${calculateProfitMargin().toFixed(1)}%`,
-                  `Development Cost: ${formatCurrency(
-                    productData[0].development_cost || 0
-                  )}`,
-                  `Marketing Budget: ${formatCurrency(
-                    productData[0].marketing_budget || 0
-                  )}`,
-                  `Quality Rating: ${productData[0].quality_rating || 0}/10`,
-                  `Innovation Rating: ${
-                    productData[0].innovation_rating || 0
-                  }/10`,
-                  `Sustainability Rating: ${
-                    productData[0].sustainability_rating || 0
-                  }/10`,
-                  `Inventory Level: ${
-                    productData[0].inventory_level || 0
-                  } units`,
-                  `Status: ${productData[0].status || "development"}`,
-                ]
+                `Product: ${productData[0].name || "Not specified"}`,
+                `Category: ${productData[0].category || "Not specified"}`,
+                `Description: ${productData[0].description || "None"}`,
+                `Selling Price: ${formatCurrency(
+                  productData[0].selling_price || 0
+                )}`,
+                `Production Cost: ${formatCurrency(
+                  productData[0].production_cost || 0
+                )}`,
+                `Profit Margin: ${calculateProfitMargin().toFixed(1)}%`,
+                `Development Cost: ${formatCurrency(
+                  productData[0].development_cost || 0
+                )}`,
+                `Marketing Budget: ${formatCurrency(
+                  productData[0].marketing_budget || 0
+                )}`,
+                `Quality Rating: ${productData[0].quality_rating || 0}/10`,
+                `Innovation Rating: ${productData[0].innovation_rating || 0
+                }/10`,
+                `Sustainability Rating: ${productData[0].sustainability_rating || 0
+                }/10`,
+                `Inventory Level: ${productData[0].inventory_level || 0
+                } units`,
+                `Status: ${productData[0].status || "development"}`,
+              ]
               : ["No products configured"]),
           ],
           keyMetrics: [
@@ -295,19 +291,19 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
             },
             ...(productData.length > 0
               ? [
-                  {
-                    label: "Selling Price",
-                    value: formatCurrency(productData[0].selling_price || 0),
-                  },
-                  {
-                    label: "Production Cost",
-                    value: formatCurrency(productData[0].production_cost || 0),
-                  },
-                  {
-                    label: "Profit Margin",
-                    value: `${calculateProfitMargin().toFixed(1)}%`,
-                  },
-                ]
+                {
+                  label: "Selling Price",
+                  value: formatCurrency(productData[0].selling_price || 0),
+                },
+                {
+                  label: "Production Cost",
+                  value: formatCurrency(productData[0].production_cost || 0),
+                },
+                {
+                  label: "Profit Margin",
+                  value: `${calculateProfitMargin().toFixed(1)}%`,
+                },
+              ]
               : []),
           ],
         },
@@ -345,7 +341,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
               label: "Net Worth",
               value: formatCurrency(
                 (companyData.total_assets || 0) -
-                  (companyData.total_liabilities || 0)
+                (companyData.total_liabilities || 0)
               ),
             },
           ],
@@ -365,14 +361,13 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
             `Average Customer Satisfaction: ${totalSalesMetrics.averageCustomerSatisfaction.toFixed(
               1
             )}/10`,
-            `Profit Margin: ${
-              totalSalesMetrics.totalRevenue > 0
-                ? (
-                    (totalSalesMetrics.totalProfit /
-                      totalSalesMetrics.totalRevenue) *
-                    100
-                  ).toFixed(1)
-                : 0
+            `Profit Margin: ${totalSalesMetrics.totalRevenue > 0
+              ? (
+                (totalSalesMetrics.totalProfit /
+                  totalSalesMetrics.totalRevenue) *
+                100
+              ).toFixed(1)
+              : 0
             }%`,
             `Products Selling: ${totalSalesMetrics.productCount}`,
           ],
@@ -453,9 +448,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
       // Wait for layout to adjust
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const filename = `business-simulation-dashboard-${period}-${
-        new Date().toISOString().split("T")[0]
-      }`;
+      const filename = `business-simulation-dashboard-${period}-${new Date().toISOString().split("T")[0]
+        }`;
       await exportDashboard(dashboardRef.current, filename);
 
       // Clean up
@@ -567,7 +561,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
             width="w-full"
             height="h-full"
             iconColor="text-green-400"
-            // subtext={`period : ${(period ?? 0)}`}
+          // subtext={`period : ${(period ?? 0)}`}
           />
 
           <InfoCard
@@ -578,7 +572,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
             width="w-full"
             height="h-full"
             iconColor="text-purple-400"
-            // subtext={`period : ${(period ?? 0) + 1}`}
+          // subtext={`period : ${(period ?? 0) + 1}`}
           />
 
           <InfoCard
@@ -701,16 +695,15 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
                       </p>
 
                       <p
-                        className={`font-semibold text-sm ${
-                          (companyData.cash_balance || 0) +
-                            totalSalesMetrics.totalProfit -
-                            (hrData.total_budget || 0) -
-                            (marketingData.budget || 0) -
-                            (rdData.budget || 0) >=
+                        className={`font-semibold text-sm ${(companyData.cash_balance || 0) +
+                          totalSalesMetrics.totalProfit -
+                          (hrData.total_budget || 0) -
+                          (marketingData.budget || 0) -
+                          (rdData.budget || 0) >=
                           0
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
+                          ? "text-green-500"
+                          : "text-red-500"
+                          }`}
                       >
                         {formatCurrency(projectedCashBalance)}
                       </p>
@@ -731,7 +724,7 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
             <Card
               key={section.title}
               className={cn(
-                "relative h-full cursor-pointer overflow-hidden border border-slate-600 bg-slate-800/50 shadow-md transition-all duration-300",
+                "relative h-full cursor-pointer overflow-hidden border border-slate-600 bg-slate-800/50 shadow-md transition-all duration-300 px-8 py-6",
                 "hover:-translate-y-1.5]"
               )}
             >
@@ -751,8 +744,8 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
                     />
                   </div>
 
-                  <div className="flex-1">
-                    <h3 className="mb-1 text-[1.1rem] font-semibold text-white">
+                  <div className="flex gap-4">
+                    <h3 className="mb-1 text-[1.3rem] font-semibold text-white">
                       {section.title}
                     </h3>
 
@@ -839,38 +832,38 @@ const PreviewDashboard: React.FC<PreviewDashboardProps> = () => {
                       </button>
                     )}
                   </div>
-                  {modalData && (
-                    <div className="fixed inset-0 bg-slate-800/50 shadow-md flex items-center justify-center z-50">
-                      <div className="bg-slate-800/90 border border-slate-600 rounded-lg p-6 max-w-lg w-full text-white">
-                        <div className="flex justify-between items-center mb-4">
-                          <h2 className="text-lg font-semibold">
-                            {modalData.title} - Full Summary
-                          </h2>
-                          <button
-                            onClick={() => setModalData(null)}
-                            className="text-red-400 hover:text-red-500"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        <div className="max-h-[400px] overflow-y-auto pr-2">
-                          {modalData.items.map((point, idx) => (
-                            <div key={idx} className="flex items-start mb-2">
-                              <div className="w-[6px] h-[6px] rounded-full mt-2 mr-2 flex-shrink-0 bg-green-400" />
-                              <p className="text-sm text-gray-300">{point}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="text-right mt-4">
-                          <button
-                            onClick={() => setModalData(null)}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm"
-                          >
-                            Close
-                          </button>
-                        </div>
+                  {modalData && createPortal(
+                    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">                      <div className="bg-slate-800/90 border border-slate-600 rounded-lg p-6 max-w-lg w-full mx-4 text-white">
+                      <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">
+                          {modalData.title} - Full Summary
+                        </h2>
+                        <button
+                          onClick={() => setModalData(null)}
+                          className="text-red-400 hover:text-red-500 p-2"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar px-5">
+                        {modalData.items.map((point, idx) => (
+                          <div key={idx} className="flex items-start mb-2">
+                            <div className="w-[6px] h-[6px] rounded-full mt-2 mr-2 flex-shrink-0 bg-green-400" />
+                            <p className="text-sm text-gray-300">{point}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-right mt-4">
+                        <button
+                          onClick={() => setModalData(null)}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm"
+                        >
+                          Close
+                        </button>
                       </div>
                     </div>
+                    </div>,
+                    document.body
                   )}
                 </div>
               </div>

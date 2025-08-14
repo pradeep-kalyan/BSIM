@@ -33,8 +33,6 @@ type ProductProductionData = {
 const formatNumber = (num: number) =>
   num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-// Helper cost calculation
-// Helper cost calculation
 const calculateProductionCost = (
   targetUnits: number,
   costPerUnit: number,
@@ -82,8 +80,6 @@ const ProductionForm = () => {
 
     updateProductionData({ ...productionData, products: updatedProducts });
 
-    // Update inventory level if units changed
-    // Update inventory level if units changed
     if (field === "units_to_produce") {
       const productIndex = productData.findIndex((p) => p.id === productId);
       if (productIndex >= 0) {
@@ -94,11 +90,8 @@ const ProductionForm = () => {
     }
 
     setError(String(field), "");
-    setError(String(field), "");
   }
 
-  // Sync productData with productionData
-  // Sync productData with productionData
   React.useEffect(() => {
     if (productData.length > 0) {
       const existingProductionIds = new Set(
@@ -135,8 +128,6 @@ const ProductionForm = () => {
     }
   }, [productData, productionData, updateProductionData]);
 
-  // Merge data
-  // Merge data
   const mergedProducts = productData.map((prod) => {
     const productionEntry = productionData.products.find(
       (p) => p.product_id === prod.id
@@ -157,9 +148,7 @@ const ProductionForm = () => {
   });
 
   // Dropdown state
-  const [selectedProductId, setSelectedProductId] = React.useState(
-    mergedProducts[0]?.id || ""
-  );
+  const [selectedProductId, setSelectedProductId] = React.useState("");
   const selectedProduct = mergedProducts.find(
     (p) => p.id === selectedProductId
   );
@@ -243,6 +232,7 @@ const ProductionForm = () => {
               onChange={(e) => setSelectedProductId(e.target.value)}
               className="bg-slate-800 text-white p-2 font-geist-sans rounded-md border border-slate-600 ml-3"
             >
+              <option value="">-- Select Product --</option>
               {mergedProducts
                 .filter((product) => product.status === "active")
                 .map((product) => (
@@ -265,29 +255,28 @@ const ProductionForm = () => {
             </h3>
             <div>
               {(() => {
-                const productionEfficiency =
-                  selectedProduct.production_capacity > 0
-                    ? (selectedProduct.units_to_produce /
-                        selectedProduct.production_capacity) *
-                      100
-                    : 0;
-                if (productionEfficiency > 100)
+                if (selectedProduct.status === "active") {
                   return (
-                    <div className="flex items-center gap-1 font-geist-sans text-red-400 bg-red-500/20 px-3 py-1 rounded-full text-sm">
-                      <AlertTriangle className="h-4 w-4" /> Overload
+                    <div className="flex items-center gap-1 font-geist-sans text-green-400 bg-green-500/20 px-3 py-1 rounded-full text-sm">
+                      <CheckCircle className="h-4 w-4" /> Active
                     </div>
                   );
-                if (productionEfficiency > 80)
+                }
+                if (selectedProduct.status === "development") {
                   return (
                     <div className="flex items-center gap-1 font-geist-sans text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full text-sm">
-                      <Zap className="h-4 w-4" /> High Load
+                      <Zap className="h-4 w-4" /> Development
                     </div>
                   );
-                return (
-                  <div className="flex items-center gap-1 font-geist-sans text-green-400 bg-green-500/20 px-3 py-1 rounded-full text-sm">
-                    <CheckCircle className="h-4 w-4" /> Optimal
-                  </div>
-                );
+                }
+                if (selectedProduct.status === "discontinued") {
+                  return (
+                    <div className="flex items-center gap-1 font-geist-sans text-red-400 bg-red-500/20 px-3 py-1 rounded-full text-sm">
+                      <AlertTriangle className="h-4 w-4" /> Discontinued
+                    </div>
+                  );
+                }
+                return null;
               })()}
             </div>
           </div>
@@ -299,15 +288,15 @@ const ProductionForm = () => {
               <Slider
                 label="Units to Produce"
                 tooltipText="How many finished products you want to make"
-                value={[selectedProduct.units_to_produce]}
+                value={selectedProduct.units_to_produce}
                 min={0}
                 max={selectedProduct.production_capacity * 2 || 2000}
                 onValueChange={(val) =>
                   selectedProduct.id &&
                   handleProductChange(
-                    selectedProduct.id, // if needed use selectedProduct.id!
+                    selectedProduct.id,
                     "units_to_produce",
-                    val[0]
+                    val
                   )
                 }
               />
@@ -315,7 +304,7 @@ const ProductionForm = () => {
               <Slider
                 label="Cost per Unit"
                 tooltipText="How much it costs to make each product (in rupees per unit)"
-                value={[selectedProduct.cost_per_unit]}
+                value={selectedProduct.cost_per_unit}
                 min={0}
                 max={1000}
                 onValueChange={(val) =>
@@ -323,7 +312,7 @@ const ProductionForm = () => {
                   handleProductChange(
                     selectedProduct.id,
                     "cost_per_unit",
-                    val[0]
+                    val
                   )
                 }
               />
@@ -331,7 +320,7 @@ const ProductionForm = () => {
               <Slider
                 label="Production Capacity"
                 tooltipText="Maximum number of products your factory can make per year"
-                value={[selectedProduct.production_capacity || 0]}
+                value={selectedProduct.production_capacity || 0}
                 min={0}
                 max={selectedProduct.production_capacity || 10000}
                 onValueChange={(val) =>
@@ -339,30 +328,29 @@ const ProductionForm = () => {
                   handleProductChange(
                     selectedProduct.id,
                     "production_capacity",
-                    val[0]
+                    val
                   )
                 }
-              />
-            </div>
+            />
 
             <div className="space-y-6">
               <Slider
                 label="Defect Rate"
                 tooltipText="Percentage of products that come out broken or unusable"
                 isPercentage
-                value={[selectedProduct.defect_rate]}
+                value={selectedProduct.defect_rate}
                 min={0}
                 max={100}
                 onValueChange={(val) =>
                   selectedProduct.id &&
-                  handleProductChange(selectedProduct.id, "defect_rate", val[0])
+                  handleProductChange(selectedProduct.id, "defect_rate", val)
                 }
               />
 
               <Slider
                 label="Storage Capacity"
                 tooltipText="How many finished products you can store in your warehouse"
-                value={[selectedProduct.storage_capacity || 0]}
+                value={selectedProduct.storage_capacity || 0}
                 min={0}
                 max={10000}
                 onValueChange={(val) =>
@@ -370,14 +358,14 @@ const ProductionForm = () => {
                   handleProductChange(
                     selectedProduct.id,
                     "storage_capacity",
-                    val[0]
+                    val
                   )
                 }
               />
 
               {/* Production Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 mx-5">
-                <div className="bg-slate-800/50 rounded-xl p-5 p-4">
+                <div className="bg-slate-800/50 rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <IndianRupee className="h-4 w-4 text-green-400" />
                     <span className="text-sm font-semibold font-roboto-sans text-green-400">
@@ -398,7 +386,7 @@ const ProductionForm = () => {
                   </div>
                 </div>
 
-                <div className="bg-slate-800/50 rounded-xl p-5 p-4">
+                <div className="bg-slate-800/50 rounded-xl p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Warehouse className="h-4 w-4 text-purple-400" />
                     <span className="text-sm text-purple-400 font-semibold font-roboto-sans">
@@ -424,7 +412,13 @@ const ProductionForm = () => {
             </div>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="flex justify-center bg-slate-800/50 shadow-md rounded-2xl py-35 border border-slate-700 mb-4 px-5">
+          <p className="text-md font-roboto-sans text-slate-300">
+            No Products Selected{" "}
+          </p>
+        </div>
+      )}
 
       {/* Financial Summary */}
       <div className="bg-slate-800/50 shadow-md rounded-lg p-4 border border-slate-500">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-// import { useForm } from "@/app/context/FormContext";
 import { type ProductFormData } from "@/app/types/simulate";
+import Mandatory from "@/app/ui/MandatoryIcon";
+import { createPortal } from "react-dom";
 
 interface ProductFormPageProps {
   mode: "add" | "edit";
@@ -30,7 +31,6 @@ export default function ProductFormPage({
   onCancel,
   submitting,
 }: ProductFormPageProps) {
-  // const { updateProductBudgetImpact } = useForm();
   const [product, setProduct] = useState<Product>(
     mode === "edit" && initialProduct
       ? {
@@ -72,8 +72,6 @@ export default function ProductFormPage({
       delete newErrors[field];
       return newErrors;
     });
-
-    // Update budget impact when development_cost or marketing_budget changes
   };
 
   const validate = (data: Product): Partial<Record<keyof Product, string>> => {
@@ -103,158 +101,165 @@ export default function ProductFormPage({
     onSubmit(product);
   };
 
-  return (
-    <div className="bg-slate-800 rounded-lg p-3 border border-slate-700/70 max-w-md mx-auto mt-4 z-20 relative">
-      <h3 className="text-lg tracking-wide font-semibold font-roboto-sans text-white mb-2 ">
-        {mode === "edit" ? "Edit Product" : "Add New Product"}
-      </h3>
-
-      <div className="absolute top-1 right-2">
-        <button
-          onClick={() => onCancel()}
-          className="text-red-400 hover:text-red-500 bg-slate-800 rounded-full m-2 hover:text-white"
-          title="Close"
-        >
-          ✕
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {/* Name */}
-        <div>
-          <label className="block text-xs text-slate-200 mb-1 tracking-wide font-semibold font-geist-sans">
-            Product Name
-          </label>
-          <Input
-            type="text"
-            value={product.name}
-            onChange={(e) => handleFieldChange("name", e.target.value)}
-            className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            required
-          />
-          {errors.name && (
-            <div className="text-red-400 text-xs">{errors.name}</div>
-          )}
+  return createPortal(
+    <div className="fixed inset-0 w-screen h-screen bg-black/50 flex items-center justify-center z-[9999]">
+      <div className="relative bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-xl w-[95%] mx-auto shadow-2xl">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-semibold text-white">
+            {mode === "edit" ? "Edit Product" : "Add New Product"}
+          </h3>
+          <button
+            onClick={() => onCancel()}
+            className="text-red-400 hover:text-red-500 p-2 rounded-full transition-colors"
+            title="Close"
+          >
+            ✕
+          </button>
         </div>
 
-        {/* Category & Description in one row */}
-        <div className="grid grid-cols-2 gap-2">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
           <div>
-            <label className="block text-xs text-slate-200 mb-1 tracking-wide font-semibold font-geist-sans">
-              Category
+            <label className="block text-sm text-slate-200 mb-1.5 font-medium">
+              Product Name <Mandatory />
             </label>
             <Input
               type="text"
-              value={product.category}
-              onChange={(e) => handleFieldChange("category", e.target.value)}
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
+              value={product.name}
+              onChange={(e) => handleFieldChange("name", e.target.value)}
+              className="w-full p-2 text-sm rounded bg-slate-900 text-white border-slate-600 focus:border-blue-500"
               required
             />
-            {errors.category && (
-              <div className="text-red-400 text-xs">{errors.category}</div>
+            {errors.name && (
+              <div className="text-red-400 text-xs mt-1">{errors.name}</div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs text-slate-200 mb-1 tracking-wide font-semibold font-geist-sans">
-              Description
-            </label>
-            <Input
-              type="text"
-              value={product.description || ""}
-              onChange={(e) => handleFieldChange("description", e.target.value)}
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-              placeholder="Optional"
-            />
-          </div>
-        </div>
+          {/* Category & Description in one row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-slate-200 mb-1.5 font-medium">
+                Category <Mandatory />
+              </label>
+              <Input
+                type="text"
+                value={product.category}
+                onChange={(e) => handleFieldChange("category", e.target.value)}
+                className="w-full p-2 text-sm rounded bg-slate-900 text-white border-slate-600 focus:border-blue-500"
+                required
+              />
+              {errors.category && (
+                <div className="text-red-400 text-xs mt-1">
+                  {errors.category}
+                </div>
+              )}
+            </div>
 
-        {/* Ratings */}
-        <div className="grid grid-cols-3 gap-2 tracking-wide font-semibold font-geist-sans">
-          <div>
-            <label className="block text-xs text-slate-200 mb-1">
-              Quality (1-10)
-            </label>
-            <Input
-              type="number"
-              min="1"
-              max="10"
-              value={product.quality_rating}
-              onChange={(e) =>
-                handleFieldChange("quality_rating", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-            {errors.quality_rating && (
-              <div className="text-red-400 text-xs">
-                {errors.quality_rating}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-200 mb-1">
-              Innovation (1-10)
-            </label>
-            <Input
-              type="number"
-              min="1"
-              max="10"
-              value={product.innovation_rating}
-              onChange={(e) =>
-                handleFieldChange("innovation_rating", Number(e.target.value))
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-            {errors.innovation_rating && (
-              <div className="text-red-400 text-xs">
-                {errors.innovation_rating}
-              </div>
-            )}
+            <div>
+              <label className="block text-sm text-slate-200 mb-1.5 font-medium">
+                Description
+              </label>
+              <Input
+                type="text"
+                value={product.description || ""}
+                onChange={(e) =>
+                  handleFieldChange("description", e.target.value)
+                }
+                className="w-full p-2 text-sm rounded bg-slate-900 text-white border-slate-600 focus:border-blue-500"
+                placeholder="Optional"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-slate-200 mb-1">
-              Sustainability (1-10)
-            </label>
-            <Input
-              type="number"
-              min="1"
-              max="10"
-              value={product.sustainability_rating}
-              onChange={(e) =>
-                handleFieldChange(
-                  "sustainability_rating",
-                  Number(e.target.value)
-                )
-              }
-              className="w-full p-1.5 text-sm rounded bg-slate-900 text-white border-slate-600"
-            />
-            {errors.sustainability_rating && (
-              <div className="text-red-400 text-xs">
-                {errors.sustainability_rating}
-              </div>
-            )}
+          {/* Ratings */}
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm text-slate-200 mb-1.5 font-medium">
+                Quality (1-10)
+              </label>
+              <Input
+                type="number"
+                min="1"
+                max="10"
+                value={product.quality_rating}
+                onChange={(e) =>
+                  handleFieldChange("quality_rating", Number(e.target.value))
+                }
+                className="w-full p-2 text-sm rounded bg-slate-900 text-white border-slate-600 focus:border-blue-500"
+              />
+              {errors.quality_rating && (
+                <div className="text-red-400 text-xs mt-1">
+                  {errors.quality_rating}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-200 mb-1.5 font-medium">
+                Innovation (1-10)
+              </label>
+              <Input
+                type="number"
+                min="1"
+                max="10"
+                value={product.innovation_rating}
+                onChange={(e) =>
+                  handleFieldChange("innovation_rating", Number(e.target.value))
+                }
+                className="w-full p-2 text-sm rounded bg-slate-900 text-white border-slate-600 focus:border-blue-500"
+              />
+              {errors.innovation_rating && (
+                <div className="text-red-400 text-xs mt-1">
+                  {errors.innovation_rating}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm text-slate-200 mb-1.5 font-medium">
+                Sustainability (1-10)
+              </label>
+              <Input
+                type="number"
+                min="1"
+                max="10"
+                value={product.sustainability_rating}
+                onChange={(e) =>
+                  handleFieldChange(
+                    "sustainability_rating",
+                    Number(e.target.value)
+                  )
+                }
+                className="w-full p-2 text-sm rounded bg-slate-900 text-white border-slate-600 focus:border-blue-500"
+              />
+              {errors.sustainability_rating && (
+                <div className="text-red-400 text-xs mt-1">
+                  {errors.sustainability_rating}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2 mt-3">
-          <button
-            type="submit"
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded disabled:opacity-60 hover:bg-blue-700 transition-colors font-roboto-sans"
-            disabled={submitting}
-          >
-            {mode === "edit" ? "Update" : "Add Product"}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-3 py-1.5 text-sm bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors font-roboto-sans"
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+
+          <div className="flex justify-end gap-3 font-roboto-sans mt-6 pt-4 border-t border-slate-600">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-sm bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 disabled:opacity-60"
+              disabled={submitting}
+            >
+              {mode === "edit" ? "Update Product" : "Add Product"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
   );
 }
