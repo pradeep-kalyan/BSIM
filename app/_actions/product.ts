@@ -40,7 +40,7 @@ export async function createProduct(formData: FormData) {
       cash_balance: newCashBalance,
     });
 
-    const product = await prisma.product.create({
+    await prisma.product.create({
       data: {
         company_id: formData.get("company_id") as string,
         name: formData.get("name") as string,

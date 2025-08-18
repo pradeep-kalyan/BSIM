@@ -14,7 +14,7 @@ export interface CompanyCardProps {
   simulationName: string;
   simulationID?: string; // Optional, if you want to use it for navigation or other purposes
 }
- export interface Props {
+export interface Props {
   company: {
     id: string;
     name: string;
@@ -57,3 +57,8 @@ export interface Product {
     customer_satisfaction: number;
   } | null;
 }
+
+export type CompanyLogoProps = {
+  logoUrl?: string;
+  companyName: string;
+};

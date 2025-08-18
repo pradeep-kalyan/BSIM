@@ -10,10 +10,6 @@ const Page = async ({ params }: PageProps) => {
   const param = await params;
   const simulationID = param.simulationID;
 
-  const simulation = await prisma.simulation.findUnique({
-    where: { id: simulationID },
-  });
-
   const user = await getCurrentUser();
   if (!user) {
     return (
@@ -22,6 +18,10 @@ const Page = async ({ params }: PageProps) => {
       </div>
     );
   }
+
+  const simulation = await prisma.simulation.findUnique({
+    where: { id: simulationID },
+  });
 
   if (!simulation) {
     return (
@@ -36,7 +36,7 @@ const Page = async ({ params }: PageProps) => {
     simulation.created_by === user.id ||
     (await prisma.simulation_access.findFirst({
       where: { simulation_id: simulationID, user_id: user.id },
-    }));
+    })) !== null;
 
   if (!hasAccess) {
     return (
