@@ -5,7 +5,27 @@ import Image from "next/image";
 import HamburgerMenu, { HamburgerMenuRef } from "./HamburgerMenu";
 import { CompanyLogoProps } from "@/app/types/company";
 
-
+interface DashboardHeaderProps {
+  data: {
+    company: {
+      id: string;
+      name: string;
+      logo_url: string | null;
+      current_period: number;
+    };
+  };
+  periods: number[];
+  selectedPeriod: number;
+  onPeriodChange: (period: number) => void;
+  currentUsername?: string;
+  menuRef: React.RefObject<HamburgerMenuRef | null>;
+  isExporting: boolean;
+  isSimulating: boolean;
+  onCapture: () => Promise<void>;
+  onViewCompany: () => void;
+  onSimulate: () => void;
+  onLogout: () => void;
+}
 
 const CompanyLogo = ({ logoUrl, companyName }: CompanyLogoProps) => {
   const [imageError, setImageError] = useState(false);
