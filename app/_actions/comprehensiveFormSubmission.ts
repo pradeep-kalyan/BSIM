@@ -271,7 +271,6 @@ export async function comprehensiveFormSubmission(
             error:
               error instanceof Error ? error.message : "HR submission failed",
           };
-          console.error("HR submission error:", error);
         }
       })(),
 
@@ -332,7 +331,6 @@ export async function comprehensiveFormSubmission(
                 ? error.message
                 : "Marketing submission failed",
           };
-          console.error("Marketing submission error:", error);
         }
       })(),
 
@@ -394,7 +392,6 @@ export async function comprehensiveFormSubmission(
             error:
               error instanceof Error ? error.message : "R&D submission failed",
           };
-          console.error("R&D submission error:", error);
         }
       })(),
 
@@ -494,7 +491,6 @@ export async function comprehensiveFormSubmission(
                 ? error.message
                 : "Production submission failed",
           };
-          console.error("Production submission error:", error);
         }
       })(),
 
@@ -568,7 +564,6 @@ export async function comprehensiveFormSubmission(
                 ? error.message
                 : "Finance submission failed",
           };
-          console.error("Finance submission error:", error);
         }
       })(),
 
@@ -648,7 +643,6 @@ export async function comprehensiveFormSubmission(
                 ? error.message
                 : "Product submission failed",
           };
-          console.error("Product submission error:", error);
         }
       })(),
     ];
@@ -727,7 +721,6 @@ export async function comprehensiveFormSubmission(
         error:
           error instanceof Error ? error.message : "Sales submission failed",
       };
-      console.error("Sales submission error:", error);
     }
 
     // Additional check: Process sales for any products that might have been created with names
@@ -826,9 +819,7 @@ export async function comprehensiveFormSubmission(
             }
           }
         }
-      } catch (error) {
-        console.error("Error processing additional product sales:", error);
-      }
+      } catch {}
     }
 
     // Check if any critical operations failed
@@ -837,7 +828,6 @@ export async function comprehensiveFormSubmission(
       .map(([operation, result]) => ({ operation, error: result.error }));
 
     if (failedOperations.length > 0) {
-      console.warn("Some operations failed:", failedOperations);
       // Continue with period advancement even if some operations failed
       // This ensures the application doesn't get stuck in an inconsistent state
     }
@@ -901,7 +891,6 @@ export async function comprehensiveFormSubmission(
         error:
           error instanceof Error ? error.message : "Period advancement failed",
       };
-      console.error("Period advancement error:", error);
 
       // If period advancement fails, we should still return the other results
       // but indicate that the process didn't complete fully
@@ -919,7 +908,6 @@ export async function comprehensiveFormSubmission(
       newPeriod: company.current_period + 1,
     } as const;
   } catch (error) {
-    console.error("Error in comprehensive form submission:", error);
     return {
       success: false,
       message:

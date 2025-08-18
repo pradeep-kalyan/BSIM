@@ -48,8 +48,7 @@ export const generateToken = async (
       .sign(secret);
 
     return token;
-  } catch (error) {
-    console.error("Failed to generate token:", error);
+  } catch {
     throw new Error("Failed to generate token");
   }
 };
@@ -75,8 +74,7 @@ export const verifyToken = async (
     const secret = await getJwtSecret();
     const { payload } = await jwtVerify(token, secret);
     return payload as unknown as JWTPayload;
-  } catch (error) {
-    console.error("Token verification failed:", error);
+  } catch {
     return null;
   }
 };
@@ -141,7 +139,6 @@ export const logoutHandler = async (): Promise<string> => {
     await deleteCookie();
     return "Logout successful";
   } catch (error) {
-    console.error("Logout failed:", error);
     throw new Error(
       `Logout failed: ${error instanceof Error ? error.message : String(error)}`
     );
@@ -165,8 +162,7 @@ export const getCurrentUser = async (): Promise<JWTPayload | null> => {
       email: payload.email as string,
       role: payload.role as string,
     };
-  } catch (error) {
-    console.error("Error verifying JWT:", error);
+  } catch {
     return null;
   }
 };
@@ -199,8 +195,7 @@ export const refreshSession = async (
     const newToken = await generateToken(payload);
     await setCookie(newToken);
     return newToken;
-  } catch (error) {
-    console.error("Session refresh failed:", error);
+  } catch {
     return null;
   }
 };

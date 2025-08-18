@@ -18,8 +18,7 @@ export async function getProduct(id: string) {
       },
     });
     return product;
-  } catch (error) {
-    console.error("Error fetching product:", error);
+  } catch {
     throw new Error("Failed to fetch product");
   }
 }
@@ -68,9 +67,7 @@ export async function createProduct(formData: FormData) {
     revalidatePath("/products");
     revalidatePath(`/companies/${formData.get("company_id")}`);
     redirect(`/products/catalog`);
-    return product.id;
-  } catch (error) {
-    console.error("Error creating product:", error);
+  } catch {
     throw new Error("Failed to create product");
   }
 }
@@ -105,8 +102,7 @@ export async function updateProduct(
     });
     revalidatePath("/products");
     revalidatePath(`/products/${id}`);
-  } catch (error) {
-    console.error("Error updating product:", error);
+  } catch {
     throw new Error("Failed to update product");
   }
 }
@@ -126,8 +122,7 @@ export async function getProductPerformance(productId: string, period: number) {
       },
     });
     return performance;
-  } catch (error) {
-    console.error("Error fetching product performance:", error);
+  } catch {
     throw new Error("Failed to fetch product performance");
   }
 }
@@ -142,8 +137,7 @@ export async function getProductPerformanceHistory(productId: string) {
       },
     });
     return performance;
-  } catch (error) {
-    console.error("Error fetching product performance history:", error);
+  } catch {
     throw new Error("Failed to fetch product performance history");
   }
 }
@@ -185,8 +179,7 @@ export async function createProductPerformance(formData: FormData) {
     });
     revalidatePath(`/products/catalog?tab=performance`);
     return performance.id;
-  } catch (error) {
-    console.error("Error creating product performance:", error);
+  } catch {
     throw new Error("Failed to create product performance");
   }
 }

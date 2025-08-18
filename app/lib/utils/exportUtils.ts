@@ -157,8 +157,6 @@ export const exportElementAsImage = async (
     link.click();
     document.body.removeChild(link);
   } catch (error) {
-    console.error("Export failed:", error);
-
     let errorMessage = "Export failed. ";
     if (error instanceof Error) {
       errorMessage += error.message;

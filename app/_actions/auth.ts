@@ -111,8 +111,7 @@ export const registerUser = async (
       message: "User registered successfully.",
       success: true,
     };
-  } catch (error) {
-    console.error("Error creating user:", error);
+  } catch {
     return {
       status: 500,
       message: "Failed to create user. Please try again.",
@@ -177,8 +176,7 @@ export const loginUser = async (formData: FormData): Promise<AuthResponse> => {
       message: "Login successful",
       success: true,
     };
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch {
     return {
       status: 500,
       message: "An error occurred during login. Please try again.",
@@ -199,8 +197,7 @@ export const logoutUser = async (): Promise<AuthResponse> => {
       message: "Logout successful",
       success: true,
     };
-  } catch (error) {
-    console.error("Logout error:", error);
+  } catch {
     return {
       status: 500,
       message: "An error occurred during logout. Please try again.",
@@ -228,8 +225,7 @@ export async function updateUser(
     });
     revalidatePath("/users");
     revalidatePath(`/users/${id}`);
-  } catch (error) {
-    console.error("Error updating user:", error);
+  } catch {
     throw new Error("Failed to update user");
   }
 }
@@ -252,8 +248,7 @@ export async function getCurrentUser(): Promise<JWTPayload | null> {
   try {
     const user = await getAuthenticatedUser();
     return user;
-  } catch (error) {
-    console.error("Error getting current user:", error);
+  } catch {
     return null;
   }
 }

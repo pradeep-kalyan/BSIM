@@ -43,9 +43,7 @@ export async function getSimulations() {
           typeof sim.config === "string"
             ? JSON.parse(sim.config)
             : sim.config || {};
-      } catch (err) {
-        console.error("Failed to parse simulation.config", err);
-      }
+      } catch {}
 
       const isOwner = sim.created_by === user.id;
       const accessEntry = sim.simulation_access.find(
@@ -81,8 +79,7 @@ export async function getSimulationscompare() {
       },
     });
     return simulations;
-  } catch (error) {
-    console.error("Error fetching simulations:", error);
+  } catch {
     throw new Error("Failed to fetch simulations");
   }
 }

@@ -194,9 +194,8 @@ const ComparePage: React.FC = () => {
       );
       setCompaniesData(data);
       setComparisonStarted(true);
-    } catch (err) {
+    } catch {
       setError("Failed to fetch company data");
-      console.error("Error fetching company data:", err);
     } finally {
       setLoading(false);
     }
@@ -260,8 +259,7 @@ const ComparePage: React.FC = () => {
       // Restore original styles
       comparePageRef.current.style.cssText = originalStyle;
       comparePageRef.current.className = originalClass;
-    } catch (error) {
-      console.error("Export failed:", error);
+    } catch {
       // Restore original styles in case of error
       if (comparePageRef.current) {
         comparePageRef.current.style.cssText = "";

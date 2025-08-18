@@ -91,7 +91,6 @@ async function main() {
   ]);
 
   // Create Simulations
-  console.log("🎮 Creating simulations...");
   const techSimulation = await prisma.simulation.create({
     data: {
       name: "Technology Industry Competition Q1-Q4 2024",
@@ -160,7 +159,6 @@ async function main() {
   });
 
   // Create Simulation Access
-  console.log("🔑 Setting up simulation access...");
   const simulationAccess = [
     // Tech simulation - all 4 main students
     ...students.slice(0, 4).map((student) => ({
@@ -189,7 +187,6 @@ async function main() {
   );
 
   // Create Companies with realistic business data
-  console.log("🏢 Creating companies...");
   const companies = await Promise.all([
     // Tech Simulation Companies
     prisma.company.create({
@@ -292,7 +289,6 @@ async function main() {
   ]);
 
   // Create Products with realistic specifications
-  console.log("📱 Creating products...");
   const products = await Promise.all([
     // TechNova Products
     prisma.product.create({
@@ -475,7 +471,6 @@ async function main() {
   ]);
 
   // Create comprehensive Finance Records
-  console.log("💰 Creating finance records...");
   const financeData = [
     // TechNova - 4 periods of growth
     {
@@ -579,7 +574,6 @@ async function main() {
   }
 
   // Create HR Decisions with realistic role structures
-  console.log("👨‍💼 Creating HR decisions...");
   const hrData = [
     { companyIndex: 0, periods: 4, baseSalaryBudget: 180000 }, // TechNova
     { companyIndex: 1, periods: 4, baseSalaryBudget: 160000 }, // Quantum
@@ -653,7 +647,6 @@ async function main() {
   }
 
   // Create R&D Decisions
-  console.log("🔬 Creating R&D decisions...");
   for (const { companyIndex, periods } of hrData.slice(0, 4)) {
     // Only tech companies
     for (let period = 1; period <= periods; period++) {
@@ -676,7 +669,6 @@ async function main() {
   }
 
   // Create Production Decisions for products that have launched
-  console.log("🏭 Creating production decisions...");
   for (const product of products) {
     if (product.launch_period) {
       const company = companies.find((c) => c.id === product.company_id);
@@ -711,7 +703,6 @@ async function main() {
   }
 
   // Create Marketing Decisions
-  console.log("📢 Creating marketing decisions...");
   for (const { companyIndex, periods } of hrData) {
     for (let period = 1; period <= periods; period++) {
       const baseBudget = companyIndex < 4 ? 120000 : 60000; // Tech vs Retail
@@ -734,7 +725,6 @@ async function main() {
   }
 
   // Create Product Performance Records
-  console.log("📊 Creating product performance records...");
   for (const product of products) {
     if (product.launch_period) {
       const company = companies.find((c) => c.id === product.company_id);
@@ -788,7 +778,6 @@ async function main() {
   }
 
   // Create Company History Records (snapshots for each period)
-  console.log("📈 Creating company history records...");
   for (const { companyIndex, periods } of hrData) {
     for (let period = 1; period <= periods; period++) {
       const company = companies[companyIndex];
@@ -832,7 +821,6 @@ async function main() {
   }
 
   // Create Company Access Records
-  console.log("🔐 Creating company access records...");
   const companyAccessRecords = [
     // Each student owns their company
     ...companies.map((company) => ({
@@ -872,55 +860,8 @@ async function main() {
   );
 
   // Summary Statistics
-  const userCount = await prisma.user.count();
-  const simulationCount = await prisma.simulation.count();
-  const companyCount = await prisma.company.count();
-  const productCount = await prisma.product.count();
-  const financeCount = await prisma.finance.count();
-  const hrCount = await prisma.hr_decision.count();
-  const rdCount = await prisma.rd.count();
-  const productionCount = await prisma.production.count();
-  const marketingCount = await prisma.marketing.count();
-  const performanceCount = await prisma.product_performance.count();
-  const historyCount = await prisma.company_history.count();
-
-  console.log("✅ Database seeding completed successfully!");
-  console.log(`
-📊 SEEDING SUMMARY:
-┌─────────────────────────────┬───────┐
-│ Entity Type                 │ Count │
-├─────────────────────────────┼───────┤
-│ Users                       │   ${userCount.toString().padStart(3)} │
-│ Simulations                 │   ${simulationCount.toString().padStart(3)} │
-│ Companies                   │   ${companyCount.toString().padStart(3)} │
-│ Products                    │   ${productCount.toString().padStart(3)} │
-│ Finance Records             │   ${financeCount.toString().padStart(3)} │
-│ HR Decisions                │   ${hrCount.toString().padStart(3)} │
-│ R&D Decisions               │   ${rdCount.toString().padStart(3)} │
-│ Production Records          │   ${productionCount.toString().padStart(3)} │
-│ Marketing Decisions         │   ${marketingCount.toString().padStart(3)} │
-│ Product Performances        │   ${performanceCount.toString().padStart(3)} │
-│ Company Histories           │   ${historyCount.toString().padStart(3)} │
-└─────────────────────────────┴───────┘
-
-🎯 KEY FEATURES SEEDED:
-• Multi-industry simulations (Tech, Retail, Manufacturing)
-• Realistic financial progression with growth patterns
-• Comprehensive HR structures with role hierarchies
-• Product lifecycle management with performance tracking
-• Historical company snapshots for trend analysis
-• Proper access control and permissions
-• Business-ready KPIs and metrics
-
-🚀 Ready for business simulation platform!
-  `);
 }
 
-main()
-  .catch((e) => {
-    console.error("❌ Error during seeding:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().finally(async () => {
+  await prisma.$disconnect();
+});

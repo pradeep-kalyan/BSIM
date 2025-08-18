@@ -91,8 +91,7 @@ export async function getCompaniesBySimulation(simulationId: string) {
         canEdit: isOwner || accessEntry?.access_level === "editor",
       };
     });
-  } catch (error) {
-    console.error("Error fetching companies with access:", error);
+  } catch {
     throw new Error("Failed to fetch companies");
   }
 }
@@ -237,7 +236,6 @@ export async function grantAccessByEmail(companyId: string, email: string) {
   if (!company) throw new Error("Company not found");
 
   if (!userToAdd) {
-    console.error(`No user found for email: ${email}`);
     return;
   }
 

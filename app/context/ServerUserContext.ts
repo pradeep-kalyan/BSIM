@@ -30,8 +30,7 @@ export async function getServerUser(): Promise<ServerUser | null> {
       role: userRole,
       email: userEmail,
     };
-  } catch (error) {
-    console.error("Failed to get server user:", error);
+  } catch {
     return null;
   }
 }

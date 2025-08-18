@@ -30,7 +30,6 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
     employee_satisfaction,
     roles,
   } = input;
-  
 
   try {
     // Calculate total employee count
@@ -84,8 +83,7 @@ export async function createHRDecisionWithRoles(input: CreateHRDecisionInput) {
     });
 
     return result.id;
-  } catch (error) {
-    console.error("Error creating HR decision with roles:", error);
+  } catch {
     throw new Error("Failed to create HR decision");
   }
 }

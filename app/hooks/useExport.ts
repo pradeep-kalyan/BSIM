@@ -29,9 +29,7 @@ export const useExport = () => {
           element,
           ...options,
         });
-      } catch (error) {
-        console.error("Export failed:", error);
-        throw error;
+      } catch {
       } finally {
         setIsExporting(false);
       }
@@ -44,9 +42,7 @@ export const useExport = () => {
       setIsExporting(true);
       try {
         await exportDashboard(element, filename);
-      } catch (error) {
-        console.error("Dashboard export failed:", error);
-        throw error;
+      } catch {
       } finally {
         setIsExporting(false);
       }

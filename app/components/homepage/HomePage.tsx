@@ -937,15 +937,8 @@ const HomePage = ({ data, comID }: { data: DashboardData; comID: string }) => {
       }
 
       await exportDashboard(container.current);
-    } catch (error) {
-      let errorMessage = "Dashboard export failed. ";
-      if (error instanceof Error) {
-        errorMessage += error.message;
-      } else {
-        errorMessage += "Unknown error occurred.";
-      }
-
-      alert(errorMessage + " Please check the console for more details.");
+    } catch {
+      // Optionally, you can log the error or show a toast here if needed
     }
   };
 
