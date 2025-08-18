@@ -1,0 +1,749 @@
+"use client";
+
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSimulation } from "@/app/context/SimulationContext";
+import { getSimulationscompare } from "@/app/_actions/createSim";
+import {
+  DollarSign,
+  Users,
+  TrendingUp,
+  BarChart3,
+  Target,
+  Lightbulb,
+  Star,
+  Building2,
+  ArrowUpDown,
+  AlertCircle,
+  RefreshCw,
+  Trophy,
+  PieChart,
+  Download,
+  LoaderCircle,
+} from "lucide-react";
+import Checkboxdropdown from "@/app/ui/checkboxdropdown";
+import formatCurrency from "@/app/functions/formatCurrency";
+import { useExport } from "@/app/hooks/useExport";
+import { CompanyOption, Company } from "@/app/types/compare";
+import { getCompanyComparisonData } from "@/app/_actions/company";
+
+type SortOption = "revenue" | "profit" | "assets" | "cash" | "roi";
+type MetricType = "financial" | "operational" | "innovation";
+
+const ComparePage: React.FC = () => {
+  const { simId: simulationId } = useSimulation();
+  const [simulationName, setSimulationName] = useState<string>("");
+  const [allCompanies, setAllCompanies] = useState<CompanyOption[]>([]);
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
+  const [companiesData, setCompaniesData] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [comparisonStarted, setComparisonStarted] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("revenue");
+  const [selectedMetric, setSelectedMetric] = useState<MetricType>("financial");
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const comparePageRef = useRef<HTMLDivElement>(null);
+  const { exportDashboard, isExporting } = useExport();
+  // Memoized formatters for better performance
+  const formatNumber = useMemo(
+    () =>
+      (value: number): string => {
+        if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;
+        if (value >= 1000) return `${(value / 1000).toFixed(2)}K`;
+        return value?.toLocaleString();
+      },
+    []
+  );
+
+  const { simId } = useSimulation();
+  const truncateWords = (text: string, wordLimit: number) => {
+    const words = text.split(" ");
+    if (words.length <= wordLimit) return text;
+    return words.slice(0, wordLimit).join(" ") + " ...";
+  };
+  // Extract metric value for sorting with better type safety
+  const getMetricValue = (company: Company, metric: SortOption): number => {
+    switch (metric) {
+      case "revenue":
+        return company.finance.total_revenue;
+      case "profit":
+        return company.finance.net_profit;
+      case "assets":
+        return company.total_assets;
+      case "cash":
+        return company.cash_balance;
+      case "roi":
+        return company.finance.roi;
+      default:
+        return company.finance.total_revenue;
+    }
+  };
+
+  // Memoized sorted companies for better performance
+  const sortedCompanies = useMemo(() => {
+    return [...companiesData].sort(
+      (a, b) => getMetricValue(b, sortBy) - getMetricValue(a, sortBy)
+    );
+  }, [companiesData, sortBy]);
+
+  // Memoized performance leaders
+  const performanceLeaders = useMemo(() => {
+    if (companiesData.length === 0)
+      return { revenue: null, roi: null, satisfaction: null };
+
+    const revenueLeader = [...companiesData].sort(
+      (a, b) => b.finance.total_revenue - a.finance.total_revenue
+    )[0];
+    const roiLeader = [...companiesData].sort(
+      (a, b) => b.finance.roi - a.finance.roi
+    )[0];
+    const satisfactionLeader = [...companiesData].sort(
+      (a, b) => b.hr.employee_satisfaction - a.hr.employee_satisfaction
+    )[0];
+
+    return {
+      revenue: revenueLeader,
+      roi: roiLeader,
+      satisfaction: satisfactionLeader,
+    };
+  }, [companiesData]);
+
+  const ComparisonCard: React.FC<{
+    title: React.ReactNode;
+    children: React.ReactNode;
+    className?: string;
+  }> = ({ title, children, className = "" }) => (
+    <div
+      className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-white/10 shadow-lg ${className}`}
+    >
+      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+
+  const MetricRow: React.FC<{
+    label: string;
+    companies: Company[];
+    getValue: (company: Company) => number;
+    format?: (value: number) => string;
+  }> = ({ label, companies, getValue, format = formatCurrency }) => (
+    <div className="grid grid-cols-4 gap-4 py-3 border-b border-gray-700/50 hover:bg-gray-800/30 transition-colors">
+      <div className="text-gray-300 font-medium">{label}</div>
+      {companies.map((company) => (
+        <div key={company.id} className="text-white text-right">
+          {format(getValue(company))}
+        </div>
+      ))}
+    </div>
+  );
+
+  const hasFetched = useRef(false);
+  const container = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!simulationId || hasFetched.current) return;
+
+    hasFetched.current = true;
+
+    const loadCompanies = async () => {
+      try {
+        setError(null);
+        const simulations = await getSimulationscompare();
+        const currentSim = simulations.find(
+          (s: { id: string }) => s.id === simulationId
+        );
+
+        if (currentSim) {
+          setSimulationName(currentSim.name);
+          setAllCompanies(
+            currentSim.companies.map((c: { id: string; name: string }) => ({
+              id: c.id,
+              name: c.name,
+            }))
+          );
+        } else {
+          setError("Simulation not found");
+        }
+      } catch {
+        setError("Failed to load companies");
+      }
+    };
+
+    loadCompanies();
+  }, [simulationId]);
+
+  const handleCompareClick = async () => {
+    if (selectedCompanyIds.length < 2) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getCompanyComparisonData(
+        simulationId!,
+        selectedCompanyIds
+      );
+      setCompaniesData(data);
+      setComparisonStarted(true);
+    } catch {
+      setError("Failed to fetch company data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (selectedCompanyIds.length >= 2) {
+      handleCompareClick();
+    }
+  };
+
+  const handleViewCompany = useCallback(() => {
+    router.push(`/simulations/${simId}`);
+  }, [router, simId]);
+
+  const handleExportComparison = useCallback(async () => {
+    if (!comparePageRef.current) return;
+
+    try {
+      // Temporarily modify styles for full content capture
+      const originalStyle = comparePageRef.current.style.cssText;
+      const originalClass = comparePageRef.current.className;
+
+      // Remove height restrictions and overflow for export
+      comparePageRef.current.style.height = "auto";
+      comparePageRef.current.style.overflow = "visible";
+      comparePageRef.current.style.maxHeight = "none";
+      comparePageRef.current.style.minHeight = "auto";
+      comparePageRef.current.className = originalClass.replace(
+        "min-h-screen",
+        "min-h-full"
+      );
+
+      // Add export-specific styles
+      const exportStyle = document.createElement("style");
+      exportStyle.textContent = `
+        .capturing-screenshot {
+          height: auto !important;
+          overflow: visible !important;
+          max-height: none !important;
+          min-height: auto !important;
+        }
+        .capturing-screenshot * {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+      `;
+      document.head.appendChild(exportStyle);
+
+      // Wait for layout to adjust
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const filename = `company-comparison-${simulationId}-${
+        new Date().toISOString().split("T")[0]
+      }`;
+      await exportDashboard(comparePageRef.current, filename);
+
+      // Clean up
+      document.head.removeChild(exportStyle);
+
+      // Restore original styles
+      comparePageRef.current.style.cssText = originalStyle;
+      comparePageRef.current.className = originalClass;
+    } catch {
+      // Restore original styles in case of error
+      if (comparePageRef.current) {
+        comparePageRef.current.style.cssText = "";
+        comparePageRef.current.className =
+          "min-h-screen bg-slate-900 text-white p-6";
+      }
+      // Clean up style element if it exists
+      const exportStyle = document.querySelector("style[data-export]");
+      if (exportStyle) {
+        document.head.removeChild(exportStyle);
+      }
+    }
+  }, [exportDashboard, simulationId]);
+
+  if (!simulationId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-slate-900">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No Simulation Selected</h2>
+          <p className="text-gray-400">
+            Please select a simulation to view company comparisons.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={comparePageRef}
+      className="min-h-screen bg-slate-900 text-white p-6"
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-4" ref={container}>
+          {/* Left: Back button + title + refresh */}
+          <div className="flex items-center gap-3">
+            {/* Back to Companies Button */}
+            <button
+              onClick={handleViewCompany}
+              title="Back to Companies"
+              className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-full 
+    shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+            >
+              <ArrowLeft className="w-5 h-6" />
+            </button>
+
+            <h1 className="text-3xl font-bold">Company Comparison Dashboard</h1>
+            {simulationName && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-blue-300 text-sm font-medium truncate max-w-[150px]">
+                  {simulationName}
+                </span>
+              </div>
+            )}
+            {comparisonStarted && (
+              <button
+                onClick={handleRefresh}
+                disabled={loading || selectedCompanyIds.length < 2}
+                title="Refresh"
+                className="flex items-center justify-center w-10 h-10 
+      bg-blue-600 text-white rounded-full shadow-md hover:shadow-lg 
+      transition-all duration-200 transform hover:scale-105
+      disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+              </button>
+            )}
+          </div>
+
+          {/* Right: Action buttons */}
+          <div className="flex items-center gap-4">
+            {comparisonStarted && companiesData.length > 0 && (
+              <button
+                onClick={handleExportComparison}
+                disabled={isExporting}
+                className="flex items-center gap-2 bg-blue-600 text-white rounded-lg px-4 py-2 
+      shadow-md hover:shadow-lg transition-all duration-200
+      disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isExporting ? (
+                  <LoaderCircle className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {isExporting ? "Exporting..." : "Export Comparison"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            <span className="text-red-300">{error}</span>
+          </div>
+        )}
+
+        {/* Company Selection */}
+        <div className="flex items-center gap-4 mb-11 flex-wrap ">
+          <Checkboxdropdown
+            options={allCompanies.map((c) => c.name)}
+            selected={allCompanies
+              .filter((c) => selectedCompanyIds.includes(c.id))
+              .map((c) => c.name)}
+            onChange={(selectedNames: string[]) => {
+              const selectedIds = allCompanies
+                .filter((c) => selectedNames.includes(c.name))
+                .map((c) => c.id);
+
+              if (selectedIds.length <= 3) {
+                setSelectedCompanyIds(selectedIds);
+              }
+            }}
+            onCompare={handleCompareClick} // now compare happens from inside dropdown
+            placeholder="Select companies"
+          />
+
+          {selectedCompanyIds.length > 0 && (
+            <span className="text-sm text-gray-400">
+              {selectedCompanyIds.length} of 3 selected
+            </span>
+          )}
+
+          {/* Additional Export Button in Company Selection Area */}
+        </div>
+
+        {/* Comparison Results */}
+        {!loading && comparisonStarted && companiesData.length > 0 && (
+          <>
+            {/* Controls */}
+            <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-800/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-400">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="revenue">Revenue</option>
+                  <option value="profit">Profit</option>
+                  <option value="assets">Assets</option>
+                  <option value="cash">Cash</option>
+                  <option value="roi">ROI</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2">
+                {(["financial", "operational", "innovation"] as const).map(
+                  (metric) => (
+                    <button
+                      key={metric}
+                      onClick={() => setSelectedMetric(metric)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedMetric === metric
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
+                    >
+                      {metric.charAt(0).toUpperCase() + metric.slice(1)}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* Company Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {sortedCompanies.map((company, index) => (
+                <div key={company.id} className="relative">
+                  {index === 0 && (
+                    <div className="absolute -top-3 left-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold z-10 shadow-lg flex items-center gap-1">
+                      <Trophy className="w-4 h-4" />
+                      #1 Leader
+                    </div>
+                  )}
+
+                  <div
+                    className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border ${
+                      index === 0
+                        ? "border-yellow-500/50 shadow-lg shadow-yellow-500/20"
+                        : "border-white/10"
+                    } transition-all hover:shadow-lg hover:border-white/20`}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-blue-500/20 rounded-lg">
+                        <Building2 className="w-6 h-6 text-blue-400" />
+                      </div>
+                      <div>
+                        <h3
+                          className="text-xl font-semibold text-white"
+                          title={company.name}
+                        >
+                          {truncateWords(company.name, 2)}
+                        </h3>
+                        <p className="text-gray-400 text-sm">
+                          Period {company.current_period}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Revenue</span>
+                        <span className="text-green-400 font-semibold">
+                          {formatCurrency(company.finance.total_revenue)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Net Profit</span>
+                        <span className="text-blue-400 font-semibold">
+                          {formatCurrency(company.finance.net_profit)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">ROI</span>
+                        <span className="text-purple-400 font-semibold">
+                          {company.finance.roi.toFixed(2)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Detailed Comparison Tables */}
+            {selectedMetric === "financial" && (
+              <ComparisonCard
+                title={
+                  <>
+                    <DollarSign className="w-5 h-5" />
+                    Financial Metrics
+                  </>
+                }
+              >
+                <div className="grid grid-cols-4 gap-4 pb-3 border-b-2 border-gray-600 mb-2">
+                  <div className="font-semibold text-gray-300">Metric</div>
+                  {sortedCompanies.map((company) => (
+                    <div
+                      key={company.id}
+                      className="font-semibold text-white text-right"
+                      title={company.name}
+                    >
+                      {truncateWords(company.name, 2)}
+                    </div>
+                  ))}
+                </div>
+
+                <MetricRow
+                  label="Total Revenue"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.finance.total_revenue}
+                />
+                <MetricRow
+                  label="Net Profit"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.finance.net_profit}
+                />
+                <MetricRow
+                  label="Cash Balance"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.cash_balance}
+                />
+                <MetricRow
+                  label="Total Assets"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.total_assets}
+                />
+                <MetricRow
+                  label="ROI %"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.finance.roi}
+                  format={(v) => `${v.toFixed(2)}%`}
+                />
+                <MetricRow
+                  label="Brand Value"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.brand_value}
+                />
+              </ComparisonCard>
+            )}
+
+            {selectedMetric === "operational" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ComparisonCard
+                  title={
+                    <>
+                      <Users className="w-5 h-5" />
+                      HR & Operations
+                    </>
+                  }
+                >
+                  <div className="grid grid-cols-4 gap-4 pb-3 border-b-2 border-gray-600 mb-2">
+                    <div className="font-semibold text-gray-300">Metric</div>
+                    {sortedCompanies.map((company) => (
+                      <div
+                        key={company.id}
+                        className="font-semibold text-white text-right text-sm"
+                        title={company.name}
+                      >
+                        {truncateWords(company.name, 2)}
+                      </div>
+                    ))}
+                  </div>
+
+                  <MetricRow
+                    label="HR Budget"
+                    companies={sortedCompanies}
+                    getValue={(c) => c.hr.total_budget}
+                  />
+                  <MetricRow
+                    label="Employee Satisfaction"
+                    companies={sortedCompanies}
+                    getValue={(c) => c.hr.employee_satisfaction}
+                    format={(v) => `${v.toFixed(2)}%`}
+                  />
+                  <MetricRow
+                    label="Production Capacity"
+                    companies={sortedCompanies}
+                    getValue={(c) => c.production.production_capacity}
+                    format={formatNumber}
+                  />
+                  <MetricRow
+                    label="Defect Rate"
+                    companies={sortedCompanies}
+                    getValue={(c) => c.production.defect_rate}
+                    format={(v) => `${v.toFixed(2)}%`}
+                  />
+                </ComparisonCard>
+
+                <ComparisonCard
+                  title={
+                    <>
+                      <Target className="w-5 h-5" />
+                      Market Performance
+                    </>
+                  }
+                >
+                  <div className="space-y-4">
+                    {sortedCompanies.map((company) => (
+                      <div
+                        key={company.id}
+                        className="border-b border-gray-700/50 pb-4 last:border-b-0"
+                      >
+                        <h4
+                          className="font-semibold text-white mb-2"
+                          title="company.name"
+                        >
+                          {truncateWords(company.name, 2)}
+                        </h4>
+                        <div className="space-y-2">
+                          {company.products.map((product, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between text-sm"
+                            >
+                              <span className="text-gray-300">
+                                {product.name}
+                              </span>
+                              <div className="flex gap-4">
+                                <span className="text-blue-400">
+                                  <PieChart className="w-4 h-4" />
+                                  {(product.market_share ?? 0).toFixed(2)}%
+                                  share
+                                </span>
+                                <span className="text-yellow-400">
+                                  <Star className="w-4 h-4 fill-yellow-400 stroke-yellow-500" />
+                                  {(product.customer_satisfaction ?? 0).toFixed(
+                                    2
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ComparisonCard>
+              </div>
+            )}
+
+            {selectedMetric === "innovation" && (
+              <ComparisonCard
+                title={
+                  <>
+                    <Lightbulb className="w-5 h-5" />
+                    R&D & Innovation
+                  </>
+                }
+              >
+                <div className="grid grid-cols-4 gap-4 pb-3 border-b-2 border-gray-600 mb-2">
+                  <div className="font-semibold text-gray-300">Metric</div>
+                  {sortedCompanies.map((company) => (
+                    <div
+                      key={company.id}
+                      className="font-semibold text-white text-right"
+                      title={company.name}
+                    >
+                      {truncateWords(company.name, 2)}
+                    </div>
+                  ))}
+                </div>
+
+                <MetricRow
+                  label="R&D Budget"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.rd.budget}
+                />
+                <MetricRow
+                  label="Patents Filed"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.rd.patented}
+                  format={(v) => v.toString()}
+                />
+                <MetricRow
+                  label="Quality Improvements"
+                  companies={sortedCompanies}
+                  getValue={(c) => c.rd.quality_changes}
+                  format={(v) => v.toString()}
+                />
+              </ComparisonCard>
+            )}
+
+            {/* Performance Summary */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-green-800/30 to-green-900/30 rounded-xl p-6 border border-green-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <TrendingUp className="w-6 h-6 text-green-400" />
+                  <h3 className="text-lg font-semibold text-white">
+                    Revenue Leader
+                  </h3>
+                </div>
+                <p className="text-2xl font-bold text-green-400">
+                  {performanceLeaders.revenue?.name}
+                </p>
+                <p className="text-green-300 text-sm">
+                  {performanceLeaders.revenue &&
+                    formatCurrency(
+                      performanceLeaders.revenue.finance.total_revenue
+                    )}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-800/30 to-blue-900/30 rounded-xl p-6 border border-blue-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <BarChart3 className="w-6 h-6 text-blue-400" />
+                  <h3 className="text-lg font-semibold text-white">
+                    Highest ROI
+                  </h3>
+                </div>
+                <p className="text-2xl font-bold text-blue-400">
+                  {performanceLeaders.roi?.name}
+                </p>
+                <p className="text-blue-300 text-sm">
+                  {performanceLeaders.roi?.finance.roi.toFixed(2)}%
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-yellow-800/30 to-yellow-900/30 rounded-xl p-6 border border-yellow-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <Star className="w-6 h-6 text-yellow-400" />
+                  <h3 className="text-lg font-semibold text-white">
+                    Employee Satisfaction Leader
+                  </h3>
+                </div>
+                <p className="text-2xl font-bold text-yellow-400">
+                  {performanceLeaders.satisfaction?.name}
+                </p>
+                <p className="text-yellow-300 text-sm">
+                  {performanceLeaders.satisfaction?.hr.employee_satisfaction}%
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ComparePage;
