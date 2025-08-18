@@ -14,7 +14,6 @@ import { ToastContainer } from "react-toastify";
 import { Slider } from "@/components/ui/slider";
 import {
   useCashBalance,
-  useCompanyForm,
   useHRForm,
   useHRRoleManagement,
 } from "@/app/context/FormContext";
@@ -31,7 +30,7 @@ const HRDashboard = () => {
     addNewRole,
     updateNewRole,
     removeNewRole,
-    updateDataOnly, 
+    updateDataOnly,
   } = useHRForm();
 
   // Get total employee count from the HR role management hook
@@ -39,7 +38,6 @@ const HRDashboard = () => {
   const [selectedRoleIndex, setSelectedRoleIndex] = React.useState(0);
   const { cashBalance, projectedCashBalance, updateHRBudgetImpact } =
     useCashBalance();
-  const { data: companyData } = useCompanyForm();
 
   // State for validation and success feedback
   const [success, setSuccess] = React.useState(false);
@@ -470,7 +468,7 @@ const HRDashboard = () => {
                       : data?.training_budget || 0
                   }
                   min={0}
-                  max={Math.min(companyData?.cash_balance || 100000, 500000)}
+                  max={data?.training_budget * 2}
                   onValueChange={(val) => {
                     updateData({ training_budget: val });
                     setSuccess(false);
