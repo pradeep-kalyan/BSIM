@@ -45,6 +45,18 @@ const Sales = () => {
     [productionData.products, products]
   );
 
+  const getCostPerUnit = React.useCallback(
+    (productId: string) => {
+      const prodEntry = productionData.products?.find(
+        (prod) => prod.product_id === productId
+      );
+      if (prodEntry) return prodEntry.cost_per_unit;
+      const product = products?.find((p) => p.id === productId);
+      return product?.inventory_level || 0;
+    },
+    [productionData.products, products]
+  );
+
   const [selectedProductId, setSelectedProductId] = React.useState<string>("");
   React.useEffect(() => {
     if (!selectedProductId) {
@@ -71,12 +83,12 @@ const Sales = () => {
       const salesVolume = pSales.sales_volume || 0;
       const sellingPrice = pSales.selling_price || product.selling_price || 0;
       const revenue = salesVolume * sellingPrice;
-      const costs = salesVolume * (product.production_cost || 0);
+      const costs = salesVolume * (getCostPerUnit(product.id) || 0);
       const profit = revenue - costs;
       values[product.id] = { revenue, costs, profit };
     });
     return values;
-  }, [products, salesData]);
+  }, [products, salesData, getCostPerUnit]);
 
   // Aggregate totals
   const totalMetrics = React.useMemo(() => {
@@ -455,7 +467,7 @@ const Sales = () => {
                             </span>
                           </div>
                           <span className="text-white text-sm sm:text-base">
-                            ₹{formatNumber(product.production_cost || 0)}
+                            ₹{formatNumber(getCostPerUnit(id) || 0)}
                           </span>
                         </div>
                       </div>
