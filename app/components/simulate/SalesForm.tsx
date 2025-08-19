@@ -347,10 +347,10 @@ const Sales = () => {
                       <Slider
                         label="Sales Volume (Units)"
                         tooltipText="Number of units you plan to sell this year"
-                        isFixed
                         value={pSales.sales_volume || 0}
+                        isFixed
+                        fixedMax={getAvailableInventory(id) ?? 10000}
                         fixedMin={0}
-                        fixedMax={getAvailableInventory(id) || 10000}
                         onValueChange={(val) =>
                           handleProductInputChange(id, "sales_volume", val)
                         }
@@ -400,62 +400,65 @@ const Sales = () => {
 
                   {/* Product Info Section */}
                   <div className="lg:col-span-1">
-                    <div className="bg-slate-700/30 rounded-lg p-4 h-full w-full max-w-xs mx-auto">
-                      <h3 className="text-base font-semibold text-white mb-2">
+                    <div className="bg-slate-700/30 rounded-lg p-4 h-full">
+                      <h3 className="text-lg font-semibold text-white mb-3">
                         Product Details
                       </h3>
-
-                      <dl className="divide-y divide-slate-600/40">
-                        {/* Category */}
-                        <div className="flex justify-between items-center py-1.5">
-                          <dt className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                            Category
-                          </dt>
-                          <dd
-                            className="text-white text-xs sm:text-sm truncate max-w-[120px]"
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Category:
+                            </span>
+                          </div>
+                          <span
+                            className="text-white text-sm sm:text-base truncate max-w-[120px] sm:max-w-none"
                             title={product.category}
                           >
                             {product.category}
-                          </dd>
+                          </span>
                         </div>
 
-                        {/* Price */}
-                        <div className="flex justify-between items-center py-1.5">
-                          <dt className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                            Price
-                          </dt>
-                          <dd className="text-white text-xs sm:text-sm">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Price:
+                            </span>
+                          </div>
+                          <span className="text-white text-sm sm:text-base">
                             ₹
                             {formatNumber(
                               pSales.selling_price || product.selling_price || 0
                             )}
-                          </dd>
+                          </span>
                         </div>
 
-                        {/* Inventory */}
-                        <div className="flex justify-between items-center py-1.5">
-                          <dt className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                            Inventory
-                          </dt>
-                          <dd className="text-white text-xs sm:text-sm">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Inventory:
+                            </span>
+                          </div>
+                          <span className="text-white text-sm sm:text-base">
                             {getAvailableInventory(id)} units
-                          </dd>
+                          </span>
                         </div>
 
-                        {/* Cost/unit */}
-                        <div className="flex justify-between items-center py-1.5">
-                          <dt className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                            Cost/unit
-                          </dt>
-                          <dd className="text-white text-xs sm:text-sm">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Cost/unit:
+                            </span>
+                          </div>
+                          <span className="text-white text-sm sm:text-base">
                             ₹{formatNumber(product.production_cost || 0)}
-                          </dd>
+                          </span>
                         </div>
-                      </dl>
+                      </div>
                     </div>
                   </div>
                 </div>

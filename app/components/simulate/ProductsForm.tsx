@@ -15,7 +15,7 @@ import InfoCard from "@/app/ui/InfoCard";
 import ProductFormPage from "./NewProduct";
 import { useCompanyForm, useProductForm } from "@/app/context/FormContext";
 import { useSimulation } from "@/app/context/SimulationContext";
-import {Product }from "@/app/types/company";
+import { Product } from "@/app/types/company";
 
 interface ProductsFormProps {
   companyId: string;
@@ -160,8 +160,12 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
     products.length > 0
       ? products.reduce((acc, p) => acc + p.quality_rating, 0) / products.length
       : 0;
-  const avgSustainability = products.reduce((acc, p) => acc + p.sustainability_rating, 0) / products.length || 0;
-  const avgInnovation = products.reduce((acc, p) => acc + p.innovation_rating, 0) / products.length || 0;
+  const avgSustainability =
+    products.reduce((acc, p) => acc + p.sustainability_rating, 0) /
+      products.length || 0;
+  const avgInnovation =
+    products.reduce((acc, p) => acc + p.innovation_rating, 0) /
+      products.length || 0;
   // ---- RENDER ----
   const avgPerformance = parseFloat(
     ((avgQualityRating + avgInnovation + avgSustainability) / 3).toFixed(1)
@@ -169,13 +173,15 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
   if (!companyData) {
     return (
       <div className="min-h-screen bg-slate-800/50 shadow-md flex items-center justify-center">
-        <p className="text-slate-300 font-semibold font-roboto-sans">No company data found</p>
+        <p className="text-slate-300 font-semibold font-roboto-sans">
+          No company data found
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-slate-800/50 shadow-md py-2 px-6">
+    <div className=" bg-slate-800/50 shadow-md py-2 px-6">
       <div className="max-w-7xl mx-auto mt-2">
         {/* Header */}
         <div>
@@ -206,7 +212,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
           />
           <InfoCard
             label="Avg Performance"
-            value={avgPerformance*10 + "%"}
+            value={avgPerformance * 10 + "%"}
             Icon={TrendingUp}
             width="w-full"
             height="h-full"
@@ -214,7 +220,7 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
           />
           <InfoCard
             label="Avg Quality"
-            value={parseFloat(avgQualityRating.toFixed(1))*10 + "%"}
+            value={parseFloat(avgQualityRating.toFixed(1)) * 10 + "%"}
             Icon={Star}
             width="w-full"
             height="h-full"
@@ -311,8 +317,9 @@ const ProductsForm: React.FC<ProductsFormProps> = () => {
                         <div
                           className="bg-green-400 h-2 rounded-full"
                           style={{
-                            width: `${(product.sustainability_rating / 10) * 100
-                              }%`,
+                            width: `${
+                              (product.sustainability_rating / 10) * 100
+                            }%`,
                           }}
                         />
                       </div>
