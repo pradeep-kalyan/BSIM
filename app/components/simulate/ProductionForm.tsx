@@ -409,10 +409,16 @@ const ProductionForm = () => {
           </div>
         </div>
       ) : (
-        <div className="flex justify-center bg-slate-800/50 shadow-md rounded-2xl py-35 border border-slate-700 mb-4 px-5">
-          <p className="text-md font-roboto-sans text-slate-300">
-            No Products Selected{" "}
-          </p>
+        <div className="flex justify-center items-center bg-slate-800/50 shadow-md rounded-2xl py-16 sm:py-24 border border-slate-700 mb-4 px-5">
+          <div className="text-center">
+            <Package className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+            <p className="text-lg font-roboto-sans text-slate-300 mb-1">
+              No Product Selected
+            </p>
+            <p className="text-sm text-slate-400">
+              Choose a product from the dropdown above to manage production data
+            </p>
+          </div>
         </div>
       )}
 

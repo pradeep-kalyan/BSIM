@@ -7,6 +7,8 @@ import {
   Package,
   AlertTriangle,
   Check,
+  CheckCircle,
+  Zap,
 } from "lucide-react";
 import {
   useProductForm,
@@ -303,12 +305,38 @@ const Sales = () => {
                 className="bg-slate-800/50 shadow-md rounded-2xl px-4 sm:px-6 py-4 sm:py-6 border border-slate-700 mb-4"
               >
                 {/* Product Header */}
-                <div className="mb-6">
-                  <h2 className="text-xl sm:text-2xl font-bold font-roboto-sans text-white break-words">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white font-geist-sans">
                     {product.name}
-                  </h2>
-                  <hr className="mt-2 mb-4 border border-slate-700" />
+                  </h3>
+                  <div>
+                    {(() => {
+                      if (product.status === "active") {
+                        return (
+                          <div className="flex items-center gap-1 font-geist-sans text-green-400 bg-green-500/20 px-3 py-1 rounded-full text-sm">
+                            <CheckCircle className="h-4 w-4" /> Active
+                          </div>
+                        );
+                      }
+                      if (product.status === "development") {
+                        return (
+                          <div className="flex items-center gap-1 font-geist-sans text-yellow-400 bg-yellow-500/20 px-3 py-1 rounded-full text-sm">
+                            <Zap className="h-4 w-4" /> Development
+                          </div>
+                        );
+                      }
+                      if (product.status === "discontinued") {
+                        return (
+                          <div className="flex items-center gap-1 font-geist-sans text-red-400 bg-red-500/20 px-3 py-1 rounded-full text-sm">
+                            <AlertTriangle className="h-4 w-4" /> Discontinued
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                 </div>
+                <hr className="mt-2 mb-4 border border-slate-700" />
 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -329,7 +357,9 @@ const Sales = () => {
                       <Slider
                         label="Selling Price per Unit (₹)"
                         tooltipText="Price per unit you will charge customers for this product (₹ per unit)"
-                        value={pSales.selling_price || product.selling_price || 0}
+                        value={
+                          pSales.selling_price || product.selling_price || 0
+                        }
                         min={0}
                         max={pSales.selling_price * 2 || 1000}
                         onValueChange={(val) =>
@@ -377,9 +407,14 @@ const Sales = () => {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                            <span className="text-blue-300 text-sm sm:text-base">Category:</span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Category:
+                            </span>
                           </div>
-                          <span className="text-white text-sm sm:text-base truncate max-w-[120px] sm:max-w-none" title={product.category}>
+                          <span
+                            className="text-white text-sm sm:text-base truncate max-w-[120px] sm:max-w-none"
+                            title={product.category}
+                          >
                             {product.category}
                           </span>
                         </div>
@@ -387,27 +422,40 @@ const Sales = () => {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                            <span className="text-blue-300 text-sm sm:text-base">Price:</span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Price:
+                            </span>
                           </div>
                           <span className="text-white text-sm sm:text-base">
-                            ₹{formatNumber(pSales.selling_price || product.selling_price || 0)}
+                            ₹
+                            {formatNumber(
+                              pSales.selling_price || product.selling_price || 0
+                            )}
                           </span>
                         </div>
 
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                            <span className="text-blue-300 text-sm sm:text-base">Inventory:</span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Inventory:
+                            </span>
                           </div>
-                          <span className="text-white text-sm sm:text-base">{getAvailableInventory(id)} units</span>
+                          <span className="text-white text-sm sm:text-base">
+                            {getAvailableInventory(id)} units
+                          </span>
                         </div>
 
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-green-400"></span>
-                            <span className="text-blue-300 text-sm sm:text-base">Cost/unit:</span>
+                            <span className="text-blue-300 text-sm sm:text-base">
+                              Cost/unit:
+                            </span>
                           </div>
-                          <span className="text-white text-sm sm:text-base">₹{formatNumber(product.production_cost || 0)}</span>
+                          <span className="text-white text-sm sm:text-base">
+                            ₹{formatNumber(product.production_cost || 0)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -420,18 +468,30 @@ const Sales = () => {
                   <div className="flex flex-col sm:flex-row gap-4 font-roboto-sans text-white w-full lg:w-auto">
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0"></span>
-                      <span className="font-medium text-sm sm:text-base">Revenue:</span>
-                      <span className="text-sm sm:text-base">₹{formatNumber(Math.round(calc.revenue))}</span>
+                      <span className="font-medium text-sm sm:text-base">
+                        Revenue:
+                      </span>
+                      <span className="text-sm sm:text-base">
+                        ₹{formatNumber(Math.round(calc.revenue))}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-red-400 flex-shrink-0"></span>
-                      <span className="font-medium text-sm sm:text-base">Costs:</span>
-                      <span className="text-sm sm:text-base">₹{formatNumber(Math.round(calc.costs))}</span>
+                      <span className="font-medium text-sm sm:text-base">
+                        Costs:
+                      </span>
+                      <span className="text-sm sm:text-base">
+                        ₹{formatNumber(Math.round(calc.costs))}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-yellow-400 flex-shrink-0"></span>
-                      <span className="font-medium text-sm sm:text-base">Profit:</span>
-                      <span className="text-sm sm:text-base">₹{formatNumber(Math.round(calc.profit))}</span>
+                      <span className="font-medium text-sm sm:text-base">
+                        Profit:
+                      </span>
+                      <span className="text-sm sm:text-base">
+                        ₹{formatNumber(Math.round(calc.profit))}
+                      </span>
                     </div>
                   </div>
 
@@ -443,8 +503,13 @@ const Sales = () => {
                         {validationAlerts[id] &&
                           !validationAlerts[id].startsWith("Validated!") && (
                             <div className="flex items-start gap-2 text-rose-400">
-                              <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
-                              <span className="break-words">{validationAlerts[id]}</span>
+                              <AlertTriangle
+                                size={16}
+                                className="mt-0.5 flex-shrink-0"
+                              />
+                              <span className="break-words">
+                                {validationAlerts[id]}
+                              </span>
                             </div>
                           )}
                         {successProducts[id] && !validationAlerts[id] && (
@@ -456,7 +521,9 @@ const Sales = () => {
                         {validationAlerts[id]?.startsWith("Validated!") && (
                           <div className="flex items-start gap-2 text-green-400">
                             <Check size={16} className="mt-0.5 flex-shrink-0" />
-                            <span className="break-words">{validationAlerts[id]}</span>
+                            <span className="break-words">
+                              {validationAlerts[id]}
+                            </span>
                           </div>
                         )}
                       </div>

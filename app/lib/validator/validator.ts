@@ -256,7 +256,7 @@ export const HRschema = z.object({
 });
 
 export const createCompanySchema = z.object({
-  name: z.string().min(5, "Company name is required"),
+  name: z.string().min(1, "Company name is required"),
   description: z.string().optional(),
   logo_url: z.url("Invalid logo URL").optional().or(z.literal("")),
   cash_balance: z.number().min(1, "Cash balance must be greater than 0"),

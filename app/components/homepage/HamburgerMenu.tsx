@@ -148,7 +148,7 @@ const HamburgerMenu = forwardRef<HamburgerMenuRef, HamburgerMenuProps>(
                   disabled={item.disabled}
                   className={`${
                     item.extraClass ?? ""
-                  } w-full flex items-center gap-4 py-2 px-4 rounded-lg mb-1 text-sm transition-all duration-150 ${
+                  } w-full flex items-center gap-4 py-2 px-4 rounded-lg mb-1 text-sm transition-all cursor-pointer duration-150 ${
                     item.disabled
                       ? "opacity-50 cursor-not-allowed bg-gray-100"
                       : `bg-gradient-to-r ${item.color} ${item.hoverColor} text-white hover:scale-[1.01] active:scale-[0.99] border border-slate-500`
